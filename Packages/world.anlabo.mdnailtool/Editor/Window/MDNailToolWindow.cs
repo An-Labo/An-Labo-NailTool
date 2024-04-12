@@ -1,0 +1,367 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.UIElements;
+using VRC.SDK3.Avatars.Components;
+using world.anlabo.mdnailtool.Editor.Entity;
+using world.anlabo.mdnailtool.Editor.Model;
+using world.anlabo.mdnailtool.Editor.NailDesigns;
+using world.anlabo.mdnailtool.Editor.VisualElements;
+using static world.anlabo.mdnailtool.Editor.Language.LanguageManager;
+using Avatar = world.anlabo.mdnailtool.Editor.Entity.Avatar;
+using Object = UnityEngine.Object;
+
+#nullable enable
+
+namespace world.anlabo.mdnailtool.Editor.Window {
+	public class MDNailToolWindow : EditorWindow {
+		public static void ShowWindow() {
+			MDNailToolWindow window = CreateWindow<MDNailToolWindow>();
+			window.Show();
+		}
+
+		private const string GUID = "f44afb5feae822a4b9308df804788d69";
+
+		private LocalizedObjectField? _materialObjectField;
+		private LocalizedObjectField? _avatarObjectField;
+		private AvatarDropDowns? _avatarDropDowns;
+		private NailDesignSelect? _nailDesignSelect;
+		private NailPreview? _nailPreview;
+		private NailShapeDropDown? _nailShapeDropDown;
+		private LocalizedDropDown? _nailMaterialDropDown;
+		private LocalizedDropDown? _nailColorDropDown;
+
+		private NailDesignDropDowns[]? _nailDesignDropDowns;
+
+		private Toggle? _setPreFinger;
+		private Toggle? _useFootNail;
+		private Toggle? _removeCurrentNail;
+		private Toggle? _generateMaterial;
+		private Toggle? _backup;
+		private Toggle? _forModularAvatar;
+
+		private LocalizedButton? _execute;
+		private LocalizedButton? _remove;
+
+		private NailPreviewController? _nailPreviewController;
+
+		private VisualElement? _handSelects;
+		private VisualElement? _footSelects;
+
+		private Label? _manualLink;
+		private LocalizedLabel? _contactLink;
+
+
+		private void CreateGUI() {
+			INailProcessor.ClearPreviewMaterialCash();
+
+			// UIに使用するDBをあらかじめキャッシュしておく
+			using DBShop _dbShop = new();
+			using DBNailDesign _dbNailDesign = new();
+
+			string uxmlPath = AssetDatabase.GUIDToAssetPath(GUID);
+			VisualTreeAsset uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath);
+			uxml.CloneTree(this.rootVisualElement);
+
+			this._materialObjectField = this.rootVisualElement.Q<LocalizedObjectField>("material-object");
+			this._materialObjectField.RegisterValueChangedCallback(this.OnChangeMaterial);
+			this._avatarObjectField = this.rootVisualElement.Q<LocalizedObjectField>("avatar-object");
+			this._avatarObjectField.RegisterValueChangedCallback(this.OnChangeAvatar);
+			this._avatarDropDowns = this.rootVisualElement.Q<AvatarDropDowns>("avatar");
+			this._nailDesignSelect = this.rootVisualElement.Q<NailDesignSelect>("nail-select");
+			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
+			this._nailPreview = this.rootVisualElement.Q<NailPreview>("nail-preview");
+			this._nailPreviewController = new NailPreviewController(this._nailPreview);
+			this._nailShapeDropDown = this.rootVisualElement.Q<NailShapeDropDown>("nail-shape");
+			this._nailShapeDropDown.SetNailShape(GlobalSetting.LastUseShapeName);
+			this._nailShapeDropDown.RegisterValueChangedCallback(this.OnChangeShapeDropDown);
+			this._nailMaterialDropDown = this.rootVisualElement.Q<LocalizedDropDown>("nail-material");
+			this._nailMaterialDropDown.RegisterValueChangedCallback(this.OnChangeNailMaterialDropDown);
+			this._nailColorDropDown = this.rootVisualElement.Q<LocalizedDropDown>("nail-color");
+			this._nailColorDropDown.RegisterValueChangedCallback(this.OnChangeNailColorDropDown);
+
+
+			this._nailDesignDropDowns = new[] {
+				this.rootVisualElement.Q<NailDesignDropDowns>("left-thumb"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("left-index"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("left-middle"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("left-ring"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("left-little"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("right-thumb"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("right-index"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("right-middle"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("right-ring"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("right-little"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("left-foot"),
+				this.rootVisualElement.Q<NailDesignDropDowns>("right-foot")
+			};
+
+			foreach (NailDesignDropDowns nailDesignDropDown in this._nailDesignDropDowns) {
+				nailDesignDropDown.RegisterCallback<ChangeEvent<string?>>(this.OnChangeNailDesign);
+			}
+
+
+			this._setPreFinger = this.rootVisualElement.Q<Toggle>("set-per-finger");
+			this._setPreFinger.RegisterValueChangedCallback(this.OnChangeSetPreFinger);
+			this._useFootNail = this.rootVisualElement.Q<Toggle>("use-foot-nail");
+			this._useFootNail.SetValueWithoutNotify(GlobalSetting.UseFootNail);
+			this._useFootNail.RegisterValueChangedCallback(this.OnChangeUseFootNail);
+
+
+			this._handSelects = this.rootVisualElement.Q<VisualElement>("hand-selects");
+			this._handSelects.SetEnabled(this._setPreFinger.value);
+			this._footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
+			this._footSelects.SetEnabled(this._useFootNail.value);
+
+			this._removeCurrentNail = this.rootVisualElement.Q<Toggle>("remove-current-nail");
+			this._removeCurrentNail.SetValueWithoutNotify(GlobalSetting.RemoveCurrentNail);
+			this._removeCurrentNail.RegisterValueChangedCallback(OnChangeRemoveCurrentNail);
+			
+			this._generateMaterial = this.rootVisualElement.Q<Toggle>("generate-material");
+			this._generateMaterial.SetValueWithoutNotify(GlobalSetting.GenerateMaterial);
+			this._generateMaterial.RegisterValueChangedCallback(OnChangeGenerateMaterial);
+			
+			this._backup = this.rootVisualElement.Q<Toggle>("backup");
+			this._backup.SetValueWithoutNotify(GlobalSetting.Backup);
+			this._backup.RegisterValueChangedCallback(OnChangeBackup);
+			
+			this._forModularAvatar = this.rootVisualElement.Q<Toggle>("for-modular-avatar");
+			this._forModularAvatar.SetValueWithoutNotify(GlobalSetting.UseModularAvatar);
+			this._forModularAvatar.RegisterValueChangedCallback(OnChangeForModularAvatar);
+
+			this._execute = this.rootVisualElement.Q<LocalizedButton>("execute");
+			this._remove = this.rootVisualElement.Q<LocalizedButton>("remove");
+
+			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
+			this._manualLink.RegisterCallback<ClickEvent>(_ => {
+				Application.OpenURL("https://anlabo.world/manual/");
+			});
+			this._contactLink = this.rootVisualElement.Q<LocalizedLabel>("link-contact");
+			this._contactLink.RegisterCallback<ClickEvent>(_ => {
+				Application.OpenURL("https://anlabo.world/manual/#%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6");
+			});
+
+			this._execute.clicked += this.OnExecute;
+			this._remove.clicked += this.OnRemove;
+
+			if (this._nailDesignSelect.FirstDesignName != null) {
+				this.OnSelectNail(this._nailDesignSelect.FirstDesignName);
+			} else {
+				this.UpdatePreview();
+			}
+		}
+
+		private void OnChangeAvatar(ChangeEvent<Object> evt) {
+			if (evt.newValue == null) return;
+			if (evt.newValue is not VRCAvatarDescriptor avatar) return;
+			AvatarMatching avatarMatching = new(avatar);
+			(Shop shop, Avatar avatar, AvatarVariation variation)? variation = avatarMatching.Match();
+			if (variation == null) return;
+			this._avatarDropDowns!.SetValues(variation.Value.shop, variation.Value.avatar, variation.Value.variation);
+		}
+
+		private void OnDestroy() {
+			INailProcessor.ClearPreviewMaterialCash();
+		}
+
+		private void OnExecute() {
+			VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
+			if (avatar == null) {
+				Debug.LogError("Not found target Avatar.");
+				EditorUtility.DisplayDialog(S("dialog.error"), S("dialog.error.select_target_avatar"), "OK");
+				return;
+			}
+
+			GameObject? prefab = this._avatarDropDowns!.GetSelectedPrefab();
+			if (prefab == null) {
+				Debug.LogError("Not found target Nail Prefabs.");
+				return;
+			}
+
+			string? nailShapeName = this._nailShapeDropDown!.value;
+			if (nailShapeName == null) {
+				Debug.LogError("not selected nail shape.");
+				return;
+			}
+
+			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
+			NailSetupProcessor processor = new(avatar, prefab, designAndVariationNames, nailShapeName) {
+				AvatarName = this._avatarDropDowns.GetAvatarName(),
+				OverrideMesh = this._nailShapeDropDown!.GetSelectedShapeMeshes(),
+				UseFootNail = this._useFootNail!.value,
+				RemoveCurrentNail = this._removeCurrentNail!.value,
+				GenerateMaterial = this._generateMaterial!.value,
+				Backup = this._backup!.value,
+				ForModularAvatar = this._forModularAvatar!.value
+			};
+			processor.Process();
+
+			Dictionary<string, DateTime> lastUsedTimes = GlobalSetting.DesignLastUsedTimes;
+			
+			foreach ((INailProcessor nailProcessor, string _, string _) in designAndVariationNames) {
+				if (string.IsNullOrEmpty(nailProcessor.DesignName)) continue;
+				lastUsedTimes[nailProcessor.DesignName] = DateTime.Now;
+			}
+
+			EditorUtility.DisplayDialog(S("dialog.finished"), S("dialog.finished.success_attach_nail"), "OK");
+
+			GlobalSetting.DesignLastUsedTimes = lastUsedTimes;
+			this._nailDesignSelect!.Init();
+		}
+
+		private void OnRemove() {
+			VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
+			if (avatar == null) {
+				Debug.LogError("Not found target Avatar.");
+				EditorUtility.DisplayDialog(S("dialog.error"), S("dialog.error.select_target_avatar"), "OK");
+				return;
+			}
+
+			NailSetupProcessor.RemoveNail(avatar);
+		}
+
+		private void OnSelectNail(string designName) {
+			using DBNailDesign dbNailDesign = new();
+			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(designName);
+			if (design?.DesignName == null) return;
+			INailProcessor nailProcessor = INailProcessor.CreateNailDesign(design.DesignName);
+			List<string> materialPopupElements = design.MaterialVariation switch {
+				null => new List<string> {""},
+				_ => design.MaterialVariation
+					.Where(pair => nailProcessor.IsInstalledMaterialVariation(pair.Value.MaterialName))
+					.Select(pair => pair.Value.MaterialName)
+					.ToList()
+			};
+			string materialValue = materialPopupElements.Count <= 0 ? "" : materialPopupElements[0];
+
+			List<string> colorPopupElements = design.ColorVariation
+				.Where(pair => nailProcessor.IsInstalledColorVariation(materialValue, pair.Value.ColorName))
+				.Select(pair => pair.Value.ColorName).ToList();
+			string colorValue = colorPopupElements.Count <= 0 ? "" : colorPopupElements[0];
+			foreach (NailDesignDropDowns nailDesignDropDowns in this._nailDesignDropDowns!) {
+				nailDesignDropDowns.SetValue(designName, materialValue, materialPopupElements, colorValue, colorPopupElements);
+			}
+
+			this._nailMaterialDropDown!.choices = materialPopupElements;
+			this._nailMaterialDropDown!.SetValueWithoutNotify(materialValue);
+
+			this._nailColorDropDown!.choices = colorPopupElements;
+			this._nailColorDropDown!.SetValueWithoutNotify(colorValue);
+			this.UpdatePreview();
+		}
+
+		private void OnChangeMaterial(ChangeEvent<Object?> evt) {
+			this.UpdatePreview();
+		}
+
+		private void OnChangeShapeDropDown(ChangeEvent<string?> evt) {
+			GlobalSetting.LastUseShapeName = evt.newValue;
+			this.UpdatePreview();
+		}
+
+		private void OnChangeNailMaterialDropDown(ChangeEvent<string?> evt) {
+			string? materialValue = evt.newValue;
+			if (materialValue == null) return;
+			foreach (NailDesignDropDowns nailDesignDropDowns in this._nailDesignDropDowns!) {
+				nailDesignDropDowns.SetMaterialValue(materialValue);
+			}
+			
+			this.UpdatePreview();
+		}
+
+		private void OnChangeNailColorDropDown(ChangeEvent<string?> evt) {
+			string? colorValue = evt.newValue;
+			if (colorValue == null) return;
+			foreach (NailDesignDropDowns nailDesignDropDowns in this._nailDesignDropDowns!) {
+				nailDesignDropDowns.SetColorValue(colorValue);
+			}
+
+			this.UpdatePreview();
+		}
+
+		private void OnChangeNailDesign(ChangeEvent<string?> evt) {
+			this.UpdatePreview();
+		}
+
+		private void OnChangeSetPreFinger(ChangeEvent<bool> evt) {
+			this._handSelects!.SetEnabled(evt.newValue);
+		}
+
+		private void OnChangeUseFootNail(ChangeEvent<bool> evt) {
+			this._footSelects!.SetEnabled(evt.newValue);
+			GlobalSetting.UseFootNail = evt.newValue;
+		}
+
+		private void UpdatePreview() {
+			string? nailShapeName = this._nailShapeDropDown!.value;
+			if (nailShapeName == null) {
+				Debug.LogError("not selected nail shape.");
+				return;
+			}
+
+			Mesh?[]? overrideMeshes = this._nailShapeDropDown!.GetSelectedShapeMeshes();
+			if (overrideMeshes == null) {
+				Debug.LogError("overrideMeshes is null.");
+				return;
+			}
+
+			this._nailPreviewController!.ChangeNailShape(overrideMeshes);
+
+			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
+
+
+			this._nailPreviewController.ChangeNailMaterial(designAndVariationNames, nailShapeName);
+			this._nailPreviewController.ChangeAdditionalObjects(designAndVariationNames, nailShapeName);
+		}
+
+		private (INailProcessor, string, string)[] GetNailProcessors() {
+			if (this._materialObjectField!.value != null && this._materialObjectField.value is Material directMaterial) {
+				INailProcessor directNailProcessor = new DirectMaterialProcessor(directMaterial);
+				return this._nailDesignDropDowns!
+					.Select(_ => (directNailProcessor, string.Empty, string.Empty))
+					.ToArray();
+			}
+			
+			(string designName, string materialName, string colorName)[] designNameAndVariationNames = this._nailDesignDropDowns!
+				.Select(dropDowns => dropDowns.GetSelectedDesignAndVariationName())
+				.ToArray();
+
+			Dictionary<string, INailProcessor> designDictionary = new();
+
+			return designNameAndVariationNames
+				.Select(tuple => {
+					if (designDictionary.TryGetValue(tuple.designName, out INailProcessor nailDesign)) {
+						return (nailDesign, tuple.materialName, tuple.colorName);
+					}
+
+					INailProcessor newProcessor = INailProcessor.CreateNailDesign(tuple.designName);
+					designDictionary.Add(tuple.designName, newProcessor);
+					return (newProcessor, tuple.materialName, tuple.colorName);
+				})
+				.ToArray();
+		}
+		
+		
+		
+		private static void OnChangeRemoveCurrentNail(ChangeEvent<bool> evt) {
+			GlobalSetting.RemoveCurrentNail = evt.newValue;
+		}
+		
+		
+		private static void OnChangeGenerateMaterial(ChangeEvent<bool> evt) {
+			GlobalSetting.GenerateMaterial = evt.newValue;
+		}
+		
+		
+		private static void OnChangeBackup(ChangeEvent<bool> evt) {
+			GlobalSetting.Backup = evt.newValue;
+		}
+		
+		
+		private static void OnChangeForModularAvatar(ChangeEvent<bool> evt) {
+			GlobalSetting.UseModularAvatar = evt.newValue;
+		}
+	}
+}
