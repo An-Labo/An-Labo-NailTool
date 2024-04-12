@@ -1,0 +1,143 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="Root" style="padding-top: 20px; padding-left: 10px; padding-right: 10px; padding-bottom: 20px; flex-grow: 1;">
+        <ui:VisualElement name="Header" style="flex-direction: row; flex-shrink: 0;">
+            <ui:VisualElement style="width: 200px;">
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-grow: 0; flex-direction: column; flex-shrink: 0; padding-top: 5px; padding-bottom: 5px; margin-right: 10px; margin-left: 10px;">
+                <ui:VisualElement style="flex-direction: row; margin-bottom: 15px;">
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row;">
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle style="margin-right: 13px;" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.favorite_only" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: row; flex-wrap: wrap; flex-grow: 1;">
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+                <world.anlabo.mdnailtool.Editor.VisualElements.ColorButton />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Body" style="margin-top: 20px; margin-bottom: 20px; flex-direction: row; flex-wrap: wrap; flex-grow: 1; align-items: flex-start; justify-content: space-between;">
+            <ui:VisualElement style="flex-direction: column; margin-bottom: 20px;">
+                <ui:VisualElement style="width: 256px; height: 256px; background-color: rgb(255, 0, 255);" />
+                <ui:VisualElement style="flex-direction: row; margin-top: 10px; justify-content: space-between;">
+                    <ui:VisualElement>
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="assets.nail_name" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.to_booth_page" />
+                    </ui:VisualElement>
+                    <ui:VisualElement>
+                        <ui:VisualElement style="width: 16px; height: 16px; background-color: rgb(255, 0, 255);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: column;">
+                <ui:VisualElement style="width: 256px; height: 256px; background-color: rgb(255, 0, 255);" />
+                <ui:VisualElement style="flex-direction: row; margin-top: 10px; justify-content: space-between;">
+                    <ui:VisualElement>
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="assets.nail_name" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.to_booth_page" />
+                    </ui:VisualElement>
+                    <ui:VisualElement>
+                        <ui:VisualElement style="width: 16px; height: 16px; background-color: rgb(255, 0, 255);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: column;">
+                <ui:VisualElement style="width: 256px; height: 255px; background-color: rgb(255, 0, 255);" />
+                <ui:VisualElement style="flex-direction: row; margin-top: 10px; justify-content: space-between;">
+                    <ui:VisualElement>
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="assets.nail_name" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.to_booth_page" />
+                    </ui:VisualElement>
+                    <ui:VisualElement>
+                        <ui:VisualElement style="width: 16px; height: 16px; background-color: rgb(255, 0, 255);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: column; margin-bottom: 20px;">
+                <ui:VisualElement style="width: 256px; height: 256px; background-color: rgb(255, 0, 255);" />
+                <ui:VisualElement style="flex-direction: row; margin-top: 10px; justify-content: space-between;">
+                    <ui:VisualElement>
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="assets.nail_name" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.to_booth_page" />
+                    </ui:VisualElement>
+                    <ui:VisualElement>
+                        <ui:VisualElement style="width: 16px; height: 16px; background-color: rgb(255, 0, 255);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: column;">
+                <ui:VisualElement style="width: 256px; height: 256px; background-color: rgb(255, 0, 255);" />
+                <ui:VisualElement style="flex-direction: row; margin-top: 10px; justify-content: space-between;">
+                    <ui:VisualElement>
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="assets.nail_name" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.to_booth_page" />
+                    </ui:VisualElement>
+                    <ui:VisualElement>
+                        <ui:VisualElement style="width: 16px; height: 16px; background-color: rgb(255, 0, 255);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: column;">
+                <ui:VisualElement style="width: 256px; height: 256px; background-color: rgb(255, 0, 255);" />
+                <ui:VisualElement style="flex-direction: row; margin-top: 10px; justify-content: space-between;">
+                    <ui:VisualElement>
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="assets.nail_name" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.to_booth_page" />
+                    </ui:VisualElement>
+                    <ui:VisualElement>
+                        <ui:VisualElement style="width: 16px; height: 16px; background-color: rgb(255, 0, 255);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Footer" style="flex-direction: row; justify-content: center;">
+            <ui:VisualElement style="background-color: rgb(255, 0, 255); width: 20px; height: 20px;" />
+            <ui:VisualElement style="width: 180px;" />
+            <ui:VisualElement style="background-color: rgb(255, 0, 255); width: 20px; height: 20px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

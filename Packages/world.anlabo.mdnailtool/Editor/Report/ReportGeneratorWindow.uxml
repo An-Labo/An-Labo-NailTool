@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Packages/world.anlabo.mdnailtool/Editor/Report/ReportGeneratorWindow.uss?fileID=7433441132597879392&amp;guid=918398b55e997e249909848d46c7e867&amp;type=3#ReportGeneratorWindow" />
+    <ui:VisualElement name="Header" style="flex-grow: 0; flex-shrink: 0; margin-bottom: 5px;">
+        <ui:Label tabindex="-1" text="Report" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+    </ui:VisualElement>
+    <ui:VisualElement name="Body" style="flex-grow: 1;">
+        <ui:ScrollView style="flex-grow: 1;">
+            <ui:TextField picking-mode="Ignore" multiline="true" name="ReportText" readonly="true" style="flex-grow: 1;" />
+        </ui:ScrollView>
+    </ui:VisualElement>
+    <ui:VisualElement name="Footer" style="flex-grow: 0; flex-shrink: 0; margin-top: 5px;">
+        <ui:Button text="Save" parse-escape-sequences="true" display-tooltip-when-elided="true" name="SaveButton" />
+    </ui:VisualElement>
+</ui:UXML>
