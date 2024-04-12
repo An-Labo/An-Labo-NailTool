@@ -257,7 +257,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				Transform? targetBone = targetBoneDictionary[boneName];
 				if (targetBone == null) continue;
 				Transform?[] nailObjects = targetBone.transform
-					.FindRecursiveWithRegex($@"\[.+\]{Regex.Escape(objectName)}")
+					.FindRecursiveWithRegex($@"(\[.+\])?{Regex.Escape(objectName)}")
 					.ToArray();
 				foreach (Transform? nailObject in nailObjects) {
 					if (nailObject == null) continue;
