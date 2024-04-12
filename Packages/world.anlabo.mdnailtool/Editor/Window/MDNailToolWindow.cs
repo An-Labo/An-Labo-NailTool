@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.Components;
 using world.anlabo.mdnailtool.Editor.Entity;
+using world.anlabo.mdnailtool.Editor.Language;
 using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 using world.anlabo.mdnailtool.Editor.VisualElements;
@@ -136,11 +137,11 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
 			this._manualLink.RegisterCallback<ClickEvent>(_ => {
-				Application.OpenURL("https://anlabo.world/manual/");
+				Application.OpenURL(S("link.manual"));
 			});
 			this._contactLink = this.rootVisualElement.Q<LocalizedLabel>("link-contact");
 			this._contactLink.RegisterCallback<ClickEvent>(_ => {
-				Application.OpenURL("https://anlabo.world/manual/#%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6");
+				Application.OpenURL(S("link.contact"));
 			});
 
 			this._execute.clicked += this.OnExecute;
@@ -256,7 +257,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this.UpdatePreview();
 		}
 
-		private void OnChangeShapeDropDown(ChangeEvent<string?> evt) {
+		private void OnChangeShapeDropDown(ChangeEvent<string> evt) {
 			GlobalSetting.LastUseShapeName = evt.newValue;
 			this.UpdatePreview();
 		}
