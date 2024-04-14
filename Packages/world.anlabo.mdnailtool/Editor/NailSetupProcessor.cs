@@ -116,6 +116,40 @@ namespace world.anlabo.mdnailtool.Editor {
 
 				if (this.UseFootNail) {
 					// 左足の装着処理
+					
+					// 左足のボーンの子に
+					{
+						string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[(int)MDNailToolDefines.TargetFingerAndToe.LeftToes];
+						Transform? target = targetBoneDictionary[boneName];
+						if (target == null) {
+							Debug.LogError($"Not found target bone : {boneName}");
+						}
+
+						foreach (Transform? nailObject in leftFootNailObjects) {
+							if (nailObject == null) continue;
+							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
+							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
+							boneProxy.target = target;
+						}
+					}
+
+
+					// 右足のボーンの子に
+					{
+						string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[(int)MDNailToolDefines.TargetFingerAndToe.RightToes];
+						Transform? target = targetBoneDictionary[boneName];
+						if (target == null) {
+							Debug.LogError($"Not found target bone : {boneName}");
+						}
+
+						foreach (Transform? nailObject in rightFootNailObjects) {
+							if (nailObject == null) continue;
+							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
+							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
+							boneProxy.target = target;
+						}
+					}
+					/* BoneProxyが Toeがマッピングされてないアバターに対してToeを配置してくれないため(Footのフォールバックも無い)一旦保留
 					foreach (Transform? nailObject in leftFootNailObjects) {
 						if (nailObject == null) continue;
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
@@ -130,6 +164,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 						boneProxy.boneReference = MDNailToolDefines.RIGHT_TOE_HUMAN_BODY_BONE;
 					}
+					*/
 				} else {
 					// 足ネイルを装着しない場合削除
 					foreach (Transform? nailObject in leftFootNailObjects) {
