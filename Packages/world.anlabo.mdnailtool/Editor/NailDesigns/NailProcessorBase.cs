@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
 using world.anlabo.mdnailtool.Editor.JsonData;
+using Object = UnityEngine.Object;
 
 #nullable enable
 
@@ -46,7 +48,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 					Directory.CreateDirectory(MDNailToolDefines.GENERATED_ASSET_PATH);
 				}
 
-				AssetDatabase.CreateAsset(clonedMaterial, $"{MDNailToolDefines.GENERATED_ASSET_PATH}generated_{materialKey}.mat");
+				AssetDatabase.CreateAsset(clonedMaterial, $"{MDNailToolDefines.GENERATED_ASSET_PATH}generated_{DateTime.Now : yyyy-MM-dd-HH-mm-ss}_{materialKey}.mat");
 				AssetDatabase.Refresh();
 				INailProcessor.RegisterCreatedMaterialCash(materialKey, clonedMaterial);
 			}
