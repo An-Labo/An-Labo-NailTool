@@ -352,7 +352,9 @@ namespace world.anlabo.mdnailtool.Editor {
 						MDNailToolDefines.RIGHT_TOES => MDNailToolDefines.RIGHT_FOOT,
 						_ => throw new ArgumentOutOfRangeException(nameof(name), name, null)
 					};
-					return (name, avatar.transform.FindRecursive(boneNameDictionary.GetValueOrDefault(name, footBoneName)));
+					string? targetBoneName = boneNameDictionary.GetValueOrDefault(name);
+					targetBoneName ??= boneNameDictionary.GetValueOrDefault(footBoneName, "");
+					return (name, avatar.transform.FindRecursive(targetBoneName));
 
 				})
 				.ToDictionary(tuple => tuple.name, tuple => tuple.Item2);
