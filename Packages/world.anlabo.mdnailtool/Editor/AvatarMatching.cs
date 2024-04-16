@@ -21,10 +21,10 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 		public (Shop, Avatar, AvatarVariation)? Match() {
+			using DBShop dbShop = new();
+			
 			if (PrefabUtility.IsAnyPrefabInstanceRoot(this._avatarObject)) {
 				// プレハブの場合
-				// TODO: 現状プレハブベースのマッチングは行わない(データがないため)
-				/*
 				Queue<GameObject> prefabQueue = new();
 				prefabQueue.Enqueue(this._avatarObject);
 
@@ -40,15 +40,14 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 				}
 
-				using DBShop dbShop = new();
-				dbShop.collection.SelectMany(shop => shop.Avatars!.Values).SelectMany(avatar => avatar.AvatarVariations);
+				dbShop.collection.SelectMany(shop => shop.Avatars.Values)
+					.SelectMany(avatar => avatar.AvatarVariations);
 				HashSet<string> prefabNames;
 
 				while (prefabQueue.Count > 0) {
 					GameObject current = prefabQueue.Dequeue();
 
 				}
-				*/
 			}
 
 			// FBXベースマッチング
@@ -57,17 +56,23 @@ namespace world.anlabo.mdnailtool.Editor {
 			SkinnedMeshRenderer faceSkinnedMeshRenderer = this._avatar.VisemeSkinnedMesh;
 			Mesh faceMesh = faceSkinnedMeshRenderer.sharedMesh;
 			string fbxPath = AssetDatabase.GetAssetPath(faceMesh);
+			string fbxGuid = AssetDatabase.GUIDFromAssetPath(fbxPath).ToString();
 			string fbxName = Path.GetFileName(fbxPath);
 
-			using DBShop dbShop = new();
-
-			IEnumerable<(string? FbxName, ShopAndAvatarAndVariation variation)> fbxNames = dbShop.collection
+			IEnumerable<(string? FbxName, string? FbxGuid, ShopAndAvatarAndVariation variation)> fbxNames = dbShop.collection
 				.SelectMany(shop => shop.Avatars.Select(pair => new ShopAndAvatar { Shop = shop, Avatar = pair.Value }))
 				.SelectMany(avatar => avatar.Avatar.AvatarVariations.Select(pair => new ShopAndAvatarAndVariation { Shop = avatar.Shop, Avatar = avatar.Avatar, Variation = pair.Value }))
-				.SelectMany(variation => variation.Variation.AvatarFbxs!.Select(fbx => (fbx.FbxName, variation)));
+				.SelectMany(variation => variation.Variation.AvatarFbxs!.Select(fbx => (fbx.FbxName, fbx.FbxGUID, variation)))
+				.ToArray();
 			
-			foreach ((string? targetName, ShopAndAvatarAndVariation variation) in fbxNames) {
-				if (targetName == null) continue;
+			foreach ((string? _, string? targetGuid, ShopAndAvatarAndVariation variation) in fbxNames) {
+				if (string.IsNullOrEmpty(targetGuid)) continue;
+				if (fbxGuid != targetGuid) continue;
+				return (variation.Shop, variation.Avatar, variation.Variation);
+			}
+			
+			foreach ((string? targetName, string? _, ShopAndAvatarAndVariation variation) in fbxNames) {
+				if (string.IsNullOrEmpty(targetName)) continue;
 				if (!fbxName.Contains(targetName)) continue;
 				return (variation.Shop, variation.Avatar, variation.Variation);
 			}
