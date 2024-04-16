@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace world.anlabo.mdnailtool.Editor {
@@ -172,7 +175,17 @@ namespace world.anlabo.mdnailtool.Editor {
 			FOOT_R_RING,
 			FOOT_R_LITTLE
 		});
-		
+
+
+		private const string PACKAGE_JSON_GUID = "ebc756db0be878d4a9e25917bfb98ab4";
+		public static string Version {
+			get {
+				string packagePath = AssetDatabase.GUIDToAssetPath(PACKAGE_JSON_GUID);
+				JObject package = JObject.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>(packagePath).text);
+				return package.GetValue("version")!.Value<string>();
+			}
+		}
+
 
 
 	}

@@ -144,6 +144,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 				Application.OpenURL(S("link.contact"));
 			});
 
+			this.rootVisualElement.Q<Label>("version").text = MDNailToolDefines.Version;
+
 			this._execute.clicked += this.OnExecute;
 			this._remove.clicked += this.OnRemove;
 

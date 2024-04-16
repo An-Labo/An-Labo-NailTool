@@ -11,16 +11,18 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		public string VariationName { get; set; } = null!;
 
 		[JsonRequired]
-		[JsonProperty("prefabGUID")]
-		public string PrefabGUID { get; set; } = null!;
+		[JsonProperty("nailPrefabGUID")]
+		public string NailPrefabGUID { get; set; } = null!;
 
 		[JsonProperty("displayNames")]
 		public IReadOnlyDictionary<string, string>? DisplayNames { get; set; }
 
+		[JsonRequired]
 		[JsonProperty("avatarPrefabs")]
-		public AvatarPrefab[]? AvatarPrefabs { get; set; }
+		public AvatarPrefab[] AvatarPrefabs { get; set; } = null!;
 
+		[JsonRequired]
 		[JsonProperty("avatarFbxs")]
-		public AvatarFbx[]? AvatarFbxs { get; set; }
+		public AvatarFbx[] AvatarFbxs { get; set; } = null!;
 	}
 }

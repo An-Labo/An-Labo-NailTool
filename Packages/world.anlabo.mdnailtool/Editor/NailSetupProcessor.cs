@@ -6,10 +6,13 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
+using world.anlabo.mdnailtool.Editor.Entity;
+using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 using Object = UnityEngine.Object;
 using world.anlabo.mdnailtool.Runtime;
 using world.anlabo.mdnailtool.Runtime.Extensions;
+using Avatar = UnityEngine.Avatar;
 
 #if MD_NAIL_FOR_MA
 using nadena.dev.modular_avatar.core;
@@ -21,7 +24,7 @@ namespace world.anlabo.mdnailtool.Editor {
 	public class NailSetupProcessor {
 		
 		private VRCAvatarDescriptor Avatar { get; }
-		private GameObject NailPrefab { get; }
+		private GameObject NailPrefab { get; set; }
 		private (INailProcessor, string, string)[] NailDesignAndVariationNames { get; }
 		private string NailShapeName { get; }
 
@@ -52,6 +55,30 @@ namespace world.anlabo.mdnailtool.Editor {
 			
 			Undo.IncrementCurrentGroup();
 			// ネイルプレハブのインスタンス化
+			{
+				// ネイルプレハブの置き換え処理
+				Regex nailPrefabNamePattern = new(@"(?<prefix>\[.+\])(?<prefabName>.+)");
+				Match match = nailPrefabNamePattern.Match(this.NailPrefab.name);
+				if (match.Success) {
+					string prefabName = match.Groups["prefabName"].Value;
+					string prefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
+					string prefabDirPath = Path.GetDirectoryName(prefabPath) ?? "";
+					GameObject current = this.NailPrefab;
+					using DBNailShape dbNailShape = new();
+					foreach (NailShape nailShape in dbNailShape.collection) {
+						string newPrefabPath = $"{prefabDirPath}/[{nailShape.ShapeName}]{prefabName}.prefab";
+						if (File.Exists(newPrefabPath)) {
+							GameObject newPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(newPrefabPath);
+							if (newPrefab != null) {
+								current = newPrefab;
+							}
+						}
+						if (nailShape.ShapeName == this.NailShapeName) break;
+					}
+
+					this.NailPrefab = current;
+				}
+			}
 			GameObject nailPrefabObject = Object.Instantiate(this.NailPrefab, this.Avatar.transform);
 			nailPrefabObject.name = $"[An-Labo NailTool]{this.AvatarName}";
 			Undo.RegisterCreatedObjectUndo(nailPrefabObject, "Nail Setup");
