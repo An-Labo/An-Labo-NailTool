@@ -25,8 +25,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			
 			if (PrefabUtility.IsAnyPrefabInstanceRoot(this._avatarObject)) {
 				// プレハブの場合
-				Queue<GameObject> prefabQueue = new();
-				prefabQueue.Enqueue(this._avatarObject);
+				List<GameObject> avatarPrefabs = new() { this._avatarObject };
 
 				{
 					// プレハブツリーを取得
@@ -35,19 +34,37 @@ namespace world.anlabo.mdnailtool.Editor {
 						GameObject parent = PrefabUtility.GetCorrespondingObjectFromSource(current);
 						if (parent == null) break;
 						if (parent == current) break;
-						prefabQueue.Enqueue(parent);
+						avatarPrefabs.Add(parent);
 						current = parent;
 					}
 				}
 
-				dbShop.collection.SelectMany(shop => shop.Avatars.Values)
-					.SelectMany(avatar => avatar.AvatarVariations);
-				HashSet<string> prefabNames;
+				avatarPrefabs.Reverse();
 
-				while (prefabQueue.Count > 0) {
-					GameObject current = prefabQueue.Dequeue();
-
+				IEnumerable<(string? prefabName, string? prefabGuid, ShopAndAvatarAndVariation variation)> prefabs = dbShop.collection
+					.SelectMany(shop => shop.Avatars.Select(pair => new ShopAndAvatar { Shop = shop, Avatar = pair.Value }))
+					.SelectMany(avatar => avatar.Avatar.AvatarVariations.Select(pair => new ShopAndAvatarAndVariation { Shop = avatar.Shop, Avatar = avatar.Avatar, Variation = pair.Value }))
+					.SelectMany(variation => variation.Variation.AvatarPrefabs.Select(prefab => (prefab.PrefabName, prefab.PrefabGUID, variation)))
+					.ToArray();
+				
+				foreach ((string? _, string? targetGuid, ShopAndAvatarAndVariation variation) in prefabs) {
+					if (string.IsNullOrEmpty(targetGuid)) continue;
+					if (avatarPrefabs
+					    .Select(avatarPrefab => AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(avatarPrefab)).ToString())
+					    .Any(prefabGuid => prefabGuid == targetGuid)) {
+						return (variation.Shop, variation.Avatar, variation.Variation);
+					}
 				}
+				
+				foreach ((string? targetName, string? _, ShopAndAvatarAndVariation variation) in prefabs) {
+					if (string.IsNullOrEmpty(targetName)) continue;
+					if (avatarPrefabs
+					    .Select(avatarPrefab => avatarPrefab.name)
+					    .Any(prefabName => prefabName.Contains(targetName))) {
+						return (variation.Shop, variation.Avatar, variation.Variation);
+					}
+				}
+				
 			}
 
 			// FBXベースマッチング
@@ -59,19 +76,19 @@ namespace world.anlabo.mdnailtool.Editor {
 			string fbxGuid = AssetDatabase.GUIDFromAssetPath(fbxPath).ToString();
 			string fbxName = Path.GetFileName(fbxPath);
 
-			IEnumerable<(string? FbxName, string? FbxGuid, ShopAndAvatarAndVariation variation)> fbxNames = dbShop.collection
+			IEnumerable<(string? FbxName, string? FbxGuid, ShopAndAvatarAndVariation variation)> fbxs = dbShop.collection
 				.SelectMany(shop => shop.Avatars.Select(pair => new ShopAndAvatar { Shop = shop, Avatar = pair.Value }))
 				.SelectMany(avatar => avatar.Avatar.AvatarVariations.Select(pair => new ShopAndAvatarAndVariation { Shop = avatar.Shop, Avatar = avatar.Avatar, Variation = pair.Value }))
-				.SelectMany(variation => variation.Variation.AvatarFbxs!.Select(fbx => (fbx.FbxName, fbx.FbxGUID, variation)))
+				.SelectMany(variation => variation.Variation.AvatarFbxs.Select(fbx => (fbx.FbxName, fbx.FbxGUID, variation)))
 				.ToArray();
 			
-			foreach ((string? _, string? targetGuid, ShopAndAvatarAndVariation variation) in fbxNames) {
+			foreach ((string? _, string? targetGuid, ShopAndAvatarAndVariation variation) in fbxs) {
 				if (string.IsNullOrEmpty(targetGuid)) continue;
 				if (fbxGuid != targetGuid) continue;
 				return (variation.Shop, variation.Avatar, variation.Variation);
 			}
 			
-			foreach ((string? targetName, string? _, ShopAndAvatarAndVariation variation) in fbxNames) {
+			foreach ((string? targetName, string? _, ShopAndAvatarAndVariation variation) in fbxs) {
 				if (string.IsNullOrEmpty(targetName)) continue;
 				if (!fbxName.Contains(targetName)) continue;
 				return (variation.Shop, variation.Avatar, variation.Variation);

@@ -17,10 +17,12 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("displayNames")]
 		public IReadOnlyDictionary<string, string>? DisplayNames { get; set; }
 
+		[JsonRequired]
 		[JsonProperty("avatarPrefabs")]
-		public AvatarPrefab[]? AvatarPrefabs { get; set; }
+		public AvatarPrefab[] AvatarPrefabs { get; set; } = null!;
 
+		[JsonRequired]
 		[JsonProperty("avatarFbxs")]
-		public AvatarFbx[]? AvatarFbxs { get; set; }
+		public AvatarFbx[] AvatarFbxs { get; set; } = null!;
 	}
 }
