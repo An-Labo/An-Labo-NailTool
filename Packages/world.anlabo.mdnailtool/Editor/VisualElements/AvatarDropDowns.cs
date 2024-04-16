@@ -216,7 +216,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
 			if (variation == null) return null;
 
-			string guid = variation.PrefabGUID;
+			string guid = variation.NailPrefabGUID;
 			if (string.IsNullOrEmpty(guid)) return null;
 
 			string? path = AssetDatabase.GUIDToAssetPath(guid);
