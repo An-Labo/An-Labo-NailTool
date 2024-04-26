@@ -121,8 +121,6 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			builder.Append(MDNailToolDefines.NAIL_DESIGN_PATH);
 			builder.Append(this.DesignName);
 			builder.Append('/');
-			builder.Append(nailShapeName);
-			builder.Append('/');
 			if (!string.IsNullOrEmpty(materialName)) {
 				builder.Append(materialName);
 				builder.Append('/');
@@ -136,7 +134,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				builder.Append('_');
 			}
 			builder.Append(nailShapeName);
-			builder.Append("_Thumb.L.mat");
+			builder.Append(".mat");
 			return builder.ToString();
 		}
 	}
