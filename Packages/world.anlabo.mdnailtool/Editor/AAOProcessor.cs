@@ -8,7 +8,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 		public bool OnPreprocessAvatar(GameObject avatarGameObject) {
 			var components = avatarGameObject.GetComponentsInChildren<MDNailObjectMarker>();
-            foreach (var component in components) {
+ 			foreach (var component in components) {
 				Object.DestroyImmediate(component);
 			}
 			return true;
