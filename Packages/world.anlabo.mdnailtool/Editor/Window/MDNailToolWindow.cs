@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.Components;
 using world.anlabo.mdnailtool.Editor.Entity;
-using world.anlabo.mdnailtool.Editor.Language;
 using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 using world.anlabo.mdnailtool.Editor.VisualElements;
@@ -241,8 +240,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 			List<string> colorPopupElements = design.ColorVariation
 				.Where(pair => nailProcessor.IsInstalledColorVariation(materialValue, pair.Value.ColorName))
-				.Select(pair => pair.Value.ColorName).ToList();
+				.Select(pair => pair.Value.ColorName)
+				.ToList();
 			string colorValue = colorPopupElements.Count <= 0 ? "" : colorPopupElements[0];
+			
 			foreach (NailDesignDropDowns nailDesignDropDowns in this._nailDesignDropDowns!) {
 				nailDesignDropDowns.SetValue(designName, materialValue, materialPopupElements, colorValue, colorPopupElements);
 			}
@@ -252,6 +253,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 			this._nailColorDropDown!.choices = colorPopupElements;
 			this._nailColorDropDown!.SetValueWithoutNotify(colorValue);
+			
+			this.UpdateNailShapeFilter(nailProcessor);
 			this.UpdatePreview();
 		}
 
@@ -285,6 +288,9 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		}
 
 		private void OnChangeNailDesign(ChangeEvent<string?> evt) {
+			if (evt.target is DropdownField { name: "NailDesignDropDowns-DesignDropDown" }) {
+				this.UpdateNailShapeFilter();
+			}
 			this.UpdatePreview();
 		}
 
@@ -295,6 +301,18 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private void OnChangeUseFootNail(ChangeEvent<bool> evt) {
 			this._footSelects!.SetEnabled(evt.newValue);
 			GlobalSetting.UseFootNail = evt.newValue;
+		}
+
+		private void UpdateNailShapeFilter(INailProcessor? processor = null) {
+			if (processor != null) {
+				this._nailShapeDropDown!.SetFilter(processor.IsSupportedNailShape);
+				return;
+			}
+
+			HashSet<string> designNameSet = this._nailDesignDropDowns!.Select(downs => downs.GetSelectedDesignName()).ToHashSet();
+			using DBNailDesign dbNailDesign = new();
+			List<INailProcessor> processors = designNameSet.Select(INailProcessor.CreateNailDesign).ToList();
+			this._nailShapeDropDown!.SetFilter(shapeName => processors.All(nailProcessor => nailProcessor.IsSupportedNailShape(shapeName)));
 		}
 
 		private void UpdatePreview() {

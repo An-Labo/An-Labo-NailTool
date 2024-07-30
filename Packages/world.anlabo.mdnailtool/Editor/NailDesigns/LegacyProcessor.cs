@@ -83,13 +83,25 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			return File.Exists(mainTexturePath);
 		}
 
-		private string GetTextureSubDirectoryPath(string materialName, string nailShapeName) {
+		public override bool IsSupportedNailShape(string nailShapeName) {
+			string nailShapeDirectoryPath = this.GetNailShapeDirectoryPath(nailShapeName);
+			return Directory.Exists(nailShapeDirectoryPath);
+		}
+
+		private string GetNailShapeDirectoryPath(string nailShapeName) {
 			StringBuilder builder = new();
 			builder.Append(AssetDatabase.GUIDToAssetPath(this.DesignData.Legacy?.DesignDirectoryGUID));
 			builder.Append('/');
 			builder.Append("[Data]/[Texture]/[");
 			builder.Append(nailShapeName);
 			builder.Append("]/");
+			return builder.ToString();
+		}
+
+		private string GetTextureSubDirectoryPath(string materialName, string nailShapeName) {
+			string nailShapeDirectoryPath = this.GetNailShapeDirectoryPath(nailShapeName);
+			StringBuilder builder = new();
+			builder.Append(nailShapeDirectoryPath);
 			if (string.IsNullOrEmpty(materialName)) return builder.ToString();
 
 			builder.Append(materialName);

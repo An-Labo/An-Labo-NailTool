@@ -18,6 +18,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			ReportGeneratorWindow.ShowWindow();
 		}
 
+		/*
 		[MenuItem(MENU_ROOT + "Re Install Legacy Design", false, 12)]
 		private static void ReInstallLegacyDesign() {
 			LegacyDesignInstaller.ReInstallLegacyNail();
@@ -32,5 +33,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		private static void ClearGlobalSetting() {
 			GlobalSetting.ClearGlobalSettings();
 		}
+		
+		*/
 	}
 }
