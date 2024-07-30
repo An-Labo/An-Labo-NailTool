@@ -29,10 +29,13 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			NailShape? nailShape = dbNailShape.FindNailShapeByName(shapeName);
 			if (nailShape == null) return null;
 
-			string guid = nailShape.FbxFolderGUID;
-			if (string.IsNullOrEmpty(guid)) return null;
+			string? path = null;
+			foreach (string guid in nailShape.FbxFolderGUID) {
+				if (string.IsNullOrEmpty(guid)) continue;
+				path = AssetDatabase.GUIDToAssetPath(guid);
+				if (!string.IsNullOrEmpty(path)) break;
+			}
 
-			string? path = AssetDatabase.GUIDToAssetPath(guid);
 			if (string.IsNullOrEmpty(path)) return null;
 
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST

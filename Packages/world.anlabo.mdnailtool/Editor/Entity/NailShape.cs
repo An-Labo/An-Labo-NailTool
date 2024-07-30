@@ -10,7 +10,7 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 
 		[JsonRequired]
 		[JsonProperty("fbxFolderGUID")]
-		public string FbxFolderGUID { get; set; } = null!;
+		public string[] FbxFolderGUID { get; set; } = null!;
 
 		[JsonProperty("fbxNamePrefix")]
 		public string? FbxNamePrefix { get; set; }
