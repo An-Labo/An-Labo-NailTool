@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -17,6 +18,16 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		private void Init() {
 			using DBNailShape dbNailShape = new();
 			List<string> shapeNames = dbNailShape.collection.Select(shape => shape.ShapeName).ToList();
+			this.choices = shapeNames;
+			this.value = shapeNames[0];
+		}
+
+		public void SetFilter(Func<string, bool> filter) {
+			using DBNailShape dbNailShape = new();
+			List<string> shapeNames = dbNailShape.collection
+				.Select(shape => shape.ShapeName)
+				.Where(filter)
+				.ToList();
 			this.choices = shapeNames;
 			this.value = shapeNames[0];
 		}
