@@ -182,11 +182,6 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			if (evt.target is not VisualElement element) return;
 			string designName = element.name;
 			if (string.IsNullOrEmpty(designName)) return;
-			this.SelectNail(designName);
-			this.OnSelectNail?.Invoke(designName);
-		}
-		
-		private void SelectNail(string designName) {
 			this.OnSelectNail?.Invoke(designName);
 		}
 
