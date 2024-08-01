@@ -23,6 +23,13 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
+		public void ChangeFootNailMesh() {
+			if (this._nailPreview.NailObj == null) return;
+			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(this._nailPreview.NailObj);
+			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(this._nailPreview.NailObj);
+			NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects);
+		}
+
 		public void ChangeNailMaterial((INailProcessor, string, string)[] designAndVariationNames, string nailShapeName) {
 			if (this._nailPreview.NailObj == null) return;
 			Transform?[] handsNailObjects = GetHandsNailObjectList(this._nailPreview.NailObj);
@@ -51,11 +58,11 @@ namespace world.anlabo.mdnailtool.Editor {
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST.Select(name => nailPrefabObject.transform.Find(name)).ToArray();
 		}
 
-		private static IEnumerable<Transform?> GetLeftFootNailObjectList(GameObject nailPrefabObject) {
+		private static Transform?[] GetLeftFootNailObjectList(GameObject nailPrefabObject) {
 			return MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST.Select(name => nailPrefabObject.transform.Find(name)).ToArray();
 		}
 
-		private static IEnumerable<Transform?> GetRightFootNailObjectList(GameObject nailPrefabObject) {
+		private static Transform?[] GetRightFootNailObjectList(GameObject nailPrefabObject) {
 			return MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST.Select(name => nailPrefabObject.transform.Find(name)).ToArray();
 		}
 	}
