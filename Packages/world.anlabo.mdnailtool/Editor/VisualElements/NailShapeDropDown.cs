@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -44,10 +45,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			foreach (string guid in nailShape.FbxFolderGUID) {
 				if (string.IsNullOrEmpty(guid)) continue;
 				path = AssetDatabase.GUIDToAssetPath(guid);
-				if (!string.IsNullOrEmpty(path)) break;
+				if (string.IsNullOrEmpty(path)) continue;
+				if (Directory.Exists(path)) break;
 			}
 
 			if (string.IsNullOrEmpty(path)) return null;
+			if (!Directory.Exists(path)) return null;
 
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
 				.Select(objectName => $"{path}/{nailShape.FbxNamePrefix}{objectName}.fbx")
