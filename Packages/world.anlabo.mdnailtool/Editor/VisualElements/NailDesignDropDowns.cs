@@ -30,7 +30,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					marginLeft = new Length(0)
 				},
 				formatSelectedValueCallback = getDesignPopupDisplayNameFunc,
-				formatListItemCallback = getDesignPopupDisplayNameFunc
+				formatListItemCallback = getDesignPopupDisplayNameFunc,
+				name = "NailDesignDropDowns-DesignDropDown",
 			};
 			this._designPopup.RegisterValueChangedCallback(this.OnChangeDesignPopup);
 
@@ -90,7 +91,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			}
 
 			this._materialPopup.choices = this._materialPopupElements;
-			this._materialPopup.value = this._materialPopupElements.Count <= 0 ? string.Empty : this._materialPopupElements[0];
+			this._materialPopup.SetValueWithoutNotify(this._materialPopupElements.Count <= 0 ? string.Empty : this._materialPopupElements[0]);
+			// this._materialPopup.value = this._materialPopupElements.Count <= 0 ? string.Empty : this._materialPopupElements[0];
 			string materialName = this._materialPopup.value;
 
 			this._colorPopupElements = design.ColorVariation
@@ -98,7 +100,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				.Select(pair => pair.Value.ColorName)
 				.ToList();
 			this._colorPopup.choices = this._colorPopupElements;
-			this._colorPopup.value = this._colorPopupElements.Count <= 0 ? string.Empty : this._colorPopupElements[0];
+			this._colorPopup.SetValueWithoutNotify(this._colorPopupElements.Count <= 0 ? string.Empty : this._colorPopupElements[0]);
+			// this._colorPopup.value = this._colorPopupElements.Count <= 0 ? string.Empty : this._colorPopupElements[0];
 		}
 
 		private void OnChangeDesignPopup(ChangeEvent<string?> evt) {
@@ -107,7 +110,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			if (design == null) {
 				this._colorPopupElements = null;
 				this._colorPopup.choices = new List<string>();
-				this._colorPopup.value = string.Empty;
+				this._colorPopup.SetValueWithoutNotify(string.Empty);
+				// this._colorPopup.value = string.Empty;
 				return;
 			}
 
@@ -124,7 +128,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			}
 
 			this._materialPopup.choices = this._materialPopupElements;
-			this._materialPopup.value = this._materialPopupElements.Count <= 0 ? string.Empty : this._materialPopupElements[0];
+			this._materialPopup.SetValueWithoutNotify(this._materialPopupElements.Count <= 0 ? string.Empty : this._materialPopupElements[0]);
+			// this._materialPopup.value = this._materialPopupElements.Count <= 0 ? string.Empty : this._materialPopupElements[0];
 			string materialName = this._materialPopup.value;
 
 			this._colorPopupElements = design.ColorVariation
@@ -132,7 +137,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				.Select(pair => pair.Value.ColorName)
 				.ToList();
 			this._colorPopup.choices = this._colorPopupElements;
-			this._colorPopup.value = this._colorPopupElements.Count <= 0 ? string.Empty : this._colorPopupElements[0];
+			this._colorPopup.SetValueWithoutNotify(this._colorPopupElements.Count <= 0 ? string.Empty : this._colorPopupElements[0]);
+			// this._colorPopup.value = this._colorPopupElements.Count <= 0 ? string.Empty : this._colorPopupElements[0];
 		}
 
 		private string GetDesignPopupDisplayName(string? id) {
@@ -146,6 +152,10 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			string materialName = this._materialPopup.value;
 			string colorName = this._colorPopup.value;
 			return (designName, materialName, colorName);
+		}
+
+		public string GetSelectedDesignName() {
+			return this._designPopup.value;
 		}
 
 		public void SetValue(string designName, string materialName, List<string>? materialPopupElements, string colorName, List<string>? colorPopupElements) {

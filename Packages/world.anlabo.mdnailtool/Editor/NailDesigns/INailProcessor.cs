@@ -23,6 +23,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		bool IsInstalledMaterialVariation(string materialName);
 		bool IsInstalledColorVariation(string materialName, string colorName);
+		bool IsSupportedNailShape(string shapeName);
 		
 		
 		protected static DesignData GetDesignData(string designName) {
@@ -34,7 +35,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			return DesignData.ToObject(textAsset.text);
 		}
 
-		public static NailProcessorBase CreateNailDesign(string designName) {
+		public static INailProcessor CreateNailDesign(string designName) {
 			DesignData designData = GetDesignData(designName);
 			switch (designData.Type) {
 				case DesignData.JsonType.Legacy:

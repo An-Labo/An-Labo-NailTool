@@ -84,5 +84,6 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		protected abstract void ProcessMaterial(Material targetMaterial, string materialName, string colorName, string nailShapeName);
 		public abstract bool IsInstalledMaterialVariation(string materialName);
 		public abstract bool IsInstalledColorVariation(string materialName, string colorName);
+		public abstract bool IsSupportedNailShape(string shapeName);
 	}
 }
