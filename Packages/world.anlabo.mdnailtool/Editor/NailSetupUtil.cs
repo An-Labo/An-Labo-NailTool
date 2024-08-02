@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 
@@ -16,11 +18,50 @@ namespace world.anlabo.mdnailtool.Editor {
 			if (handsNailObjects.Length != 10) {
 				throw new ArgumentException($"Incorrect length of {nameof(handsNailObjects)} parameter : {overrideMesh.Length}");
 			}
+			
+			ReplaceMesh(handsNailObjects, overrideMesh);
+		}
 
+		public static void ReplaceFootNailMesh(Transform?[] leftFootNailObjects, Transform?[] rightFootNailObjects) {
+			if (leftFootNailObjects.Length != 5) {
+				throw new ArgumentException($"Incorrect length of {nameof(leftFootNailObjects)} parameter : {leftFootNailObjects.Length}");
+			}
+			
+			if (rightFootNailObjects.Length != 5) {
+				throw new ArgumentException($"Incorrect length of {nameof(rightFootNailObjects)} parameter : {rightFootNailObjects.Length}");
+			}
+
+			string? path = null;
+			foreach (string guid in MDNailToolDefines.FOOT_NAIL_CHIP_FOLDER_GUIDS) {
+				if (string.IsNullOrEmpty(guid)) continue;
+				path = AssetDatabase.GUIDToAssetPath(guid);
+				if (string.IsNullOrEmpty(path)) continue;
+				if (Directory.Exists(path)) break;
+			}
+
+			if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) {
+				throw new InvalidOperationException($"Not found foot nail objects.");
+			}
+
+			Mesh[] leftFootOverrideMesh = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST
+				.Select(objectName => $"{path}/MD_nail_{objectName}.fbx")
+				.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+				.ToArray();
+
+			Mesh[] rightFootOverrideMesh = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST
+				.Select(objectName => $"{path}/MD_nail_{objectName}.fbx")
+				.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+				.ToArray();
+			
+			ReplaceMesh(leftFootNailObjects, leftFootOverrideMesh);
+			ReplaceMesh(rightFootNailObjects, rightFootOverrideMesh);
+		}
+
+		private static void ReplaceMesh(Transform?[] transforms, Mesh?[] overrideMesh) {
 			for (int index = 0; index < overrideMesh.Length; index++) {
 				Mesh? mesh = overrideMesh[index];
 				if (mesh == null) continue;
-				Transform? targetTransform = handsNailObjects[index];
+				Transform? targetTransform = transforms[index];
 				if (targetTransform == null) continue;
 				SkinnedMeshRenderer? skinnedMeshRenderer = targetTransform.GetComponent<SkinnedMeshRenderer>();
 				if (skinnedMeshRenderer == null) continue;

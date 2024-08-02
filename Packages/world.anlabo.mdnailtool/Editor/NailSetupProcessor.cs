@@ -111,6 +111,14 @@ namespace world.anlabo.mdnailtool.Editor {
 					throw;
 				}
 			}
+			
+			// 足のメッシュの適用
+			try {
+				NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects);
+			} catch (Exception) {
+				Undo.RevertAllInCurrentGroup();
+				throw;
+			}
 
 			// マテリアルの適用
 			try {

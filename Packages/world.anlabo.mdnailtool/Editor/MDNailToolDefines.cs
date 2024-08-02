@@ -29,7 +29,12 @@ namespace world.anlabo.mdnailtool.Editor {
 		public const string PREVIEW_PREFAB_GUID = "371bb8ffdf995444b823f1f4a1111dcb";
 
 		public const string GRAY_SHADER_GUID = "57969ef515a043528c7c5e39cb29d123";
-		
+
+		public static readonly string[] FOOT_NAIL_CHIP_FOLDER_GUIDS = {
+			"37d4110791f04a447af17c82ee9d77a4", 
+			"15de7a83bfbe0504fb98ebbac9afbd92"
+		};
+
 		public const string LEFT_THUMB_DISTAL = "Left Thumb Distal";
 		public const string LEFT_INDEX_DISTAL = "Left Index Distal";
 		public const string LEFT_MIDDLE_DISTAL = "Left Middle Distal";
