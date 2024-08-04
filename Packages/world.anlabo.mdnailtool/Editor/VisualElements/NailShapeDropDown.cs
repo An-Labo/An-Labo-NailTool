@@ -30,7 +30,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				.Where(filter)
 				.ToList();
 			this.choices = shapeNames;
-			this.value = shapeNames[0];
+			this.SetValueWithoutNotify(shapeNames.Contains(GlobalSetting.LastUseShapeName) ? GlobalSetting.LastUseShapeName : shapeNames[0]);
 		}
 
 		public Mesh?[]? GetSelectedShapeMeshes() {
