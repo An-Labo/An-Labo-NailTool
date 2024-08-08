@@ -114,7 +114,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			
 			// 足のメッシュの適用
 			try {
-				NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects);
+				NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, this.NailShapeName);
 			} catch (Exception) {
 				Undo.RevertAllInCurrentGroup();
 				throw;

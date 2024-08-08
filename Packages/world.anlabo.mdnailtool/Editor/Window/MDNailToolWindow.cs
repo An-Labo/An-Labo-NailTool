@@ -339,7 +339,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			}
 
 			this._nailPreviewController!.ChangeNailShape(overrideMeshes);
-			this._nailPreviewController!.ChangeFootNailMesh();
+			this._nailPreviewController!.ChangeFootNailMesh(this._nailShapeDropDown!.value);
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
 
