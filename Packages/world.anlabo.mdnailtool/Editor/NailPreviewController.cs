@@ -23,11 +23,11 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		public void ChangeFootNailMesh() {
+		public void ChangeFootNailMesh(string nailShapeName) {
 			if (this._nailPreview.NailObj == null) return;
 			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(this._nailPreview.NailObj);
 			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(this._nailPreview.NailObj);
-			NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects);
+			NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, nailShapeName);
 		}
 
 		public void ChangeNailMaterial((INailProcessor, string, string)[] designAndVariationNames, string nailShapeName) {
