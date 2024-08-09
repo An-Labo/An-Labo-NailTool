@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using world.anlabo.mdnailtool.Editor.Entity;
+using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 
 namespace world.anlabo.mdnailtool.Editor {
@@ -22,7 +24,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			ReplaceMesh(handsNailObjects, overrideMesh);
 		}
 
-		public static void ReplaceFootNailMesh(Transform?[] leftFootNailObjects, Transform?[] rightFootNailObjects) {
+		public static void ReplaceFootNailMesh(Transform?[] leftFootNailObjects, Transform?[] rightFootNailObjects, string nailShape) {
 			if (leftFootNailObjects.Length != 5) {
 				throw new ArgumentException($"Incorrect length of {nameof(leftFootNailObjects)} parameter : {leftFootNailObjects.Length}");
 			}
@@ -31,8 +33,14 @@ namespace world.anlabo.mdnailtool.Editor {
 				throw new ArgumentException($"Incorrect length of {nameof(rightFootNailObjects)} parameter : {rightFootNailObjects.Length}");
 			}
 
+			using DBNailShape db = new();
+			NailShape? shape = db.FindNailShapeByName(nailShape);
+			if (shape == null) {
+				throw new ArgumentException("Not found nail shape.");
+			}
+
 			string? path = null;
-			foreach (string guid in MDNailToolDefines.FOOT_NAIL_CHIP_FOLDER_GUIDS) {
+			foreach (string guid in shape.FootFbxFolderGUID) {
 				if (string.IsNullOrEmpty(guid)) continue;
 				path = AssetDatabase.GUIDToAssetPath(guid);
 				if (string.IsNullOrEmpty(path)) continue;
@@ -40,18 +48,39 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) {
-				throw new InvalidOperationException($"Not found foot nail objects.");
+				throw new InvalidOperationException("Not found foot nail objects.");
+			}
+			
+
+			Mesh[] leftFootOverrideMesh;
+			Mesh[] rightFootOverrideMesh;
+			if (File.Exists($"{path}/{shape.FootFbxNamePrefix}{MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST[0]}.fbx")) {
+				leftFootOverrideMesh = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST
+					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName}.fbx")
+					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.ToArray();
+
+				rightFootOverrideMesh = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST
+					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName}.fbx")
+					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.ToArray();
+			} else {
+				leftFootOverrideMesh = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST
+					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName.Replace('.', '_')}.fbx")
+					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.ToArray();
+
+				rightFootOverrideMesh = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST
+					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName.Replace('.', '_')}.fbx")
+					.Select(name => { Debug.Log(name);
+						return name;
+					})
+					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.ToArray();
+				
 			}
 
-			Mesh[] leftFootOverrideMesh = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST
-				.Select(objectName => $"{path}/MD_nail_{objectName}.fbx")
-				.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
-				.ToArray();
 
-			Mesh[] rightFootOverrideMesh = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST
-				.Select(objectName => $"{path}/MD_nail_{objectName}.fbx")
-				.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
-				.ToArray();
 			
 			ReplaceMesh(leftFootNailObjects, leftFootOverrideMesh);
 			ReplaceMesh(rightFootNailObjects, rightFootOverrideMesh);

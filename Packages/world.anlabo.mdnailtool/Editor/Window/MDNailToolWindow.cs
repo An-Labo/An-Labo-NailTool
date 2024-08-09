@@ -259,6 +259,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		}
 
 		private void OnChangeMaterial(ChangeEvent<Object?> evt) {
+			this.UpdateNailShapeFilter();
 			this.UpdatePreview();
 		}
 
@@ -304,11 +305,20 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		}
 
 		private void UpdateNailShapeFilter(INailProcessor? processor = null) {
+
+			// マテリアルが直接指定されている場合、フィルターをクリア
+			if (this._materialObjectField!.value != null) {
+				this._nailShapeDropDown!.SetFilter(_ => true);
+				return;
+			}
+			
+			// 一括指定でプロセッサが直接渡された場合それでフィルター
 			if (processor != null) {
 				this._nailShapeDropDown!.SetFilter(processor.IsSupportedNailShape);
 				return;
 			}
-
+			
+			// 設定されたネイルのプロセッサを取得してフィルター構築
 			HashSet<string> designNameSet = this._nailDesignDropDowns!.Select(downs => downs.GetSelectedDesignName()).ToHashSet();
 			using DBNailDesign dbNailDesign = new();
 			List<INailProcessor> processors = designNameSet.Select(INailProcessor.CreateNailDesign).ToList();
@@ -329,7 +339,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			}
 
 			this._nailPreviewController!.ChangeNailShape(overrideMeshes);
-			this._nailPreviewController!.ChangeFootNailMesh();
+			this._nailPreviewController!.ChangeFootNailMesh(this._nailShapeDropDown!.value);
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
 

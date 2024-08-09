@@ -30,7 +30,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				.Where(filter)
 				.ToList();
 			this.choices = shapeNames;
-			this.value = shapeNames[0];
+			this.SetValueWithoutNotify(shapeNames.Contains(GlobalSetting.LastUseShapeName) ? GlobalSetting.LastUseShapeName : shapeNames[0]);
 		}
 
 		public Mesh?[]? GetSelectedShapeMeshes() {
@@ -52,8 +52,15 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			if (string.IsNullOrEmpty(path)) return null;
 			if (!Directory.Exists(path)) return null;
 
+			if (File.Exists($"{path}/{nailShape.FbxNamePrefix}{MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST[0]}.fbx")) {
+				return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
+					.Select(objectName => $"{path}/{nailShape.FbxNamePrefix}{objectName}.fbx")
+					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.ToArray();
+			}
+
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
-				.Select(objectName => $"{path}/{nailShape.FbxNamePrefix}{objectName}.fbx")
+				.Select(objectName => $"{path}/{nailShape.FbxNamePrefix}{objectName.Replace('.', '_')}.fbx")
 				.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
 				.ToArray();
 		}

@@ -11,9 +11,18 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonRequired]
 		[JsonProperty("fbxFolderGUID")]
 		public string[] FbxFolderGUID { get; set; } = null!;
-
+		
+		[JsonRequired]
 		[JsonProperty("fbxNamePrefix")]
-		public string? FbxNamePrefix { get; set; }
+		public string FbxNamePrefix { get; set; } = null!;
+
+		[JsonRequired]
+		[JsonProperty("footFbxFolderGUID")]
+		public string[] FootFbxFolderGUID { get; set; } = null!;
+
+		[JsonRequired]
+		[JsonProperty("footFbxNamePrefix")]
+		public string FootFbxNamePrefix { get; set; } = null!;
 
 		[JsonRequired]
 		[JsonProperty("normalMapGUID")]
