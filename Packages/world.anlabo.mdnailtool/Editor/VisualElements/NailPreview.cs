@@ -25,7 +25,13 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		public GameObject? NailObj => this._view?.NailObj;
 
 		public NailPreview() {
-			this.Add(new IMGUIContainer(this.OnGUI));
+			this.Add(new IMGUIContainer(this.OnGUI) {
+				style = {
+					height = new Length(200, LengthUnit.Pixel)
+				},
+				cullingEnabled = true,
+				pickingMode = PickingMode.Ignore
+			});
 		}
 
 		private void OnGUI() {
