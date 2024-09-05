@@ -53,7 +53,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				}
 			};
 			labelGroup.Add(label);
-			// labelGroup.Add(searchButton);
+			labelGroup.Add(searchButton);
 			Func<string?, string> getShopPopupDisplayNameFunc = this.GetShopPopupDisplayName;
 			this._shopPopup = new DropdownField {
 				style = {
@@ -298,7 +298,6 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			oldValue = this._variantPopup.value;
 			this._variantPopup.SetValueWithoutNotify("");
 			this._variantPopup.SetValueWithoutNotify(oldValue);
-
 		}
 
 		internal new class UxmlFactory : UxmlFactory<AvatarDropDowns, UxmlTraits> { }
