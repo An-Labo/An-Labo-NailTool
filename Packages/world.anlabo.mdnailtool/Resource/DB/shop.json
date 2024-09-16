@@ -6301,20 +6301,41 @@
       "en": "kujishift"
     },
     "avatars": {
-      "Grus(A)": {
-        "avatarName": "Grus(A)",
+      "Grus": {
+        "avatarName": "Grus",
         "avatarUrl": "https://kujishift.booth.pm/items/3190100",
         "displayNames": {
-          "ja": "Grus(A)",
-          "en": "Grus(A)"
+          "ja": "Grus",
+          "en": "Grus"
         },
         "avatarVariations": {
-          "default": {
-            "variationName": "default",
+          "A": {
+            "variationName": "A",
             "nailPrefabGUID": "545286eaa13339647ac5ec9a9d8ffa24",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "A",
+              "en": "A"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Grus",
+                "fbxGUID": "",
+                "bodyName": "Face"
+              }
+            ]
+          },
+          "T": {
+            "variationName": "T",
+            "nailPrefabGUID": "4a91f4666aea6a441a1c6c08ed7deb62",
+            "displayNames": {
+              "ja": "T",
+              "en": "T"
             },
             "avatarPrefabs": [
               {
@@ -6332,51 +6353,20 @@
           }
         }
       },
-      "Grus(T)": {
-        "avatarName": "Grus(T)",
-        "avatarUrl": "https://kujishift.booth.pm/items/3190100",
-        "displayNames": {
-          "ja": "Grus(T)",
-          "en": "Grus(T)"
-        },
-        "avatarVariations": {
-          "default": {
-            "variationName": "default",
-            "nailPrefabGUID": "4a91f4666aea6a441a1c6c08ed7deb62",
-            "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
-            },
-            "avatarPrefabs": [
-              {
-                "prefabName": "",
-                "prefabGUID": ""
-              }
-            ],
-            "avatarFbxs": [
-              {
-                "fbxName": "GrusBody_T",
-                "fbxGUID": "",
-                "bodyName": "Face"
-              }
-            ]
-          }
-        }
-      },
-      "Lapwing(A)": {
-        "avatarName": "Lapwing(A)",
+      "Lapwing": {
+        "avatarName": "Lapwing",
         "avatarUrl": "https://kujishift.booth.pm/items/4993931",
         "displayNames": {
-          "ja": "Lapwing(A)(FAQお読みください)",
-          "en": "Lapwing(A)(Read FAQ)"
+          "ja": "Lapwing",
+          "en": "Lapwing"
         },
         "avatarVariations": {
-          "default": {
-            "variationName": "default",
+          "A": {
+            "variationName": "A",
             "nailPrefabGUID": "ed23f2c2a5b041f468adf6c892839cd1",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "A(FAQお読みください)",
+              "en": "A(Read FAQ)"
             },
             "avatarPrefabs": [
               {
@@ -6391,23 +6381,13 @@
                 "bodyName": "Body"
               }
             ]
-          }
-        }
-      },
-      "Lapwing(T)": {
-        "avatarName": "Lapwing(T)",
-        "avatarUrl": "https://kujishift.booth.pm/items/4993931",
-        "displayNames": {
-          "ja": "Lapwing(T)(FAQお読みください)",
-          "en": "Lapwing(T)(Read FAQ)"
-        },
-        "avatarVariations": {
-          "default": {
-            "variationName": "default",
+          },
+          "T": {
+            "variationName": "T",
             "nailPrefabGUID": "f828d3fd0e6da4848857365932f8de0b",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "T(FAQお読みください)",
+              "en": "T(Read FAQ)"
             },
             "avatarPrefabs": [
               {
@@ -6417,7 +6397,7 @@
             ],
             "avatarFbxs": [
               {
-                "fbxName": "LapwingBodyT",
+                "fbxName": "Lapwing",
                 "fbxGUID": "",
                 "bodyName": "Body"
               }
