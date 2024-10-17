@@ -79,6 +79,13 @@ namespace world.anlabo.mdnailtool.Editor {
 						};
 						break;
 					}
+					case "LilithyNail": {
+						designData.Legacy.AdditionalObjectGUIDs = new Dictionary<MDNailToolDefines.TargetFinger, string[]> {
+							{ MDNailToolDefines.TargetFinger.LeftRing, new[] { "68b60f39f3a560240a60f1eaf5b30a4b" }},
+							{ MDNailToolDefines.TargetFinger.RightRing, new[] { "68b60f39f3a560240a60f1eaf5b30a4b" }},
+						};
+						break;
+					}
 				}
 
 				File.WriteAllText($"{targetPath}_design.json", designData.ToJson());
