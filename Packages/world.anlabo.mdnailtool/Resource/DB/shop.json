@@ -907,16 +907,16 @@
         "avatarName": "Selestia",
         "avatarUrl": "https://jingo1016.booth.pm/items/4035411",
         "displayNames": {
-          "ja": "セレスティア(非推奨)",
-          "en": "Selestia(Not Recommend)"
+          "ja": "セレスティア",
+          "en": "Selestia"
         },
         "avatarVariations": {
-          "default": {
-            "variationName": "default",
+          "RemovedNail": {
+            "variationName": "RemovedNail",
             "nailPrefabGUID": "179488a04bff8b94b8c4e3415dbe618a",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "RemovedNail(ネイルマスクご利用ください)",
+              "en": "RemovedNail(Use Nail Mask)"
             },
             "avatarPrefabs": [
               {
@@ -936,12 +936,12 @@
               }
             ]
           },
-          "RemovedNail": {
-            "variationName": "RemovedNail",
+          "default": {
+            "variationName": "default",
             "nailPrefabGUID": "179488a04bff8b94b8c4e3415dbe618a",
             "displayNames": {
-              "ja": "RemovedNail(ネイルマスクご利用ください)",
-              "en": "RemovedNail(Use Nail Mask)"
+              "ja": "デフォルト(非推奨)",
+              "en": "Default(Not Recommend)"
             },
             "avatarPrefabs": [
               {
@@ -3323,19 +3323,23 @@
             "variationName": "default",
             "nailPrefabGUID": "013d6cbbb1a5b1d49bc84acd43014682",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "デフォルト(ネイルマスク使用 か Cloth Aの非表示)",
+              "en": "Default(Use Nail Mask or Deactivate Cloth A)"
             },
             "avatarPrefabs": [
               {
-                "prefabName": "",
-                "prefabGUID": ""
+                "prefabName": "Zome_VRC",
+                "prefabGUID": "d91d217c8b26af0478c142b9862e674e"
+              },
+              {
+                "prefabName": "Zome_VRC (Light)",
+                "prefabGUID": "331048e0eb4646b4fbbaa52b1d841e53"
               }
             ],
             "avatarFbxs": [
               {
                 "fbxName": "Zome_VRC",
-                "fbxGUID": "",
+                "fbxGUID": "4c6007da5e379e446a32c0eddcff0066",
                 "bodyName": "Face"
               }
             ]
@@ -4692,12 +4696,111 @@
           "en": "meiyun"
         },
         "avatarVariations": {
+          "RemovedNail": {
+            "variationName": "RemovedNail",
+            "nailPrefabGUID": "ca50ff79c60f1e34697572ee24eab2ab",
+            "displayNames": {
+              "ja": "RemovedNail(ネイルマスクご利用ください)",
+              "en": "RemovedNail(Use Nail Mask)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Meiyu_改変",
+                "prefabGUID": "1beb12ddd87d5054c92adcff4802fe6c"
+              },
+              {
+                "prefabName": "Meiyun",
+                "prefabGUID": "c56047428177e7b4abff2c5a9cd7abcc"
+              },
+              {
+                "prefabName": "Meiyu_改変 2P",
+                "prefabGUID": "28bfc70f7b65db74fa749d8e296aff48"
+              },
+              {
+                "prefabName": "Meiyun 2P",
+                "prefabGUID": "34583823b89a8b543b89ab5956604a4c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Meiyun",
+                "fbxGUID": "793cac30a4a9c7842989c774267cae8b",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "RemovedNail_toe_heel:65": {
+            "variationName": "RemovedNail_toe_heel:65",
+            "nailPrefabGUID": "6aeb3830df3449c49a81f07fdac1ba58",
+            "displayNames": {
+              "ja": "RemovedNail_toe_heel:65(ネイルマスクご利用ください)",
+              "en": "RemovedNail_toe_heel:65(Use Nail Mask)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Meiyu_改変",
+                "prefabGUID": "1beb12ddd87d5054c92adcff4802fe6c"
+              },
+              {
+                "prefabName": "Meiyun",
+                "prefabGUID": "c56047428177e7b4abff2c5a9cd7abcc"
+              },
+              {
+                "prefabName": "Meiyu_改変 2P",
+                "prefabGUID": "28bfc70f7b65db74fa749d8e296aff48"
+              },
+              {
+                "prefabName": "Meiyun 2P",
+                "prefabGUID": "34583823b89a8b543b89ab5956604a4c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Meiyun",
+                "fbxGUID": "793cac30a4a9c7842989c774267cae8b",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "RemovedNail_toe_heel:100": {
+            "variationName": "RemovedNail_toe_heel:100",
+            "nailPrefabGUID": "913330a5ebd826044a764d820a5c9564",
+            "displayNames": {
+              "ja": "RemovedNail_toe_heel:100(ネイルマスクご利用ください)",
+              "en": "RemovedNail_toe_heel:100(Use Nail Mask)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Meiyu_改変",
+                "prefabGUID": "1beb12ddd87d5054c92adcff4802fe6c"
+              },
+              {
+                "prefabName": "Meiyun",
+                "prefabGUID": "c56047428177e7b4abff2c5a9cd7abcc"
+              },
+              {
+                "prefabName": "Meiyu_改変 2P",
+                "prefabGUID": "28bfc70f7b65db74fa749d8e296aff48"
+              },
+              {
+                "prefabName": "Meiyun 2P",
+                "prefabGUID": "34583823b89a8b543b89ab5956604a4c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Meiyun",
+                "fbxGUID": "793cac30a4a9c7842989c774267cae8b",
+                "bodyName": "Body"
+              }
+            ]
+          },
           "default": {
             "variationName": "default",
             "nailPrefabGUID": "a4af9315b797e334d97e60b2ec5b1227",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "デフォルト(非推奨)",
+              "en": "Default(Not Recommend)"
             },
             "avatarPrefabs": [
               {
@@ -4717,8 +4820,8 @@
             "variationName": "toe_heel:65",
             "nailPrefabGUID": "4e01d74aa14dac8439018ee9e12b004a",
             "displayNames": {
-              "ja": "toe_heel:65",
-              "en": "toe_heel:65"
+              "ja": "toe_heel:65(非推奨)",
+              "en": "toe_heel:65(Not Recommend)"
             },
             "avatarPrefabs": [
               {
@@ -4738,8 +4841,8 @@
             "variationName": "toe_heel:100",
             "nailPrefabGUID": "a794a2f54accd334b9fc9c4eee92f05b",
             "displayNames": {
-              "ja": "toe_heel:100",
-              "en": "toe_heel:100"
+              "ja": "toe_heel:100(非推奨)",
+              "en": "toe_heel:100(Not Recommend)"
             },
             "avatarPrefabs": [
               {
@@ -6939,12 +7042,37 @@
           "en": "Renard"
         },
         "avatarVariations": {
+          "RemovedNail": {
+            "variationName": "RemovedNail",
+            "nailPrefabGUID": "dae2b3a32ea91b944a068572a29f322f",
+            "displayNames": {
+              "ja": "RemovedNail(ネイルマスクご利用ください)",
+              "en": "RemovedNail(Use Nail Mask)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "7st01_Renard_Base",
+                "prefabGUID": "0a30418c253de3a41b1d3d52284f628b"
+              },
+              {
+                "prefabName": "7st01_Renard_MA Variant",
+                "prefabGUID": "766a2b437ae72c444a23d0ed0f93f3bb"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Renard",
+                "fbxGUID": "d6ee09f195507ec42ada5c885f088fbe",
+                "bodyName": "Body"
+              }
+            ]
+          },
           "default": {
             "variationName": "default",
             "nailPrefabGUID": "4d6c8a0bc14312643aedc4b4581cd1b8",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "デフォルト(非推奨)",
+              "en": "Default(Not Recommend)"
             },
             "avatarPrefabs": [
               {
