@@ -1001,12 +1001,12 @@
           "en": "Selestia"
         },
         "avatarVariations": {
-          "RemovedNail": {
-            "variationName": "RemovedNail",
-            "nailPrefabGUID": "179488a04bff8b94b8c4e3415dbe618a",
+          "RemovedNail_Default": {
+            "variationName": "RemovedNail_Default",
+            "nailPrefabGUID": "d83a66b16276fd8458e9b2532d275088",
             "displayNames": {
-              "ja": "RemovedNail(ネイルマスクご利用ください)",
-              "en": "RemovedNail(Use Nail Mask)"
+              "ja": "RemovedNail_Default(ネイルマスクご利用ください)",
+              "en": "RemovedNail_Default(Use Nail Mask)"
             },
             "avatarPrefabs": [
               {
@@ -1026,12 +1026,37 @@
               }
             ]
           },
-          "default": {
-            "variationName": "default",
-            "nailPrefabGUID": "179488a04bff8b94b8c4e3415dbe618a",
+          "RemovedNail_Foot_hill": {
+            "variationName": "RemovedNail_Foot_hill",
+            "nailPrefabGUID": "9931fb2b3e0e7a44cb56fa37f8452b8f",
             "displayNames": {
-              "ja": "デフォルト(非推奨)",
-              "en": "Default(Not Recommend)"
+              "ja": "RemovedNail_Foot_hill(ネイルマスクご利用ください)",
+              "en": "RemovedNail_Foot_hill(Use Nail Mask)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "SELESTIA_lilToon",
+                "prefabGUID": "570c1e8845289e24e97cfe99c9c88468"
+              },
+              {
+                "prefabName": "SELESTIA_UTS",
+                "prefabGUID": "787a04c84c5bc834c8d5f1b9ec785838"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "SELESTIA",
+                "fbxGUID": "38e912eb58295f246987c551362bf7b1",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Foot_hill": {
+            "variationName": "Foot_hill",
+            "nailPrefabGUID": "722522115f189c84fa0e4d5e022dedd3",
+            "displayNames": {
+              "ja": "Foot_hill(非推奨)",
+              "en": "Foot_hill(Not Recommend)"
             },
             "avatarPrefabs": [
               {
