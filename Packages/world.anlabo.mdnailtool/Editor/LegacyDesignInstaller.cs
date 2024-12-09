@@ -79,10 +79,10 @@ namespace world.anlabo.mdnailtool.Editor {
 						};
 						break;
 					}
-					case "LilithyNail": {
+					case "LILITHYNail": {
 						designData.Legacy.AdditionalObjectGUIDs = new Dictionary<MDNailToolDefines.TargetFinger, string[]> {
-							{ MDNailToolDefines.TargetFinger.LeftRing, new[] { "68b60f39f3a560240a60f1eaf5b30a4b" }},
-							{ MDNailToolDefines.TargetFinger.RightRing, new[] { "68b60f39f3a560240a60f1eaf5b30a4b" }},
+							{ MDNailToolDefines.TargetFinger.LeftRing, new[] { "13a4d9bebb685a04bb0f4a797f2b1f47" }},
+							{ MDNailToolDefines.TargetFinger.RightRing, new[] { "13a4d9bebb685a04bb0f4a797f2b1f47" }},
 						};
 						break;
 					}
