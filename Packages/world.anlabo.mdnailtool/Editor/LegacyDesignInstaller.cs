@@ -79,6 +79,31 @@ namespace world.anlabo.mdnailtool.Editor {
 						};
 						break;
 					}
+					case "LilithyNail": {
+						designData.Legacy.AdditionalObjectGUIDs = new Dictionary<MDNailToolDefines.TargetFinger, string[]> {
+							{ MDNailToolDefines.TargetFinger.LeftRing, new[] { "68b60f39f3a560240a60f1eaf5b30a4b" }},
+							{ MDNailToolDefines.TargetFinger.RightRing, new[] { "68b60f39f3a560240a60f1eaf5b30a4b" }},
+						};
+						break;
+					}
+					case "WeatherNail-falling star": {
+						designData.Legacy.AdditionalMaterialGUIDs = new[] { "8d3a0fd7c809cf241bbaf3f6e9b3816e" };
+						break;
+					}
+					case "WeatherNail-rain": {
+						designData.Legacy.AdditionalMaterialGUIDs = new[] { "1fab5e8449e088040ba732c442855988",
+																			"4af59f753d438f94a8cbdc54bcd91ded",
+																			"28e0022f43bd7004eb241ddfff6ef52a",
+																			"3de719e51de5dee46b725fa360ab8a71" };
+						break;
+					}
+					case "WeatherNail-snow": {
+						designData.Legacy.AdditionalMaterialGUIDs = new[] { "0b07f97defdae7749a20b4417c4c962b",
+																			"11e4f3f6ae08e7b43815ba0309572e7b",
+																			"6438737957322fb4999c3827cb8c2e60",
+																			"514ebd2bffadacd47a9128ebebb350c4" };
+						break;
+					}
 				}
 
 				File.WriteAllText($"{targetPath}_design.json", designData.ToJson());
