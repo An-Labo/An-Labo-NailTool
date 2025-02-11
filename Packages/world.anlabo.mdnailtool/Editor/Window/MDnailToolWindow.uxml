@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:VisualElement name="Root" style="flex-grow: 1;">
+    <ui:ScrollView name="Root" style="flex-grow: 1;">
         <ui:VisualElement name="Header">
             <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout text-id="window.treatment" value="false">
                 <ui:Label name="link-manual" text="Manual" style="color: #7070FF;" />
@@ -93,5 +93,5 @@
                 <ui:Label name="version" style="font-size: 10px;" />
             </ui:VisualElement>
         </ui:VisualElement>
-    </ui:VisualElement>
+    </ui:ScrollView>
 </ui:UXML>
