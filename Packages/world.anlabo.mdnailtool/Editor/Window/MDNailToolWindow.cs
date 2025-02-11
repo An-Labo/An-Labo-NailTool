@@ -111,9 +111,9 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 
 			this._handSelects = this.rootVisualElement.Q<VisualElement>("hand-selects");
-			this._handSelects.SetEnabled(this._setPreFinger.value);
+			this._handSelects.style.display = this._setPreFinger.value ? DisplayStyle.Flex : DisplayStyle.None;
 			this._footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
-			this._footSelects.SetEnabled(this._useFootNail.value);
+			this._footSelects.style.display = this._useFootNail.value ? DisplayStyle.Flex : DisplayStyle.None;
 
 			this._removeCurrentNail = this.rootVisualElement.Q<Toggle>("remove-current-nail");
 			this._removeCurrentNail.SetValueWithoutNotify(GlobalSetting.RemoveCurrentNail);
@@ -296,11 +296,11 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		}
 
 		private void OnChangeSetPreFinger(ChangeEvent<bool> evt) {
-			this._handSelects!.SetEnabled(evt.newValue);
+			this._handSelects!.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
 		}
 
 		private void OnChangeUseFootNail(ChangeEvent<bool> evt) {
-			this._footSelects!.SetEnabled(evt.newValue);
+			this._footSelects!.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
 			GlobalSetting.UseFootNail = evt.newValue;
 		}
 
