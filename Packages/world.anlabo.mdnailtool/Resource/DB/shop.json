@@ -1155,6 +1155,18 @@
               "ja": "v1.01",
               "en": "v1.01"
             },
+            "boneMappingOverride": {
+              "Left Thumb Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/ThumbProximal.L/ThumbIntermediate.L/ThumbDistal.L",
+              "Left Index Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/IndexInterProxima.L/IndexIntermediate.L",
+              "Left Middle Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/MiddleProxima.L/MiddleIntermediate.L",
+              "Left Ring Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/RingProxima.L/RingIntermediate.L",
+              "Left Little Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/LittleProxima.L/LittleIntermediate.L",
+              "Right Thumb Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/ThumbProximal.R/ThumbIntermediate.R/ThumbDistal.R",
+              "Right Index Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/IndexInterProxima.R/IndexIntermediate.R",
+              "Right Middle Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/MiddleProxima.R/MiddleIntermediate.R",
+              "Right Ring Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/RingProxima.R/RingIntermediate.R",
+              "Right Little Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/LittleProxima.R/LittleIntermediate.R"
+            },
             "avatarPrefabs": [
               {
                 "prefabName": "Milltina",
@@ -4942,6 +4954,82 @@
       }
     }
   },
+  "Vervain_Shop": {
+    "shopName": "Vervain_Shop",
+    "shopUrl": "https://vervain-shop.booth.pm/",
+    "displayNames": {
+      "ja": "Vervain_Shop",
+      "en": "Vervain_Shop"
+    },
+    "avatars": {
+      "リース": {
+        "avatarName": "リース",
+        "avatarUrl": "https://vervain-shop.booth.pm/items/6680891",
+        "displayNames": {
+          "ja": "リース",
+          "en": "Lys"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "953cc72936d550b489a4f22523519889",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Lys",
+                "prefabGUID": "732c3ccb963f7b54a8857e67714035c2"
+              },
+              {
+                "prefabName": "Lys Kisekae",
+                "prefabGUID": "7a99edd2e0bc5c945b2b2d7ca5384f76"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Lys",
+                "fbxGUID": "559d03a4a57a9764696aa98e2288c4e4",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      },
+      "Mimi": {
+        "avatarName": "Mimi",
+        "avatarUrl": "https://vervain-shop.booth.pm/items/6042562",
+        "displayNames": {
+          "ja": "Mimi",
+          "en": "Mimi"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "855d46274826bec48af04ca3ccc36f30",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Mimi",
+                "prefabGUID": "081515a8392037d4d8f682c79ca0c807"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "mimi_lipadd",
+                "fbxGUID": "20be36aee2ed04d4f9a4acc8381c306a",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
   "VIVID PLUM": {
     "shopName": "VIVID PLUM",
     "shopUrl": "https://vividplum.booth.pm/",
@@ -7884,6 +7972,18 @@
             "displayNames": {
               "ja": "デフォルト",
               "en": "-"
+            },
+            "boneMappingOverride": {
+              "Left Thumb Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/ThumbProximal.L/ThumbIntermediate.L/ThumbDistal.L",
+              "Left Index Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/IndexInterProxima.L/IndexIntermediate.L",
+              "Left Middle Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/MiddleProxima.L/MiddleIntermediate.L",
+              "Left Ring Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/RingProxima.L/RingIntermediate.L",
+              "Left Little Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/LittleProxima.L/LittleIntermediate.L",
+              "Right Thumb Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/ThumbProximal.R/ThumbIntermediate.R/ThumbDistal.R",
+              "Right Index Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/IndexInterProxima.R/IndexIntermediate.R",
+              "Right Middle Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/MiddleProxima.R/MiddleIntermediate.R",
+              "Right Ring Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/RingProxima.R/RingIntermediate.R",
+              "Right Little Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/LittleProxima.R/LittleIntermediate.R"
             },
             "avatarPrefabs": [
               {
