@@ -12,7 +12,7 @@ using world.anlabo.mdnailtool.Editor.NailDesigns;
 using Object = UnityEngine.Object;
 using world.anlabo.mdnailtool.Runtime;
 using world.anlabo.mdnailtool.Runtime.Extensions;
-using Avatar = UnityEngine.Avatar;
+using UEAvatar = UnityEngine.Avatar;
 
 #if MD_NAIL_FOR_MA
 using nadena.dev.modular_avatar.core;
@@ -22,8 +22,8 @@ using nadena.dev.modular_avatar.core;
 
 namespace world.anlabo.mdnailtool.Editor {
 	public class NailSetupProcessor {
-		
 		private VRCAvatarDescriptor Avatar { get; }
+		private AvatarVariation AvatarVariationData { get; }
 		private GameObject NailPrefab { get; set; }
 		private (INailProcessor, string, string)[] NailDesignAndVariationNames { get; }
 		private string NailShapeName { get; }
@@ -37,8 +37,10 @@ namespace world.anlabo.mdnailtool.Editor {
 		public bool Backup { get; set; }
 		public bool ForModularAvatar { get; set; }
 
-		public NailSetupProcessor(VRCAvatarDescriptor avatar, GameObject nailPrefab, (INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName) {
+		public NailSetupProcessor(VRCAvatarDescriptor avatar, AvatarVariation avatarVariationData, GameObject nailPrefab, (INailProcessor, string, string)[] nailDesignAndVariationNames,
+			string nailShapeName) {
 			this.Avatar = avatar;
+			this.AvatarVariationData = avatarVariationData;
 			this.NailPrefab = nailPrefab;
 			this.NailDesignAndVariationNames = nailDesignAndVariationNames;
 			this.NailShapeName = nailShapeName;
@@ -46,13 +48,12 @@ namespace world.anlabo.mdnailtool.Editor {
 
 
 		public void Process() {
-
 			if (this.Backup) {
 				this.CreateBackup();
 			}
-			
+
 			INailProcessor.ClearCreatedMaterialCash();
-			
+
 			Undo.IncrementCurrentGroup();
 			// ネイルプレハブのインスタンス化
 			{
@@ -73,6 +74,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								current = newPrefab;
 							}
 						}
+
 						if (nailShape.ShapeName == this.NailShapeName) break;
 					}
 
@@ -84,24 +86,24 @@ namespace world.anlabo.mdnailtool.Editor {
 			Undo.RegisterCreatedObjectUndo(nailPrefabObject, "Nail Setup");
 
 			string prefix = this.getPrefabPrefix();
-			
+
 			foreach (Transform child in nailPrefabObject.transform) {
 				child.name = child.name.Replace($"{prefix}", "");
 			}
 
 			// 装着対象ボーンの取得
-			Dictionary<string, Transform?> targetBoneDictionary = GetTargetBoneDictionary(this.Avatar);
-			
+			Dictionary<string, Transform?> targetBoneDictionary = GetTargetBoneDictionary(this.Avatar, this.AvatarVariationData.BoneMappingOverride);
+
 			// プレハブ内のネイルオブジェクトを取得
 			Transform?[] handsNailObjects = GetHandsNailObjectList(nailPrefabObject);
 			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(nailPrefabObject);
 			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(nailPrefabObject);
-			
-			
+
+
 			if (this.RemoveCurrentNail) {
 				RemoveNail(this.Avatar, targetBoneDictionary);
 			}
-			
+
 			// メッシュの適用
 			if (this.OverrideMesh is { Length: > 0 }) {
 				try {
@@ -111,7 +113,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					throw;
 				}
 			}
-			
+
 			// 足のメッシュの適用
 			try {
 				NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, this.NailShapeName);
@@ -146,12 +148,12 @@ namespace world.anlabo.mdnailtool.Editor {
 					if (nailObject == null) continue;
 					ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 					boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-					boneProxy.boneReference = MDNailToolDefines.HANDS_HUMAN_BODY_BONE_LIST[index];
+					boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 				}
 
 				if (this.UseFootNail) {
 					// 左足の装着処理
-					
+
 					// 左足のボーンの子に
 					{
 						string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[(int)MDNailToolDefines.TargetFingerAndToe.LeftToes];
@@ -206,6 +208,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject == null) continue;
 						Object.DestroyImmediate(nailObject.gameObject);
 					}
+
 					foreach (Transform? nailObject in rightFootNailObjects) {
 						if (nailObject == null) continue;
 						Object.DestroyImmediate(nailObject.gameObject);
@@ -239,7 +242,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 
 				if (this.UseFootNail) {
-
 					// 左足のボーンの子に
 					{
 						string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[(int)MDNailToolDefines.TargetFingerAndToe.LeftToes];
@@ -274,6 +276,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject == null) continue;
 						Object.DestroyImmediate(nailObject.gameObject);
 					}
+
 					foreach (Transform? nailObject in rightFootNailObjects) {
 						if (nailObject == null) continue;
 						Object.DestroyImmediate(nailObject.gameObject);
@@ -297,7 +300,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			AssetDatabase.Refresh();
 			Object.DestroyImmediate(clonedObject);
 		}
-		
 
 
 		private string getPrefabPrefix() {
@@ -309,9 +311,13 @@ namespace world.anlabo.mdnailtool.Editor {
 			return "";
 		}
 
-		public static void RemoveNail(VRCAvatarDescriptor avatar, Dictionary<string, Transform?>? targetBoneDictionary = null) {
-			targetBoneDictionary ??= GetTargetBoneDictionary(avatar);
-			
+		public static void RemoveNail(VRCAvatarDescriptor avatar, IReadOnlyDictionary<string, string>? boneMappingOverride) {
+			Dictionary<string, Transform?> targetBoneDictionary = GetTargetBoneDictionary(avatar, boneMappingOverride);
+			RemoveNail(avatar, targetBoneDictionary);
+		}
+
+		private static void RemoveNail(VRCAvatarDescriptor avatar, Dictionary<string, Transform?> targetBoneDictionary) {
+
 			// 既存のネイル削除処理
 			// ModularAvatar用の削除処理
 			foreach (MDNailObjectMarker mdNailObjectMarker in avatar.GetComponentsInChildren<MDNailObjectMarker>().ToArray()) {
@@ -367,9 +373,9 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		private static Dictionary<string, Transform?> GetTargetBoneDictionary(VRCAvatarDescriptor avatar) {
+		private static Dictionary<string, Transform?> GetTargetBoneDictionary(VRCAvatarDescriptor avatar, IReadOnlyDictionary<string, string>? boneMappingOverride) {
 			Animator? avatarAnimator = avatar.GetComponent<Animator>();
-			Avatar? animatorAvatar = avatarAnimator.avatar;
+			UEAvatar? animatorAvatar = avatarAnimator.avatar;
 			HumanDescription humanDescription = animatorAvatar.humanDescription;
 			HumanBone[] humanBones = humanDescription.human;
 			Dictionary<string, string> boneNameDictionary = humanBones.ToDictionary(humanBone => humanBone.humanName, humanBone => humanBone.boneName);
@@ -377,9 +383,19 @@ namespace world.anlabo.mdnailtool.Editor {
 				.Select(name => {
 					if (name is not (MDNailToolDefines.LEFT_TOES or MDNailToolDefines.RIGHT_TOES)) {
 						// 通常はつま先同様、ボーンが未マップを想定するべきだが、指が未マップのアバターは普通存在しないため、エラーを出させるために処理を分ける。
+						// ReSharper disable once InvertIf
+						if (boneMappingOverride != null && boneMappingOverride.TryGetValue(name, out string bonePath)) {
+							Transform? targetBone = avatar.transform.Find(bonePath);
+							if (targetBone != null) {
+								return (name, targetBone);
+							}
+
+							Debug.LogWarning($"Not found bone : {bonePath}");
+						}
+
 						return (name, avatar.transform.FindRecursive(boneNameDictionary[name]));
 					}
-					
+
 					// つま先がアバターにマッピングされていないアバターがあった。
 					// そもそもつま先がないアバターがありそうなため、つま先がない場合足を取得する
 					string footBoneName = name switch {
@@ -390,7 +406,6 @@ namespace world.anlabo.mdnailtool.Editor {
 					string? targetBoneName = boneNameDictionary.GetValueOrDefault(name);
 					targetBoneName ??= boneNameDictionary.GetValueOrDefault(footBoneName, "");
 					return (name, avatar.transform.FindRecursive(targetBoneName));
-
 				})
 				.ToDictionary(tuple => tuple.name, tuple => tuple.Item2);
 		}
