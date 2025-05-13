@@ -48,6 +48,18 @@ namespace world.anlabo.mdnailtool.Editor {
 		public const string RIGHT_FOOT = "RightFoot";
 		public const string RIGHT_TOES = "RightToes";
 		
+		public const string LEFT_FOOT_THUMB = "Left Foot Thumb";
+		public const string LEFT_FOOT_INDEX = "Left Foot Index";
+		public const string LEFT_FOOT_MIDDLE = "Left Foot Middle";
+		public const string LEFT_FOOT_RING = "Left Foot Ring";
+		public const string LEFT_FOOT_LITTLE = "Left Foot Little";
+		
+		public const string RIGHT_FOOT_THUMB = "Right Foot Thumb";
+		public const string RIGHT_FOOT_INDEX = "Right Foot Index";
+		public const string RIGHT_FOOT_MIDDLE = "Right Foot Middle";
+		public const string RIGHT_FOOT_RING = "Right Foot Ring";
+		public const string RIGHT_FOOT_LITTLE = "Right Foot Little";
+		
 		public const string HAND_L_THUMB = "HandL.Thumb";
 		public const string HAND_L_INDEX = "HandL.Index";
 		public const string HAND_L_MIDDLE = "HandL.Middle";
@@ -86,7 +98,17 @@ namespace world.anlabo.mdnailtool.Editor {
 			RightRing = 8,
 			RightLittle = 9,
 			LeftToes = 10,
-			RightToes = 11
+			RightToes = 11,
+			LeftFootThumb = 12,
+			LeftFootIndex = 13,
+			LeftFootMiddle = 14,
+			LeftFootRing = 15,
+			LeftFootLittle = 16,
+			RightFootThumb = 17,
+			RightFootIndex = 18,
+			RightFootMiddle = 19,
+			RightFootRing = 20,
+			RightFootLittle = 21,
 		}
 		
 		public enum TargetFinger {
@@ -118,7 +140,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 		public const HumanBodyBones LEFT_TOE_HUMAN_BODY_BONE = HumanBodyBones.LeftToes;
 		public const HumanBodyBones RIGHT_TOE_HUMAN_BODY_BONE = HumanBodyBones.RightToes;
-
+		
 		public static readonly IReadOnlyList<string> TARGET_BONE_NAME_LIST = Array.AsReadOnly( new[] {
 			LEFT_THUMB_DISTAL,
 			LEFT_INDEX_DISTAL,
@@ -131,7 +153,17 @@ namespace world.anlabo.mdnailtool.Editor {
 			RIGHT_RING_DISTAL,
 			RIGHT_LITTLE_DISTAL,
 			LEFT_TOES,
-			RIGHT_TOES
+			RIGHT_TOES,
+			LEFT_FOOT_THUMB,
+			LEFT_FOOT_INDEX,
+			LEFT_FOOT_MIDDLE,
+			LEFT_FOOT_RING,
+			LEFT_FOOT_LITTLE,
+			RIGHT_FOOT_THUMB,
+			RIGHT_FOOT_INDEX,
+			RIGHT_FOOT_MIDDLE,
+			RIGHT_FOOT_RING,
+			RIGHT_FOOT_LITTLE
 		});
 		
 		public static readonly IReadOnlyList<string> TARGET_HANDS_BONE_NAME_LIST = Array.AsReadOnly( new[] {
@@ -144,7 +176,25 @@ namespace world.anlabo.mdnailtool.Editor {
 			RIGHT_INDEX_DISTAL,
 			RIGHT_MIDDLE_DISTAL,
 			RIGHT_RING_DISTAL,
-			RIGHT_LITTLE_DISTAL,
+			RIGHT_LITTLE_DISTAL
+		});
+		
+		public static readonly IReadOnlyList<string> LEFT_FOOT_FINGER_BONE_NAME_LIST = Array.AsReadOnly(new[] {
+			LEFT_FOOT_THUMB,
+			LEFT_FOOT_INDEX,
+			LEFT_FOOT_MIDDLE,
+			LEFT_FOOT_RING,
+			LEFT_FOOT_LITTLE,
+			LEFT_TOES
+		});
+
+		public static readonly IReadOnlyList<string> RIGHT_FOOT_FINGER_BONE_NAME_LIST = Array.AsReadOnly(new[] {
+			RIGHT_FOOT_THUMB,
+			RIGHT_FOOT_INDEX,
+			RIGHT_FOOT_MIDDLE,
+			RIGHT_FOOT_RING,
+			RIGHT_FOOT_LITTLE,
+			RIGHT_TOES
 		});
 
 		public static readonly IReadOnlyList<string> HANDS_NAIL_OBJECT_NAME_LIST = Array.AsReadOnly(new[] {
