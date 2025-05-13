@@ -99,7 +99,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(nailPrefabObject);
 			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(nailPrefabObject);
 
-
 			if (this.RemoveCurrentNail) {
 				RemoveNail(this.Avatar, targetBoneDictionary);
 			}
@@ -142,7 +141,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				// 装着処理(ModularAvatar)
 #if MD_NAIL_FOR_MA
 				// 手の装着処理
-				int index = -1;
+				int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
 				foreach (Transform? nailObject in handsNailObjects) {
 					index++;
 					if (nailObject == null) continue;
@@ -152,56 +151,24 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 
 				if (this.UseFootNail) {
-					// 左足の装着処理
-
-					// 左足のボーンの子に
-					{
-						string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[(int)MDNailToolDefines.TargetFingerAndToe.LeftToes];
-						Transform? target = targetBoneDictionary[boneName];
-						if (target == null) {
-							Debug.LogError($"Not found target bone : {boneName}");
-						}
-
-						foreach (Transform? nailObject in leftFootNailObjects) {
-							if (nailObject == null) continue;
-							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
-							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-							boneProxy.target = target;
-						}
-					}
-
-
-					// 右足のボーンの子に
-					{
-						string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[(int)MDNailToolDefines.TargetFingerAndToe.RightToes];
-						Transform? target = targetBoneDictionary[boneName];
-						if (target == null) {
-							Debug.LogError($"Not found target bone : {boneName}");
-						}
-
-						foreach (Transform? nailObject in rightFootNailObjects) {
-							if (nailObject == null) continue;
-							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
-							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-							boneProxy.target = target;
-						}
-					}
-					/* BoneProxyが Toeがマッピングされてないアバターに対してToeを配置してくれないため(Footのフォールバックも無い)一旦保留
+					// 足の装着処理
+					index = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
 					foreach (Transform? nailObject in leftFootNailObjects) {
+						index++;
 						if (nailObject == null) continue;
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-						boneProxy.boneReference = MDNailToolDefines.LEFT_TOE_HUMAN_BODY_BONE;
+						boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 					}
 
-					// 右足の装着処理
+					index = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
 					foreach (Transform? nailObject in rightFootNailObjects) {
+						index++;
 						if (nailObject == null) continue;
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-						boneProxy.boneReference = MDNailToolDefines.RIGHT_TOE_HUMAN_BODY_BONE;
+						boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 					}
-					*/
 				} else {
 					// 足ネイルを装着しない場合削除
 					foreach (Transform? nailObject in leftFootNailObjects) {
@@ -226,49 +193,44 @@ namespace world.anlabo.mdnailtool.Editor {
 			} else {
 				// 装着処理(直接)
 				// 手の指のボーンの子に
-				int index = -1;
-				foreach (string boneName in MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST) {
+				int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
+				foreach (Transform? nailObject in handsNailObjects) {
 					index++;
-
-					Transform? target = targetBoneDictionary[boneName];
+					if (nailObject == null) continue;
+					Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 					if (target == null) {
-						Debug.LogError($"Not found target bone : {boneName}");
+						Debug.LogError($"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
 						continue;
 					}
 
-					Transform? nailObject = handsNailObjects[index];
-					if (nailObject == null) continue;
 					nailObject.SetParent(target);
 				}
 
 				if (this.UseFootNail) {
-					// 左足のボーンの子に
-					{
-						string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[(int)MDNailToolDefines.TargetFingerAndToe.LeftToes];
-						Transform? target = targetBoneDictionary[boneName];
+					// 足の装着処理
+					index = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
+					foreach (Transform? nailObject in leftFootNailObjects) {
+						index++;
+						if (nailObject == null) continue;
+						Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 						if (target == null) {
-							Debug.LogError($"Not found target bone : {boneName}");
+							Debug.LogError($"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
+							continue;
 						}
 
-						foreach (Transform? nailObject in leftFootNailObjects) {
-							if (nailObject == null) continue;
-							nailObject.SetParent(target);
-						}
+						nailObject.SetParent(target);
 					}
 
-
-					// 右足のボーンの子に
-					{
-						string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[(int)MDNailToolDefines.TargetFingerAndToe.RightToes];
-						Transform? target = targetBoneDictionary[boneName];
+					foreach (Transform? nailObject in rightFootNailObjects) {
+						index++;
+						if (nailObject == null) continue;
+						Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 						if (target == null) {
-							Debug.LogError($"Not found target bone : {boneName}");
+							Debug.LogError($"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
+							continue;
 						}
 
-						foreach (Transform? nailObject in rightFootNailObjects) {
-							if (nailObject == null) continue;
-							nailObject.SetParent(target);
-						}
+						nailObject.SetParent(target);
 					}
 				} else {
 					// 足ネイルを装着しない場合削除
@@ -317,7 +279,6 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 		private static void RemoveNail(VRCAvatarDescriptor avatar, Dictionary<string, Transform?> targetBoneDictionary) {
-
 			// 既存のネイル削除処理
 			// ModularAvatar用の削除処理
 			foreach (MDNailObjectMarker mdNailObjectMarker in avatar.GetComponentsInChildren<MDNailObjectMarker>().ToArray()) {
@@ -326,7 +287,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			// 直接装着された物の削除処理
 			// 手のネイル削除処理
-			int index = -1;
+			int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
 			foreach (string boneName in MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST) {
 				index++;
 				string objectName = MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST[index];
@@ -341,34 +302,40 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 
-			// 左足のネイル削除処理
-			{
-				Transform? targetBone = targetBoneDictionary[MDNailToolDefines.LEFT_TOES];
-				if (targetBone != null) {
-					foreach (string objectName in MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST) {
-						Transform?[] nailObjects = targetBone.transform
-							.FindRecursiveWithRegex(Regex.Escape(objectName))
-							.ToArray();
-						foreach (Transform? nailObject in nailObjects) {
-							if (nailObject == null) continue;
-							Undo.DestroyObjectImmediate(nailObject.gameObject);
-						}
-					}
+			// 足のネイル削除処理
+			index = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
+			int objectIndex = -1;
+			foreach (string boneName in MDNailToolDefines.LEFT_FOOT_FINGER_BONE_NAME_LIST) {
+				index++;
+				objectIndex++;
+				if (objectIndex >= 5) continue;
+				string objectName = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST[objectIndex];
+				Transform? targetBone = targetBoneDictionary[boneName];
+				if (targetBone == null) continue;
+				Transform?[] nailObjects = targetBone.transform
+					.FindRecursiveWithRegex(Regex.Escape(objectName))
+					.ToArray();
+				foreach (Transform? nailObject in nailObjects) {
+					if (nailObject == null) continue;
+					Undo.DestroyObjectImmediate(nailObject.gameObject);
 				}
 			}
 
-			// 右足のネイル削除処理
-			{
-				Transform? targetBone = targetBoneDictionary[MDNailToolDefines.RIGHT_TOES];
-				if (targetBone == null) return;
-				foreach (string objectName in MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST) {
-					Transform?[] nailObjects = targetBone.transform
-						.FindRecursiveWithRegex(Regex.Escape(objectName))
-						.ToArray();
-					foreach (Transform? nailObject in nailObjects) {
-						if (nailObject == null) continue;
-						Undo.DestroyObjectImmediate(nailObject.gameObject);
-					}
+			index = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
+			objectIndex = -1;
+			foreach (string boneName in MDNailToolDefines.RIGHT_FOOT_FINGER_BONE_NAME_LIST) {
+				index++;
+				objectIndex++;
+				if (objectIndex >= 5) continue;
+				string objectName = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST[objectIndex];
+				Transform? targetBone = targetBoneDictionary[boneName];
+				if (targetBone == null) continue;
+				Transform?[] nailObjects = targetBone.transform
+					.FindRecursiveWithRegex(Regex.Escape(objectName))
+					.ToArray();
+				foreach (Transform? nailObject in nailObjects) {
+					if (nailObject == null) continue;
+					Undo.DestroyObjectImmediate(nailObject.gameObject);
 				}
 			}
 		}
@@ -381,29 +348,44 @@ namespace world.anlabo.mdnailtool.Editor {
 			Dictionary<string, string> boneNameDictionary = humanBones.ToDictionary(humanBone => humanBone.humanName, humanBone => humanBone.boneName);
 			return MDNailToolDefines.TARGET_BONE_NAME_LIST
 				.Select(name => {
-					if (name is not (MDNailToolDefines.LEFT_TOES or MDNailToolDefines.RIGHT_TOES)) {
+					if (MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST.Contains(name)) {
 						// 通常はつま先同様、ボーンが未マップを想定するべきだが、指が未マップのアバターは普通存在しないため、エラーを出させるために処理を分ける。
 						// ReSharper disable once InvertIf
-						if (boneMappingOverride != null && boneMappingOverride.TryGetValue(name, out string bonePath)) {
-							Transform? targetBone = avatar.transform.Find(bonePath);
+						if (boneMappingOverride != null && boneMappingOverride.TryGetValue(name, out string handFingerBonePath)) {
+							Transform? targetBone = avatar.transform.Find(handFingerBonePath);
 							if (targetBone != null) {
 								return (name, targetBone);
 							}
 
-							Debug.LogWarning($"Not found bone : {bonePath}");
+							Debug.LogWarning($"Not found bone : {handFingerBonePath}");
 						}
 
 						return (name, avatar.transform.FindRecursive(boneNameDictionary[name]));
 					}
 
+
+					if (boneMappingOverride != null && boneMappingOverride.TryGetValue(name, out string footFingerBonePath)) {
+						// ボーンが上書きされていればそれを反す
+						Transform? targetBone = avatar.transform.Find(footFingerBonePath);
+						if (targetBone != null) {
+							return (name, targetBone);
+						}
+
+						Debug.LogWarning($"Not found bone : {footFingerBonePath}");
+					}
+
+					// 足の指のボーン名から、どちらのつま先かを求める
+					string toeBoneName = MDNailToolDefines.LEFT_FOOT_FINGER_BONE_NAME_LIST.Contains(name) ? MDNailToolDefines.LEFT_TOES : MDNailToolDefines.RIGHT_TOES;
+
 					// つま先がアバターにマッピングされていないアバターがあった。
 					// そもそもつま先がないアバターがありそうなため、つま先がない場合足を取得する
-					string footBoneName = name switch {
+					string footBoneName = toeBoneName switch {
 						MDNailToolDefines.LEFT_TOES => MDNailToolDefines.LEFT_FOOT,
 						MDNailToolDefines.RIGHT_TOES => MDNailToolDefines.RIGHT_FOOT,
 						_ => throw new ArgumentOutOfRangeException(nameof(name), name, null)
 					};
-					string? targetBoneName = boneNameDictionary.GetValueOrDefault(name);
+
+					string? targetBoneName = boneNameDictionary.GetValueOrDefault(toeBoneName);
 					targetBoneName ??= boneNameDictionary.GetValueOrDefault(footBoneName, "");
 					return (name, avatar.transform.FindRecursive(targetBoneName));
 				})
