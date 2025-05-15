@@ -203,6 +203,19 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			return this._variantDisplayNameDictionary.GetValueOrDefault(id, id) ?? id;
 		}
 
+		public AvatarVariation? GetSelectedAvatarVariation() {
+			string? shopName = this._shopPopup.value;
+			string? avatarName = this._avatarPopup.value;
+			string? variantName = this._variantPopup.value;
+			if (string.IsNullOrEmpty(shopName) || string.IsNullOrEmpty(avatarName) || string.IsNullOrEmpty(variantName)) return null;
+			
+			using DBShop dbShop = new();
+			Shop? shop = dbShop.FindShopByName(shopName);
+			Avatar? avatar = shop?.FindAvatarByName(avatarName);
+			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
+			return variation;
+		}
+
 		public GameObject? GetSelectedPrefab() {
 			string? shopName = this._shopPopup.value;
 			string? avatarName = this._avatarPopup.value;
