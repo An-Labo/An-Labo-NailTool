@@ -102,6 +102,47 @@
       }
     }
   },
+  "#のらなべや": {
+    "shopName": "#のらなべや",
+    "shopUrl": "https://noranabeya.booth.pm/",
+    "displayNames": {
+      "ja": "#のらなべや",
+      "en": "noranabeya"
+    },
+    "avatars": {
+      "NoraFirika": {
+        "avatarName": "NoraFirika",
+        "avatarUrl": "https://noranabeya.booth.pm/items/6358495",
+        "displayNames": {
+          "ja": "ノラフィリカ(FAQご確認ください)",
+          "en": "NoraFirika(Check FAQ)"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "291aeac2336e14744bce8ef80e2a057c",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "NoraFirika",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "NoraFirika",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
   "24時間休業": {
     "shopName": "24時間休業",
     "shopUrl": "https://ensuiuni.booth.pm/",
@@ -151,6 +192,37 @@
       "en": "1058mart"
     },
     "avatars": {
+      "Mitsumame": {
+        "avatarName": "Mitsumame",
+        "avatarUrl": "https://inugoyamart.booth.pm/items/5748454",
+        "displayNames": {
+          "ja": "みつまめ(FAQご確認ください)",
+          "en": "Mitsumame(Check FAQ)"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "291aeac2336e14744bce8ef80e2a057c",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Mitsumame",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Mitsumame",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      },
       "TarteTatin": {
         "avatarName": "TarteTatin",
         "avatarUrl": "https://inugoyamart.booth.pm/items/2939958",
@@ -180,6 +252,47 @@
               {
                 "fbxName": "TarteTatin_",
                 "fbxGUID": "bc99af95c6c2fbc449d14f1b5ae20361",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "afro-da-afro`s shop": {
+    "shopName": "afro-da-afro`s shop",
+    "shopUrl": "https://afro-da-afro.booth.pm/",
+    "displayNames": {
+      "ja": "afro-da-afro`s shop",
+      "en": "afro-da-afro`s shop"
+    },
+    "avatars": {
+      "Isanai Nuku": {
+        "avatarName": "Isanai Nuku",
+        "avatarUrl": "https://afro-da-afro.booth.pm/items/6044846",
+        "displayNames": {
+          "ja": "イサナイ・ヌク(FAQご確認ください)",
+          "en": "Isanai Nuku(Check FAQ)"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "291aeac2336e14744bce8ef80e2a057c",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Isanai Nuku",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Isanai Nuku",
+                "fbxGUID": "",
                 "bodyName": "Body"
               }
             ]
@@ -1035,12 +1148,192 @@
           "en": "Milltina"
         },
         "avatarVariations": {
-          "default": {
-            "variationName": "default",
+          "v1.01": {
+            "variationName": "v1.01",
+            "nailPrefabGUID": "59d905e1e47c89943bac71c7802492ac",
+            "displayNames": {
+              "ja": "v1.01",
+              "en": "v1.01"
+            },
+            "boneMappingOverride": {
+              "Left Thumb Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/ThumbProximal.L/ThumbIntermediate.L/ThumbDistal.L",
+              "Left Index Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/IndexInterProxima.L/IndexIntermediate.L",
+              "Left Middle Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/MiddleProxima.L/MiddleIntermediate.L",
+              "Left Ring Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/RingProxima.L/RingIntermediate.L",
+              "Left Little Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/LittleProxima.L/LittleIntermediate.L",
+              "Right Thumb Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/ThumbProximal.R/ThumbIntermediate.R/ThumbDistal.R",
+              "Right Index Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/IndexInterProxima.R/IndexIntermediate.R",
+              "Right Middle Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/MiddleProxima.R/MiddleIntermediate.R",
+              "Right Ring Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/RingProxima.R/RingIntermediate.R",
+              "Right Little Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/LittleProxima.R/LittleIntermediate.R"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Milltina",
+                "prefabGUID": "bfe2f056d1eb4997a8b5f2b2b12e4b1f"
+              },
+              {
+                "prefabName": "Milltina_kisekae",
+                "prefabGUID": "6445acf6571647bfbe13d3d144add6d6"
+              },
+              {
+                "prefabName": "Milltina_mukuchi",
+                "prefabGUID": "5d9c6ca72ba449c6951da2c6b0cbad73"
+              },
+              {
+                "prefabName": "Milltina_mukuchi_kisekae",
+                "prefabGUID": "607261a1e280432eaa704141b2b49b98"
+              },
+              {
+                "prefabName": "FC_Milltina",
+                "prefabGUID": "19f9221291344e48a7bf59fdc5045621"
+              },
+              {
+                "prefabName": "FC_Milltina_kisekae",
+                "prefabGUID": "53a81734f5724c42a8caae0e08b3c5b9"
+              },
+              {
+                "prefabName": "FC_Milltina_mukuchi",
+                "prefabGUID": "ebebf5c6171745af8ce4d94b74b73c85"
+              },
+              {
+                "prefabName": "FC_Milltina_mukuchi_kisekae",
+                "prefabGUID": "8bedbfc3783044c1b09e9aeffeecbcb1"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Milltina",
+                "fbxGUID": "bdb3eb13b1114bd3b853c5d98e48fa91",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "Milltina_kisekae",
+                "fbxGUID": "b621f782b01d4f6193cdcf6671bfa5b0",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "Milltina_mukuchi",
+                "fbxGUID": "241c283c85494ee78a8e28d1c5ec976b",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "Milltina_mukuchi_kisekae",
+                "fbxGUID": "808a2e53540e4aa983dd60f1babf1310",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "FC_Milltina",
+                "fbxGUID": "9144b20467944455b6d7aa25221d09db",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "FC_Milltin_kisekae",
+                "fbxGUID": "3c542b08c73842ffad543e202b9b281a",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "FC_Milltina_mukuchi",
+                "fbxGUID": "d02bf9a8536c414a957700a9c0a294b0",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "FC_Milltina_mukuchi_kisekae",
+                "fbxGUID": "83456445ca5444b89ed4764cd088a8eb",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "v1.01_Foot_heel": {
+            "variationName": "v1.01_Foot_heel",
+            "nailPrefabGUID": "92b3bdfbb34bc704c83bff24c514cbc4",
+            "displayNames": {
+              "ja": "v1.01_Foot_heel",
+              "en": "v1.01_Foot_heel"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Milltina",
+                "prefabGUID": "bfe2f056d1eb4997a8b5f2b2b12e4b1f"
+              },
+              {
+                "prefabName": "Milltina_kisekae",
+                "prefabGUID": "6445acf6571647bfbe13d3d144add6d6"
+              },
+              {
+                "prefabName": "Milltina_mukuchi",
+                "prefabGUID": "5d9c6ca72ba449c6951da2c6b0cbad73"
+              },
+              {
+                "prefabName": "Milltina_mukuchi_kisekae",
+                "prefabGUID": "607261a1e280432eaa704141b2b49b98"
+              },
+              {
+                "prefabName": "FC_Milltina",
+                "prefabGUID": "19f9221291344e48a7bf59fdc5045621"
+              },
+              {
+                "prefabName": "FC_Milltina_kisekae",
+                "prefabGUID": "53a81734f5724c42a8caae0e08b3c5b9"
+              },
+              {
+                "prefabName": "FC_Milltina_mukuchi",
+                "prefabGUID": "ebebf5c6171745af8ce4d94b74b73c85"
+              },
+              {
+                "prefabName": "FC_Milltina_mukuchi_kisekae",
+                "prefabGUID": "8bedbfc3783044c1b09e9aeffeecbcb1"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Milltina",
+                "fbxGUID": "bdb3eb13b1114bd3b853c5d98e48fa91",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "Milltina_kisekae",
+                "fbxGUID": "b621f782b01d4f6193cdcf6671bfa5b0",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "Milltina_mukuchi",
+                "fbxGUID": "241c283c85494ee78a8e28d1c5ec976b",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "Milltina_mukuchi_kisekae",
+                "fbxGUID": "808a2e53540e4aa983dd60f1babf1310",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "FC_Milltina",
+                "fbxGUID": "9144b20467944455b6d7aa25221d09db",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "FC_Milltin_kisekae",
+                "fbxGUID": "3c542b08c73842ffad543e202b9b281a",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "FC_Milltina_mukuchi",
+                "fbxGUID": "d02bf9a8536c414a957700a9c0a294b0",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "FC_Milltina_mukuchi_kisekae",
+                "fbxGUID": "83456445ca5444b89ed4764cd088a8eb",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "v1.00": {
+            "variationName": "v1.00",
             "nailPrefabGUID": "1a851b479ec21464e8a06d93c1288628",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "v1.00",
+              "en": "v1.00"
             },
             "avatarPrefabs": [
               {
@@ -1083,12 +1376,12 @@
               }
             ]
           },
-          "Foot_heel": {
-            "variationName": "Foot_heel",
+          "v1.00_Foot_heel": {
+            "variationName": "v1.00_Foot_heel",
             "nailPrefabGUID": "d02f3ae728f4c884ebb98785ee8e7c08",
             "displayNames": {
-              "ja": "Foot_heel",
-              "en": "Foot_heel"
+              "ja": "v1.00_Foot_heel",
+              "en": "v1.00_Foot_heel"
             },
             "avatarPrefabs": [
               {
@@ -1207,6 +1500,47 @@
               {
                 "fbxName": "Flare",
                 "fbxGUID": "9a124bac80afe854b927661b0c46b329",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "emudotto": {
+    "shopName": "emudotto",
+    "shopUrl": "https://emudotto.booth.pm/",
+    "displayNames": {
+      "ja": "emudotto",
+      "en": "emudotto"
+    },
+    "avatars": {
+      "Menno": {
+        "avatarName": "Menno",
+        "avatarUrl": "https://emudotto.booth.pm/items/6504220",
+        "displayNames": {
+          "ja": "Menno",
+          "en": "Menno"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "f931533764f5f9549a459659714f8ddf",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Menno",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Menno",
+                "fbxGUID": "",
                 "bodyName": "Body"
               }
             ]
@@ -2586,6 +2920,79 @@
       "en": "paryi"
     },
     "avatars": {
+      "mao": {
+        "avatarName": "mao",
+        "avatarUrl": "https://paryi.booth.pm/items/6846646",
+        "displayNames": {
+          "ja": "真央",
+          "en": "mao"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "cc31b6d590d1d984f9ca8daf323ebb85",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "mao",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "mao",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "heel_OFF_ヒールオフ": {
+            "variationName": "heel_OFF_ヒールオフ",
+            "nailPrefabGUID": "9c7fcb0efeda7c14d9735023252f02ad",
+            "displayNames": {
+              "ja": "heel_OFF_ヒールオフ",
+              "en": "heel_OFF_ヒールオフ"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "mao",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "mao",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "highheel_ハイヒール": {
+            "variationName": "highheel_ハイヒール",
+            "nailPrefabGUID": "43053f38ca3074c40a4c6acc308e0560",
+            "displayNames": {
+              "ja": "highheel_ハイヒール",
+              "en": "highheel_ハイヒール"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "mao",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "mao",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      },
       "ririka": {
         "avatarName": "ririka",
         "avatarUrl": "https://paryi.booth.pm/items/6373683",
@@ -3396,6 +3803,47 @@
       }
     }
   },
+  "rls-house": {
+    "shopName": "rls-house",
+    "shopUrl": "https://rls-house.booth.pm/",
+    "displayNames": {
+      "ja": "rls-house",
+      "en": "rls-house"
+    },
+    "avatars": {
+      "UltharA": {
+        "avatarName": "UltharA",
+        "avatarUrl": "https://rls-house.booth.pm/items/5955835",
+        "displayNames": {
+          "ja": "ウルタラ(FAQご確認ください)",
+          "en": "UltharA(Check FAQ)"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "291aeac2336e14744bce8ef80e2a057c",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "UltharA",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "UltharA",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
   "ROKO SHOP": {
     "shopName": "ROKO SHOP",
     "shopUrl": "https://rokota.booth.pm/",
@@ -4141,14 +4589,30 @@
             },
             "avatarPrefabs": [
               {
-                "prefabName": "",
-                "prefabGUID": ""
+                "prefabName": "NagiyaRuri",
+                "prefabGUID": "08f4783b25b47c84799da00e011c27a9"
+              },
+              {
+                "prefabName": "NagiyaRuri_Kisekae",
+                "prefabGUID": "f294338405dc8a941b9fd9421a09d49d"
+              },
+              {
+                "prefabName": "NagiyaRuri_Simple",
+                "prefabGUID": "749e793fa35156343b53b99ecd367107"
+              },
+              {
+                "prefabName": "NagiyaRuri_Simple_Kisekae",
+                "prefabGUID": "960528fda6b3c7240bc97c36e13290b9"
+              },
+              {
+                "prefabName": "NagiyaRuri_Base",
+                "prefabGUID": "2dad73d6c7527d748b3ccd2d0e01f550"
               }
             ],
             "avatarFbxs": [
               {
                 "fbxName": "NagiyaRuri",
-                "fbxGUID": "",
+                "fbxGUID": "272ce5652573bbc44a3fc89cb2e5e2d1",
                 "bodyName": "Body"
               }
             ]
@@ -4612,6 +5076,82 @@
               {
                 "fbxName": "Phi1_",
                 "fbxGUID": "4f2fe834878aa5245a628ddd916fcd00",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Vervain_Shop": {
+    "shopName": "Vervain_Shop",
+    "shopUrl": "https://vervain-shop.booth.pm/",
+    "displayNames": {
+      "ja": "Vervain_Shop",
+      "en": "Vervain_Shop"
+    },
+    "avatars": {
+      "リース": {
+        "avatarName": "リース",
+        "avatarUrl": "https://vervain-shop.booth.pm/items/6680891",
+        "displayNames": {
+          "ja": "リース",
+          "en": "Lys"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "953cc72936d550b489a4f22523519889",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Lys",
+                "prefabGUID": "732c3ccb963f7b54a8857e67714035c2"
+              },
+              {
+                "prefabName": "Lys Kisekae",
+                "prefabGUID": "7a99edd2e0bc5c945b2b2d7ca5384f76"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Lys",
+                "fbxGUID": "559d03a4a57a9764696aa98e2288c4e4",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      },
+      "Mimi": {
+        "avatarName": "Mimi",
+        "avatarUrl": "https://vervain-shop.booth.pm/items/6042562",
+        "displayNames": {
+          "ja": "Mimi",
+          "en": "Mimi"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "855d46274826bec48af04ca3ccc36f30",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Mimi",
+                "prefabGUID": "081515a8392037d4d8f682c79ca0c807"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "mimi_lipadd",
+                "fbxGUID": "20be36aee2ed04d4f9a4acc8381c306a",
                 "bodyName": "Body"
               }
             ]
@@ -5406,6 +5946,37 @@
       "en": "kanalia"
     },
     "avatars": {
+      "Uzuruha": {
+        "avatarName": "Uzuruha",
+        "avatarUrl": "https://kanalia.booth.pm/items/5673586",
+        "displayNames": {
+          "ja": "ウズルハ(FAQご確認ください)",
+          "en": "Uzuruha(Check FAQ)"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "291aeac2336e14744bce8ef80e2a057c",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Uzuruha",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Uzuruha",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      },
       "Haolan": {
         "avatarName": "Haolan",
         "avatarUrl": "https://kanalia.booth.pm/items/3818504",
@@ -5553,6 +6124,125 @@
       }
     }
   },
+  "こまいぬ通り": {
+    "shopName": "こまいぬ通り",
+    "shopUrl": "https://komainu-street.booth.pm/",
+    "displayNames": {
+      "ja": "こまいぬ通り",
+      "en": "komainu-street"
+    },
+    "avatars": {
+      "ネメシス": {
+        "avatarName": "ネメシス",
+        "avatarUrl": "https://komainu-street.booth.pm/items/5986971",
+        "displayNames": {
+          "ja": "ネメシス",
+          "en": "Nemesis"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "b6be7f2604172a6438abfe4383c02b94",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Nemesis",
+                "prefabGUID": "15cc010a981f2904d9f7f6aa843148bc"
+              },
+              {
+                "prefabName": "Nemesis_Full",
+                "prefabGUID": "479dccd64ca792944bf1fd4944236fbe"
+              },
+              {
+                "prefabName": "Nemesis_Kisekae",
+                "prefabGUID": "cd8402f1840c40d40babc77cee143dec"
+              },
+              {
+                "prefabName": "Nemesis_Full_Kisekae",
+                "prefabGUID": "8153eaa3679f7d944ac3c687ee7bdb9f"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Nemesis",
+                "fbxGUID": "13effdaea02feb14a9f0af5776f8ea72",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Foot_down": {
+            "variationName": "Foot_down",
+            "nailPrefabGUID": "25e671972898c0544a0bb33dd8553b21",
+            "displayNames": {
+              "ja": "Foot_down",
+              "en": "Foot_down"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Nemesis",
+                "prefabGUID": "15cc010a981f2904d9f7f6aa843148bc"
+              },
+              {
+                "prefabName": "Nemesis_Full",
+                "prefabGUID": "479dccd64ca792944bf1fd4944236fbe"
+              },
+              {
+                "prefabName": "Nemesis_Kisekae",
+                "prefabGUID": "cd8402f1840c40d40babc77cee143dec"
+              },
+              {
+                "prefabName": "Nemesis_Full_Kisekae",
+                "prefabGUID": "8153eaa3679f7d944ac3c687ee7bdb9f"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Nemesis",
+                "fbxGUID": "13effdaea02feb14a9f0af5776f8ea72",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Foot_heel": {
+            "variationName": "Foot_heel",
+            "nailPrefabGUID": "65d2acec89007f74b9629dbe5fb2acda",
+            "displayNames": {
+              "ja": "Foot_heel",
+              "en": "Foot_heel"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Nemesis",
+                "prefabGUID": "15cc010a981f2904d9f7f6aa843148bc"
+              },
+              {
+                "prefabName": "Nemesis_Full",
+                "prefabGUID": "479dccd64ca792944bf1fd4944236fbe"
+              },
+              {
+                "prefabName": "Nemesis_Kisekae",
+                "prefabGUID": "cd8402f1840c40d40babc77cee143dec"
+              },
+              {
+                "prefabName": "Nemesis_Full_Kisekae",
+                "prefabGUID": "8153eaa3679f7d944ac3c687ee7bdb9f"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Nemesis",
+                "fbxGUID": "13effdaea02feb14a9f0af5776f8ea72",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
   "こよりLabo": {
     "shopName": "こよりLabo",
     "shopUrl": "https://nagatorokoyori.booth.pm/",
@@ -5607,6 +6297,89 @@
               {
                 "fbxName": "Anon",
                 "fbxGUID": "b90ae694f8009d949934a1419170452e",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "ぞうさん屋": {
+    "shopName": "ぞうさん屋",
+    "shopUrl": "https://umikuri.booth.pm/",
+    "displayNames": {
+      "ja": "ぞうさん屋",
+      "en": "Zousanya"
+    },
+    "avatars": {
+      "Mao": {
+        "avatarName": "Mao",
+        "avatarUrl": "https://umikuri.booth.pm/items/5862767",
+        "displayNames": {
+          "ja": "マオ",
+          "en": "Mao"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "e0d4f6ccd0043c142a7d13a70eeb2fa2",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Mao",
+                "prefabGUID": "7f856cb1636c59e449e067ee101a5698"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Mao",
+                "fbxGUID": "1b998aff8c548754394bdd148b01d82a",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Heal": {
+            "variationName": "Heal",
+            "nailPrefabGUID": "688c44aeb07dcfd44952e508daeca1e9",
+            "displayNames": {
+              "ja": "Heal",
+              "en": "Heal"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Mao",
+                "prefabGUID": "7f856cb1636c59e449e067ee101a5698"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Mao",
+                "fbxGUID": "1b998aff8c548754394bdd148b01d82a",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Highheal": {
+            "variationName": "Highheal",
+            "nailPrefabGUID": "8050779e59745c7479768746577410a4",
+            "displayNames": {
+              "ja": "Highheal",
+              "en": "Highheal"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Mao",
+                "prefabGUID": "7f856cb1636c59e449e067ee101a5698"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Mao",
+                "fbxGUID": "1b998aff8c548754394bdd148b01d82a",
                 "bodyName": "Body"
               }
             ]
@@ -7239,6 +8012,115 @@
       "en": "mk22"
     },
     "avatars": {
+      "Milfy": {
+        "avatarName": "Milfy",
+        "avatarUrl": "https://mk22.booth.pm/items/6571299",
+        "displayNames": {
+          "ja": "ミルフィ",
+          "en": "Milfy"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "673e3cc9231a36c40b347f387fbe5d99",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Milfy",
+                "prefabGUID": "c5c33eee7f7871d4e88abbe5a53f028f"
+              },
+              {
+                "prefabName": "Milfy_Another",
+                "prefabGUID": "efb1dadc147ba2846a68fd5535502c7e"
+              },
+              {
+                "prefabName": "Milfy_kisekae",
+                "prefabGUID": "8aa946bb04902574c9aa054951e48c58"
+              },
+              {
+                "prefabName": "Milfy_Another_kisekae",
+                "prefabGUID": "e145ba5aea384654a80c8ad45da86d7c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Milfy",
+                "fbxGUID": "9ef94258554e06b4ab03fbe9fc914c5c",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Foot_heels": {
+            "variationName": "Foot_heels",
+            "nailPrefabGUID": "aca5f262771714d4fa9be67363a994d0",
+            "displayNames": {
+              "ja": "Foot_heels",
+              "en": "Foot_heels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Milfy",
+                "prefabGUID": "c5c33eee7f7871d4e88abbe5a53f028f"
+              },
+              {
+                "prefabName": "Milfy_Another",
+                "prefabGUID": "efb1dadc147ba2846a68fd5535502c7e"
+              },
+              {
+                "prefabName": "Milfy_kisekae",
+                "prefabGUID": "8aa946bb04902574c9aa054951e48c58"
+              },
+              {
+                "prefabName": "Milfy_Another_kisekae",
+                "prefabGUID": "e145ba5aea384654a80c8ad45da86d7c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Milfy",
+                "fbxGUID": "9ef94258554e06b4ab03fbe9fc914c5c",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Foot_highheels": {
+            "variationName": "Foot_highheels",
+            "nailPrefabGUID": "5718109b84e728449ac0b417a4dd3894",
+            "displayNames": {
+              "ja": "Foot_highheels",
+              "en": "Foot_highheels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Milfy",
+                "prefabGUID": "c5c33eee7f7871d4e88abbe5a53f028f"
+              },
+              {
+                "prefabName": "Milfy_Another",
+                "prefabGUID": "efb1dadc147ba2846a68fd5535502c7e"
+              },
+              {
+                "prefabName": "Milfy_kisekae",
+                "prefabGUID": "8aa946bb04902574c9aa054951e48c58"
+              },
+              {
+                "prefabName": "Milfy_Another_kisekae",
+                "prefabGUID": "e145ba5aea384654a80c8ad45da86d7c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Milfy",
+                "fbxGUID": "9ef94258554e06b4ab03fbe9fc914c5c",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      },
       "Ash": {
         "avatarName": "Ash",
         "avatarUrl": "https://mk22.booth.pm/items/3234473",
@@ -7907,6 +8789,47 @@
                 "fbxName": "body",
                 "fbxGUID": "844d7bfc6ef56df4ea43faa7f01a6d87",
                 "bodyName": "Face"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "アマノソラ": {
+    "shopName": "アマノソラ",
+    "shopUrl": "https://am23ti.booth.pm/",
+    "displayNames": {
+      "ja": "アマノソラ",
+      "en": "am23ti"
+    },
+    "avatars": {
+      "clonka": {
+        "avatarName": "clonka",
+        "avatarUrl": "https://am23ti.booth.pm/items/4256853",
+        "displayNames": {
+          "ja": "クロンカ(FAQご確認ください)",
+          "en": "clonka(Check FAQ)"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "291aeac2336e14744bce8ef80e2a057c",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "clonka",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "clonka",
+                "fbxGUID": "",
+                "bodyName": "Body"
               }
             ]
           }
@@ -8661,14 +9584,35 @@
             },
             "avatarPrefabs": [
               {
-                "prefabName": "",
-                "prefabGUID": ""
+                "prefabName": "Shiina",
+                "prefabGUID": "d756557e5d668f54c802a7d94801e86f"
               }
             ],
             "avatarFbxs": [
               {
                 "fbxName": "Shiina",
-                "fbxGUID": "",
+                "fbxGUID": "8b1ec5829ccd6b04581edd8a5db3abcd",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "high_heels": {
+            "variationName": "high_heels",
+            "nailPrefabGUID": "8884afa25bfe22a43a0a1d49a6b361cd",
+            "displayNames": {
+              "ja": "high_heels",
+              "en": "high_heels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Shiina",
+                "prefabGUID": "d756557e5d668f54c802a7d94801e86f"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Shiina",
+                "fbxGUID": "8b1ec5829ccd6b04581edd8a5db3abcd",
                 "bodyName": "Body"
               }
             ]
@@ -8699,6 +9643,27 @@
             "avatarFbxs": [
               {
                 "fbxName": "Kosame",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "high_heels": {
+            "variationName": "high_heels",
+            "nailPrefabGUID": "8884afa25bfe22a43a0a1d49a6b361cd",
+            "displayNames": {
+              "ja": "high_heels",
+              "en": "high_heels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "",
                 "fbxGUID": "",
                 "bodyName": "Body"
               }
@@ -8734,6 +9699,27 @@
                 "bodyName": "Body"
               }
             ]
+          },
+          "high_heels": {
+            "variationName": "high_heels",
+            "nailPrefabGUID": "8884afa25bfe22a43a0a1d49a6b361cd",
+            "displayNames": {
+              "ja": "high_heels",
+              "en": "high_heels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
           }
         }
       }
@@ -8755,12 +9741,190 @@
           "en": "Nanase Noir"
         },
         "avatarVariations": {
-          "v1.3 default": {
-            "variationName": "v1.3 default",
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "6fa7303f713bba74ba0f2b740cd0c6de",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "default"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "ebc763133f900f4409aece96015f8256"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "afa838e8a99a93b43bc838a9c81092e1"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "68e4ffb4f890c2445b4c41501c5d17d3"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "2e76a57374cf11740b07ebcc43017fe5"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "ad0ee930ec40f904298083f73ab773eb"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "7412e7ac851dffd4ba723dba7212505f"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir__nor",
+                "prefabGUID": "a053b25db3edcc04d8dd850993a46b24"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir__nor",
+                "prefabGUID": "7ce8bb2bd493d3f4f83314aa09b9d389"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "879cfc91ea1b0c649a32ac272a8460e0"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "ebc763133f900f4409aece96015f8256"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "afa838e8a99a93b43bc838a9c81092e1"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "68e4ffb4f890c2445b4c41501c5d17d3"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "2e76a57374cf11740b07ebcc43017fe5"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "ad0ee930ec40f904298083f73ab773eb"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "7412e7ac851dffd4ba723dba7212505f"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01__nor",
+                "prefabGUID": "a053b25db3edcc04d8dd850993a46b24"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01__nor",
+                "prefabGUID": "7ce8bb2bd493d3f4f83314aa09b9d389"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "879cfc91ea1b0c649a32ac272a8460e0"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "ch05_NanaseNoir_",
+                "fbxGUID": "80c2600f3b1935b4a9d4dc0f6790d4cf",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "high heels": {
+            "variationName": "high heels",
+            "nailPrefabGUID": "42d81dd240adda6428026487ac4c2862",
+            "displayNames": {
+              "ja": "high heels",
+              "en": "high heels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "ebc763133f900f4409aece96015f8256"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "afa838e8a99a93b43bc838a9c81092e1"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "68e4ffb4f890c2445b4c41501c5d17d3"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "2e76a57374cf11740b07ebcc43017fe5"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "ad0ee930ec40f904298083f73ab773eb"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "7412e7ac851dffd4ba723dba7212505f"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir__nor",
+                "prefabGUID": "a053b25db3edcc04d8dd850993a46b24"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir__nor",
+                "prefabGUID": "7ce8bb2bd493d3f4f83314aa09b9d389"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_",
+                "prefabGUID": "879cfc91ea1b0c649a32ac272a8460e0"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "ebc763133f900f4409aece96015f8256"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "afa838e8a99a93b43bc838a9c81092e1"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "68e4ffb4f890c2445b4c41501c5d17d3"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "2e76a57374cf11740b07ebcc43017fe5"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "ad0ee930ec40f904298083f73ab773eb"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "7412e7ac851dffd4ba723dba7212505f"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01__nor",
+                "prefabGUID": "a053b25db3edcc04d8dd850993a46b24"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01__nor",
+                "prefabGUID": "7ce8bb2bd493d3f4f83314aa09b9d389"
+              },
+              {
+                "prefabName": "ch05_NanaseNoir_gen2.01_",
+                "prefabGUID": "879cfc91ea1b0c649a32ac272a8460e0"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "ch05_NanaseNoir_",
+                "fbxGUID": "80c2600f3b1935b4a9d4dc0f6790d4cf",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "under v1.3 default": {
+            "variationName": "under v1.3 default",
             "nailPrefabGUID": "57923903e34ce9446a9302c326b634aa",
             "displayNames": {
-              "ja": "v1.3 デフォルト",
-              "en": "v1.3 default"
+              "ja": "v1.3未満 デフォルト",
+              "en": "under v1.3 default"
             },
             "avatarPrefabs": [
               {
@@ -8808,12 +9972,12 @@
               }
             ]
           },
-          "v1.3 high heels": {
-            "variationName": "v1.3 high heels",
+          "under v1.3 high heels": {
+            "variationName": "under v1.3 high heels",
             "nailPrefabGUID": "a6154a4e7eb79a24eb0846dbbc03af4e",
             "displayNames": {
-              "ja": "v1.3 high heels",
-              "en": "v1.3 high heels"
+              "ja": "v1.3未満 high heels",
+              "en": "under v1.3 high heels"
             },
             "avatarPrefabs": [
               {
@@ -9353,12 +10517,42 @@
               {
                 "prefabName": "7st01_Renard_MA Variant",
                 "prefabGUID": "766a2b437ae72c444a23d0ed0f93f3bb"
+              },
+              {
+                "prefabName": "7st01_Renard_v2_Base",
+                "prefabGUID": "7fba07b50271b604f950c0a11d9ba27d"
+              },
+              {
+                "prefabName": "7st01_Renard_v2_Mobile_Base",
+                "prefabGUID": "a643188f1cbde48468effb9169bfe4d8"
+              },
+              {
+                "prefabName": "7st01_Renard_v2_Mobile_Base",
+                "prefabGUID": "a643188f1cbde48468effb9169bfe4d8"
+              },
+              {
+                "prefabName": "7st01_Renard_v2",
+                "prefabGUID": "81a37ffdac489ec4dbfac67b2d791908"
+              },
+              {
+                "prefabName": "7st01_Renard_v2_Mobile",
+                "prefabGUID": "135cc301e6ca9844a9cb282a80bf6384"
               }
             ],
             "avatarFbxs": [
               {
                 "fbxName": "Renard",
                 "fbxGUID": "d6ee09f195507ec42ada5c885f088fbe",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "7st01_Renard_Mobile_v2",
+                "fbxGUID": "5fab36dfb25d3dd4e8d2d1f19717ff8b",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "7st01_Renard_v2",
+                "fbxGUID": "ef9221708afde8f46a57cb1d65510217",
                 "bodyName": "Body"
               }
             ]
@@ -10117,7 +11311,7 @@
             ]
           },
           "U_V1.10": {
-            "variationName": "default",
+            "variationName": "U_V1.10",
             "nailPrefabGUID": "2bb2360159ff1ef43a005186542b5419",
             "displayNames": {
               "ja": "V1.10以前",
@@ -10143,7 +11337,7 @@
             ]
           },
           "U_V1.10_FootHighHeel1": {
-            "variationName": "FootHighHeel1",
+            "variationName": "U_V1.10_FootHighHeel1",
             "nailPrefabGUID": "dbc0062fc4edd4c49a798a14a4135a54",
             "displayNames": {
               "ja": "V1.10以前_FootHighHeel1",
@@ -10169,7 +11363,7 @@
             ]
           },
           "U_V1.10_FootHighHeel2": {
-            "variationName": "FootHighHeel2",
+            "variationName": "U_V1.10_FootHighHeel2",
             "nailPrefabGUID": "0a0d7c625b803c342ade82a64ac09244",
             "displayNames": {
               "ja": "V1.10以前_FootHighHeel2",
@@ -10290,6 +11484,47 @@
               {
                 "fbxName": "Perula",
                 "fbxGUID": "9981d27aac8df684d8f34b0bbcb010ff",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "塩トローチ": {
+    "shopName": "塩トローチ",
+    "shopUrl": "https://messier.booth.pm/",
+    "displayNames": {
+      "ja": "塩トローチ",
+      "en": "messier"
+    },
+    "avatars": {
+      "Yilnel": {
+        "avatarName": "Yilnel",
+        "avatarUrl": "https://messier.booth.pm/items/6289095",
+        "displayNames": {
+          "ja": "イルネル(FAQご確認ください)",
+          "en": "Yilnel(Check FAQ)"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "291aeac2336e14744bce8ef80e2a057c",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Yilnel",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Yilnel",
+                "fbxGUID": "",
                 "bodyName": "Body"
               }
             ]
@@ -10632,14 +11867,109 @@
             },
             "avatarPrefabs": [
               {
-                "prefabName": "",
-                "prefabGUID": ""
+                "prefabName": "Lzebul",
+                "prefabGUID": "c77cd6829be245b4dae4b078b92ce8a6"
+              },
+              {
+                "prefabName": "Lzebul_naked",
+                "prefabGUID": "cbe4764e5a8a79246866f1ff1eb58d11"
+              },
+              {
+                "prefabName": "Lzebul_underwear",
+                "prefabGUID": "1d92be4dc20e78c499de4d8c4da9f5e8"
               }
             ],
             "avatarFbxs": [
               {
                 "fbxName": "Lzebul",
-                "fbxGUID": "",
+                "fbxGUID": "a278a11038620bc49be5b2fb75b2a499",
+                "bodyName": "base_face"
+              }
+            ]
+          },
+          "heels": {
+            "variationName": "heels",
+            "nailPrefabGUID": "d766aeccda70b4b45ac41fe4bd3272d5",
+            "displayNames": {
+              "ja": "heels",
+              "en": "heels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Lzebul",
+                "prefabGUID": "c77cd6829be245b4dae4b078b92ce8a6"
+              },
+              {
+                "prefabName": "Lzebul_naked",
+                "prefabGUID": "cbe4764e5a8a79246866f1ff1eb58d11"
+              },
+              {
+                "prefabName": "Lzebul_underwear",
+                "prefabGUID": "1d92be4dc20e78c499de4d8c4da9f5e8"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Lzebul",
+                "fbxGUID": "a278a11038620bc49be5b2fb75b2a499",
+                "bodyName": "base_face"
+              }
+            ]
+          },
+          "high heels": {
+            "variationName": "high heels",
+            "nailPrefabGUID": "63d312cca8d711f47b700df63e19609a",
+            "displayNames": {
+              "ja": "high heels",
+              "en": "high heels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Lzebul",
+                "prefabGUID": "c77cd6829be245b4dae4b078b92ce8a6"
+              },
+              {
+                "prefabName": "Lzebul_naked",
+                "prefabGUID": "cbe4764e5a8a79246866f1ff1eb58d11"
+              },
+              {
+                "prefabName": "Lzebul_underwear",
+                "prefabGUID": "1d92be4dc20e78c499de4d8c4da9f5e8"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Lzebul",
+                "fbxGUID": "a278a11038620bc49be5b2fb75b2a499",
+                "bodyName": "base_face"
+              }
+            ]
+          },
+          "more high heels": {
+            "variationName": "more high heels",
+            "nailPrefabGUID": "5f374554d46789b4d862c56294733f2d",
+            "displayNames": {
+              "ja": "more high heels",
+              "en": "more high heels"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Lzebul",
+                "prefabGUID": "c77cd6829be245b4dae4b078b92ce8a6"
+              },
+              {
+                "prefabName": "Lzebul_naked",
+                "prefabGUID": "cbe4764e5a8a79246866f1ff1eb58d11"
+              },
+              {
+                "prefabName": "Lzebul_underwear",
+                "prefabGUID": "1d92be4dc20e78c499de4d8c4da9f5e8"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Lzebul",
+                "fbxGUID": "a278a11038620bc49be5b2fb75b2a499",
                 "bodyName": "base_face"
               }
             ]
@@ -10656,6 +11986,37 @@
       "en": "usagi-cocoa"
     },
     "avatars": {
+      "Seiran": {
+        "avatarName": "Seiran",
+        "avatarUrl": "https://usagi-cocoa.booth.pm/items/6359289",
+        "displayNames": {
+          "ja": "セイラン",
+          "en": "Seiran"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "0bad409aa86097b4e994b10d9ce50b90",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Seiran",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Seiran",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      },
       "Marshmero": {
         "avatarName": "Marshmero",
         "avatarUrl": "https://usagi-cocoa.booth.pm/items/4910503",
