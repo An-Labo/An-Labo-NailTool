@@ -5,20 +5,22 @@ using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
+#nullable enable
+
 namespace world.anlabo.mdnailtool.Editor.Language {
 	/// <summary>
 	/// 言語マネージャー
 	/// </summary>
 	internal static class LanguageManager {
 
-		private static List<LanguageData> _languageDataList;
+		private static List<LanguageData>? _languageDataList;
 		/// <summary>
 		/// 読み込まれてる言語データリスト
 		/// </summary>
 		public static List<LanguageData> LanguageDataList {
 			get {
 				if (_languageDataList != null) return _languageDataList;
-				ReloadLanguages();
+				_languageDataList = LoadLanguages();
 				return _languageDataList;
 			}
 		}
@@ -28,10 +30,10 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 		/// </summary>
 		public static LanguageData CurrentLanguageData {
 			get {
-				string currentLang = GlobalSetting.Language;
+				string? currentLang = GlobalSetting.Language;
 				if (currentLang == null) return GetDefaultLanguage();
 				
-				LanguageData currentLangData = LanguageDataList.FirstOrDefault(data => data.language == currentLang);
+				LanguageData? currentLangData = LanguageDataList.FirstOrDefault(data => data.language == currentLang);
 				if (currentLangData != null) {
 					return currentLangData;
 				}
@@ -65,10 +67,10 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 		/// <summary>
 		/// 言語ファイルをリロードします。
 		/// </summary>
-		public static void ReloadLanguages() {
+		private static List<LanguageData> LoadLanguages() {
 			TextAsset langs = AssetDatabase.LoadAssetAtPath<TextAsset>(MDNailToolDefines.LANG_FILE_PATH);
 			string json = langs.text;
-			_languageDataList = JsonConvert.DeserializeObject<List<LanguageData>>(json);
+			return JsonConvert.DeserializeObject<List<LanguageData>>(json) ?? throw new InvalidOperationException("Not found language file.");
 		}
 	}
 }

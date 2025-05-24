@@ -27,6 +27,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private LocalizedObjectField? _materialObjectField;
 		private LocalizedObjectField? _avatarObjectField;
 		private AvatarDropDowns? _avatarDropDowns;
+		private AvatarSortDropdown? _avatarSortDropdown;
 		private NailDesignSelect? _nailDesignSelect;
 		private NailPreview? _nailPreview;
 		private NailShapeDropDown? _nailShapeDropDown;
@@ -53,6 +54,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private Label? _manualLink;
 		private LocalizedLabel? _contactLink;
 
+		public void SetAvatar(Shop shop, Avatar? avatar, AvatarVariation? variation) {
+			this._avatarDropDowns?.SetValues(shop, avatar, variation);
+		}
+
 
 		private void CreateGUI() {
 			INailProcessor.ClearPreviewMaterialCash();
@@ -70,6 +75,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this._avatarObjectField = this.rootVisualElement.Q<LocalizedObjectField>("avatar-object");
 			this._avatarObjectField.RegisterValueChangedCallback(this.OnChangeAvatar);
 			this._avatarDropDowns = this.rootVisualElement.Q<AvatarDropDowns>("avatar");
+			this._avatarDropDowns.SearchButtonClicked += this.ShowAvatarSearchWindow;
+			this._avatarSortDropdown = this.rootVisualElement.Q<AvatarSortDropdown>("avatar-sort");
+			this._avatarSortDropdown.Init();
+			this._avatarSortDropdown.RegisterValueChangedCallback(this.OnChangeAvatarSort);
 			this._nailDesignSelect = this.rootVisualElement.Q<NailDesignSelect>("nail-select");
 			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
 			this._nailPreview = this.rootVisualElement.Q<NailPreview>("nail-preview");
@@ -153,6 +162,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			} else {
 				this.UpdatePreview();
 			}
+		}
+
+		private void OnChangeAvatarSort(ChangeEvent<AvatarSortOrder> evt) {
+			this._avatarDropDowns?.Sort(evt.newValue);
 		}
 
 		private void OnChangeAvatar(ChangeEvent<Object> evt) {
@@ -406,6 +419,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		
 		private static void OnChangeForModularAvatar(ChangeEvent<bool> evt) {
 			GlobalSetting.UseModularAvatar = evt.newValue;
+		}
+
+		private void ShowAvatarSearchWindow() {
+			SearchAvatarWindow.ShowWindow(this);
 		}
 	}
 }
