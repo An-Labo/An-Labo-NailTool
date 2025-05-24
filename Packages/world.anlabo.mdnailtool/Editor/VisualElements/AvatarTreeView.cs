@@ -40,14 +40,16 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			List<TreeViewItem> BuildShopTree() {
 				using DBShop _dbShop = new();
 				IEnumerable<TreeViewItem> shopItems = _dbShop.collection.Select(shop => {
-					string shopName = shop.DisplayNames.GetValueOrDefault(langKey, shop.ShopName);
+					string displayName = shop.DisplayNames.GetValueOrDefault(langKey, shop.ShopName);
 					TreeItemData data = new() {
-						name = shopName,
+						type = ItemType.Shop,
+						name = displayName,
 						allNames = shop.DisplayNames?.Values.ToArray(),
-						url = shop.shopUrl
+						url = shop.shopUrl,
+						shop = shop
 					};
 					bool matched = nonFilter || data.IsMatch(filter!);
-					List<TreeViewItem> avatarItems = BuildAvatarTree(shop.Avatars.Values, matched);
+					List<TreeViewItem> avatarItems = BuildAvatarTree(shop, matched);
 					return new TreeViewItem(id++, data, avatarItems);
 				});
 
@@ -58,16 +60,19 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				return shopItems.ToList();
 			}
 
-			List<TreeViewItem> BuildAvatarTree(IEnumerable<Avatar> avatars, bool parentMatched) {
-				IEnumerable<TreeViewItem> avatarItems = avatars.Select(avatar => {
-					string avatarName = avatar.DisplayNames.GetValueOrDefault(langKey, avatar.AvatarName);
+			List<TreeViewItem> BuildAvatarTree(Shop shop, bool parentMatched) {
+				IEnumerable<TreeViewItem> avatarItems = shop.Avatars.Values.Select(avatar => {
+					string displayName = avatar.DisplayNames.GetValueOrDefault(langKey, avatar.AvatarName);
 					TreeItemData data = new() {
-						name = avatarName,
+						type = ItemType.Avatar,
+						name = displayName,
 						allNames = avatar.DisplayNames?.Values.ToArray(),
-						url = avatar.Url
+						url = avatar.Url,
+						shop = shop,
+						avatar = avatar
 					};
 					bool matched = nonFilter || parentMatched || data.IsMatch(filter!);
-					List<TreeViewItem> variationItems = BuildVariationTree(avatar.AvatarVariations.Values, matched);
+					List<TreeViewItem> variationItems = BuildVariationTree(shop, avatar, matched);
 					return new TreeViewItem(id++, data, variationItems);
 				});
 				if (!nonFilter && !parentMatched) {
@@ -77,12 +82,16 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				return avatarItems.ToList();
 			}
 
-			List<TreeViewItem> BuildVariationTree(IEnumerable<AvatarVariation> variations, bool parentMatched) {
-				IEnumerable<TreeViewItem> variationItems = variations.Select(variation => {
+			List<TreeViewItem> BuildVariationTree(Shop shop, Avatar avatar, bool parentMatched) {
+				IEnumerable<TreeViewItem> variationItems = avatar.AvatarVariations.Values.Select(variation => {
 					string variationName = variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName);
 					TreeItemData data = new() {
+						type = ItemType.Variation,
 						name = variationName,
-						allNames = variation.DisplayNames?.Values.ToArray()
+						allNames = variation.DisplayNames?.Values.ToArray(),
+						shop = shop,
+						avatar = avatar,
+						variation = variation
 					};
 					return new TreeViewItem(id++, data);
 				});
@@ -96,10 +105,11 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 
 		private static VisualElement MakeItem() {
-			return new Label {
+			Label label = new() {
 				name = "label",
 				enableRichText = true
 			};
+			return label;
 		}
 
 		private void BindItem(VisualElement element, int index) {
@@ -121,10 +131,21 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			element.Q<Label>().text = $"{beforeText}<color=red><b>{matchText}</b></color>{afterText}";
 		}
 
+		internal enum ItemType {
+			Shop,
+			Avatar,
+			Variation
+		}
+
 		internal struct TreeItemData {
+			public ItemType type;
 			public string name;
 			public string[]? allNames;
 			public string? url;
+
+			public Shop shop;
+			public Avatar? avatar;
+			public AvatarVariation? variation;
 
 			public bool IsMatch(string filter) {
 				if (this.name.Contains(filter, StringComparison.OrdinalIgnoreCase)) return true;

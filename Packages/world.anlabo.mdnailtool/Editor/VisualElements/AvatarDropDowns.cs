@@ -13,8 +13,14 @@ using Avatar = world.anlabo.mdnailtool.Editor.Entity.Avatar;
 
 namespace world.anlabo.mdnailtool.Editor.VisualElements {
 	internal class AvatarDropDowns : VisualElement, ILocalizedElement {
+		public event Action SearchButtonClicked {
+			add => this._searchButton.clicked += value;
+			remove => this._searchButton.clicked -= value;
+		}
+
 		private const string ALL_ITEM = "<--all-->";
 		private const string SPLIT = "::";
+		private readonly Button _searchButton;
 		private readonly DropdownField _shopPopup;
 		private readonly DropdownField _avatarPopup;
 		private readonly DropdownField _variantPopup;
@@ -33,15 +39,13 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				TextId = "window.supported_avatars"
 			};
 			label.UpdateLanguage();
-			VisualElement searchButton = new() {
+			this._searchButton = new Button {
 				style = {
 					width = new Length(15, LengthUnit.Pixel),
 					height = new Length(15, LengthUnit.Pixel),
-					backgroundImage = EditorGUIUtility.Load("d_Search Icon") as Texture2D,
-					visibility = Visibility.Hidden
+					backgroundImage = EditorGUIUtility.Load("d_Search Icon") as Texture2D
 				}
 			};
-
 
 			VisualElement labelGroup = new() {
 				style = {
@@ -53,7 +57,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				}
 			};
 			labelGroup.Add(label);
-			labelGroup.Add(searchButton);
+			labelGroup.Add(this._searchButton);
 			Func<string?, string> getShopPopupDisplayNameFunc = this.GetShopPopupDisplayName;
 			this._shopPopup = new DropdownField {
 				style = {
@@ -113,7 +117,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._shopPopup.choices = this._shopPopupElements;
 			this._shopPopup.value = this._shopPopupElements?[0];
 
-			this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar.AvatarName))).Select(tuple => tuple.ShopName + SPLIT + tuple.AvatarName).ToList();
+			this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar.AvatarName)))
+				.Select(tuple => tuple.ShopName + SPLIT + tuple.AvatarName).ToList();
 			this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar)))
 				.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
 			this._avatarPopup.choices = this._avatarPopupElements;
@@ -129,21 +134,23 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._variantPopup.value = this._variantPopupElements?[0];
 		}
 
-		public void SetValues(Shop shop, Avatar avatar, AvatarVariation avatarVariation) {
+		public void SetValues(Shop shop, Avatar? avatar, AvatarVariation? avatarVariation) {
 			string langKey = LanguageManager.CurrentLanguageData.language;
-			
+
 			this._shopPopup.SetValueWithoutNotify(shop.ShopName);
-			
+
 			this._avatarPopupElements = shop.Avatars.Values.Select(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName).ToList();
 			this._avatarDisplayNameDictionary = shop.Avatars.Values
-				.ToDictionary(_avatar => shop.ShopName + SPLIT +_avatar.AvatarName, _avatar => _avatar.DisplayNames.GetValueOrDefault(langKey, _avatar.AvatarName));
+				.ToDictionary(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName, _avatar => _avatar.DisplayNames.GetValueOrDefault(langKey, _avatar.AvatarName));
 			this._avatarPopup.choices = this._avatarPopupElements;
+			avatar ??= shop.Avatars.Values.First();
 			this._avatarPopup.SetValueWithoutNotify(shop.ShopName + SPLIT + avatar.AvatarName);
-			
+
 			this._variantPopupElements = avatar.AvatarVariations.Values.Select(variation => variation.VariationName).ToList();
 			this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
 				.ToDictionary(variation => variation.VariationName, variation => variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName));
 			this._variantPopup.choices = this._variantPopupElements;
+			avatarVariation ??= avatar.AvatarVariations.Values.First();
 			this._variantPopup.SetValueWithoutNotify(avatarVariation.VariationName);
 		}
 
@@ -153,7 +160,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			Debug.Log(evt.newValue);
 
 			if (evt.newValue == ALL_ITEM) {
-				this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar.AvatarName))).Select(tuple => tuple.ShopName + SPLIT + tuple.AvatarName).ToList();
+				this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar.AvatarName)))
+					.Select(tuple => tuple.ShopName + SPLIT + tuple.AvatarName).ToList();
 				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar)))
 					.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
 			} else {
@@ -165,18 +173,19 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					this._avatarPopup.value = null;
 					return;
 				}
+
 				this._avatarPopupElements = shop.Avatars.Values.Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName).ToList();
 				this._avatarDisplayNameDictionary = shop.Avatars.Values
 					.ToDictionary(avatar => shop.ShopName + SPLIT + avatar.AvatarName, avatar => avatar.DisplayNames.GetValueOrDefault(langKey, avatar.AvatarName));
 			}
-			
+
 			this._avatarPopup.choices = this._avatarPopupElements;
 			this._avatarPopup.value = this._avatarPopupElements?[0];
 		}
 
 		private void OnChangeAvatarPopup(ChangeEvent<string?> evt) {
 			string langKey = LanguageManager.CurrentLanguageData.language;
-			string[] names = evt.newValue?.Split(SPLIT) ?? new []{"", ""};
+			string[] names = evt.newValue?.Split(SPLIT) ?? new[] { "", "" };
 			string shopName = names[0];
 			string avatarName = names[1];
 			using DBShop dbShop = new();
@@ -276,7 +285,6 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
 						.ToDictionary(variation => variation.VariationName, variation => variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName));
 				}
-
 			} else {
 				Shop? shop = dbShop.FindShopByName(this._shopPopup.value);
 				if (shop != null) {
@@ -288,13 +296,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					this._variantDisplayNameDictionary = avatar.AvatarVariations.Values.ToDictionary(variation => variation.VariationName,
 						variation => variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName));
 				}
-
 			}
-			
+
 			oldValue = this._avatarPopup.value;
 			this._avatarPopup.SetValueWithoutNotify("");
 			this._avatarPopup.SetValueWithoutNotify(oldValue);
-			
+
 			oldValue = this._variantPopup.value;
 			this._variantPopup.SetValueWithoutNotify("");
 			this._variantPopup.SetValueWithoutNotify(oldValue);

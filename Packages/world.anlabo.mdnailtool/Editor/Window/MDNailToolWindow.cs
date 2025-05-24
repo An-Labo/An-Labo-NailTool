@@ -53,6 +53,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private Label? _manualLink;
 		private LocalizedLabel? _contactLink;
 
+		public void SetAvatar(Shop shop, Avatar? avatar, AvatarVariation? variation) {
+			this._avatarDropDowns?.SetValues(shop, avatar, variation);
+		}
+
 
 		private void CreateGUI() {
 			INailProcessor.ClearPreviewMaterialCash();
@@ -70,6 +74,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this._avatarObjectField = this.rootVisualElement.Q<LocalizedObjectField>("avatar-object");
 			this._avatarObjectField.RegisterValueChangedCallback(this.OnChangeAvatar);
 			this._avatarDropDowns = this.rootVisualElement.Q<AvatarDropDowns>("avatar");
+			this._avatarDropDowns.SearchButtonClicked += this.ShowAvatarSearchWindow;
 			this._nailDesignSelect = this.rootVisualElement.Q<NailDesignSelect>("nail-select");
 			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
 			this._nailPreview = this.rootVisualElement.Q<NailPreview>("nail-preview");
@@ -406,6 +411,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		
 		private static void OnChangeForModularAvatar(ChangeEvent<bool> evt) {
 			GlobalSetting.UseModularAvatar = evt.newValue;
+		}
+
+		private void ShowAvatarSearchWindow() {
+			SearchAvatarWindow.ShowWindow(this);
 		}
 	}
 }
