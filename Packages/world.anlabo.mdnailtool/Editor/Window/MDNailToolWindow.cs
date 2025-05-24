@@ -176,6 +176,12 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 				return;
 			}
 
+			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
+			if (avatarVariationData == null) {
+				Debug.LogError("Not found Avatar.");
+				return;
+			}
+
 			GameObject? prefab = this._avatarDropDowns!.GetSelectedPrefab();
 			if (prefab == null) {
 				Debug.LogError("Not found target Nail Prefabs.");
@@ -189,7 +195,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			}
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
-			NailSetupProcessor processor = new(avatar, prefab, designAndVariationNames, nailShapeName) {
+			NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName) {
 				AvatarName = this._avatarDropDowns.GetAvatarName(),
 				OverrideMesh = this._nailShapeDropDown!.GetSelectedShapeMeshes(),
 				UseFootNail = this._useFootNail!.value,
@@ -220,8 +226,14 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 				EditorUtility.DisplayDialog(S("dialog.error"), S("dialog.error.select_target_avatar"), "OK");
 				return;
 			}
+			
+			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
+			if (avatarVariationData == null) {
+				Debug.LogError("Not found Avatar.");
+				return;
+			}
 
-			NailSetupProcessor.RemoveNail(avatar);
+			NailSetupProcessor.RemoveNail(avatar, avatarVariationData.BoneMappingOverride);
 		}
 
 		private void OnSelectNail(string designName) {
