@@ -33,6 +33,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		private Dictionary<string, string>? _avatarDisplayNameDictionary;
 		private Dictionary<string, string>? _variantDisplayNameDictionary;
 
+		private AvatarSortOrder _avatarSortOrder = AvatarSortOrder.Default;
+
 		public AvatarDropDowns() {
 			this.style.height = new Length(22, LengthUnit.Pixel);
 			LocalizedLabel label = new() {
@@ -117,10 +119,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._shopPopup.choices = this._shopPopupElements;
 			this._shopPopup.value = this._shopPopupElements?[0];
 
-			this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar.AvatarName)))
-				.Select(tuple => tuple.ShopName + SPLIT + tuple.AvatarName).ToList();
-			this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar)))
-				.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
+			this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName)).ToList();
+			this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop, avatar)))
+				.ToDictionary(tuple => tuple.shop.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
 			this._avatarPopup.choices = this._avatarPopupElements;
 			this._avatarPopup.value = this._avatarPopupElements[0];
 
@@ -134,16 +135,44 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._variantPopup.value = this._variantPopupElements?[0];
 		}
 
-		public void SetValues(Shop shop, Avatar? avatar, AvatarVariation? avatarVariation) {
+		public void Sort(AvatarSortOrder order) {
+			this._avatarSortOrder = order;
+			using DBShop dbShop = new();
+			this.SortShopList(order);
+
+			string[] avatarNames = this._avatarPopup.value.Split(SPLIT);
+			string shopName = avatarNames[0];
+			string avatarName = avatarNames[1];
+			string? variantName = this._variantPopup.value;
+
+			Shop? shop = dbShop.FindShopByName(shopName);
+			if (shop == null) throw new InvalidOperationException("Not found shop.");
+			Avatar? avatar = shop.FindAvatarByName(avatarName);
+			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
+			this.SetValues(shop, avatar, variation, this._shopPopup.value == ALL_ITEM);
+		}
+
+		public void SetValues(Shop shop, Avatar? avatar, AvatarVariation? avatarVariation, bool isAllItem = false) {
 			string langKey = LanguageManager.CurrentLanguageData.language;
 
-			this._shopPopup.SetValueWithoutNotify(shop.ShopName);
+			this._shopPopup.SetValueWithoutNotify(isAllItem ? ALL_ITEM : shop.ShopName);
 
-			this._avatarPopupElements = shop.Avatars.Values.Select(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName).ToList();
-			this._avatarDisplayNameDictionary = shop.Avatars.Values
-				.ToDictionary(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName, _avatar => _avatar.DisplayNames.GetValueOrDefault(langKey, _avatar.AvatarName));
-			this._avatarPopup.choices = this._avatarPopupElements;
+			if (isAllItem) {
+				using DBShop dbShop = new();
+				this._avatarPopupElements = dbShop.collection.SelectMany(s => s.Avatars.Values.Select(a => s.ShopName + SPLIT + a.AvatarName))
+					.ToList();
+				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(s => s.Avatars.Values.Select(a => (s, a)))
+					.ToDictionary(tuple => tuple.s.ShopName + SPLIT + tuple.a.AvatarName, tuple => tuple.a.DisplayNames.GetValueOrDefault(langKey, tuple.a.AvatarName));
+			} else {
+				this._avatarPopupElements = shop.Avatars.Values.Select(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName).ToList();
+				this._avatarDisplayNameDictionary = shop.Avatars.Values
+					.ToDictionary(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName, _avatar => _avatar.DisplayNames.GetValueOrDefault(langKey, _avatar.AvatarName));
+			}
+
+			this.SortAvatarList(this._avatarSortOrder);
+
 			avatar ??= shop.Avatars.Values.First();
+			this._avatarPopup.choices = this._avatarPopupElements;
 			this._avatarPopup.SetValueWithoutNotify(shop.ShopName + SPLIT + avatar.AvatarName);
 
 			this._variantPopupElements = avatar.AvatarVariations.Values.Select(variation => variation.VariationName).ToList();
@@ -157,7 +186,6 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		private void OnChangeShopPopup(ChangeEvent<string?> evt) {
 			string langKey = LanguageManager.CurrentLanguageData.language;
 			using DBShop dbShop = new();
-			Debug.Log(evt.newValue);
 
 			if (evt.newValue == ALL_ITEM) {
 				this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar.AvatarName)))
@@ -180,7 +208,10 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			}
 
 			this._avatarPopup.choices = this._avatarPopupElements;
-			this._avatarPopup.value = this._avatarPopupElements?[0];
+			this.SortAvatarList(this._avatarSortOrder);
+			if (evt.newValue != ALL_ITEM) {
+				this._avatarPopup.value = this._avatarPopupElements?[0];
+			}
 		}
 
 		private void OnChangeAvatarPopup(ChangeEvent<string?> evt) {
@@ -238,8 +269,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public GameObject? GetSelectedPrefab() {
-			string? shopName = this._shopPopup.value;
-			string? avatarName = this._avatarPopup.value.Split(SPLIT)[1];
+			string[] avatarNames = this._avatarPopup.value.Split(SPLIT);
+			string shopName = avatarNames[0];
+			string avatarName = avatarNames[1];
 			string? variantName = this._variantPopup.value;
 
 			if (string.IsNullOrEmpty(shopName) || string.IsNullOrEmpty(avatarName) || string.IsNullOrEmpty(variantName)) return null;
@@ -260,6 +292,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			return nailPrefab;
 		}
 
+
 		public string GetAvatarName() {
 			return this._avatarPopup.value;
 		}
@@ -270,9 +303,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			using DBShop dbShop = new();
 			this._shopDisplayNameDictionary = dbShop.collection.ToDictionary(shop => shop.ShopName, shop => shop.DisplayNames.GetValueOrDefault(langKey, shop.ShopName));
 			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop");
-			string? oldValue = this._shopPopup.value;
-			this._shopPopup.SetValueWithoutNotify("");
-			this._shopPopup.SetValueWithoutNotify(oldValue);
+			this.SortShopList(this._avatarSortOrder);
+			this._shopPopup.SetValueWithoutNotify(this._shopPopup.value);
 
 			if (this._shopPopup.value == ALL_ITEM) {
 				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar)))
@@ -298,13 +330,97 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				}
 			}
 
-			oldValue = this._avatarPopup.value;
-			this._avatarPopup.SetValueWithoutNotify("");
-			this._avatarPopup.SetValueWithoutNotify(oldValue);
+			this.SortAvatarList(this._avatarSortOrder);
 
-			oldValue = this._variantPopup.value;
-			this._variantPopup.SetValueWithoutNotify("");
-			this._variantPopup.SetValueWithoutNotify(oldValue);
+			this._avatarPopup.SetValueWithoutNotify(this._avatarPopup.value);
+			this._variantPopup.SetValueWithoutNotify(this._variantPopup.value);
+		}
+
+		private void SortShopList(AvatarSortOrder order) {
+			switch (order) {
+				case AvatarSortOrder.Default:
+				case AvatarSortOrder.AvatarNameAsc:
+				case AvatarSortOrder.AvatarNameDesc:
+				case AvatarSortOrder.NewerAsc:
+				case AvatarSortOrder.NewerDesc: {
+					using DBShop dbShop = new();
+					this._shopPopupElements = dbShop.collection.Select(shop => shop.ShopName).Prepend(ALL_ITEM).ToList();
+					this._shopPopup.choices = this._shopPopupElements;
+					break;
+				}
+				case AvatarSortOrder.ShopNameAsc:
+					this._shopPopupElements?.Sort(1, this._shopPopupElements.Count - 1, Comparer<string>.Create((s, s1) =>
+						string.Compare(this._shopDisplayNameDictionary?.GetValueOrDefault(s) ?? s, this._shopDisplayNameDictionary?.GetValueOrDefault(s1) ?? s1, StringComparison.CurrentCulture)));
+					break;
+				case AvatarSortOrder.ShopNameDesc:
+					this._shopPopupElements?.Sort(1, this._shopPopupElements.Count - 1, Comparer<string>.Create((s, s1) =>
+						string.Compare(this._shopDisplayNameDictionary?.GetValueOrDefault(s1) ?? s1, this._shopDisplayNameDictionary?.GetValueOrDefault(s) ?? s, StringComparison.CurrentCulture)));
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(order), order, null);
+			}
+		}
+
+		private void SortAvatarList(AvatarSortOrder order) {
+			if (this._avatarPopupElements == null) throw new InvalidOperationException("AvatarPopupElements is null");
+			switch (order) {
+				case AvatarSortOrder.AvatarNameAsc:
+					this._avatarPopupElements.Sort((a, b) =>
+						string.Compare(this._avatarDisplayNameDictionary?.GetValueOrDefault(a) ?? a, this._avatarDisplayNameDictionary?.GetValueOrDefault(b) ?? b, StringComparison.CurrentCulture));
+
+					break;
+				case AvatarSortOrder.AvatarNameDesc:
+					this._avatarPopupElements.Sort((a, b) =>
+						string.Compare(this._avatarDisplayNameDictionary?.GetValueOrDefault(b) ?? b, this._avatarDisplayNameDictionary?.GetValueOrDefault(a) ?? a, StringComparison.CurrentCulture));
+					break;
+				case AvatarSortOrder.ShopNameAsc:
+					this._avatarPopupElements.Sort((a, b) => {
+						string shopNameA = a.Split(SPLIT)[0];
+						string shopNameB = b.Split(SPLIT)[0];
+						return string.Compare(this._shopDisplayNameDictionary?.GetValueOrDefault(shopNameA) ?? shopNameA, this._shopDisplayNameDictionary?.GetValueOrDefault(shopNameB) ?? shopNameB,
+							StringComparison.CurrentCulture);
+					});
+					break;
+				case AvatarSortOrder.ShopNameDesc:
+					this._avatarPopupElements.Sort((a, b) => {
+						string shopNameA = a.Split(SPLIT)[0];
+						string shopNameB = b.Split(SPLIT)[0];
+						return string.Compare(this._shopDisplayNameDictionary?.GetValueOrDefault(shopNameB) ?? shopNameB, this._shopDisplayNameDictionary?.GetValueOrDefault(shopNameA) ?? shopNameA,
+							StringComparison.CurrentCulture);
+					});
+					break;
+
+				case AvatarSortOrder.NewerAsc: {
+					Dictionary<string, int> indexMap = this._avatarPopupElements.Select((s, i) => (s, i)).ToDictionary(tuple => tuple.s, tuple => tuple.i);
+					this._avatarPopupElements.Sort((a, b) => {
+						string shopNameA = a.Split(SPLIT)[0];
+						string shopNameB = b.Split(SPLIT)[0];
+
+						int shopNameCompare = string.Compare(shopNameA, shopNameB, StringComparison.CurrentCulture);
+						if (shopNameCompare != 0) return shopNameCompare;
+
+						return indexMap[a].CompareTo(indexMap[b]);
+					});
+					break;
+				}
+				case AvatarSortOrder.NewerDesc: {
+					Dictionary<string, int> indexMap = this._avatarPopupElements.Select((s, i) => (s, i)).ToDictionary(tuple => tuple.s, tuple => tuple.i);
+					this._avatarPopupElements.Sort((a, b) => {
+						string shopNameA = a.Split(SPLIT)[0];
+						string shopNameB = b.Split(SPLIT)[0];
+
+						int shopNameCompare = string.Compare(shopNameA, shopNameB, StringComparison.CurrentCulture);
+						if (shopNameCompare != 0) return shopNameCompare;
+
+						return indexMap[b].CompareTo(indexMap[a]);
+					});
+					break;
+				}
+				case AvatarSortOrder.Default:
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 
 		internal new class UxmlFactory : UxmlFactory<AvatarDropDowns, UxmlTraits> { }

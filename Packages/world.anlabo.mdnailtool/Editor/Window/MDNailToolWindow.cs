@@ -27,6 +27,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private LocalizedObjectField? _materialObjectField;
 		private LocalizedObjectField? _avatarObjectField;
 		private AvatarDropDowns? _avatarDropDowns;
+		private AvatarSortDropdown? _avatarSortDropdown;
 		private NailDesignSelect? _nailDesignSelect;
 		private NailPreview? _nailPreview;
 		private NailShapeDropDown? _nailShapeDropDown;
@@ -75,6 +76,9 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this._avatarObjectField.RegisterValueChangedCallback(this.OnChangeAvatar);
 			this._avatarDropDowns = this.rootVisualElement.Q<AvatarDropDowns>("avatar");
 			this._avatarDropDowns.SearchButtonClicked += this.ShowAvatarSearchWindow;
+			this._avatarSortDropdown = this.rootVisualElement.Q<AvatarSortDropdown>("avatar-sort");
+			this._avatarSortDropdown.Init();
+			this._avatarSortDropdown.RegisterValueChangedCallback(this.OnChangeAvatarSort);
 			this._nailDesignSelect = this.rootVisualElement.Q<NailDesignSelect>("nail-select");
 			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
 			this._nailPreview = this.rootVisualElement.Q<NailPreview>("nail-preview");
@@ -158,6 +162,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			} else {
 				this.UpdatePreview();
 			}
+		}
+
+		private void OnChangeAvatarSort(ChangeEvent<AvatarSortOrder> evt) {
+			this._avatarDropDowns?.Sort(evt.newValue);
 		}
 
 		private void OnChangeAvatar(ChangeEvent<Object> evt) {
