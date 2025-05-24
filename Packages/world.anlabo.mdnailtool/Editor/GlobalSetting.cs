@@ -108,7 +108,22 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			set {
 				string json = JsonConvert.SerializeObject(value);
-				EditorPrefs.SetString(DESIGN_LAST_USED_TIMES_KEY, json);
+				EditorPrefs.SetString(DESIGN_USE_COUNT_KEY, json);
+			}
+		}
+		
+		private const string AVATAR_USE_COUNT_KEY = "world.anlabo.mdnailtool.avatar_use_count";
+		internal static Dictionary<string, int> AvatarUseCount {
+			get {
+				if (!EditorPrefs.HasKey(AVATAR_USE_COUNT_KEY)) return new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(DESIGN_USE_COUNT_KEY);
+				Dictionary<string, int>? obj = JsonConvert.DeserializeObject<Dictionary<string, int>>(json);
+				return obj ?? new Dictionary<string, int>();
+			}
+
+			set {
+				string json = JsonConvert.SerializeObject(value);
+				EditorPrefs.SetString(AVATAR_USE_COUNT_KEY, json);
 			}
 		}
 
@@ -120,6 +135,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			EditorPrefs.DeleteKey(BACKUP_KEY);
 			EditorPrefs.DeleteKey(USE_MODULAR_AVATAR_KEY);
 			EditorPrefs.DeleteKey(DESIGN_LAST_USED_TIMES_KEY);
+			EditorPrefs.DeleteKey(DESIGN_USE_COUNT_KEY);
+			EditorPrefs.DeleteKey(AVATAR_USE_COUNT_KEY);
 		}
 
 	}

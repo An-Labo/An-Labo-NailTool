@@ -256,8 +256,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public AvatarVariation? GetSelectedAvatarVariation() {
-			string? shopName = this._shopPopup.value;
-			string? avatarName = this._avatarPopup.value;
+			string[] avatarNames = this._avatarPopup.value.Split(SPLIT);
+			string shopName = avatarNames[0];
+			string avatarName = avatarNames[1];
 			string? variantName = this._variantPopup.value;
 			if (string.IsNullOrEmpty(shopName) || string.IsNullOrEmpty(avatarName) || string.IsNullOrEmpty(variantName)) return null;
 			
@@ -292,9 +293,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			return nailPrefab;
 		}
 
+		public string GetAvatarKey() {
+			return this._avatarPopup.value;
+		}
 
 		public string GetAvatarName() {
-			return this._avatarPopup.value;
+			return this._avatarPopup.value.Split(SPLIT)[1];
 		}
 		
 
