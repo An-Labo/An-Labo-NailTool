@@ -220,15 +220,18 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			processor.Process();
 
 			Dictionary<string, DateTime> lastUsedTimes = GlobalSetting.DesignLastUsedTimes;
+			Dictionary<string, int> usedCounts = GlobalSetting.DesignUseCount;
 			
 			foreach ((INailProcessor nailProcessor, string _, string _) in designAndVariationNames) {
 				if (string.IsNullOrEmpty(nailProcessor.DesignName)) continue;
 				lastUsedTimes[nailProcessor.DesignName] = DateTime.Now;
+				usedCounts[nailProcessor.DesignName] += 1;
 			}
 
 			EditorUtility.DisplayDialog(S("dialog.finished"), S("dialog.finished.success_attach_nail"), "OK");
 
 			GlobalSetting.DesignLastUsedTimes = lastUsedTimes;
+			GlobalSetting.DesignUseCount = usedCounts;
 			this._nailDesignSelect!.Init();
 		}
 

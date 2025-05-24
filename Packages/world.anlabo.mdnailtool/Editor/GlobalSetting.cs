@@ -97,6 +97,21 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
+		private const string DESIGN_USE_COUNT_KEY = "world.anlabo.mdnailtool.design_use_count";
+		internal static Dictionary<string, int> DesignUseCount {
+			get {
+				if (!EditorPrefs.HasKey(DESIGN_USE_COUNT_KEY)) return new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(DESIGN_USE_COUNT_KEY);
+				Dictionary<string, int>? obj = JsonConvert.DeserializeObject<Dictionary<string, int>>(json);
+				return obj ?? new Dictionary<string, int>();
+			}
+
+			set {
+				string json = JsonConvert.SerializeObject(value);
+				EditorPrefs.SetString(DESIGN_LAST_USED_TIMES_KEY, json);
+			}
+		}
+
 		public static void ClearGlobalSettings() {
 			EditorPrefs.DeleteKey(LANGUAGE_KEY);
 			EditorPrefs.DeleteKey(LAST_USE_SHAPE_NAME_KEY);
