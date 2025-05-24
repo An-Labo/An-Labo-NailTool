@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:VisualElement name="Root" style="flex-grow: 1;">
+    <ui:ScrollView name="Root" style="flex-grow: 1;">
         <ui:VisualElement name="Header">
             <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout text-id="window.treatment" value="false">
                 <ui:Label name="link-manual" text="Manual" style="color: #7070FF;" />
@@ -7,13 +7,14 @@
             <world.anlabo.mdnailtool.Editor.VisualElements.LanguageDropDown focusable="true" />
             <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedObjectField name="avatar-object" text-id="window.avatar" type="VRC.SDK3.Avatars.Components.VRCAvatarDescriptor, VRCSDK3A"/>
             <world.anlabo.mdnailtool.Editor.VisualElements.AvatarDropDowns name="avatar"/>
+            <world.anlabo.mdnailtool.Editor.VisualElements.AvatarSortDropdown name="avatar-sort"/>
         </ui:VisualElement>
         <ui:VisualElement name="Body">
             <ui:Box style="margin: 5px; padding: 5px;">
                 <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignSelect name="nail-select"/>
             </ui:Box>
             <ui:Box style="margin: 0px 5px; padding: 5px;">
-                <world.anlabo.mdnailtool.Editor.VisualElements.NailPreview name="nail-preview" background-color="#426C7F00" style="height: 200px; margin-top: 5px; margin-bottom: 5px;"/> 
+                <world.anlabo.mdnailtool.Editor.VisualElements.NailPreview name="nail-preview" background-color="#426C7F00" style="height: 250px; margin-top: 5px; margin-bottom: 5px;"/> 
                 <ui:VisualElement style="flex-direction: row;">
                     <world.anlabo.mdnailtool.Editor.VisualElements.NailShapeDropDown name="nail-shape" text-id="window.nail_shape" style="width: 30%; margin-left: 0;" />
                     <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown name="nail-material" text-id="window.nail_material" style="width: 30%; margin-left: 10px; margin-right: 10px;" />
@@ -93,5 +94,5 @@
                 <ui:Label name="version" style="font-size: 10px;" />
             </ui:VisualElement>
         </ui:VisualElement>
-    </ui:VisualElement>
+    </ui:ScrollView>
 </ui:UXML>

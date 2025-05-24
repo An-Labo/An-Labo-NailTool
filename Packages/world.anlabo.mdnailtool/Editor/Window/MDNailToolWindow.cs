@@ -27,6 +27,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private LocalizedObjectField? _materialObjectField;
 		private LocalizedObjectField? _avatarObjectField;
 		private AvatarDropDowns? _avatarDropDowns;
+		private AvatarSortDropdown? _avatarSortDropdown;
 		private NailDesignSelect? _nailDesignSelect;
 		private NailPreview? _nailPreview;
 		private NailShapeDropDown? _nailShapeDropDown;
@@ -53,6 +54,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private Label? _manualLink;
 		private LocalizedLabel? _contactLink;
 
+		public void SetAvatar(Shop shop, Avatar? avatar, AvatarVariation? variation) {
+			this._avatarDropDowns?.SetValues(shop, avatar, variation);
+		}
+
 
 		private void CreateGUI() {
 			INailProcessor.ClearPreviewMaterialCash();
@@ -70,6 +75,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this._avatarObjectField = this.rootVisualElement.Q<LocalizedObjectField>("avatar-object");
 			this._avatarObjectField.RegisterValueChangedCallback(this.OnChangeAvatar);
 			this._avatarDropDowns = this.rootVisualElement.Q<AvatarDropDowns>("avatar");
+			this._avatarDropDowns.SearchButtonClicked += this.ShowAvatarSearchWindow;
+			this._avatarSortDropdown = this.rootVisualElement.Q<AvatarSortDropdown>("avatar-sort");
+			this._avatarSortDropdown.Init();
+			this._avatarSortDropdown.RegisterValueChangedCallback(this.OnChangeAvatarSort);
 			this._nailDesignSelect = this.rootVisualElement.Q<NailDesignSelect>("nail-select");
 			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
 			this._nailPreview = this.rootVisualElement.Q<NailPreview>("nail-preview");
@@ -111,9 +120,9 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 
 			this._handSelects = this.rootVisualElement.Q<VisualElement>("hand-selects");
-			this._handSelects.SetEnabled(this._setPreFinger.value);
+			this._handSelects.style.display = this._setPreFinger.value ? DisplayStyle.Flex : DisplayStyle.None;
 			this._footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
-			this._footSelects.SetEnabled(this._useFootNail.value);
+			this._footSelects.style.display = this._useFootNail.value ? DisplayStyle.Flex : DisplayStyle.None;
 
 			this._removeCurrentNail = this.rootVisualElement.Q<Toggle>("remove-current-nail");
 			this._removeCurrentNail.SetValueWithoutNotify(GlobalSetting.RemoveCurrentNail);
@@ -155,6 +164,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			}
 		}
 
+		private void OnChangeAvatarSort(ChangeEvent<AvatarSortOrder> evt) {
+			this._avatarDropDowns?.Sort(evt.newValue);
+		}
+
 		private void OnChangeAvatar(ChangeEvent<Object> evt) {
 			if (evt.newValue == null) return;
 			if (evt.newValue is not VRCAvatarDescriptor avatar) return;
@@ -176,6 +189,12 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 				return;
 			}
 
+			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
+			if (avatarVariationData == null) {
+				Debug.LogError("Not found Avatar.");
+				return;
+			}
+
 			GameObject? prefab = this._avatarDropDowns!.GetSelectedPrefab();
 			if (prefab == null) {
 				Debug.LogError("Not found target Nail Prefabs.");
@@ -189,7 +208,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			}
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
-			NailSetupProcessor processor = new(avatar, prefab, designAndVariationNames, nailShapeName) {
+			NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName) {
 				AvatarName = this._avatarDropDowns.GetAvatarName(),
 				OverrideMesh = this._nailShapeDropDown!.GetSelectedShapeMeshes(),
 				UseFootNail = this._useFootNail!.value,
@@ -201,15 +220,28 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			processor.Process();
 
 			Dictionary<string, DateTime> lastUsedTimes = GlobalSetting.DesignLastUsedTimes;
+			Dictionary<string, int> designUsedCounts = GlobalSetting.DesignUseCount;
+			Dictionary<string, int> avatarUseCount = GlobalSetting.AvatarUseCount;
 			
 			foreach ((INailProcessor nailProcessor, string _, string _) in designAndVariationNames) {
 				if (string.IsNullOrEmpty(nailProcessor.DesignName)) continue;
 				lastUsedTimes[nailProcessor.DesignName] = DateTime.Now;
+				if (!designUsedCounts.TryAdd(nailProcessor.DesignName, 1)) {
+					designUsedCounts[nailProcessor.DesignName] += 1;
+				}
+
+				if (avatarUseCount.TryAdd(this._avatarDropDowns.GetAvatarKey(), 1)) {
+					avatarUseCount[this._avatarDropDowns.GetAvatarKey()] += 1;
+				}
+
+				designUsedCounts[nailProcessor.DesignName] += 1;
 			}
 
 			EditorUtility.DisplayDialog(S("dialog.finished"), S("dialog.finished.success_attach_nail"), "OK");
 
 			GlobalSetting.DesignLastUsedTimes = lastUsedTimes;
+			GlobalSetting.DesignUseCount = designUsedCounts;
+			GlobalSetting.AvatarUseCount = avatarUseCount;
 			this._nailDesignSelect!.Init();
 		}
 
@@ -220,8 +252,14 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 				EditorUtility.DisplayDialog(S("dialog.error"), S("dialog.error.select_target_avatar"), "OK");
 				return;
 			}
+			
+			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
+			if (avatarVariationData == null) {
+				Debug.LogError("Not found Avatar.");
+				return;
+			}
 
-			NailSetupProcessor.RemoveNail(avatar);
+			NailSetupProcessor.RemoveNail(avatar, avatarVariationData.BoneMappingOverride);
 		}
 
 		private void OnSelectNail(string designName) {
@@ -296,11 +334,11 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		}
 
 		private void OnChangeSetPreFinger(ChangeEvent<bool> evt) {
-			this._handSelects!.SetEnabled(evt.newValue);
+			this._handSelects!.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
 		}
 
 		private void OnChangeUseFootNail(ChangeEvent<bool> evt) {
-			this._footSelects!.SetEnabled(evt.newValue);
+			this._footSelects!.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
 			GlobalSetting.UseFootNail = evt.newValue;
 		}
 
@@ -394,6 +432,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		
 		private static void OnChangeForModularAvatar(ChangeEvent<bool> evt) {
 			GlobalSetting.UseModularAvatar = evt.newValue;
+		}
+
+		private void ShowAvatarSearchWindow() {
+			SearchAvatarWindow.ShowWindow(this);
 		}
 	}
 }
