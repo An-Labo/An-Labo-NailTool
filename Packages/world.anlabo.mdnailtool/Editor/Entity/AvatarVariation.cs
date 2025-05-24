@@ -16,6 +16,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 
 		[JsonProperty("displayNames")]
 		public IReadOnlyDictionary<string, string>? DisplayNames { get; set; }
+		
+		[JsonProperty("boneMappingOverride")]
+		public IReadOnlyDictionary<string, string>? BoneMappingOverride { get; set; }
 
 		[JsonRequired]
 		[JsonProperty("avatarPrefabs")]
