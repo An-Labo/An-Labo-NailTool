@@ -11,18 +11,19 @@ namespace world.anlabo.mdnailtool.Editor {
 		private static void ShowMDNailToolWindow() {
 			MDNailToolWindow.ShowWindow();
 		}
-
-
-		[MenuItem(MENU_ROOT + "Report Generator", false, 1)]
+		
+		[MenuItem(MENU_ROOT + "Reload Design", false, 100)]
+		private static void ReInstallLegacyDesign() {
+			LegacyDesignInstaller.ReInstallLegacyNail();
+		}
+		
+		[MenuItem(MENU_ROOT + "Report Generator", false, 101)]
 		private static void ShowReportGeneratorWindow() {
 			ReportGeneratorWindow.ShowWindow();
 		}
 
 		/*
-		[MenuItem(MENU_ROOT + "Re Install Legacy Design", false, 12)]
-		private static void ReInstallLegacyDesign() {
-			LegacyDesignInstaller.ReInstallLegacyNail();
-		}
+
 
 		[MenuItem(MENU_ROOT + "Reload Languages", false, 13)]
 		private static void ReloadLanguages() {
