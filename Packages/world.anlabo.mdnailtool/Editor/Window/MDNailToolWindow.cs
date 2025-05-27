@@ -39,7 +39,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private Toggle? _setPreFinger;
 		private Toggle? _useFootNail;
 		private Toggle? _removeCurrentNail;
-		private Toggle? _generateMaterial;
 		private Toggle? _backup;
 		private Toggle? _forModularAvatar;
 
@@ -128,10 +127,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this._removeCurrentNail.SetValueWithoutNotify(GlobalSetting.RemoveCurrentNail);
 			this._removeCurrentNail.RegisterValueChangedCallback(OnChangeRemoveCurrentNail);
 			
-			this._generateMaterial = this.rootVisualElement.Q<Toggle>("generate-material");
-			this._generateMaterial.SetValueWithoutNotify(GlobalSetting.GenerateMaterial);
-			this._generateMaterial.RegisterValueChangedCallback(OnChangeGenerateMaterial);
-			
 			this._backup = this.rootVisualElement.Q<Toggle>("backup");
 			this._backup.SetValueWithoutNotify(GlobalSetting.Backup);
 			this._backup.RegisterValueChangedCallback(OnChangeBackup);
@@ -213,7 +208,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 				OverrideMesh = this._nailShapeDropDown!.GetSelectedShapeMeshes(),
 				UseFootNail = this._useFootNail!.value,
 				RemoveCurrentNail = this._removeCurrentNail!.value,
-				GenerateMaterial = this._generateMaterial!.value,
+				GenerateMaterial = true,
 				Backup = this._backup!.value,
 				ForModularAvatar = this._forModularAvatar!.value
 			};
@@ -417,11 +412,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		
 		private static void OnChangeRemoveCurrentNail(ChangeEvent<bool> evt) {
 			GlobalSetting.RemoveCurrentNail = evt.newValue;
-		}
-		
-		
-		private static void OnChangeGenerateMaterial(ChangeEvent<bool> evt) {
-			GlobalSetting.GenerateMaterial = evt.newValue;
 		}
 		
 		
