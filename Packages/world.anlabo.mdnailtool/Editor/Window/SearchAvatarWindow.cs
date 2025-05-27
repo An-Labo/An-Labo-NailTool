@@ -34,11 +34,18 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this._avatarTreeView = this.rootVisualElement.Q<AvatarTreeView>("avatar-tree-view");
 			this._avatarTreeView.Init();
 			this._avatarTreeView.selectionChanged += this.AvatarTreeViewOnSelectionChanged;
+			this._avatarTreeView.itemsChosen += AvatarTreeViewOnChosen;
 		}
+
 
 		private void AvatarTreeViewOnSelectionChanged(IEnumerable<object> data) {
 			AvatarTreeView.TreeItemData itemData = data.Cast<AvatarTreeView.TreeItemData>().First();
 			this._parentWindow?.SetAvatar(itemData.shop, itemData.avatar, itemData.variation);
+		}
+
+		private void AvatarTreeViewOnChosen(IEnumerable<object> data) {
+			this.AvatarTreeViewOnSelectionChanged(data);
+			this.Close();
 		}
 	}
 }

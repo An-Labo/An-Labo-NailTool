@@ -261,7 +261,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			string avatarName = avatarNames[1];
 			string? variantName = this._variantPopup.value;
 			if (string.IsNullOrEmpty(shopName) || string.IsNullOrEmpty(avatarName) || string.IsNullOrEmpty(variantName)) return null;
-			
+
 			using DBShop dbShop = new();
 			Shop? shop = dbShop.FindShopByName(shopName);
 			Avatar? avatar = shop?.FindAvatarByName(avatarName);
@@ -300,7 +300,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		public string GetAvatarName() {
 			return this._avatarPopup.value.Split(SPLIT)[1];
 		}
-		
+
 
 		public void UpdateLanguage() {
 			string langKey = LanguageManager.CurrentLanguageData.language;
@@ -395,28 +395,36 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					break;
 
 				case AvatarSortOrder.NewerAsc: {
-					Dictionary<string, int> indexMap = this._avatarPopupElements.Select((s, i) => (s, i)).ToDictionary(tuple => tuple.s, tuple => tuple.i);
+					using DBShop db = new();
 					this._avatarPopupElements.Sort((a, b) => {
-						string shopNameA = a.Split(SPLIT)[0];
-						string shopNameB = b.Split(SPLIT)[0];
+						string[] namesA = a.Split(SPLIT);
+						string? urlA = db.FindShopByName(namesA[0])?.FindAvatarByName(namesA[1])?.Url;
+						string[] namesB = b.Split(SPLIT);
+						string? urlB = db.FindShopByName(namesB[0])?.FindAvatarByName(namesB[1])?.Url;
 
-						int shopNameCompare = string.Compare(shopNameA, shopNameB, StringComparison.CurrentCulture);
-						if (shopNameCompare != 0) return shopNameCompare;
-
-						return indexMap[a].CompareTo(indexMap[b]);
+						return (string.IsNullOrEmpty(urlA), string.IsNullOrEmpty(urlB)) switch {
+							(true, true) => 0,
+							(true, false) => 1,
+							(false, true) => -1,
+							_ => CompareUrl(urlA!, urlB!, true)
+						};
 					});
 					break;
 				}
 				case AvatarSortOrder.NewerDesc: {
-					Dictionary<string, int> indexMap = this._avatarPopupElements.Select((s, i) => (s, i)).ToDictionary(tuple => tuple.s, tuple => tuple.i);
+					using DBShop db = new();
 					this._avatarPopupElements.Sort((a, b) => {
-						string shopNameA = a.Split(SPLIT)[0];
-						string shopNameB = b.Split(SPLIT)[0];
+						string[] namesA = a.Split(SPLIT);
+						string? urlA = db.FindShopByName(namesA[0])?.FindAvatarByName(namesA[1])?.Url;
+						string[] namesB = b.Split(SPLIT);
+						string? urlB = db.FindShopByName(namesB[0])?.FindAvatarByName(namesB[1])?.Url;
 
-						int shopNameCompare = string.Compare(shopNameA, shopNameB, StringComparison.CurrentCulture);
-						if (shopNameCompare != 0) return shopNameCompare;
-
-						return indexMap[b].CompareTo(indexMap[a]);
+						return (string.IsNullOrEmpty(urlA), string.IsNullOrEmpty(urlB)) switch {
+							(true, true) => 0,
+							(true, false) => 1,
+							(false, true) => -1,
+							_ => CompareUrl(urlA!, urlB!)
+						};
 					});
 					break;
 				}
@@ -425,6 +433,23 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+		private static int CompareUrl(string a, string b, bool revert = false) {
+			string[] partsA = a.Split('/');
+			string[] partsB = b.Split('/');
+
+			int numA = -1, numB = -1;
+
+			bool matchA = partsA.Length >= 2 && partsA[^2] == "items" && int.TryParse(partsA[^1], out numA);
+			bool matchB = partsB.Length >= 2 && partsB[^2] == "items" && int.TryParse(partsB[^1], out numB);
+
+			return (matchA, matchB) switch {
+				(true, true) => revert ? numB.CompareTo(numA) : numA.CompareTo(numB),
+				(true, false) => -1,
+				(false, true) => 1,
+				_ => 0
+			};
 		}
 
 		internal new class UxmlFactory : UxmlFactory<AvatarDropDowns, UxmlTraits> { }
