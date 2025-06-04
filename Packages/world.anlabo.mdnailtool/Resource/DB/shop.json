@@ -5085,6 +5085,18 @@
               "ja": "デフォルト",
               "en": "-"
             },
+            "boneMappingOverride": {
+              "Left Foot Thumb": "Armature/Hips/upper_leg.L/lower_leg.L/foot.L",
+              "Left Foot Index": "Armature/Hips/upper_leg.L/lower_leg.L/foot.L",
+              "Left Foot Middle": "Armature/Hips/upper_leg.L/lower_leg.L/foot.L",
+              "Left Foot Ring": "Armature/Hips/upper_leg.L/lower_leg.L/foot.L",
+              "Left Foot Little": "Armature/Hips/upper_leg.L/lower_leg.L/foot.L",
+              "Right Foot Thumb": "Armature/Hips/upper_leg.R/lower_leg.R/foot.R",
+              "Right Foot Index": "Armature/Hips/upper_leg.R/lower_leg.R/foot.R",
+              "Right Foot Middle": "Armature/Hips/upper_leg.R/lower_leg.R/foot.R",
+              "Right Foot Ring": "Armature/Hips/upper_leg.R/lower_leg.R/foot.R",
+              "Right Foot Little": "Armature/Hips/upper_leg.R/lower_leg.R/foot.R"
+            },
             "avatarPrefabs": [
               {
                 "prefabName": "Lilimoca_1.0(Edit)",
@@ -5498,6 +5510,94 @@
                 "fbxName": "Zome_VRC",
                 "fbxGUID": "4c6007da5e379e446a32c0eddcff0066",
                 "bodyName": "Face"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "yuufyu": {
+    "shopName": "yuufyu",
+    "shopUrl": "https://yuufyu.booth.pm",
+    "displayNames": {
+      "ja": "yuufyu",
+      "en": "yuufyu"
+    },
+    "avatars": {
+      "Carroll": {
+        "avatarName": "Carroll",
+        "avatarUrl": "https://yuufyu.booth.pm/items/5361549",
+        "displayNames": {
+          "ja": "キャロル",
+          "en": "Carroll"
+        },
+        "avatarVariations": {
+          "A-Pose": {
+            "variationName": "A-Pose",
+            "nailPrefabGUID": "5663f265b08a19640856fe3cedbdb73a",
+            "displayNames": {
+              "ja": "A-Pose",
+              "en": "A-Pose"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Carroll",
+                "prefabGUID": "a314fd5830bc6654b89c4b266a0ef923"
+              },
+              {
+                "prefabName": "Carroll_Quest",
+                "prefabGUID": "5db4ced88ba44a145855d036cee120eb"
+              },
+              {
+                "prefabName": "Kisekae_Carroll_Apose",
+                "prefabGUID": "1f19abaebeab98741b1f2ec1939f5c44"
+              },
+              {
+                "prefabName": "Kisekae_Carroll_Apose_Quest",
+                "prefabGUID": "95fb36ac9578a474a8f3d1d597a95297"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Carroll_Body",
+                "fbxGUID": "46f669233c57f25488e6ab28eb67884a",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "Carroll_Body_Quest",
+                "fbxGUID": "623b50204f1d48a4293e163bed4c5854",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "T-Pose": {
+            "variationName": "T-Pose",
+            "nailPrefabGUID": "7188a1f8e23785c4db86a19482f50df2",
+            "displayNames": {
+              "ja": "T-Pose",
+              "en": "T-Pose"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Kisekae_Carroll_Tpose",
+                "prefabGUID": "cc85e9af4c46cee4db87d4b8ce093f91"
+              },
+              {
+                "prefabName": "Kisekae_Carroll_Tpose_Quest",
+                "prefabGUID": "cfc847102fbae9a46a379908d38d44b8"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Carroll_Body",
+                "fbxGUID": "46f669233c57f25488e6ab28eb67884a",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "Carroll_Body_Quest",
+                "fbxGUID": "623b50204f1d48a4293e163bed4c5854",
+                "bodyName": "Body"
               }
             ]
           }
@@ -12674,20 +12774,20 @@
       "en": "kuroinyan"
     },
     "avatars": {
-      "Himeka(A)": {
-        "avatarName": "Himeka(A)",
+      "Himeka": {
+        "avatarName": "Himeka",
         "avatarUrl": "https://kuroinyan.booth.pm/items/4344924",
         "displayNames": {
           "ja": "姫華",
-          "en": "Himeka(A)"
+          "en": "Himeka"
         },
         "avatarVariations": {
-          "default": {
-            "variationName": "default",
-            "nailPrefabGUID": "ce3acf426f206094cb8ac831dfcc53c1",
+          "T-Pose": {
+            "variationName": "T-Pose",
+            "nailPrefabGUID": "05f4d6348defdca418695c398040a3f8",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "T-Pose",
+              "en": "T-Pose"
             },
             "avatarPrefabs": [
               {
@@ -12702,23 +12802,13 @@
                 "bodyName": "Body"
               }
             ]
-          }
-        }
-      },
-      "Himeka(T)": {
-        "avatarName": "Himeka(T)",
-        "avatarUrl": "https://kuroinyan.booth.pm/items/4344924",
-        "displayNames": {
-          "ja": "姫華",
-          "en": "Himeka(T)"
-        },
-        "avatarVariations": {
-          "default": {
-            "variationName": "default",
-            "nailPrefabGUID": "05f4d6348defdca418695c398040a3f8",
+          },
+          "A-Pose": {
+            "variationName": "A-Pose",
+            "nailPrefabGUID": "ce3acf426f206094cb8ac831dfcc53c1",
             "displayNames": {
-              "ja": "デフォルト",
-              "en": "-"
+              "ja": "A-Pose",
+              "en": "A-Pose"
             },
             "avatarPrefabs": [
               {
@@ -12728,7 +12818,7 @@
             ],
             "avatarFbxs": [
               {
-                "fbxName": "Himeka_T",
+                "fbxName": "Himeka_A",
                 "fbxGUID": "",
                 "bodyName": "Body"
               }
