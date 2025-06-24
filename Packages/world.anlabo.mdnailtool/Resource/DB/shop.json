@@ -283,6 +283,28 @@
               "ja": "デフォルト",
               "en": "-"
             },
+            "boneMappingOverride": {
+              "Left Thumb Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/ThumbProximal.L/ThumbIntermediate.L/ThumbDistal.L",
+              "Left Index Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/IndexInterProxima.L/IndexIntermediate.L",
+              "Left Middle Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/MiddleProxima.L/MiddleIntermediate.L",
+              "Left Ring Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/RingProxima.L/RingIntermediate.L",
+              "Left Little Distal": "armature/Hips/Spine/Chest/Shoulder.L/UpperArm.L/LowerArm.L/Hand.L/LittleProxima.L/LittleIntermediate.L",
+              "Right Thumb Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/ThumbProximal.R/ThumbIntermediate.R/ThumbDistal.R",
+              "Right Index Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/IndexInterProxima.R/IndexIntermediate.R",
+              "Right Middle Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/MiddleProxima.R/MiddleIntermediate.R",
+              "Right Ring Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/RingProxima.R/RingIntermediate.R",
+              "Right Little Distal": "armature/Hips/Spine/Chest/Shoulder.R/UpperArm.R/LowerArm.R/Hand.R/LittleProxima.R/LittleIntermediate.R",
+              "Left Foot Thumb": "armature/Hips/UpperLeg.L/LowerLeg.L/foot.L/Toe.L",
+              "Left Foot Index": "armature/Hips/UpperLeg.L/LowerLeg.L/foot.L/Toe.L",
+              "Left Foot Middle": "armature/Hips/UpperLeg.L/LowerLeg.L/foot.L/Toe.L",
+              "Left Foot Ring": "armature/Hips/UpperLeg.L/LowerLeg.L/foot.L/Toe.L",
+              "Left Foot Little": "armature/Hips/UpperLeg.L/LowerLeg.L/foot.L/Toe.L",
+              "Right Foot Thumb": "armature/Hips/UpperLeg.R/LowerLeg.R/foot.R/Toe.R",
+              "Right Foot Index": "armature/Hips/UpperLeg.R/LowerLeg.R/foot.R/Toe.R",
+              "Right Foot Middle": "armature/Hips/UpperLeg.R/LowerLeg.R/foot.R/Toe.R",
+              "Right Foot Ring": "armature/Hips/UpperLeg.R/LowerLeg.R/foot.R/Toe.R",
+              "Right Foot Little": "armature/Hips/UpperLeg.R/LowerLeg.R/foot.R/Toe.R"
+            },
             "avatarPrefabs": [
               {
                 "prefabName": "Isanai Nuku",
@@ -919,6 +941,68 @@
       }
     }
   },
+  "BRCL BOOTH": {
+    "shopName": "BRCL BOOTH",
+    "shopUrl": "https://brcl.booth.pm/",
+    "displayNames": {
+      "ja": "BRCL BOOTH",
+      "en": "BRCL BOOTH"
+    },
+    "avatars": {
+      "Aldona": {
+        "avatarName": "Aldona",
+        "avatarUrl": "https://brcl.booth.pm/items/5674386",
+        "displayNames": {
+          "ja": "アルドナ",
+          "en": "Aldona"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "f298623d2c9ec084b9631dea91fb65c2",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "ALDONA",
+                "prefabGUID": "cfbe70e702691dc4c82ad19dffd902d9"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "ALDONA",
+                "fbxGUID": "15bda59ff1404e2fb4cfc40d79ff6568",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Heel": {
+            "variationName": "Heel",
+            "nailPrefabGUID": "18a4c9ed6501e9a4e9f4ad8b23d956b1",
+            "displayNames": {
+              "ja": "Heel",
+              "en": "Heel"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "ALDONA",
+                "prefabGUID": "cfbe70e702691dc4c82ad19dffd902d9"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "ALDONA",
+                "fbxGUID": "15bda59ff1404e2fb4cfc40d79ff6568",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
   "brochiManac": {
     "shopName": "brochiManac",
     "shopUrl": "https://brochimanac.booth.pm",
@@ -1124,6 +1208,68 @@
               {
                 "fbxName": "FBX_Sio",
                 "fbxGUID": "2ddbacf82480cce419d2d4b40b8879dd",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Dea": {
+    "shopName": "Dea",
+    "shopUrl": "https://seodea.booth.pm/",
+    "displayNames": {
+      "ja": "Dea",
+      "en": "Dea"
+    },
+    "avatars": {
+      "DAMI": {
+        "avatarName": "DAMI",
+        "avatarUrl": "https://seodea.booth.pm/items/4884916",
+        "displayNames": {
+          "ja": "ダミ",
+          "en": "DAMI"
+        },
+        "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "8f3d6d414e4f46848aead343c3c1542a",
+            "displayNames": {
+              "ja": "デフォルト",
+              "en": "-"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "DAMI_2.0",
+                "prefabGUID": "a9e6f57977322b1498da86032508ddb1"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "DAMI_2.0",
+                "fbxGUID": "680ad8d8fcbfefe4d89c7e288036c1d0",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "High_heel": {
+            "variationName": "High_heel",
+            "nailPrefabGUID": "96d9631a83511d945a15d1fc7a086e1a",
+            "displayNames": {
+              "ja": "High_heel",
+              "en": "High_heel"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "DAMI_2.0",
+                "prefabGUID": "a9e6f57977322b1498da86032508ddb1"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "DAMI_2.0",
+                "fbxGUID": "680ad8d8fcbfefe4d89c7e288036c1d0",
                 "bodyName": "Body"
               }
             ]
