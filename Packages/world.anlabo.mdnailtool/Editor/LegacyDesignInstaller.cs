@@ -87,21 +87,21 @@ namespace world.anlabo.mdnailtool.Editor {
 						break;
 					}
 					case "WeatherNail-falling star": {
-						designData.Legacy.AdditionalMaterialGUIDs = new[] { "8d3a0fd7c809cf241bbaf3f6e9b3816e" };
+						designData.Legacy.AdditionalMaterialGUIDs = new[] { "203d5349fc7378f479dd251156ff0a73" };
 						break;
 					}
 					case "WeatherNail-rain": {
-						designData.Legacy.AdditionalMaterialGUIDs = new[] { "1fab5e8449e088040ba732c442855988",
-																			"4af59f753d438f94a8cbdc54bcd91ded",
-																			"28e0022f43bd7004eb241ddfff6ef52a",
-																			"3de719e51de5dee46b725fa360ab8a71" };
+						designData.Legacy.AdditionalMaterialGUIDs = new[] { "40cd7558714d88547b4ff556a1438aff",
+																			"ee55a6dcda4337642aa17c4aaa559acc",
+																			"571f8c9bcd281e94a990aabdff8ba5f3",
+																			"c8821d596c605c9459518797f7f5dabc" };
 						break;
 					}
 					case "WeatherNail-snow": {
-						designData.Legacy.AdditionalMaterialGUIDs = new[] { "0b07f97defdae7749a20b4417c4c962b",
-																			"11e4f3f6ae08e7b43815ba0309572e7b",
-																			"6438737957322fb4999c3827cb8c2e60",
-																			"514ebd2bffadacd47a9128ebebb350c4" };
+						designData.Legacy.AdditionalMaterialGUIDs = new[] { "db388f72784d3f241a0f2b5da0a605ce",
+																			"310bd38e86d65d1418cd69b389a70b9b",
+																			"73eb6039e82e68e4aab95b7201df4158",
+																			"9d3b17d5b3af6974693492ea548f2975" };
 						break;
 					}
 				}
