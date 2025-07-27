@@ -1509,7 +1509,7 @@
             ]
           },
           "v1.01_Foot_heel2": {
-            "variationName": "v1.01_Foot_heel",
+            "variationName": "v1.01_Foot_heel2",
             "nailPrefabGUID": "cf97ebb01af288044b8e96fc5693928b",
             "displayNames": {
               "ja": "v1.01_Foot_heel2",
@@ -2596,6 +2596,56 @@
           "en": "SELESTIA"
         },
         "avatarVariations": {
+          "Default": {
+            "variationName": "Default",
+            "nailPrefabGUID": "56b9338f65db564499111ecaa93b13dc",
+            "displayNames": {
+              "ja": "Blendshapeなし(ネイルチップ v2)",
+              "en": "No Blendshape(NailTip v2)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "SELESTIA_lilToon",
+                "prefabGUID": "570c1e8845289e24e97cfe99c9c88468"
+              },
+              {
+                "prefabName": "SELESTIA_UTS",
+                "prefabGUID": "787a04c84c5bc834c8d5f1b9ec785838"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "SELESTIA",
+                "fbxGUID": "38e912eb58295f246987c551362bf7b1",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Foot_hill": {
+            "variationName": "Foot_hill",
+            "nailPrefabGUID": "183f55e5b5a69d04e83c2013dd7b476d",
+            "displayNames": {
+              "ja": "Foot_hill(ネイルチップ v2)",
+              "en": "Foot_hill(NailTip v2)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "SELESTIA_lilToon",
+                "prefabGUID": "570c1e8845289e24e97cfe99c9c88468"
+              },
+              {
+                "prefabName": "SELESTIA_UTS",
+                "prefabGUID": "787a04c84c5bc834c8d5f1b9ec785838"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "SELESTIA",
+                "fbxGUID": "38e912eb58295f246987c551362bf7b1",
+                "bodyName": "Body"
+              }
+            ]
+          },
           "RemovedNail_Default": {
             "variationName": "RemovedNail_Default",
             "nailPrefabGUID": "d83a66b16276fd8458e9b2532d275088",
@@ -2646,8 +2696,33 @@
               }
             ]
           },
-          "Foot_hill": {
-            "variationName": "Foot_hill",
+          "Default_old": {
+            "variationName": "Default_old",
+            "nailPrefabGUID": "722522115f189c84fa0e4d5e022dedd3",
+            "displayNames": {
+              "ja": "Blendshapeなし(非推奨)",
+              "en": "No Blendshape(Not Recommend)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "SELESTIA_lilToon",
+                "prefabGUID": "570c1e8845289e24e97cfe99c9c88468"
+              },
+              {
+                "prefabName": "SELESTIA_UTS",
+                "prefabGUID": "787a04c84c5bc834c8d5f1b9ec785838"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "SELESTIA",
+                "fbxGUID": "38e912eb58295f246987c551362bf7b1",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Foot_hill_old": {
+            "variationName": "Foot_hill_old",
             "nailPrefabGUID": "722522115f189c84fa0e4d5e022dedd3",
             "displayNames": {
               "ja": "Foot_hill(非推奨)",
@@ -8406,6 +8481,105 @@
           "en": "meiyun"
         },
         "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "3885d6b3510498d4d9aab32c5a266848",
+            "displayNames": {
+              "ja": "Blendshapeなし(ネイルチップ v2)",
+              "en": "No Blendshape(NailTip v2)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Meiyu_改変",
+                "prefabGUID": "1beb12ddd87d5054c92adcff4802fe6c"
+              },
+              {
+                "prefabName": "Meiyun",
+                "prefabGUID": "c56047428177e7b4abff2c5a9cd7abcc"
+              },
+              {
+                "prefabName": "Meiyu_改変 2P",
+                "prefabGUID": "28bfc70f7b65db74fa749d8e296aff48"
+              },
+              {
+                "prefabName": "Meiyun 2P",
+                "prefabGUID": "34583823b89a8b543b89ab5956604a4c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Meiyun",
+                "fbxGUID": "793cac30a4a9c7842989c774267cae8b",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "toe_heel:65": {
+            "variationName": "toe_heel:65",
+            "nailPrefabGUID": "27320db746a8632429a1df852d653210",
+            "displayNames": {
+              "ja": "toe_heel:65(ネイルチップ v2)",
+              "en": "toe_heel:65(NailTip v2)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Meiyu_改変",
+                "prefabGUID": "1beb12ddd87d5054c92adcff4802fe6c"
+              },
+              {
+                "prefabName": "Meiyun",
+                "prefabGUID": "c56047428177e7b4abff2c5a9cd7abcc"
+              },
+              {
+                "prefabName": "Meiyu_改変 2P",
+                "prefabGUID": "28bfc70f7b65db74fa749d8e296aff48"
+              },
+              {
+                "prefabName": "Meiyun 2P",
+                "prefabGUID": "34583823b89a8b543b89ab5956604a4c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Meiyun",
+                "fbxGUID": "793cac30a4a9c7842989c774267cae8b",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "toe_heel:100": {
+            "variationName": "toe_heel:100",
+            "nailPrefabGUID": "857112480e4b6aa42a97f54775415eec",
+            "displayNames": {
+              "ja": "toe_heel:100(ネイルチップ v2)",
+              "en": "toe_heel:100(NailTip v2)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "Meiyu_改変",
+                "prefabGUID": "1beb12ddd87d5054c92adcff4802fe6c"
+              },
+              {
+                "prefabName": "Meiyun",
+                "prefabGUID": "c56047428177e7b4abff2c5a9cd7abcc"
+              },
+              {
+                "prefabName": "Meiyu_改変 2P",
+                "prefabGUID": "28bfc70f7b65db74fa749d8e296aff48"
+              },
+              {
+                "prefabName": "Meiyun 2P",
+                "prefabGUID": "34583823b89a8b543b89ab5956604a4c"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Meiyun",
+                "fbxGUID": "793cac30a4a9c7842989c774267cae8b",
+                "bodyName": "Body"
+              }
+            ]
+          },
           "RemovedNail": {
             "variationName": "RemovedNail",
             "nailPrefabGUID": "86e3df32eeee88e4e8b16dbfc71dbd7c",
@@ -8505,9 +8679,9 @@
               }
             ]
           },
-          "default": {
-            "variationName": "default",
-            "nailPrefabGUID": "3885d6b3510498d4d9aab32c5a266848",
+          "default_old": {
+            "variationName": "default_old",
+            "nailPrefabGUID": "5be912fe372422d4bbe6f067447445db",
             "displayNames": {
               "ja": "Blendshapeなし(非推奨)",
               "en": "Default(Not Recommend)"
@@ -8526,8 +8700,8 @@
               }
             ]
           },
-          "toe_heel:65": {
-            "variationName": "toe_heel:65",
+          "toe_heel:65_old": {
+            "variationName": "toe_heel:65_old",
             "nailPrefabGUID": "45e7074c3f2e77b478733725e4420e6d",
             "displayNames": {
               "ja": "toe_heel:65(非推奨)",
@@ -8547,8 +8721,8 @@
               }
             ]
           },
-          "toe_heel:100": {
-            "variationName": "toe_heel:100",
+          "toe_heel:100_old": {
+            "variationName": "toe_heel:100_old",
             "nailPrefabGUID": "2b2c70a65120c9448a2500253b5a9114",
             "displayNames": {
               "ja": "toe_heel:100(非推奨)",
@@ -11597,6 +11771,27 @@
           "en": "Choucas"
         },
         "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "fa7151f7b1de7264db88406c8a39dfec",
+            "displayNames": {
+              "ja": "Blendshapeなし(ネイルチップ v2)",
+              "en": "No Blendshape(NailTip v2)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "7st02_Choucas Variant",
+                "prefabGUID": "20bb4604667e1f24ea020f0c1dcfb3bf"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "7st02_Choucas",
+                "fbxGUID": "88072b3468e2693428660ffee197cb6a",
+                "bodyName": "Body"
+              }
+            ]
+          },
           "RemovedNail": {
             "variationName": "RemovedNail",
             "nailPrefabGUID": "dae2b3a32ea91b944a068572a29f322f",
@@ -11618,8 +11813,8 @@
               }
             ]
           },
-          "default": {
-            "variationName": "default",
+          "default_old": {
+            "variationName": "default_old",
             "nailPrefabGUID": "4d6c8a0bc14312643aedc4b4581cd1b8",
             "displayNames": {
               "ja": "Blendshapeなし(非推奨)",
@@ -11649,6 +11844,48 @@
           "en": "Renard"
         },
         "avatarVariations": {
+          "default": {
+            "variationName": "default",
+            "nailPrefabGUID": "fa7151f7b1de7264db88406c8a39dfec",
+            "displayNames": {
+              "ja": "Blendshapeなし(ネイルチップ v2)",
+              "en": "No Blendshape(NailTip v2)"
+            },
+            "avatarPrefabs": [
+              {
+                "prefabName": "7st01_Renard_Base",
+                "prefabGUID": "0a30418c253de3a41b1d3d52284f628b"
+              },
+              {
+                "prefabName": "7st01_Renard_Base_Android",
+                "prefabGUID": "39fe13b3b0c9c7340b9d032d6b9170a3"
+              },
+              {
+                "prefabName": "7st01_Renard_AMA_Base_Variant",
+                "prefabGUID": "93f692955d0feb5439f921ac7dc52f61"
+              },
+              {
+                "prefabName": "7st01_Renard_MA Variant",
+                "prefabGUID": "766a2b437ae72c444a23d0ed0f93f3bb"
+              },
+              {
+                "prefabName": "7st01_Renard_MA_Base Variant",
+                "prefabGUID": "f8f607c56626cf4419f13a9e13844301"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "7st01_Renard",
+                "fbxGUID": "d6ee09f195507ec42ada5c885f088fbe",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "7st01_Renard_Android",
+                "fbxGUID": "1b298ebbcd344ed44876a01dcaac19ea",
+                "bodyName": "Body"
+              }
+            ]
+          },
           "RemovedNail": {
             "variationName": "RemovedNail",
             "nailPrefabGUID": "dae2b3a32ea91b944a068572a29f322f",
@@ -11704,8 +11941,8 @@
               }
             ]
           },
-          "default": {
-            "variationName": "default",
+          "default_old": {
+            "variationName": "default_old",
             "nailPrefabGUID": "4d6c8a0bc14312643aedc4b4581cd1b8",
             "displayNames": {
               "ja": "Blendshapeなし(非推奨)",
