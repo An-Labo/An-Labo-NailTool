@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: '[mat][DailyNail][lil-toon]#180_point'
+  m_Name: '[mat][SherbetNail][lil-toon]point'
   m_Shader: {fileID: 4800000, guid: df12117ecd77c31469c224178886498e, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -52,11 +52,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap:
-        m_Texture: {fileID: 2800000, guid: c067daff1b83fcf40975cc75db0f88ac, type: 3}
+        m_Texture: {fileID: 2800000, guid: 5358ffd0673fb2043bb0a2c495bcec5f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: c067daff1b83fcf40975cc75db0f88ac, type: 3}
+        m_Texture: {fileID: 2800000, guid: 5358ffd0673fb2043bb0a2c495bcec5f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Bump2ndMap:
@@ -108,7 +108,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterColorTex:
-        m_Texture: {fileID: 2800000, guid: 7dbf5523d750e25479dbe48c11b7ed50, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterShapeTex:
@@ -156,7 +156,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: c067daff1b83fcf40975cc75db0f88ac, type: 3}
+        m_Texture: {fileID: 2800000, guid: 5358ffd0673fb2043bb0a2c495bcec5f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MatCap2ndBlendMask:
@@ -299,45 +299,13 @@ Material:
     - _BacklightReceiveShadow: 1
     - _BacklightViewStrength: 1
     - _BeforeExposureLimit: 10000
-    - _BitKey0: 0
-    - _BitKey1: 0
-    - _BitKey10: 0
-    - _BitKey11: 0
-    - _BitKey12: 0
-    - _BitKey13: 0
-    - _BitKey14: 0
-    - _BitKey15: 0
-    - _BitKey16: 0
-    - _BitKey17: 0
-    - _BitKey18: 0
-    - _BitKey19: 0
-    - _BitKey2: 0
-    - _BitKey20: 0
-    - _BitKey21: 0
-    - _BitKey22: 0
-    - _BitKey23: 0
-    - _BitKey24: 0
-    - _BitKey25: 0
-    - _BitKey26: 0
-    - _BitKey27: 0
-    - _BitKey28: 0
-    - _BitKey29: 0
-    - _BitKey3: 0
-    - _BitKey30: 0
-    - _BitKey31: 0
-    - _BitKey4: 0
-    - _BitKey5: 0
-    - _BitKey6: 0
-    - _BitKey7: 0
-    - _BitKey8: 0
-    - _BitKey9: 0
     - _BlendOp: 0
     - _BlendOpAlpha: 0
     - _BlendOpAlphaFA: 4
     - _BlendOpFA: 4
     - _Bump2ndMap_UVMode: 0
     - _Bump2ndScale: 1
-    - _BumpScale: 1
+    - _BumpScale: 0.34
     - _ColorMask: 15
     - _Cull: 0
     - _Cutoff: 0.001
@@ -373,17 +341,17 @@ Material:
     - _GlitterAngleRandomize: 0
     - _GlitterApplyShape: 0
     - _GlitterApplyTransparency: 1
-    - _GlitterBackfaceMask: 1
+    - _GlitterBackfaceMask: 0
     - _GlitterColorTex_UVMode: 0
     - _GlitterEnableLighting: 1
     - _GlitterMainStrength: 0
     - _GlitterNormalStrength: 1
     - _GlitterPostContrast: 1
     - _GlitterScaleRandomize: 0
-    - _GlitterSensitivity: 250.00003
+    - _GlitterSensitivity: 0.25
     - _GlitterShadowMask: 0
     - _GlitterUVMode: 0
-    - _GlitterVRParallaxStrength: 1
+    - _GlitterVRParallaxStrength: 0
     - _IDMask1: 0
     - _IDMask2: 0
     - _IDMask3: 0
@@ -412,7 +380,6 @@ Material:
     - _IDMaskPrior6: 0
     - _IDMaskPrior7: 0
     - _IDMaskPrior8: 0
-    - _IgnoreEncryption: 0
     - _Invisible: 0
     - _LightMaxLimit: 1
     - _LightMinLimit: 0
@@ -519,36 +486,7 @@ Material:
     - _OutlineZWrite: 1
     - _Parallax: 0.02
     - _ParallaxOffset: 0.5
-    - _PreAlphaToMask: 0
-    - _PreBlendOp: 0
-    - _PreBlendOpAlpha: 0
-    - _PreBlendOpAlphaFA: 4
-    - _PreBlendOpFA: 4
-    - _PreColorMask: 15
-    - _PreCull: 2
-    - _PreCutoff: 0.5
-    - _PreDstBlend: 10
-    - _PreDstBlendAlpha: 10
-    - _PreDstBlendAlphaFA: 1
-    - _PreDstBlendFA: 1
-    - _PreOffsetFactor: 0
-    - _PreOffsetUnits: 0
-    - _PreOutType: 0
-    - _PreSrcBlend: 1
-    - _PreSrcBlendAlpha: 1
-    - _PreSrcBlendAlphaFA: 0
-    - _PreSrcBlendFA: 1
-    - _PreStencilComp: 8
-    - _PreStencilFail: 0
-    - _PreStencilPass: 0
-    - _PreStencilReadMask: 255
-    - _PreStencilRef: 0
-    - _PreStencilWriteMask: 255
-    - _PreStencilZFail: 0
-    - _PreZClip: 1
-    - _PreZTest: 4
-    - _PreZWrite: 1
-    - _Reflectance: 0.29999998
+    - _Reflectance: 1
     - _ReflectionApplyTransparency: 1
     - _ReflectionBlendMode: 1
     - _ReflectionCubeEnableLighting: 1
@@ -569,8 +507,8 @@ Material:
     - _RimMainStrength: 0
     - _RimNormalStrength: 1
     - _RimShadeBlur: 1
-    - _RimShadeBorder: 0.5
-    - _RimShadeFresnelPower: 1
+    - _RimShadeBorder: 0.846
+    - _RimShadeFresnelPower: 0.6
     - _RimShadeNormalStrength: 1
     - _RimShadowMask: 0
     - _RimVRParallaxStrength: 1
@@ -599,9 +537,9 @@ Material:
     - _ShadowStrength: 1
     - _ShadowStrengthMaskLOD: 0
     - _ShiftBackfaceUV: 0
-    - _Smoothness: 0.88
-    - _SpecularBlur: 0
-    - _SpecularBorder: 0.5
+    - _Smoothness: 0.871
+    - _SpecularBlur: 0.1
+    - _SpecularBorder: 0.1
     - _SpecularNormalStrength: 1
     - _SpecularToon: 0
     - _SrcBlend: 1
@@ -657,7 +595,7 @@ Material:
     - _UseOutline: 0
     - _UsePOM: 0
     - _UseParallax: 0
-    - _UseReflection: 0
+    - _UseReflection: 1
     - _UseRim: 0
     - _UseRimShade: 0
     - _UseShadow: 0
@@ -700,13 +638,12 @@ Material:
     - _Emission2ndMap_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionBlendMask_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionBlink: {r: 0, g: 0, b: 3.141593, a: 0}
-    - _EmissionColor: {r: 0.8156863, g: 0.8509804, b: 1, a: 1}
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionMap_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
     - _GlitterAtras: {r: 1, g: 1, b: 0, a: 0}
     - _GlitterColor: {r: 1, g: 1, b: 1, a: 1}
-    - _GlitterParams1: {r: 256, g: 256, b: 0.040000003, a: 0.44444445}
-    - _GlitterParams2: {r: 0, g: 0, b: 0, a: 0}
-    - _Keys: {r: 0, g: 0, b: 0, a: 0}
+    - _GlitterParams1: {r: 256, g: 256, b: 0.16, a: 50}
+    - _GlitterParams2: {r: 0.25, g: 0, b: 0, a: 0}
     - _LightDirectionOverride: {r: 0, g: 0.001, b: 0, a: 0}
     - _Main2ndDissolveColor: {r: 1, g: 1, b: 1, a: 1}
     - _Main2ndDissolveNoiseMask_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
@@ -729,12 +666,11 @@ Material:
     - _MatCap2ndBlendUV1: {r: 0, g: 0, b: 0, a: 0}
     - _MatCap2ndColor: {r: 1, g: 1, b: 1, a: 1}
     - _MatCapBlendUV1: {r: 0, g: 0, b: 0, a: 0}
-    - _MatCapColor: {r: 1, g: 1, b: 1, a: 1}
+    - _MatCapColor: {r: 1, g: 1, b: 1, a: 0.9}
     - _OutlineColor: {r: 0.6, g: 0.56, b: 0.73, a: 1}
     - _OutlineLitColor: {r: 1, g: 0.19999996, b: 0, a: 0}
     - _OutlineTexHSVG: {r: 0, g: 1, b: 1, a: 1}
     - _OutlineTex_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
-    - _PreColor: {r: 1, g: 1, b: 1, a: 1}
     - _ReflectionColor: {r: 1, g: 1, b: 1, a: 1}
     - _ReflectionCubeColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimColor: {r: 1, g: 1, b: 1, a: 1}
