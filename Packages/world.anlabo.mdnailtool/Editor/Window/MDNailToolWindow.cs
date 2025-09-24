@@ -23,6 +23,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		}
 
 		private const string GUID = "f44afb5feae822a4b9308df804788d69";
+		private const string USS_GUID = "518510ce88e1451e8f8f06ab4add9daf";
 
 		private LocalizedObjectField? _materialObjectField;
 		private LocalizedObjectField? _avatarObjectField;
@@ -64,6 +65,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			// UIに使用するDBをあらかじめキャッシュしておく
 			using DBShop _dbShop = new();
 			using DBNailDesign _dbNailDesign = new();
+
+			string ussPath = AssetDatabase.GUIDToAssetPath(USS_GUID);
+			StyleSheet uss = AssetDatabase.LoadAssetAtPath<StyleSheet>(ussPath);
+			this.rootVisualElement.styleSheets.Add(uss);
 
 			string uxmlPath = AssetDatabase.GUIDToAssetPath(GUID);
 			VisualTreeAsset uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath);

@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using world.anlabo.mdnailtool.Editor.Entity;
+using world.anlabo.mdnailtool.Editor.Language;
 using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 
@@ -113,11 +114,19 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			using DBNailDesign dbNailDesign = new();
 			Action<EventBase> selectNailAction = SelectNail;
 			IReadOnlyDictionary<string, DateTime> lastUsedTime = GlobalSetting.DesignLastUsedTimes;
+			string langKey = LanguageManager.CurrentLanguageData.language;
 			foreach (NailDesign nailDesign in dbNailDesign.collection
 				         .OrderByDescending(design => lastUsedTime.GetValueOrDefault(design.DesignName, DateTime.MinValue))
 				         .ThenByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName))
 				         .ThenByDescending(design => design.Id)) {
-				Button visualElement = new() {
+				VisualElement nailElement = new() {
+					style = {
+						marginTop = new Length(5, LengthUnit.Pixel),
+						marginRight = new Length(3, LengthUnit.Pixel),
+						marginLeft = new Length(3, LengthUnit.Pixel),
+					}
+				};
+				Button thumbnailButton = new() {
 					style = {
 						width = new Length(60, LengthUnit.Pixel),
 						height = new Length(60, LengthUnit.Pixel),
@@ -130,25 +139,40 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 						borderBottomLeftRadius = 0,
 						borderTopLeftRadius = 0,
 						backgroundColor = new Color(1, 0, 1),
-						marginTop = new Length(5, LengthUnit.Pixel),
+						marginTop = new Length(0, LengthUnit.Pixel),
+						marginRight = new Length(0, LengthUnit.Pixel),
+						marginBottom = new Length(0, LengthUnit.Pixel),
+						marginLeft =	new Length(0, LengthUnit.Pixel),
 						flexShrink = 0
 					},
 					name = nailDesign.DesignName
 				};
+				nailElement.Add(thumbnailButton);
+				string displayName = nailDesign.DisplayNames.GetValueOrDefault(langKey, nailDesign.DesignName);
+				Label nailTitle = new(displayName) {
+					style = {
+						width = new Length(60, LengthUnit.Pixel),
+						whiteSpace = WhiteSpace.Normal,
+						textOverflow = TextOverflow.Ellipsis,
+						overflow = Overflow.Hidden,
+					}
+				};
+				nailTitle.AddToClassList("main-window-nail-design-name");
+				nailElement.Add(nailTitle);
 
-				this._list.Add(visualElement);
+				this._list.Add(nailElement);
 				bool isInstalled = INailProcessor.IsInstalledDesign(nailDesign.DesignName);
 
 				if (isInstalled) {
-					visualElement.name = nailDesign.DesignName;
-					visualElement.clickable.clickedWithEventInfo += selectNailAction;
+					thumbnailButton.name = nailDesign.DesignName;
+					thumbnailButton.clickable.clickedWithEventInfo += selectNailAction;
 					this.FirstDesignName ??= nailDesign.DesignName;
 				} else {
-					visualElement.SetEnabled(false);
-					visualElement.style.borderTopWidth = 0;
-					visualElement.style.borderRightWidth = 0;
-					visualElement.style.borderBottomWidth = 0;
-					visualElement.style.borderLeftWidth = 0;
+					thumbnailButton.SetEnabled(false);
+					thumbnailButton.style.borderTopWidth = 0;
+					thumbnailButton.style.borderRightWidth = 0;
+					thumbnailButton.style.borderBottomWidth = 0;
+					thumbnailButton.style.borderLeftWidth = 0;
 				}
 				
 				if (string.IsNullOrEmpty(nailDesign.ThumbnailGUID)) continue;
@@ -160,12 +184,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				if (thumbnail == null) continue;
 
 				if (isInstalled) {
-					visualElement.Add(new Image {
+					thumbnailButton.Add(new Image {
 						image = thumbnail,
 						pickingMode = PickingMode.Ignore
 					});
 				} else {
-					visualElement.Add(new GrayImage(thumbnail) {
+					thumbnailButton.Add(new GrayImage(thumbnail) {
 						style = {
 							width = new Length(60, LengthUnit.Pixel),
 							height = new Length(60, LengthUnit.Pixel)
