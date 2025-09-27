@@ -60,11 +60,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap:
-        m_Texture: {fileID: 2800000, guid: ea96788807a4176468e6896143554b68, type: 3}
+        m_Texture: {fileID: 2800000, guid: 07cbade728242954faddc64e5e697dbe, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: ea96788807a4176468e6896143554b68, type: 3}
+        m_Texture: {fileID: 2800000, guid: 07cbade728242954faddc64e5e697dbe, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Bump2ndMap:
@@ -76,7 +76,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: 38409f93b2d68bc46980fd5d553c1131, type: 3}
+        m_Texture: {fileID: 2800000, guid: 40a26025009ca15419bebf9181193aa9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ClippingMask:
@@ -136,7 +136,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterColorTex:
-        m_Texture: {fileID: 2800000, guid: af6b396882eda7d4c97afda519868951, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2ba0c8b1db44a3144a84c82f6a3ee660, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterShapeTex:
@@ -188,7 +188,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: ea96788807a4176468e6896143554b68, type: 3}
+        m_Texture: {fileID: 2800000, guid: 07cbade728242954faddc64e5e697dbe, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MatCap2ndBlendMask:
@@ -251,8 +251,12 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Ramp:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ReflectionColorTex:
-        m_Texture: {fileID: 2800000, guid: af6b396882eda7d4c97afda519868951, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2ba0c8b1db44a3144a84c82f6a3ee660, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ReflectionCubeTex:
@@ -449,6 +453,8 @@ Material:
     - _EmissionMap_UVMode: 0
     - _EmissionParallaxDepth: 0
     - _EmissionUseGrad: 0
+    - _EnvRimBlur: 0.35
+    - _EnvRimBorder: 3
     - _FlipNormal: 0
     - _GI_Intensity: 0
     - _GSAAStrength: 0
