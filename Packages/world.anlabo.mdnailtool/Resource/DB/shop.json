@@ -7671,6 +7671,62 @@
         },
         "avatarPrefab": null,
         "avatarFBXs": []
+      },
+      "Yuzuki": {
+        "avatarName": "Yuzuki",
+        "avatarUrl": "https://vividplum.booth.pm/items/7447697",
+        "displayNames": {
+          "ja": "柚希",
+          "en": "Yuzuki"
+        },
+        "avatarVariations": {
+          "No Blendshape": {
+            "variationName": "No Blendshape",
+            "nailPrefabGUID": "6654ea1734f889f48b2cd060b97bb662",
+            "displayNames": {
+              "ja": "No Blendshape",
+              "en": "No Blendshape"
+            },
+            "boneMappingOverride": {},
+            "avatarPrefabs": [
+              {
+                "prefabName": "Yuzuki",
+                "prefabGUID": ""
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Yuzuki",
+                "fbxGUID": "",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "Heel_High": {
+            "variationName": "Heel_High",
+            "nailPrefabGUID": "6ff8941127bfc6b4981e94ee4dfecd72",
+            "displayNames": {
+              "ja": "Heel_High",
+              "en": "Heel_High"
+            },
+            "boneMappingOverride": {},
+            "avatarPrefabs": [
+              {
+                "prefabName": "Yuzuki",
+                "prefabGUID": "840969588adc9a248a9b80f05f9896f5"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "Yuzuki",
+                "fbxGUID": "1d25a420d40a8b441a4b2d0c842a6721",
+                "bodyName": "Body"
+              }
+            ]
+          }
+        },
+        "avatarPrefab": null,
+        "avatarFBXs": []
       }
     }
   },
@@ -15400,20 +15456,20 @@
       "en": "tonomaoo"
     },
     "avatars": {
-      "RadDollV2": {
-        "avatarName": "RadDollV2",
+      "RadDoll": {
+        "avatarName": "RadDoll",
         "avatarUrl": "https://tonomaoo.booth.pm/items/3741802",
         "displayNames": {
-          "ja": "RadDollV2",
-          "en": "RadDollV2"
+          "ja": "RadDoll",
+          "en": "RadDoll"
         },
         "avatarVariations": {
-          "Default": {
-            "variationName": "Default",
+          "V2": {
+            "variationName": "V2",
             "nailPrefabGUID": "e67962de665899e428c7d37f372f4028",
             "displayNames": {
-              "ja": "Blendshapeなし",
-              "en": "No Blendshape"
+              "ja": "V2",
+              "en": "V2"
             },
             "boneMappingOverride": {},
             "avatarPrefabs": [
@@ -15435,6 +15491,37 @@
               {
                 "fbxName": "RadDollV2",
                 "fbxGUID": "dd3ffdd6d596668ac5f7872513945965",
+                "bodyName": "Body"
+              }
+            ]
+          },
+          "V3": {
+            "variationName": "V3",
+            "nailPrefabGUID": "50870d2006e9b3347aa9467bc0f92fca",
+            "displayNames": {
+              "ja": "V3",
+              "en": "V3"
+            },
+            "boneMappingOverride": {},
+            "avatarPrefabs": [
+              {
+                "prefabName": "RaddollV3",
+                "prefabGUID": "9c1ebb20fb25e6947beb9b5ea2ffc6ce"
+              },
+              {
+                "prefabName": "RaddollV3_Lite",
+                "prefabGUID": "c9b40d627c476454d8ee42a86aeffebd"
+              }
+            ],
+            "avatarFbxs": [
+              {
+                "fbxName": "RaddollV3",
+                "fbxGUID": "3e63e38e59acf954099c03788ec556dc",
+                "bodyName": "Body"
+              },
+              {
+                "fbxName": "RaddollV3_Lite",
+                "fbxGUID": "851b8ecf9f7587c46a196e0aa888ee93",
                 "bodyName": "Body"
               }
             ]
