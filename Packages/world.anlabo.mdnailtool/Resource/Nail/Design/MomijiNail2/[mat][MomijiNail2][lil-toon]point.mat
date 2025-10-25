@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: '[mat][SpookyMagnetNail][lil-toon]natural'
+  m_Name: '[mat][MomijiNail2][lil-toon]point'
   m_Shader: {fileID: 4800000, guid: df12117ecd77c31469c224178886498e, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -52,11 +52,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap:
-        m_Texture: {fileID: 2800000, guid: a7b486bfbb24d7f4589dd68d294879c5, type: 3}
+        m_Texture: {fileID: 2800000, guid: e15bf675f4e45d44e99944ac48078477, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: a7b486bfbb24d7f4589dd68d294879c5, type: 3}
+        m_Texture: {fileID: 2800000, guid: e15bf675f4e45d44e99944ac48078477, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Bump2ndMap:
@@ -68,7 +68,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: 41ee1fa4dbd3bbf46a12767e12dc29d2, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8a3abb8bc6976914aaeb567109cb0b9c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DissolveMask:
@@ -156,7 +156,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: a7b486bfbb24d7f4589dd68d294879c5, type: 3}
+        m_Texture: {fileID: 2800000, guid: e15bf675f4e45d44e99944ac48078477, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MatCap2ndBlendMask:
@@ -291,10 +291,10 @@ Material:
     - _AudioLinkVertexUVMode: 1
     - _BackfaceForceShadow: 0
     - _BacklightBackfaceMask: 1
-    - _BacklightBlur: 0.175
-    - _BacklightBorder: 0.44700003
-    - _BacklightDirectivity: 0.97
-    - _BacklightMainStrength: 0.517
+    - _BacklightBlur: 0.05
+    - _BacklightBorder: 0.35000002
+    - _BacklightDirectivity: 5
+    - _BacklightMainStrength: 0
     - _BacklightNormalStrength: 1
     - _BacklightReceiveShadow: 1
     - _BacklightViewStrength: 1
@@ -493,47 +493,47 @@ Material:
     - _ReflectionCubeOverride: 0
     - _ReflectionNormalStrength: 1
     - _RimApplyTransparency: 1
-    - _RimBackfaceMask: 1
+    - _RimBackfaceMask: 0
     - _RimBlendMode: 1
-    - _RimBlur: 1
-    - _RimBorder: 0
-    - _RimDirRange: -0.693
-    - _RimDirStrength: 1
+    - _RimBlur: 0.1
+    - _RimBorder: 0.5
+    - _RimDirRange: 0
+    - _RimDirStrength: 0
     - _RimEnableLighting: 1
-    - _RimFresnelPower: 23.3
-    - _RimIndirBlur: 0
-    - _RimIndirBorder: 1
-    - _RimIndirRange: -1
-    - _RimMainStrength: 0.22
-    - _RimNormalStrength: 0
-    - _RimShadeBlur: 0.709
-    - _RimShadeBorder: 0.927
-    - _RimShadeFresnelPower: 0.2
+    - _RimFresnelPower: 3
+    - _RimIndirBlur: 0.1
+    - _RimIndirBorder: 0.5
+    - _RimIndirRange: 0
+    - _RimMainStrength: 0
+    - _RimNormalStrength: 1
+    - _RimShadeBlur: 1
+    - _RimShadeBorder: 0.846
+    - _RimShadeFresnelPower: 0.6
     - _RimShadeNormalStrength: 1
-    - _RimShadowMask: 0.41
+    - _RimShadowMask: 0
     - _RimVRParallaxStrength: 1
-    - _Shadow2ndBlur: 0.119
-    - _Shadow2ndBorder: 0.151
-    - _Shadow2ndNormalStrength: 0.399
-    - _Shadow2ndReceive: 0.783
+    - _Shadow2ndBlur: 0.3
+    - _Shadow2ndBorder: 0.5
+    - _Shadow2ndNormalStrength: 1
+    - _Shadow2ndReceive: 0
     - _Shadow3rdBlur: 0.1
     - _Shadow3rdBorder: 0.25
     - _Shadow3rdNormalStrength: 1
     - _Shadow3rdReceive: 0
-    - _ShadowBlur: 0.132
+    - _ShadowBlur: 0.1
     - _ShadowBlurMaskLOD: 0
-    - _ShadowBorder: 0.027
+    - _ShadowBorder: 0.5
     - _ShadowBorderMaskLOD: 0
-    - _ShadowBorderRange: 0.08
+    - _ShadowBorderRange: 0
     - _ShadowColorType: 0
-    - _ShadowEnvStrength: 0
+    - _ShadowEnvStrength: 1
     - _ShadowFlatBlur: 1
     - _ShadowFlatBorder: 1
-    - _ShadowMainStrength: 0.078
+    - _ShadowMainStrength: 1
     - _ShadowMaskType: 0
-    - _ShadowNormalStrength: 0.42
+    - _ShadowNormalStrength: 1
     - _ShadowPostAO: 0
-    - _ShadowReceive: 0.72
+    - _ShadowReceive: 0
     - _ShadowStrength: 1
     - _ShadowStrengthMaskLOD: 0
     - _ShiftBackfaceUV: 0
@@ -620,7 +620,7 @@ Material:
     - _AudioLinkVertexStrength: {r: 0, g: 0, b: 0, a: 1}
     - _AudioLinkVertexUVParams: {r: 0.25, g: 0, b: 0, a: 0.125}
     - _BackfaceColor: {r: 0, g: 0, b: 0, a: 0}
-    - _BacklightColor: {r: 1.0090982, g: 1.0090982, b: 1.0090982, a: 1}
+    - _BacklightColor: {r: 0.85, g: 0.8, b: 0.7, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color2nd: {r: 1, g: 1, b: 1, a: 1}
@@ -673,15 +673,15 @@ Material:
     - _OutlineTex_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
     - _ReflectionColor: {r: 1, g: 1, b: 1, a: 1}
     - _ReflectionCubeColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RimColor: {r: 0.99056596, g: 0.99056596, b: 0.99056596, a: 0.425}
+    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimIndirColor: {r: 1, g: 1, b: 1, a: 1}
-    - _RimShadeColor: {r: 0.5660378, g: 0.5660378, b: 0.5660378, a: 1}
-    - _Shadow2ndColor: {r: 0.9150943, g: 0.9150943, b: 0.9150943, a: 1}
+    - _RimShadeColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _Shadow2ndColor: {r: 0, g: 0, b: 0, a: 0}
     - _Shadow3rdColor: {r: 0, g: 0, b: 0, a: 0}
     - _ShadowAOShift: {r: 1, g: 0, b: 1, a: 0}
     - _ShadowAOShift2: {r: 1, g: 0, b: 1, a: 0}
-    - _ShadowBorderColor: {r: 0.36792448, g: 0.24383673, b: 0.11974899, a: 1}
-    - _ShadowColor: {r: 0.6415094, g: 0.6415094, b: 0.6415094, a: 1}
+    - _ShadowBorderColor: {r: 1, g: 0, b: 0, a: 1}
+    - _ShadowColor: {r: 0.7, g: 0.75, b: 0.85, a: 1}
     - _e2ga0: {r: 1, g: 0, b: 0, a: 0}
     - _e2ga1: {r: 1, g: 0, b: 0, a: 1}
     - _e2ga2: {r: 1, g: 0, b: 0, a: 0}
