@@ -52,11 +52,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap:
-        m_Texture: {fileID: 2800000, guid: 1b0ae9696bf8e4746903e9943f89fbcd, type: 3}
+        m_Texture: {fileID: 2800000, guid: 6557fdb9647d9024f90fa29d6cdf0632, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 1b0ae9696bf8e4746903e9943f89fbcd, type: 3}
+        m_Texture: {fileID: 2800000, guid: 6557fdb9647d9024f90fa29d6cdf0632, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Bump2ndMap:
@@ -68,7 +68,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: ff774f5ae49fe024ab22bff93bc9c827, type: 3}
+        m_Texture: {fileID: 2800000, guid: 38409f93b2d68bc46980fd5d553c1131, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DissolveMask:
@@ -108,7 +108,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterColorTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: af6b396882eda7d4c97afda519868951, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterShapeTex:
@@ -156,7 +156,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 1b0ae9696bf8e4746903e9943f89fbcd, type: 3}
+        m_Texture: {fileID: 2800000, guid: 6557fdb9647d9024f90fa29d6cdf0632, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MatCap2ndBlendMask:
@@ -208,7 +208,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ReflectionColorTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: af6b396882eda7d4c97afda519868951, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ReflectionCubeTex:
@@ -343,15 +343,15 @@ Material:
     - _GlitterApplyTransparency: 1
     - _GlitterBackfaceMask: 0
     - _GlitterColorTex_UVMode: 0
-    - _GlitterEnableLighting: 1
+    - _GlitterEnableLighting: 0.5
     - _GlitterMainStrength: 0
-    - _GlitterNormalStrength: 1
+    - _GlitterNormalStrength: 0
     - _GlitterPostContrast: 1
-    - _GlitterScaleRandomize: 0
+    - _GlitterScaleRandomize: 1
     - _GlitterSensitivity: 0.25
     - _GlitterShadowMask: 0
     - _GlitterUVMode: 0
-    - _GlitterVRParallaxStrength: 0
+    - _GlitterVRParallaxStrength: 1
     - _IDMask1: 0
     - _IDMask2: 0
     - _IDMask3: 0
@@ -537,11 +537,11 @@ Material:
     - _ShadowStrength: 1
     - _ShadowStrengthMaskLOD: 0
     - _ShiftBackfaceUV: 0
-    - _Smoothness: 0.871
+    - _Smoothness: 0.6
     - _SpecularBlur: 0.1
     - _SpecularBorder: 0.1
-    - _SpecularNormalStrength: 1
-    - _SpecularToon: 0
+    - _SpecularNormalStrength: 0
+    - _SpecularToon: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _SrcBlendAlphaFA: 0
@@ -587,7 +587,7 @@ Material:
     - _UseDither: 0
     - _UseEmission: 0
     - _UseEmission2nd: 0
-    - _UseGlitter: 0
+    - _UseGlitter: 1
     - _UseMain2ndTex: 0
     - _UseMain3rdTex: 0
     - _UseMatCap: 1
@@ -641,9 +641,9 @@ Material:
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionMap_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
     - _GlitterAtras: {r: 1, g: 1, b: 0, a: 0}
-    - _GlitterColor: {r: 1, g: 1, b: 1, a: 1}
-    - _GlitterParams1: {r: 256, g: 256, b: 0.16, a: 50}
-    - _GlitterParams2: {r: 0.25, g: 0, b: 0, a: 0}
+    - _GlitterColor: {r: 1, g: 0.9575471, b: 0.9575471, a: 1}
+    - _GlitterParams1: {r: 256, g: 256, b: 4, a: 0.44444445}
+    - _GlitterParams2: {r: 0, g: 3, b: 0, a: 0}
     - _LightDirectionOverride: {r: 0, g: 0.001, b: 0, a: 0}
     - _Main2ndDissolveColor: {r: 1, g: 1, b: 1, a: 1}
     - _Main2ndDissolveNoiseMask_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
