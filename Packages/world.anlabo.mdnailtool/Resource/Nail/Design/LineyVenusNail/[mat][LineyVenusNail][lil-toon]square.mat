@@ -120,7 +120,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionBlendMask:
-        m_Texture: {fileID: 2800000, guid: 223499ab97e123d49b0c898eac53b95d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 39b7e4f2353d8b0418ea38e648fd1bdc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionGradTex:
@@ -128,7 +128,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
-        m_Texture: {fileID: 2800000, guid: 223499ab97e123d49b0c898eac53b95d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 39b7e4f2353d8b0418ea38e648fd1bdc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Emissive_Tex:
@@ -220,7 +220,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
-        m_Texture: {fileID: 2800000, guid: 223499ab97e123d49b0c898eac53b95d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 39b7e4f2353d8b0418ea38e648fd1bdc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
@@ -251,8 +251,12 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Ramp:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ReflectionColorTex:
-        m_Texture: {fileID: 2800000, guid: 223499ab97e123d49b0c898eac53b95d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 39b7e4f2353d8b0418ea38e648fd1bdc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ReflectionCubeTex:
@@ -312,7 +316,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SmoothnessTex:
-        m_Texture: {fileID: 2800000, guid: 223499ab97e123d49b0c898eac53b95d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 39b7e4f2353d8b0418ea38e648fd1bdc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -449,6 +453,8 @@ Material:
     - _EmissionMap_UVMode: 0
     - _EmissionParallaxDepth: 0
     - _EmissionUseGrad: 0
+    - _EnvRimBlur: 0.35
+    - _EnvRimBorder: 3
     - _FlipNormal: 0
     - _GI_Intensity: 0
     - _GSAAStrength: 0
@@ -730,7 +736,7 @@ Material:
     - _ShadowStrength: 1
     - _ShadowStrengthMaskLOD: 0
     - _ShiftBackfaceUV: 0
-    - _Smoothness: 0.832
+    - _Smoothness: 0.853
     - _SmoothnessTextureChannel: 0
     - _SpecularBlur: 0.05
     - _SpecularBorder: 0.5
@@ -818,7 +824,7 @@ Material:
     - _egci: 2
     - _lilDirectionalLightStrength: 1
     - _lilShadowCasterBias: 0
-    - _lilToonVersion: 43
+    - _lilToonVersion: 45
     - _simpleUI: 2
     - _utsTechnique: 0
     - _utsVersion: 2.075
