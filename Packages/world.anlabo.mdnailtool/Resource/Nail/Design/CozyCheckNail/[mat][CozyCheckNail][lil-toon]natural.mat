@@ -180,7 +180,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MatCapTex:
-        m_Texture: {fileID: 2800000, guid: 81aa5acab4400e54486f930dda82be43, type: 3}
+        m_Texture: {fileID: 2800000, guid: fd5584d5ea42340439a459a0fed1b50c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -291,10 +291,10 @@ Material:
     - _AudioLinkVertexUVMode: 1
     - _BackfaceForceShadow: 0
     - _BacklightBackfaceMask: 1
-    - _BacklightBlur: 0.175
-    - _BacklightBorder: 0.44700003
-    - _BacklightDirectivity: 0.97
-    - _BacklightMainStrength: 0.517
+    - _BacklightBlur: 0.05
+    - _BacklightBorder: 0.35000002
+    - _BacklightDirectivity: 5
+    - _BacklightMainStrength: 0
     - _BacklightNormalStrength: 1
     - _BacklightReceiveShadow: 1
     - _BacklightViewStrength: 1
@@ -305,7 +305,7 @@ Material:
     - _BlendOpFA: 4
     - _Bump2ndMap_UVMode: 0
     - _Bump2ndScale: 1
-    - _BumpScale: 0.34
+    - _BumpScale: 0.12
     - _ColorMask: 15
     - _Cull: 0
     - _Cutoff: 0.001
@@ -433,8 +433,8 @@ Material:
     - _MatCapBumpScale: 1
     - _MatCapCustomNormal: 0
     - _MatCapEnableLighting: 1
-    - _MatCapLod: 5
-    - _MatCapMainStrength: 0
+    - _MatCapLod: 4.14
+    - _MatCapMainStrength: 1
     - _MatCapNormalStrength: 1
     - _MatCapPerspective: 1
     - _MatCapShadowMask: 0
@@ -486,31 +486,31 @@ Material:
     - _OutlineZWrite: 1
     - _Parallax: 0.02
     - _ParallaxOffset: 0.5
-    - _Reflectance: 1
+    - _Reflectance: 0.21599993
     - _ReflectionApplyTransparency: 1
     - _ReflectionBlendMode: 1
     - _ReflectionCubeEnableLighting: 1
     - _ReflectionCubeOverride: 0
     - _ReflectionNormalStrength: 1
     - _RimApplyTransparency: 1
-    - _RimBackfaceMask: 1
+    - _RimBackfaceMask: 0
     - _RimBlendMode: 1
-    - _RimBlur: 1
-    - _RimBorder: 0
-    - _RimDirRange: -0.693
-    - _RimDirStrength: 1
+    - _RimBlur: 0.1
+    - _RimBorder: 0.5
+    - _RimDirRange: 0
+    - _RimDirStrength: 0
     - _RimEnableLighting: 1
-    - _RimFresnelPower: 23.3
-    - _RimIndirBlur: 0
-    - _RimIndirBorder: 1
-    - _RimIndirRange: -1
-    - _RimMainStrength: 0.22
-    - _RimNormalStrength: 0
-    - _RimShadeBlur: 0.709
-    - _RimShadeBorder: 0.927
-    - _RimShadeFresnelPower: 0.2
+    - _RimFresnelPower: 3
+    - _RimIndirBlur: 0.1
+    - _RimIndirBorder: 0.5
+    - _RimIndirRange: 0
+    - _RimMainStrength: 0
+    - _RimNormalStrength: 1
+    - _RimShadeBlur: 1
+    - _RimShadeBorder: 0.846
+    - _RimShadeFresnelPower: 0.6
     - _RimShadeNormalStrength: 1
-    - _RimShadowMask: 0.41
+    - _RimShadowMask: 0
     - _RimVRParallaxStrength: 1
     - _Shadow2ndBlur: 0.119
     - _Shadow2ndBorder: 0.151
@@ -537,7 +537,7 @@ Material:
     - _ShadowStrength: 1
     - _ShadowStrengthMaskLOD: 0
     - _ShiftBackfaceUV: 0
-    - _Smoothness: 0.871
+    - _Smoothness: 1
     - _SpecularBlur: 0.1
     - _SpecularBorder: 0.1
     - _SpecularNormalStrength: 1
@@ -620,7 +620,7 @@ Material:
     - _AudioLinkVertexStrength: {r: 0, g: 0, b: 0, a: 1}
     - _AudioLinkVertexUVParams: {r: 0.25, g: 0, b: 0, a: 0.125}
     - _BackfaceColor: {r: 0, g: 0, b: 0, a: 0}
-    - _BacklightColor: {r: 1.0090982, g: 1.0090982, b: 1.0090982, a: 1}
+    - _BacklightColor: {r: 0.85, g: 0.8, b: 0.7, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color2nd: {r: 1, g: 1, b: 1, a: 1}
@@ -666,21 +666,21 @@ Material:
     - _MatCap2ndBlendUV1: {r: 0, g: 0, b: 0, a: 0}
     - _MatCap2ndColor: {r: 1, g: 1, b: 1, a: 1}
     - _MatCapBlendUV1: {r: 0, g: 0, b: 0, a: 0}
-    - _MatCapColor: {r: 1, g: 1, b: 1, a: 0.9}
+    - _MatCapColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0.6, g: 0.56, b: 0.73, a: 1}
-    - _OutlineLitColor: {r: 1, g: 0.19999996, b: 0, a: 0}
+    - _OutlineLitColor: {r: 1, g: 0.19999993, b: 0, a: 0}
     - _OutlineTexHSVG: {r: 0, g: 1, b: 1, a: 1}
     - _OutlineTex_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
     - _ReflectionColor: {r: 1, g: 1, b: 1, a: 1}
     - _ReflectionCubeColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RimColor: {r: 0.99056596, g: 0.99056596, b: 0.99056596, a: 0.425}
+    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimIndirColor: {r: 1, g: 1, b: 1, a: 1}
-    - _RimShadeColor: {r: 0.5660378, g: 0.5660378, b: 0.5660378, a: 1}
+    - _RimShadeColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _Shadow2ndColor: {r: 0.9150943, g: 0.9150943, b: 0.9150943, a: 1}
     - _Shadow3rdColor: {r: 0, g: 0, b: 0, a: 0}
     - _ShadowAOShift: {r: 1, g: 0, b: 1, a: 0}
     - _ShadowAOShift2: {r: 1, g: 0, b: 1, a: 0}
-    - _ShadowBorderColor: {r: 0.36792448, g: 0.24383673, b: 0.11974899, a: 1}
+    - _ShadowBorderColor: {r: 0.36792445, g: 0.2438367, b: 0.11974896, a: 1}
     - _ShadowColor: {r: 0.6415094, g: 0.6415094, b: 0.6415094, a: 1}
     - _e2ga0: {r: 1, g: 0, b: 0, a: 0}
     - _e2ga1: {r: 1, g: 0, b: 0, a: 1}
