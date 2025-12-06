@@ -85,6 +85,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this._avatarSortDropdown.RegisterValueChangedCallback(this.OnChangeAvatarSort);
 			this._nailDesignSelect = this.rootVisualElement.Q<NailDesignSelect>("nail-select");
 			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
+			this._nailDesignSelect.OnSearchButtonClicked += this.ShowNailSearchWindow;
 			this._nailPreview = this.rootVisualElement.Q<NailPreview>("nail-preview");
 			this._nailPreviewController = new NailPreviewController(this._nailPreview);
 			this._nailShapeDropDown = this.rootVisualElement.Q<NailShapeDropDown>("nail-shape");
@@ -431,6 +432,15 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 		private void ShowAvatarSearchWindow() {
 			SearchAvatarWindow.ShowWindow(this);
+			}
+
+
+		private void ShowNailSearchWindow() {
+			SearchNailDesignWindow.ShowWindow(this);
+		}
+		
+		public void SelectNailFromSearch(string designName) {
+			this.OnSelectNail(designName);
 		}
 	}
 }
