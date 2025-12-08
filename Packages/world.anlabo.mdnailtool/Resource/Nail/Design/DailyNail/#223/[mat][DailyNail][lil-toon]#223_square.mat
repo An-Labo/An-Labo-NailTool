@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: '[mat][DailyNail][lil-toon]#211_oval'
+  m_Name: '[mat][DailyNail][lil-toon]#211_square'
   m_Shader: {fileID: 4800000, guid: df12117ecd77c31469c224178886498e, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -52,11 +52,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap:
-        m_Texture: {fileID: 2800000, guid: be68f812c0d7978469d8529ce49c6452, type: 3}
+        m_Texture: {fileID: 2800000, guid: b3cbbf69e0d4b794dbcf02f27d76bbeb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: be68f812c0d7978469d8529ce49c6452, type: 3}
+        m_Texture: {fileID: 2800000, guid: b3cbbf69e0d4b794dbcf02f27d76bbeb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Bump2ndMap:
@@ -68,7 +68,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: 8eb7f26e7ef74864ba68a01fc91c26bd, type: 3}
+        m_Texture: {fileID: 2800000, guid: 29dc4e563202e6b49ba50badea045887, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DissolveMask:
@@ -108,7 +108,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterColorTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 7dbf5523d750e25479dbe48c11b7ed50, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterShapeTex:
@@ -156,7 +156,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: be68f812c0d7978469d8529ce49c6452, type: 3}
+        m_Texture: {fileID: 2800000, guid: b3cbbf69e0d4b794dbcf02f27d76bbeb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MatCap2ndBlendMask:
@@ -340,7 +340,7 @@ Material:
     - _BumpScale: 1
     - _ColorMask: 15
     - _Cull: 0
-    - _Cutoff: 0.5
+    - _Cutoff: 0.001
     - _DissolveNoiseStrength: 0.1
     - _DistanceFadeMode: 0
     - _DistanceFadeRimFresnelPower: 5
