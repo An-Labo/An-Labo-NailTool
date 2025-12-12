@@ -21,7 +21,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		
 
 		public void UpdateLanguage() {
-			this.label = LanguageManager.S(this.TextId);
+			this.label = LanguageManager.S(this.TextId ?? "");
 		}
 
 		private static void DisableValueChangeEvent(ChangeEvent<string> evt) {
