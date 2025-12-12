@@ -162,6 +162,21 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			} else {
 				this.UpdatePreview();
 			}
+
+			//DDでアバター認識するように
+			if (Selection.activeGameObject != null) {
+				VRCAvatarDescriptor? descriptor = Selection.activeGameObject.GetComponentInParent<VRCAvatarDescriptor>();
+				
+				if (descriptor != null) {
+					this._avatarObjectField.value = descriptor;
+
+					AvatarMatching avatarMatching = new(descriptor);
+					(Shop shop, Avatar avatar, AvatarVariation variation)? variation = avatarMatching.Match();
+					if (variation != null && this._avatarDropDowns != null) {
+						this._avatarDropDowns.SetValues(variation.Value.shop, variation.Value.avatar, variation.Value.variation);
+					}
+				}
+			}
 		}
 
 		private void OnChangeAvatarSort(ChangeEvent<AvatarSortOrder> evt) {
