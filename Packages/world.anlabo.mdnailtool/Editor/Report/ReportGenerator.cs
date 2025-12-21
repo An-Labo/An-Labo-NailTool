@@ -29,7 +29,7 @@ namespace world.anlabo.mdnailtool.Editor.Report {
 
 			{
 				builder.AppendLine("[Nail List Dump]");
-				DBNailDesign dbNailDesign = new();
+				using DBNailDesign dbNailDesign = new();
 				foreach (NailDesign nailDesign in dbNailDesign.collection) {
 					builder.Append(nailDesign.DesignName);
 					builder.Append(" : ");
