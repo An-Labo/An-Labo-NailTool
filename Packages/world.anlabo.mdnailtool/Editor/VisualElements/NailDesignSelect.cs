@@ -280,7 +280,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			int width = (int)this._listView.contentRect.width;
 			const int elementSize = 60 + 10;
 
+			if (width < elementSize) return;
+
 			this._onePageCount = width / elementSize;
+
+			if (this._onePageCount == 0) return;
+			
 			this._maxPageCount = Mathf.Max(Mathf.CeilToInt(count / (float)this._onePageCount) - 1, 0);
 
 			int surplus = width - this._onePageCount * elementSize;
