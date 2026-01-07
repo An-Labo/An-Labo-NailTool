@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement class="root">
+        <ui:VisualElement class="header">
+            <ui:VisualElement class="header-row">
+                <uie:ToolbarSearchField name="search-field" style="width: 200px;" />
+                <ui:DropdownField name="sort-dropdown" choices="新着順,名前順" index="0" style="width: 100px; margin-left: 10px;" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="header-row filter-container">
+                <ui:Toggle label="お気に入りのみ" name="toggle-fav" />
+                <ui:Toggle label="購入済みのみ" name="toggle-installed" />
+                <ui:VisualElement style="width: 20px;" /> <ui:Toggle label="かっこいい" name="tag-cool" />
+                <ui:Toggle label="ニュアンス" name="tag-nuance" />
+                <ui:Toggle label="シンプル" name="tag-simple" />
+                <ui:Toggle label="上品" name="tag-elegance" />
+                <ui:Toggle label="かわいい" name="tag-cute" />
+                <ui:Toggle label="ポップ" name="tag-pop" />
+                <ui:Toggle label="派手" name="tag-flashy" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="header-row color-container" name="color-filter-container">
+                </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:ScrollView class="body">
+            <ui:VisualElement name="nail-grid" class="nail-grid" />
+        </ui:ScrollView>
+
+        <ui:VisualElement class="footer">
+            <ui:Button name="btn-prev" text="◀" class="page-btn" />
+            <ui:Label name="lbl-page" text="1 / 5" style="align-self: center; margin: 0 10px;" />
+            <ui:Button name="btn-next" text="▶" class="page-btn" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
