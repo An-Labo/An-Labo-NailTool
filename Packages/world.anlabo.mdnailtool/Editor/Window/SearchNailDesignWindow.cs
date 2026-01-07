@@ -89,7 +89,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             _allToggles.Clear();
             _colorButtons.Clear();
 
-            // テーマカラー設定
             bool isDark = EditorGUIUtility.isProSkin;
             if (isDark) {
                 _windowBgColor = new Color(0.22f, 0.22f, 0.22f);
@@ -112,7 +111,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             root.style.paddingTop = 8; root.style.paddingBottom = 8;
             root.style.paddingLeft = 8; root.style.paddingRight = 8;
 
-            // === 1. 最上段バー ===
             var topBar = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 0, height = 20 } };
             
             _searchField = new ToolbarSearchField { style = { flexGrow = 1, marginRight = 0 } };
@@ -132,7 +130,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             root.Add(topBar);
 
 
-            // === 2. フィルターパネル ===
             var filterPanel = new VisualElement { 
                 style = { 
                     flexDirection = FlexDirection.Row,
@@ -144,7 +141,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             };
             root.Add(filterPanel);
 
-            // --- [左] テキストフィルタ群 ---
             var textFilterContainer = new VisualElement { 
                 style = { 
                     flexDirection = FlexDirection.Row, 
@@ -154,7 +150,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             };
             filterPanel.Add(textFilterContainer);
 
-            // === 列1: お気に入り -> かわいい -> かっこいい ===
             var col1 = CreateColumn();
             string favText = LanguageManager.S("window.favorite_only") ?? "Favorite";
             _favToggle = AddCustomCheckbox(col1, favText, v => _favOnly = v);
@@ -163,7 +158,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             AddTagToColumn(col1, "tag.cool");
             textFilterContainer.Add(col1);
 
-            // === 列2: インポート済み -> ニュアンス -> ポップ ===
             var col2 = CreateColumn();
             string importedText = LanguageManager.S("window.imported_only") ?? "Imported";
             _importedToggle = AddCustomCheckbox(col2, importedText, v => _importedOnly = v);
@@ -172,7 +166,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             AddTagToColumn(col2, "tag.pop");
             textFilterContainer.Add(col2);
 
-            // === 列3: 未インポート -> シンプル -> 派手 ===
             var col3 = CreateColumn();
             string notImportedText = LanguageManager.S("window.not_imported") ?? "Not Imported";
             _notImportedToggle = AddCustomCheckbox(col3, notImportedText, v => _notImportedOnly = v);
@@ -181,38 +174,28 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             AddTagToColumn(col3, "tag.flashy");
             textFilterContainer.Add(col3);
 
-            // === 列4: (空き) -> 上品 ===
             var col4 = CreateColumn();
             col4.Add(new VisualElement { style = { height = 20, marginBottom = 2 } }); 
             AddTagToColumn(col4, "tag.elegance");
             textFilterContainer.Add(col4);
 
-
-            // --- [区切り線] ---
             filterPanel.Add(new VisualElement { style = { width = 1, backgroundColor = Color.gray, marginRight = 10 } });
 
-
-            // --- [右] カラーパレット ---
             var colorContainer = new VisualElement { style = { width = 100 } }; 
             filterPanel.Add(colorContainer);
 
-            // 1行目
             var rowColor1 = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 4 } };
             foreach (var colorKey in _monoColors) AddColorButton(rowColor1, colorKey);
             colorContainer.Add(rowColor1);
 
-            // 2行目
             var rowColor2 = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 4 } };
             foreach (var colorKey in _colorsRow2) AddColorButton(rowColor2, colorKey);
             colorContainer.Add(rowColor2);
 
-            // 3行目
             var rowColor3 = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 0 } };
             foreach (var colorKey in _colorsRow3) AddColorButton(rowColor3, colorKey);
             colorContainer.Add(rowColor3);
 
-
-            // === 3. ボディ ===
             var scroll = new ScrollView { style = { flexGrow = 1 } };
             _nailGrid = new VisualElement { 
                 style = { 
@@ -222,7 +205,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             scroll.Add(_nailGrid);
             root.Add(scroll);
 
-            // === 4. フッター ===
             var footer = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.Center, marginTop = 10, marginBottom = 5 } };
 var prevBtn = new Button(() => ChangePage(-1)) { 
                 text = "◀", 
@@ -296,11 +278,7 @@ var prevBtn = new Button(() => ChangePage(-1)) {
             parent.Add(btn);
         }
 
-        // ★完全自作チェックボックス (Toggle+Label)
-        // Unity標準のToggleを使わず、コンテナの中に「箱」と「文字」を置くことで
-        // 完璧な位置調整とクリック制御を行う
         private Toggle AddCustomCheckbox(VisualElement parent, string labelText, Action<bool> onToggle) {
-            // コンテナ (Row)
             var container = new VisualElement {
                 style = {
                     flexDirection = FlexDirection.Row,
@@ -309,7 +287,6 @@ var prevBtn = new Button(() => ChangePage(-1)) {
                 }
             };
 
-            // トグル本体 (文字なし)
             var toggle = new Toggle {
                 style = {
                     width = 18, height = 18,
@@ -317,25 +294,20 @@ var prevBtn = new Button(() => ChangePage(-1)) {
                 }
             };
 
-            // ラベル
             var label = new Label(labelText) {
                 style = {
-                    marginLeft = 2, // ★ここで距離を極限まで縮める！
+                    marginLeft = 2,
                     paddingLeft = 0,
-                    color = new Color(0.9f, 0.9f, 0.9f) // 少し明るいグレー
+                    color = new Color(0.9f, 0.9f, 0.9f)
                 }
             };
 
-            // ロジック連結
             toggle.RegisterValueChangedCallback(evt => {
                 onToggle(evt.newValue);
                 UpdateFilter();
             });
 
-            // コンテナ全体クリックでトグル反転
             container.RegisterCallback<ClickEvent>(evt => {
-                // Toggle自体のクリックイベントと重複しないようにガードしたいが、
-                // VisualElementへのクリックなら安全
                 if (evt.target != toggle) {
                     toggle.value = !toggle.value;
                 }
@@ -345,7 +317,7 @@ var prevBtn = new Button(() => ChangePage(-1)) {
             container.Add(label);
             parent.Add(container);
 
-            return toggle; // リセット用にToggle本体を返す
+            return toggle;
         }
 
         private void ResetFilters() {

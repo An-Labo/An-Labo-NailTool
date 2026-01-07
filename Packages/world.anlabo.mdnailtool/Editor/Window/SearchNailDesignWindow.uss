@@ -1,6 +1,6 @@
 .root {
     flex-grow: 1;
-    background-color: #c8c8c8; /* スクショっぽい背景色 */
+    background-color: #c8c8c8;
     padding: 10px;
 }
 
@@ -22,7 +22,7 @@
 .color-btn {
     width: 20px;
     height: 20px;
-    border-radius: 10px; /* 丸くする */
+    border-radius: 10px;
     margin-right: 5px;
     border-width: 2px;
     border-color: #666;
@@ -31,19 +31,17 @@
 .color-btn.selected {
     border-color: #fff;
     border-width: 3px;
-    scale: 1.2; /* 選択時はちょっと大きく */
+    scale: 1.2;
 }
 
-/* グリッドレイアウト */
 .nail-grid {
     flex-direction: row;
     flex-wrap: wrap;
-    justify-content: flex-start; /* 左詰め */
+    justify-content: flex-start;
 }
 
-/* カードのデザイン */
 .nail-card {
-    width: 160px; /* サイズは調整してね */
+    width: 160px;
     height: 200px;
     margin: 5px;
     background-color: #dddddd;
@@ -68,7 +66,7 @@
 .design-name {
     font-size: 12px;
     -unity-font-style: bold;
-    white-space: normal; /* 折り返し許可 */
+    white-space: normal;
 }
 
 .link-label {
