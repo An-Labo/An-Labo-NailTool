@@ -15,7 +15,6 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 	public class NailDesignSelect : VisualElement {
 
 		public event Action<string>? OnSelectNail;
-		public event Action? OnSearchButtonClicked;
 		public string? FirstDesignName { get; private set; }
 
 		private readonly VisualElement _listView;
@@ -23,7 +22,6 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		private readonly VisualElement _list;
 		private readonly Button _leftButton;
 		private readonly Button _rightButton;
-		private readonly Button _searchButton;
 
 		private int _pageIndex;
 		private int _onePageCount;
@@ -59,97 +57,52 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				style = {
 					flexDirection = FlexDirection.Row,
 					justifyContent = Justify.Center,
-					alignItems = Align.Center,
-					marginTop = new Length(5, LengthUnit.Pixel),
-					height = new Length(36, LengthUnit.Pixel),
-					position = Position.Relative
+					marginTop = new Length(5, LengthUnit.Pixel)
 				}
 			};
+
 			this.Add(footer);
 
-			var arrowsContainer = new VisualElement {
-				style = {
-					flexDirection = FlexDirection.Row,
-					alignItems = Align.Center,
-					justifyContent = Justify.Center
-				}
-			};
-			footer.Add(arrowsContainer);
-
-			
 			this._leftButton = new Button {
 				style = {
 					flexShrink = 0,
 					width = new Length(36, LengthUnit.Pixel),
 					height = new Length(36, LengthUnit.Pixel),
-					paddingLeft = 1, paddingRight = 1
+					paddingLeft = new Length(1, LengthUnit.Pixel),
+					paddingRight = new Length(1, LengthUnit.Pixel)
 				}
 			};
 			this._leftButton.clicked += this.OnLeftButton;
 			this._leftButton.Add(new Image {
 				image = EditorGUIUtility.Load("d_tab_prev@2x") as Texture2D
 			});
-			arrowsContainer.Add(this._leftButton);
+			footer.Add(this._leftButton);
 
 			LocalizedLabel viewLargeLabel = new() {
 				TextId = "window.view_large",
 				style = {
 					width = new Length(200, LengthUnit.Pixel),
 					unityTextAlign = TextAnchor.MiddleCenter,
-					visibility = Visibility.Hidden,
-					display = DisplayStyle.Flex
+					visibility = Visibility.Hidden
 				}
 			};
-			arrowsContainer.Add(viewLargeLabel); 
+
+			footer.Add(viewLargeLabel);
 
 			this._rightButton = new Button {
 				style = {
 					flexShrink = 0,
 					width = new Length(36, LengthUnit.Pixel),
 					height = new Length(36, LengthUnit.Pixel),
-					paddingLeft = 1, paddingRight = 1
+					paddingLeft = new Length(1, LengthUnit.Pixel),
+					paddingRight = new Length(1, LengthUnit.Pixel)
 				}
 			};
 			this._rightButton.clicked += this.OnRightButton;
 			this._rightButton.Add(new Image {
 				image = EditorGUIUtility.Load("d_tab_next@2x") as Texture2D
 			});
-			arrowsContainer.Add(this._rightButton); 
-
-
-			this._searchButton = new Button {
-				style = {
-					height = new Length(30, LengthUnit.Pixel),
-					flexDirection = FlexDirection.Row,
-					alignItems = Align.Center,
-					justifyContent = Justify.Center,
-					paddingLeft = 10, paddingRight = 10,
-					borderTopLeftRadius = 15, borderBottomLeftRadius = 15,
-					borderTopRightRadius = 15, borderBottomRightRadius = 15,
-					position = Position.Absolute,
-					right = 0 
-				}
-			};
-
-				var searchIcon = new Image {
-				image = EditorGUIUtility.Load("d_Search Icon") as Texture2D, 
-				style = { width = 16, height = 16, marginRight = 5 }
-			};
-
-			searchIcon.tintColor = EditorGUIUtility.isProSkin ? new Color(0.9f, 0.9f, 0.9f) : Color.black;
-			this._searchButton.Add(searchIcon);
-
-			string buttonText = LanguageManager.S("window.search_nail") ?? "Search Nail";
-			
-			this._searchButton.Add(new Label(buttonText) {
-				style = { 
-					unityTextAlign = TextAnchor.MiddleCenter, 
-					paddingTop = 0, paddingBottom = 0,
-				}
-			});
-
-			this._searchButton.clicked += () => OnSearchButtonClicked?.Invoke();
-			footer.Add(this._searchButton);
+			footer.Add(this._rightButton);
 
 			this.Init();
 		}
