@@ -1,0 +1,93 @@
+.root {
+    flex-grow: 1;
+    background-color: #c8c8c8; /* スクショっぽい背景色 */
+    padding: 10px;
+}
+
+.header {
+    margin-bottom: 10px;
+}
+
+.header-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.filter-container > Toggle {
+    margin-right: 10px;
+}
+
+.color-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 10px; /* 丸くする */
+    margin-right: 5px;
+    border-width: 2px;
+    border-color: #666;
+}
+
+.color-btn.selected {
+    border-color: #fff;
+    border-width: 3px;
+    scale: 1.2; /* 選択時はちょっと大きく */
+}
+
+/* グリッドレイアウト */
+.nail-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* 左詰め */
+}
+
+/* カードのデザイン */
+.nail-card {
+    width: 160px; /* サイズは調整してね */
+    height: 200px;
+    margin: 5px;
+    background-color: #dddddd;
+    border-radius: 5px;
+    padding: 5px;
+    justify-content: space-between;
+}
+
+.nail-thumb {
+    width: 150px;
+    height: 150px;
+    background-color: #000;
+    align-self: center;
+}
+
+.card-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.design-name {
+    font-size: 12px;
+    -unity-font-style: bold;
+    white-space: normal; /* 折り返し許可 */
+}
+
+.link-label {
+    color: #0000FF;
+    font-size: 11px;
+}
+
+.heart-icon {
+    font-size: 16px;
+    -unity-font-style: bold;
+}
+
+.footer {
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.page-btn {
+    width: 30px;
+    height: 20px;
+}
