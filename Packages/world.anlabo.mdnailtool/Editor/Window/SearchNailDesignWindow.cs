@@ -14,39 +14,34 @@ namespace world.anlabo.mdnailtool.Editor.Window {
     public class SearchNailDesignWindow : EditorWindow {
         private MDNailToolWindow _parentWindow;
 
-        // UI Elements
         private VisualElement _nailGrid;
         private Label _pageLabel;
         private ToolbarSearchField _searchField;
         private DropdownField _sortDropdown;
         
-        // リセット用に保持
         private List<Toggle> _allToggles = new List<Toggle>();
         private List<Button> _colorButtons = new List<Button>();
         private Toggle _favToggle;
         private Toggle _importedToggle;
         private Toggle _notImportedToggle;
 
-        // データ
         private List<NailDesign> _allDesigns = new();
         private List<NailDesign> _filteredDesigns = new();
         
-        // フィルタ状態
         private string _searchText = "";
-        private bool _favOnly = false;
-        private bool _importedOnly = false;
-        private bool _notImportedOnly = false;
+        private bool _favPriority = false;
+        private bool _showImported = true;
+        private bool _showNotImported = true;
         private readonly HashSet<string> _activeTags = new();
         private readonly HashSet<string> _activeColors = new();
 
-        // ページネーション (4列x3行)
+        private const string PrefFavPriority = "MDNail_Search_FavPriority";
+
         private int _pageIndex = 0;
         private const int ItemsPerPage = 12;
 
-        // ウィンドウサイズ固定
         private static readonly Vector2 FixedWindowSize = new Vector2(740, 920);
 
-        // カラー設定
         private Color _windowBgColor;
         private Color _panelBgColor; 
         private Color _cardBgColor;
@@ -54,7 +49,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
         private Color _linkColor;
         private Color _borderColor;
 
-        // タグ定義
         private readonly Dictionary<string, string> _tagMap = new() {
             {"tag.cute", "cute"}, {"tag.cool", "cool"},
             {"tag.nuance", "nuance"}, {"tag.pop", "pop"},
@@ -62,7 +56,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             {"tag.elegance", "elegance"}
         };
 
-        // カラー定義
         private readonly string[] _monoColors = { "white", "black", "gray" };
         private readonly string[] _colorsRow2 = { "brown", "green", "blue", "purple" };
         private readonly string[] _colorsRow3 = { "red", "yellow", "pink", "orange" };
@@ -88,6 +81,9 @@ namespace world.anlabo.mdnailtool.Editor.Window {
         private void CreateGUI() {
             _allToggles.Clear();
             _colorButtons.Clear();
+            _favPriority = EditorPrefs.GetBool(PrefFavPriority, false);
+            _showImported = true;
+            _showNotImported = true;
 
             bool isDark = EditorGUIUtility.isProSkin;
             if (isDark) {
@@ -151,24 +147,30 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             filterPanel.Add(textFilterContainer);
 
             var col1 = CreateColumn();
-            string favText = LanguageManager.S("window.favorite_only") ?? "Favorite";
-            _favToggle = AddCustomCheckbox(col1, favText, v => _favOnly = v);
+            string favText = LanguageManager.S("window.favorite_priority") ?? "Fav Priority";
+            _favToggle = AddCustomCheckbox(col1, favText, v => {
+                _favPriority = v;
+                EditorPrefs.SetBool(PrefFavPriority, v);
+            });
+            _favToggle.value = _favPriority;
             
             AddTagToColumn(col1, "tag.cute");
             AddTagToColumn(col1, "tag.cool");
             textFilterContainer.Add(col1);
 
             var col2 = CreateColumn();
-            string importedText = LanguageManager.S("window.imported_only") ?? "Imported";
-            _importedToggle = AddCustomCheckbox(col2, importedText, v => _importedOnly = v);
+            string importedText = LanguageManager.S("window.show_imported") ?? "Imported";
+            _importedToggle = AddCustomCheckbox(col2, importedText, v => _showImported = v);
+            _importedToggle.value = _showImported;
 
             AddTagToColumn(col2, "tag.nuance");
             AddTagToColumn(col2, "tag.pop");
             textFilterContainer.Add(col2);
 
             var col3 = CreateColumn();
-            string notImportedText = LanguageManager.S("window.not_imported") ?? "Not Imported";
-            _notImportedToggle = AddCustomCheckbox(col3, notImportedText, v => _notImportedOnly = v);
+            string notImportedText = LanguageManager.S("window.show_not_imported") ?? "Not Imported";
+            _notImportedToggle = AddCustomCheckbox(col3, notImportedText, v => _showNotImported = v);
+            _notImportedToggle.value = _showNotImported;
 
             AddTagToColumn(col3, "tag.simple");
             AddTagToColumn(col3, "tag.flashy");
@@ -323,9 +325,8 @@ var prevBtn = new Button(() => ChangePage(-1)) {
         private void ResetFilters() {
             _searchText = "";
             _searchField.value = "";
-            _favOnly = false;
-            _importedOnly = false;
-            _notImportedOnly = false;
+            _showImported = true;
+            _showNotImported = true;
             _activeTags.Clear();
             _activeColors.Clear();
 
@@ -357,18 +358,17 @@ var prevBtn = new Button(() => ChangePage(-1)) {
             UpdateFilter();
         }
 
-        private void UpdateFilter() {
+private void UpdateFilter() {
             _pageIndex = 0;
             _filteredDesigns = _allDesigns.Where(d => {
                 if (!string.IsNullOrEmpty(_searchText)) {
                     bool match = d.DisplayNames.Values.Any(n => n.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) >= 0);
                     if (!match) return false;
                 }
-                if (_favOnly && !IsFavorite(d.DesignName)) return false;
 
                 bool isInstalled = INailProcessor.IsInstalledDesign(d.DesignName);
-                if (_importedOnly && !isInstalled) return false;
-                if (_notImportedOnly && isInstalled) return false;
+                if (!_showImported && isInstalled) return false;
+                if (!_showNotImported && !isInstalled) return false;
                 
                 if (_activeTags.Count > 0) {
                     if (d.Tag == null) return false;
@@ -383,8 +383,17 @@ var prevBtn = new Button(() => ChangePage(-1)) {
                 return true;
             }).ToList();
 
-            if (_sortDropdown.index == 0) _filteredDesigns.Sort((a, b) => b.Id.CompareTo(a.Id));
-            else _filteredDesigns.Sort((a, b) => string.Compare(a.DesignName, b.DesignName, StringComparison.Ordinal));
+            _filteredDesigns.Sort((a, b) => {
+                if (_favPriority) {
+                    bool favA = IsFavorite(a.DesignName);
+                    bool favB = IsFavorite(b.DesignName);
+                    if (favA != favB) return favB.CompareTo(favA);
+                }
+
+                if (_sortDropdown.index == 0) return b.Id.CompareTo(a.Id);
+                return string.Compare(a.DesignName, b.DesignName, StringComparison.Ordinal);
+            });
+
             RebuildGrid();
         }
 
@@ -458,7 +467,7 @@ var prevBtn = new Button(() => ChangePage(-1)) {
             favBtn.RegisterCallback<ClickEvent>(_ => {
                 ToggleFavorite(design.DesignName);
                 favBtn.text = IsFavorite(design.DesignName) ? "♥" : "♡";
-                if (_favOnly) UpdateFilter();
+                if (_favPriority) UpdateFilter();
             });
             rowName.Add(favBtn);
             card.Add(rowName);
