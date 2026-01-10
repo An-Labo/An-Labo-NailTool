@@ -12,6 +12,7 @@ using world.anlabo.mdnailtool.Editor.VisualElements;
 using static world.anlabo.mdnailtool.Editor.Language.LanguageManager;
 using Avatar = world.anlabo.mdnailtool.Editor.Entity.Avatar;
 using Object = UnityEngine.Object;
+using Newtonsoft.Json;
 
 #nullable enable
 
@@ -60,9 +61,9 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 
 		private void CreateGUI() {
+			this.MigrateUsageStats();
 			INailProcessor.ClearPreviewMaterialCash();
 
-			// UIに使用するDBをあらかじめキャッシュしておく
 			using DBShop _dbShop = new();
 			using DBNailDesign _dbNailDesign = new();
 
@@ -164,7 +165,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 				this.UpdatePreview();
 			}
 
-			//DDでアバター認識するように
 			if (Selection.activeGameObject != null) {
 				VRCAvatarDescriptor? descriptor = Selection.activeGameObject.GetComponentInParent<VRCAvatarDescriptor>();
 				
@@ -197,7 +197,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			INailProcessor.ClearPreviewMaterialCash();
 		}
 
-		private void OnExecute() {
+private void OnExecute() {
 			VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
 			if (avatar == null) {
 				Debug.LogError("Not found target Avatar.");
@@ -239,26 +239,27 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			Dictionary<string, int> designUsedCounts = GlobalSetting.DesignUseCount;
 			Dictionary<string, int> avatarUseCount = GlobalSetting.AvatarUseCount;
 			
+			HashSet<string> uniqueDesignNames = new();
 			foreach ((INailProcessor nailProcessor, string _, string _) in designAndVariationNames) {
-				if (string.IsNullOrEmpty(nailProcessor.DesignName)) continue;
-				lastUsedTimes[nailProcessor.DesignName] = DateTime.Now;
-				if (!designUsedCounts.TryAdd(nailProcessor.DesignName, 1)) {
-					designUsedCounts[nailProcessor.DesignName] += 1;
+				if (!string.IsNullOrEmpty(nailProcessor.DesignName)) {
+					uniqueDesignNames.Add(nailProcessor.DesignName);
 				}
-
-				if (avatarUseCount.TryAdd(this._avatarDropDowns.GetAvatarKey(), 1)) {
-					avatarUseCount[this._avatarDropDowns.GetAvatarKey()] += 1;
-				}
-
-				designUsedCounts[nailProcessor.DesignName] += 1;
 			}
 
-			EditorUtility.DisplayDialog(S("dialog.finished"), S("dialog.finished.success_attach_nail"), "OK");
+			foreach (string dName in uniqueDesignNames) {
+				lastUsedTimes[dName] = DateTime.Now;
+				designUsedCounts[dName] = designUsedCounts.GetValueOrDefault(dName, 0) + 1;
+			}
+
+			string avatarKey = this._avatarDropDowns!.GetAvatarKey();
+			avatarUseCount[avatarKey] = avatarUseCount.GetValueOrDefault(avatarKey, 0) + 1;
 
 			GlobalSetting.DesignLastUsedTimes = lastUsedTimes;
 			GlobalSetting.DesignUseCount = designUsedCounts;
 			GlobalSetting.AvatarUseCount = avatarUseCount;
 			this._nailDesignSelect!.Init();
+
+			EditorUtility.DisplayDialog(S("dialog.finished"), S("dialog.finished.success_attach_nail"), "OK");
 		}
 
 		private void OnRemove() {
@@ -359,20 +360,16 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		}
 
 		private void UpdateNailShapeFilter(INailProcessor? processor = null) {
-
-			// マテリアルが直接指定されている場合、フィルターをクリア
 			if (this._materialObjectField!.value != null) {
 				this._nailShapeDropDown!.SetFilter(_ => true);
 				return;
 			}
 			
-			// 一括指定でプロセッサが直接渡された場合それでフィルター
 			if (processor != null) {
 				this._nailShapeDropDown!.SetFilter(processor.IsSupportedNailShape);
 				return;
 			}
 			
-			// 設定されたネイルのプロセッサを取得してフィルター構築
 			HashSet<string> designNameSet = this._nailDesignDropDowns!.Select(downs => downs.GetSelectedDesignName()).ToHashSet();
 			using DBNailDesign dbNailDesign = new();
 			List<INailProcessor> processors = designNameSet.Select(INailProcessor.CreateNailDesign).ToList();
@@ -396,7 +393,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			this._nailPreviewController!.ChangeFootNailMesh(this._nailShapeDropDown!.value);
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
-
 
 			this._nailPreviewController.ChangeNailMaterial(designAndVariationNames, nailShapeName);
 			this._nailPreviewController.ChangeAdditionalObjects(designAndVariationNames, nailShapeName);
@@ -429,17 +425,13 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 				.ToArray();
 		}
 		
-		
-		
 		private static void OnChangeRemoveCurrentNail(ChangeEvent<bool> evt) {
 			GlobalSetting.RemoveCurrentNail = evt.newValue;
 		}
 		
-		
 		private static void OnChangeBackup(ChangeEvent<bool> evt) {
 			GlobalSetting.Backup = evt.newValue;
 		}
-		
 		
 		private static void OnChangeForModularAvatar(ChangeEvent<bool> evt) {
 			GlobalSetting.UseModularAvatar = evt.newValue;
@@ -447,8 +439,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 		private void ShowAvatarSearchWindow() {
 			SearchAvatarWindow.ShowWindow(this);
-			}
-
+		}
 
 		private void ShowNailSearchWindow() {
 			SearchNailDesignWindow.ShowWindow(this);
@@ -456,6 +447,24 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		
 		public void SelectNailFromSearch(string designName) {
 			this.OnSelectNail(designName);
+		}
+
+		// 着用回数リセット
+		private void MigrateUsageStats() {
+			const string OLD_DESIGN_KEY = "world.anlabo.mdnailtool.design_use_count";
+			const string OLD_AVATAR_KEY = "world.anlabo.mdnailtool.avatar_use_count";
+
+			if (!EditorPrefs.HasKey(OLD_DESIGN_KEY)) return;
+
+			var oldDesignCounts = JsonConvert.DeserializeObject<Dictionary<string, int>>(EditorPrefs.GetString(OLD_DESIGN_KEY));
+			if (oldDesignCounts != null) {
+				var migrated = new Dictionary<string, int>();
+				foreach (var kvp in oldDesignCounts) migrated[kvp.Key] = Mathf.CeilToInt(kvp.Value / 24.0f);
+				GlobalSetting.DesignUseCount = migrated;
+			}
+            
+			EditorPrefs.DeleteKey(OLD_DESIGN_KEY);
+			EditorPrefs.DeleteKey(OLD_AVATAR_KEY);
 		}
 	}
 }

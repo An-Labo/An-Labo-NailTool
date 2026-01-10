@@ -97,34 +97,24 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		private const string DESIGN_USE_COUNT_KEY = "world.anlabo.mdnailtool.design_use_count";
+		private const string DESIGN_USE_COUNT_KEY = "world.anlabo.mdnailtool.design_count";
 		internal static Dictionary<string, int> DesignUseCount {
 			get {
 				if (!EditorPrefs.HasKey(DESIGN_USE_COUNT_KEY)) return new Dictionary<string, int>();
 				string json = EditorPrefs.GetString(DESIGN_USE_COUNT_KEY);
-				Dictionary<string, int>? obj = JsonConvert.DeserializeObject<Dictionary<string, int>>(json);
-				return obj ?? new Dictionary<string, int>();
+				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
 			}
-
-			set {
-				string json = JsonConvert.SerializeObject(value);
-				EditorPrefs.SetString(DESIGN_USE_COUNT_KEY, json);
-			}
+			set => EditorPrefs.SetString(DESIGN_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
 		}
 		
-		private const string AVATAR_USE_COUNT_KEY = "world.anlabo.mdnailtool.avatar_use_count";
+		private const string AVATAR_USE_COUNT_KEY = "world.anlabo.mdnailtool.avatar_count";
 		internal static Dictionary<string, int> AvatarUseCount {
 			get {
 				if (!EditorPrefs.HasKey(AVATAR_USE_COUNT_KEY)) return new Dictionary<string, int>();
-				string json = EditorPrefs.GetString(DESIGN_USE_COUNT_KEY);
-				Dictionary<string, int>? obj = JsonConvert.DeserializeObject<Dictionary<string, int>>(json);
-				return obj ?? new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(AVATAR_USE_COUNT_KEY);
+				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
 			}
-
-			set {
-				string json = JsonConvert.SerializeObject(value);
-				EditorPrefs.SetString(AVATAR_USE_COUNT_KEY, json);
-			}
+			set => EditorPrefs.SetString(AVATAR_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
 		}
 
 		public static void ClearGlobalSettings() {

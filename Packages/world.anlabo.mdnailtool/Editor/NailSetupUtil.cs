@@ -80,21 +80,36 @@ namespace world.anlabo.mdnailtool.Editor {
 				
 			}
 
-
-			
 			ReplaceMesh(leftFootNailObjects, leftFootOverrideMesh);
 			ReplaceMesh(rightFootNailObjects, rightFootOverrideMesh);
 		}
 
 		private static void ReplaceMesh(Transform?[] transforms, Mesh?[] overrideMesh) {
 			for (int index = 0; index < overrideMesh.Length; index++) {
-				Mesh? mesh = overrideMesh[index];
-				if (mesh == null) continue;
+				Mesh? newMesh = overrideMesh[index];
+				if (newMesh == null) continue;
 				Transform? targetTransform = transforms[index];
 				if (targetTransform == null) continue;
-				SkinnedMeshRenderer? skinnedMeshRenderer = targetTransform.GetComponent<SkinnedMeshRenderer>();
-				if (skinnedMeshRenderer == null) continue;
-				skinnedMeshRenderer.sharedMesh = mesh;
+				
+				SkinnedMeshRenderer? smr = targetTransform.GetComponent<SkinnedMeshRenderer>();
+				if (smr == null) continue;
+
+				Dictionary<string, float> savedWeights = new();
+				Mesh currentMesh = smr.sharedMesh;
+				if (currentMesh != null) {
+					for (int i = 0; i < currentMesh.blendShapeCount; i++) {
+						savedWeights[currentMesh.GetBlendShapeName(i)] = smr.GetBlendShapeWeight(i);
+					}
+				}
+
+				smr.sharedMesh = newMesh;
+
+				foreach (var weightInfo in savedWeights) {
+					int newIndex = newMesh.GetBlendShapeIndex(weightInfo.Key);
+					if (newIndex != -1) {
+						smr.SetBlendShapeWeight(newIndex, weightInfo.Value);
+					}
+				}
 			}
 		}
 

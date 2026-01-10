@@ -161,11 +161,16 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			using DBNailDesign dbNailDesign = new();
 			Action<EventBase> selectNailAction = SelectNail;
 			IReadOnlyDictionary<string, DateTime> lastUsedTime = GlobalSetting.DesignLastUsedTimes;
-			string langKey = LanguageManager.CurrentLanguageData.language;
-			foreach (NailDesign nailDesign in dbNailDesign.collection
-				         .OrderByDescending(design => lastUsedTime.GetValueOrDefault(design.DesignName, DateTime.MinValue))
-				         .ThenByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName))
-				         .ThenByDescending(design => design.Id)) {
+IReadOnlyDictionary<string, int> useCounts = GlobalSetting.DesignUseCount;
+string langKey = LanguageManager.CurrentLanguageData.language;
+
+foreach (NailDesign nailDesign in dbNailDesign.collection
+         .OrderByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName)) 
+         .ThenByDescending(design => useCounts.GetValueOrDefault(design.DesignName, 0)) 
+         .ThenByDescending(design => lastUsedTime.GetValueOrDefault(design.DesignName, DateTime.MinValue))
+         .ThenByDescending(design => design.Id)) 
+{
+{
 				VisualElement nailElement = new() {
 					style = {
 						marginTop = new Length(5, LengthUnit.Pixel),
@@ -247,6 +252,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			}
 
 			this.CalculateListWidth();
+		}
 		}
 
 		private void SelectNail(EventBase evt) {

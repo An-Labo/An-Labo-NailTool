@@ -115,7 +115,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
             string sortNewest = LanguageManager.S("window.sort.newest") ?? "Newest";
             string sortName = LanguageManager.S("window.sort.name") ?? "Name";
-            _sortDropdown = new DropdownField(new List<string> { sortNewest, sortName }, 0);
+            string sortUsage = LanguageManager.S("window.sort.usage") ?? "Usage Count";
+            _sortDropdown = new DropdownField(new List<string> { sortNewest, sortName, sortUsage }, 0);
             _sortDropdown.style.width = 80;
             _sortDropdown.style.marginLeft = 0;
             _sortDropdown.RegisterValueChangedCallback(_ => UpdateFilter());
@@ -331,8 +332,8 @@ var prevBtn = new Button(() => ChangePage(-1)) {
             _activeColors.Clear();
 
             if (_favToggle != null) _favToggle.SetValueWithoutNotify(false);
-            if (_importedToggle != null) _importedToggle.SetValueWithoutNotify(false);
-            if (_notImportedToggle != null) _notImportedToggle.SetValueWithoutNotify(false);
+            if (_importedToggle != null) _importedToggle.SetValueWithoutNotify(true);
+            if (_notImportedToggle != null) _notImportedToggle.SetValueWithoutNotify(true);
 
             foreach (var t in _allToggles) t.SetValueWithoutNotify(false);
             foreach (var btn in _colorButtons) {
@@ -388,6 +389,12 @@ private void UpdateFilter() {
                     bool favA = IsFavorite(a.DesignName);
                     bool favB = IsFavorite(b.DesignName);
                     if (favA != favB) return favB.CompareTo(favA);
+                }
+
+                if (_sortDropdown.index == 2) {
+                    int countA = GlobalSetting.DesignUseCount.GetValueOrDefault(a.DesignName, 0);
+                    int countB = GlobalSetting.DesignUseCount.GetValueOrDefault(b.DesignName, 0);
+                    if (countA != countB) return countB.CompareTo(countA);
                 }
 
                 if (_sortDropdown.index == 0) return b.Id.CompareTo(a.Id);
@@ -471,6 +478,23 @@ private void UpdateFilter() {
             });
             rowName.Add(favBtn);
             card.Add(rowName);
+
+            int count = GlobalSetting.DesignUseCount.GetValueOrDefault(design.DesignName, 0);
+            var badge = new Label($"{count}") {
+                style = {
+                    position = Position.Absolute, 
+                    bottom = 2,
+                    right = 2,
+                    fontSize = 10, 
+                    backgroundColor = new Color(0, 0, 0, 0.6f),
+                    color = Color.white, 
+                    paddingLeft = 4, 
+                    paddingRight = 4,
+                    borderTopLeftRadius = 4, 
+                    borderBottomRightRadius = 0 
+                }
+            };
+            card.Add(badge);    
 
             string linkText = LanguageManager.S("window.to_booth_page") ?? "Booth Page";
             var linkLabel = new Label(linkText) {
