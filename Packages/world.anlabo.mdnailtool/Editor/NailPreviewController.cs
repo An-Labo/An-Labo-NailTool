@@ -53,6 +53,25 @@ namespace world.anlabo.mdnailtool.Editor {
 			NailSetupUtil.AttachAdditionalObjects(handsNailObjects, designAndVariationNames, nailShapeName, true);
 		}
 
+		public void UpdateVisibility(bool isHandActive, bool isFootActive) {
+			if (this._nailPreview.NailObj == null) return;
+
+			Transform?[] handsNailObjects = GetHandsNailObjectList(this._nailPreview.NailObj);
+			foreach (var transform in handsNailObjects) {
+				transform?.gameObject.SetActive(isHandActive);
+			}
+
+			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(this._nailPreview.NailObj);
+			foreach (var transform in leftFootNailObjects) {
+				transform?.gameObject.SetActive(isFootActive);
+			}
+
+			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(this._nailPreview.NailObj);
+			foreach (var transform in rightFootNailObjects) {
+				transform?.gameObject.SetActive(isFootActive);
+			}
+		}
+
 
 		private static Transform?[] GetHandsNailObjectList(GameObject nailPrefabObject) {
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST.Select(name => nailPrefabObject.transform.Find(name)).ToArray();

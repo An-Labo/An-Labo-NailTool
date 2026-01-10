@@ -12,6 +12,7 @@ using world.anlabo.mdnailtool.Editor.NailDesigns;
 
 namespace world.anlabo.mdnailtool.Editor {
 	public static class NailSetupUtil {
+		
 		public static void ReplaceHandsNailMesh(Transform?[] handsNailObjects, Mesh?[] overrideMesh) {
 			if (overrideMesh.Length != 10) {
 				throw new ArgumentException($"Incorrect length of {nameof(overrideMesh)} parameter : {overrideMesh.Length}");
@@ -115,7 +116,8 @@ namespace world.anlabo.mdnailtool.Editor {
 
 		public static void ReplaceNailMaterial(Transform?[] handsNailObjects, IEnumerable<Transform?> leftFootNailObjects, IEnumerable<Transform?> rightFootNailObjects,
 			(INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isGenerate, bool isPreview) {
-			if (nailDesignAndVariationNames.Length != 12) {
+			
+			if (nailDesignAndVariationNames.Length != 20) {
 				throw new ArgumentException($"Incorrect length of {nameof(nailDesignAndVariationNames)} parameter : {nailDesignAndVariationNames.Length}");
 			}
 
@@ -124,54 +126,52 @@ namespace world.anlabo.mdnailtool.Editor {
 
 				Transform? transform = handsNailObjects[index];
 				if (transform == null) {
-					Debug.LogError($"{nameof(handsNailObjects)}[{index}] is null.");
 					continue;
 				}
 
-				Renderer? renderer = transform.GetComponent<Renderer>();
-				if (renderer == null) {
-					Debug.LogError($"Not found Renderer : {transform.name}");
-					continue;
-				}
-
-				Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
-				IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
-				renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
 			}
 
+			var leftFootArray = leftFootNailObjects.ToArray();
+			for (int i = 0; i < leftFootArray.Length; i++)
 			{
-				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[(int)MDNailToolDefines.TargetFingerAndToe.LeftToes];
+				int designIndex = 10 + i;
+				if (designIndex >= nailDesignAndVariationNames.Length) break;
 
-				foreach (Transform? transform in leftFootNailObjects) {
-					if (transform == null) continue;
-					Renderer? renderer = transform.GetComponent<Renderer>();
-					if (renderer == null) {
-						Debug.LogError($"Not found Renderer : {transform.name}");
-						continue;
-					}
-
-					Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
-					IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
-					renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
-				}
+				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[designIndex];
+				Transform? transform = leftFootArray[i];
+				
+				if (transform == null) continue;
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
 			}
 
+			var rightFootArray = rightFootNailObjects.ToArray();
+			for (int i = 0; i < rightFootArray.Length; i++)
 			{
-				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[(int)MDNailToolDefines.TargetFingerAndToe.RightToes];
+				int designIndex = 15 + i;
+				if (designIndex >= nailDesignAndVariationNames.Length) break;
 
-				foreach (Transform? transform in rightFootNailObjects) {
-					if (transform == null) continue;
-					Renderer? renderer = transform.GetComponent<Renderer>();
-					if (renderer == null) {
-						Debug.LogError($"Not found Renderer : {transform.name}");
-						continue;
-					}
+				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[designIndex];
+				Transform? transform = rightFootArray[i];
 
-					Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
-					IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
-					renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
-				}
+				if (transform == null) continue;
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
 			}
+		}
+
+		private static void ApplyMaterial(Transform transform, INailProcessor processor, string materialName, string colorName, string nailShapeName, bool isGenerate, bool isPreview)
+		{
+			Renderer? renderer = transform.GetComponent<Renderer>();
+			if (renderer == null) {
+				Debug.LogError($"Not found Renderer : {transform.name}");
+				return;
+			}
+			
+			if (processor == null) return;
+
+			Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
+			IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
+			renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
 		}
 
 		public static void AttachAdditionalObjects(Transform?[] handsNailObjects, (INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isPreview) {
@@ -184,9 +184,10 @@ namespace world.anlabo.mdnailtool.Editor {
 
 				Transform? transform = handsNailObjects[index];
 				if (transform == null) {
-					Debug.LogError($"{nameof(handsNailObjects)}[{index}] is null.");
 					continue;
 				}
+				
+				if (processor == null) continue;
 
 				foreach (Transform additionalObject in processor.GetAdditionalObjects(colorName, nailShapeName, (MDNailToolDefines.TargetFinger)index, isPreview)) {
 					additionalObject.SetParent(transform, false);
