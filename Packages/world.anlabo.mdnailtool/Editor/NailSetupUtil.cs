@@ -11,7 +11,14 @@ using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 
 namespace world.anlabo.mdnailtool.Editor {
+	/// <summary>
+	/// ネイルのメッシュ置換やマテリアル適用を行うユーティリティクラスです。
+	/// </summary>
 	public static class NailSetupUtil {
+		
+		/// <summary>
+		/// ハンドネイルのメッシュを置き換えます。
+		/// </summary>
 		public static void ReplaceHandsNailMesh(Transform?[] handsNailObjects, Mesh?[] overrideMesh) {
 			if (overrideMesh.Length != 10) {
 				throw new ArgumentException($"Incorrect length of {nameof(overrideMesh)} parameter : {overrideMesh.Length}");
@@ -24,6 +31,9 @@ namespace world.anlabo.mdnailtool.Editor {
 			ReplaceMesh(handsNailObjects, overrideMesh);
 		}
 
+		/// <summary>
+		/// フットネイルのメッシュを置き換えます。
+		/// </summary>
 		public static void ReplaceFootNailMesh(Transform?[] leftFootNailObjects, Transform?[] rightFootNailObjects, string nailShape) {
 			if (leftFootNailObjects.Length != 5) {
 				throw new ArgumentException($"Incorrect length of {nameof(leftFootNailObjects)} parameter : {leftFootNailObjects.Length}");
@@ -113,65 +123,78 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
+		/// <summary>
+		/// ネイルのマテリアルを適用します。
+		/// 以前は足の処理が一括適用されていましたが、指ごとに個別適用するように修正されました。
+		/// </summary>
 		public static void ReplaceNailMaterial(Transform?[] handsNailObjects, IEnumerable<Transform?> leftFootNailObjects, IEnumerable<Transform?> rightFootNailObjects,
 			(INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isGenerate, bool isPreview) {
-			if (nailDesignAndVariationNames.Length != 12) {
+			
+			if (nailDesignAndVariationNames.Length != 20) {
 				throw new ArgumentException($"Incorrect length of {nameof(nailDesignAndVariationNames)} parameter : {nailDesignAndVariationNames.Length}");
 			}
 
+			// --- ハンドネイルの適用 (Index 0-9) ---
 			for (int index = 0; index < handsNailObjects.Length; index++) {
 				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[index];
 
 				Transform? transform = handsNailObjects[index];
 				if (transform == null) {
-					Debug.LogError($"{nameof(handsNailObjects)}[{index}] is null.");
+					// プレビュー等でオブジェクトが存在しない場合はログを出してスキップ
+					// Debug.LogError($"{nameof(handsNailObjects)}[{index}] is null.");
 					continue;
 				}
 
-				Renderer? renderer = transform.GetComponent<Renderer>();
-				if (renderer == null) {
-					Debug.LogError($"Not found Renderer : {transform.name}");
-					continue;
-				}
-
-				Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
-				IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
-				renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
 			}
 
+			// --- 左足ネイルの適用 (Index 10-14) ---
+			// IEnumerableを配列に変換してインデックスアクセスできるようにする
+			var leftFootArray = leftFootNailObjects.ToArray();
+			for (int i = 0; i < leftFootArray.Length; i++)
 			{
-				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[(int)MDNailToolDefines.TargetFingerAndToe.LeftToes];
+				int designIndex = 10 + i; // 左足の開始インデックスは10
+				if (designIndex >= nailDesignAndVariationNames.Length) break;
 
-				foreach (Transform? transform in leftFootNailObjects) {
-					if (transform == null) continue;
-					Renderer? renderer = transform.GetComponent<Renderer>();
-					if (renderer == null) {
-						Debug.LogError($"Not found Renderer : {transform.name}");
-						continue;
-					}
-
-					Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
-					IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
-					renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
-				}
+				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[designIndex];
+				Transform? transform = leftFootArray[i];
+				
+				if (transform == null) continue;
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
 			}
 
+			// --- 右足ネイルの適用 (Index 15-19) ---
+			var rightFootArray = rightFootNailObjects.ToArray();
+			for (int i = 0; i < rightFootArray.Length; i++)
 			{
-				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[(int)MDNailToolDefines.TargetFingerAndToe.RightToes];
+				int designIndex = 15 + i; // 右足の開始インデックスは15
+				if (designIndex >= nailDesignAndVariationNames.Length) break;
 
-				foreach (Transform? transform in rightFootNailObjects) {
-					if (transform == null) continue;
-					Renderer? renderer = transform.GetComponent<Renderer>();
-					if (renderer == null) {
-						Debug.LogError($"Not found Renderer : {transform.name}");
-						continue;
-					}
+				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[designIndex];
+				Transform? transform = rightFootArray[i];
 
-					Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
-					IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
-					renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
-				}
+				if (transform == null) continue;
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
 			}
+		}
+
+		/// <summary>
+		/// 個別のTransformに対してマテリアルを適用するヘルパーメソッド
+		/// </summary>
+		private static void ApplyMaterial(Transform transform, INailProcessor processor, string materialName, string colorName, string nailShapeName, bool isGenerate, bool isPreview)
+		{
+			Renderer? renderer = transform.GetComponent<Renderer>();
+			if (renderer == null) {
+				Debug.LogError($"Not found Renderer : {transform.name}");
+				return;
+			}
+			
+			// デザイン情報がnull（空データ）の場合は適用しない
+			if (processor == null) return;
+
+			Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
+			IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
+			renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
 		}
 
 		public static void AttachAdditionalObjects(Transform?[] handsNailObjects, (INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isPreview) {
@@ -184,9 +207,11 @@ namespace world.anlabo.mdnailtool.Editor {
 
 				Transform? transform = handsNailObjects[index];
 				if (transform == null) {
-					Debug.LogError($"{nameof(handsNailObjects)}[{index}] is null.");
+					// Debug.LogError($"{nameof(handsNailObjects)}[{index}] is null.");
 					continue;
 				}
+				
+				if (processor == null) continue;
 
 				foreach (Transform additionalObject in processor.GetAdditionalObjects(colorName, nailShapeName, (MDNailToolDefines.TargetFinger)index, isPreview)) {
 					additionalObject.SetParent(transform, false);
