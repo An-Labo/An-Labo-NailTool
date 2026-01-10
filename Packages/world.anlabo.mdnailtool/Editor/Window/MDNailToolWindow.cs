@@ -19,15 +19,8 @@ using world.anlabo.mdnailtool.Editor;
 
 namespace world.anlabo.mdnailtool.Editor.Window
 {
-	/// <summary>
-	/// MDNailToolのメインウィンドウクラスです。
-	/// UI操作の受付、プレビュー制御、およびネイル生成プロセスの起点となります。
-	/// </summary>
 	public class MDNailToolWindow : EditorWindow
 	{
-		/// <summary>
-		/// エディタウィンドウを表示します。
-		/// </summary>
 		public static void ShowWindow()
 		{
 			MDNailToolWindow window = CreateWindow<MDNailToolWindow>();
@@ -41,12 +34,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		
 		private const string SCENE_PREVIEW_NAME = "[MDNailTool_Preview]";
 
-		// UI状態保存用のキー
 		private const string PREF_KEY_HAND_ACTIVE = "MDNailTool_HandActive";
 		private const string PREF_KEY_HAND_DETAIL = "MDNailTool_HandDetail";
 		private const string PREF_KEY_FOOT_DETAIL = "MDNailTool_FootDetail";
 
-		// UIコンポーネント
 		private LocalizedObjectField? _materialObjectField;
 		private LocalizedObjectField? _avatarObjectField;
 		private AvatarDropDowns? _avatarDropDowns;
@@ -59,7 +50,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private NailDesignDropDowns[]? _nailDesignDropDowns;
 		
-		// ハンド・フット制御用トグル
 		private Toggle? _tglHandActive;
 		private Toggle? _tglHandDetail;
 		private Toggle? _tglFootActive;
@@ -84,17 +74,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		#endregion
 
-		/// <summary>
-		/// アバター情報をセットアップします。
-		/// </summary>
 		public void SetAvatar(Shop shop, Avatar? avatar, AvatarVariation? variation)
 		{
 			this._avatarDropDowns?.SetValues(shop, avatar, variation);
 		}
 
-		/// <summary>
-		/// GUIの初期化を行います。
-		/// </summary>
 		private void CreateGUI()
 		{
 			this.MigrateUsageStats();
@@ -115,7 +99,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			VisualTreeAsset uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath);
 			uxml.CloneTree(this.rootVisualElement);
 
-			// --- 各UIパーツのバインディング ---
 			this._materialObjectField = this.rootVisualElement.Q<LocalizedObjectField>("material-object");
 			this._materialObjectField.RegisterValueChangedCallback(this.OnChangeMaterial);
 
@@ -151,16 +134,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailColorDropDown = this.rootVisualElement.Q<LocalizedDropDown>("nail-color");
 			this._nailColorDropDown.RegisterValueChangedCallback(this.OnChangeNailColorDropDown);
 
-			// --- 足指エリアの構築 ---
 			this.SetupFootVisualElements();
 
-			// --- ドロップダウンリストの初期化 ---
 			this.InitializeNailDesignDropDowns();
 
-			// --- ハンド＆フット制御ロジックの初期化 ---
 			this.InitializeHandFootControl();
 
-			// --- その他設定トグルの初期化 ---
 			this._removeCurrentNail = this.rootVisualElement.Q<Toggle>("remove-current-nail");
 			this._removeCurrentNail.SetValueWithoutNotify(GlobalSetting.RemoveCurrentNail);
 			this._removeCurrentNail.RegisterValueChangedCallback(OnChangeRemoveCurrentNail);
@@ -176,7 +155,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._execute = this.rootVisualElement.Q<LocalizedButton>("execute");
 			this._remove = this.rootVisualElement.Q<LocalizedButton>("remove");
 
-			// リンク設定
 			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
 			this._manualLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
 
@@ -188,7 +166,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._execute.clicked += this.OnExecute;
 			this._remove.clicked += this.OnRemove;
 
-			// 初回プレビュー更新
 			if (this._nailDesignSelect.FirstDesignName != null)
 			{
 				this.OnSelectNail(this._nailDesignSelect.FirstDesignName);
@@ -214,9 +191,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
-		/// <summary>
-		/// 足指のUI要素を動的に生成します。
-		/// </summary>
 		private void SetupFootVisualElements()
 		{
 			this._footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
@@ -252,9 +226,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
-		/// <summary>
-		/// ドロップダウンリストを初期化します。
-		/// </summary>
 		private void InitializeNailDesignDropDowns()
 		{
 			this._nailDesignDropDowns = new[] {
@@ -288,9 +259,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
-		/// <summary>
-		/// ハンド・フットの制御ロジックを初期化します。
-		/// </summary>
 		private void InitializeHandFootControl()
 		{
 			this._tglHandActive = this.rootVisualElement.Q<Toggle>("toggle-hand-active");
@@ -445,7 +413,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			foreach (string nailName in MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST)
 			{
-				// ★修正：Containsで部分一致検索（名前の一部さえ合っていれば削除対象）
 				var targets = avatar.transform.GetComponentsInChildren<Transform>(true)
 					.Where(t => t.name.Contains(nailName)).ToArray();
 				foreach (var t in targets) if (t != null) Undo.DestroyObjectImmediate(t.gameObject);
@@ -458,7 +425,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				.Concat(MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST);
 			foreach (string nailName in targetNames)
 			{
-				// ★修正：Containsで部分一致検索
 				var targets = avatar.transform.GetComponentsInChildren<Transform>(true)
 					.Where(t => t.name.Contains(nailName)).ToArray();
 				foreach (var t in targets) if (t != null) Undo.DestroyObjectImmediate(t.gameObject);
@@ -506,7 +472,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (avatarVariationData != null) NailSetupProcessor.RemoveNail(avatar, avatarVariationData.BoneMappingOverride);
 		}
 
-		// --- イベントハンドラ群 ---
 		private void OnSelectNail(string designName)
 		{
 			using DBNailDesign dbNailDesign = new();
@@ -564,9 +529,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailShapeDropDown!.SetFilter(shapeName => processors.All(p => p.IsSupportedNailShape(shapeName)));
 		}
 
-		/// <summary>
-		/// プレビューを更新します。
-		/// </summary>
 		private void UpdatePreview()
 		{
 			string? nailShapeName = this._nailShapeDropDown!.value;
@@ -589,15 +551,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this.UpdateScenePreview(overrideMeshes, nailShapeName, isHandActive, isFootActive, designAndVariationNames);
 		}
 
-		/// <summary>
-		/// シーン上のアバターにプレビュー用の仮オブジェクトを配置・更新します。
-		/// </summary>
 		private void UpdateScenePreview(Mesh?[] overrideMeshes, string nailShapeName, bool isHandActive, bool isFootActive, (INailProcessor, string, string)[] designAndVariationNames)
 		{
 			VRCAvatarDescriptor? avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			if (avatar == null) return;
 
-			// プレビューオブジェクト生成
 			if (this._scenePreviewObject == null)
 			{
 				var existing = avatar.transform.Find(SCENE_PREVIEW_NAME);
@@ -619,7 +577,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			if (this._scenePreviewObject == null) return;
 
-			// ★修正：検索ロジックをContainsに変更して、[Natural]などの接頭辞があっても見つけられるようにしました
 			var allTransforms = this._scenePreviewObject.GetComponentsInChildren<Transform>(true);
 			Transform? FindByName(string name) => allTransforms.FirstOrDefault(t => t.name.Contains(name));
 
@@ -631,7 +588,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				.Select(name => FindByName(name)).ToArray();
 			foreach (var t in feet) if(t != null) t.gameObject.SetActive(isFootActive);
 
-			// --- 形状適用 ---
 			if (isHandActive && overrideMeshes.Length > 0)
 			{
 				NailSetupUtil.ReplaceHandsNailMesh(hands, overrideMeshes);
@@ -644,16 +600,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				NailSetupUtil.ReplaceFootNailMesh(leftFeet, rightFeet, nailShapeName);
 			}
 
-			// ★修正：isGenerate=true にしてマテリアルを強制生成
 			var pLeftFeet = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST.Select(FindByName);
 			var pRightFeet = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST.Select(FindByName);
 			
 			NailSetupUtil.ReplaceNailMaterial(hands, pLeftFeet, pRightFeet, designAndVariationNames, nailShapeName, true, true);
 		}
 
-		/// <summary>
-		/// シーンプレビュー用の仮オブジェクトを削除します。
-		/// </summary>
 		private void CleanupScenePreview()
 		{
 			if (this._scenePreviewObject != null)
@@ -670,9 +622,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
-		/// <summary>
-		/// UI設定に基づいてネイルプロセッサー情報を生成します。
-		/// </summary>
 		private (INailProcessor, string, string)[] GetNailProcessors()
 		{
 			(string d, string m, string c)[] allSelections = this._nailDesignDropDowns!
@@ -683,7 +632,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var emptyDummy = ("", "", "");
 			var globalMasterSource = allSelections.Length > 0 ? allSelections[0] : emptyDummy;
 
-			// --- HAND (0-9) ---
 			if (this._tglHandActive?.value ?? true) 
 			{
 				bool isHandDetail = this._tglHandDetail?.value ?? false;
@@ -695,7 +643,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				for (int i = 0; i < 10; i++) finalSelectionList.Add(emptyDummy);
 			}
 
-			// --- FOOT (10-19) ---
 			if (this._tglFootActive?.value ?? false) 
 			{
 				bool isFootDetail = this._tglFootDetail?.value ?? false;

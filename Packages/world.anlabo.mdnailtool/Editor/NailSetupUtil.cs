@@ -11,14 +11,8 @@ using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 
 namespace world.anlabo.mdnailtool.Editor {
-	/// <summary>
-	/// ネイルのメッシュ置換やマテリアル適用を行うユーティリティクラスです。
-	/// </summary>
 	public static class NailSetupUtil {
 		
-		/// <summary>
-		/// ハンドネイルのメッシュを置き換えます。
-		/// </summary>
 		public static void ReplaceHandsNailMesh(Transform?[] handsNailObjects, Mesh?[] overrideMesh) {
 			if (overrideMesh.Length != 10) {
 				throw new ArgumentException($"Incorrect length of {nameof(overrideMesh)} parameter : {overrideMesh.Length}");
@@ -31,9 +25,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			ReplaceMesh(handsNailObjects, overrideMesh);
 		}
 
-		/// <summary>
-		/// フットネイルのメッシュを置き換えます。
-		/// </summary>
 		public static void ReplaceFootNailMesh(Transform?[] leftFootNailObjects, Transform?[] rightFootNailObjects, string nailShape) {
 			if (leftFootNailObjects.Length != 5) {
 				throw new ArgumentException($"Incorrect length of {nameof(leftFootNailObjects)} parameter : {leftFootNailObjects.Length}");
@@ -123,10 +114,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		/// <summary>
-		/// ネイルのマテリアルを適用します。
-		/// 以前は足の処理が一括適用されていましたが、指ごとに個別適用するように修正されました。
-		/// </summary>
 		public static void ReplaceNailMaterial(Transform?[] handsNailObjects, IEnumerable<Transform?> leftFootNailObjects, IEnumerable<Transform?> rightFootNailObjects,
 			(INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isGenerate, bool isPreview) {
 			
@@ -134,26 +121,21 @@ namespace world.anlabo.mdnailtool.Editor {
 				throw new ArgumentException($"Incorrect length of {nameof(nailDesignAndVariationNames)} parameter : {nailDesignAndVariationNames.Length}");
 			}
 
-			// --- ハンドネイルの適用 (Index 0-9) ---
 			for (int index = 0; index < handsNailObjects.Length; index++) {
 				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[index];
 
 				Transform? transform = handsNailObjects[index];
 				if (transform == null) {
-					// プレビュー等でオブジェクトが存在しない場合はログを出してスキップ
-					// Debug.LogError($"{nameof(handsNailObjects)}[{index}] is null.");
 					continue;
 				}
 
 				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
 			}
 
-			// --- 左足ネイルの適用 (Index 10-14) ---
-			// IEnumerableを配列に変換してインデックスアクセスできるようにする
 			var leftFootArray = leftFootNailObjects.ToArray();
 			for (int i = 0; i < leftFootArray.Length; i++)
 			{
-				int designIndex = 10 + i; // 左足の開始インデックスは10
+				int designIndex = 10 + i;
 				if (designIndex >= nailDesignAndVariationNames.Length) break;
 
 				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[designIndex];
@@ -163,11 +145,10 @@ namespace world.anlabo.mdnailtool.Editor {
 				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
 			}
 
-			// --- 右足ネイルの適用 (Index 15-19) ---
 			var rightFootArray = rightFootNailObjects.ToArray();
 			for (int i = 0; i < rightFootArray.Length; i++)
 			{
-				int designIndex = 15 + i; // 右足の開始インデックスは15
+				int designIndex = 15 + i;
 				if (designIndex >= nailDesignAndVariationNames.Length) break;
 
 				(INailProcessor processor, string materialName, string colorName) = nailDesignAndVariationNames[designIndex];
@@ -178,9 +159,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		/// <summary>
-		/// 個別のTransformに対してマテリアルを適用するヘルパーメソッド
-		/// </summary>
 		private static void ApplyMaterial(Transform transform, INailProcessor processor, string materialName, string colorName, string nailShapeName, bool isGenerate, bool isPreview)
 		{
 			Renderer? renderer = transform.GetComponent<Renderer>();
@@ -189,7 +167,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				return;
 			}
 			
-			// デザイン情報がnull（空データ）の場合は適用しない
 			if (processor == null) return;
 
 			Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
@@ -207,7 +184,6 @@ namespace world.anlabo.mdnailtool.Editor {
 
 				Transform? transform = handsNailObjects[index];
 				if (transform == null) {
-					// Debug.LogError($"{nameof(handsNailObjects)}[{index}] is null.");
 					continue;
 				}
 				
