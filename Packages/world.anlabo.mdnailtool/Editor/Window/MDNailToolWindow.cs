@@ -14,6 +14,8 @@ using Avatar = world.anlabo.mdnailtool.Editor.Entity.Avatar;
 using Object = UnityEngine.Object;
 using Newtonsoft.Json;
 using world.anlabo.mdnailtool.Editor;
+using world.anlabo.mdnailtool.Editor.Window.Domain;
+using world.anlabo.mdnailtool.Editor.Window.Controllers;
 
 #nullable enable
 
@@ -29,14 +31,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		#region Constants & Fields
 
-		private const string GUID = "f44afb5feae822a4b9308df804788d69";
-		private const string USS_GUID = "518510ce88e1451e8f8f06ab4add9daf";
-		
 		private const string SCENE_PREVIEW_NAME = "[MDNailTool_Preview]";
-
-		private const string PREF_KEY_HAND_ACTIVE = "MDNailTool_HandActive";
-		private const string PREF_KEY_HAND_DETAIL = "MDNailTool_HandDetail";
-		private const string PREF_KEY_FOOT_DETAIL = "MDNailTool_FootDetail";
 
 		private LocalizedObjectField? _materialObjectField;
 		private LocalizedObjectField? _avatarObjectField;
@@ -49,18 +44,21 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private LocalizedDropDown? _nailColorDropDown;
 
 		private NailDesignDropDowns[]? _nailDesignDropDowns;
-		
+
 		private Toggle? _tglHandActive;
 		private Toggle? _tglHandDetail;
 		private Toggle? _tglFootActive;
 		private Toggle? _tglFootDetail;
-		
+
 		private Toggle? _removeCurrentNail;
 		private Toggle? _backup;
+		private Toggle? _enableScenePreview;
 		private Toggle? _forModularAvatar;
-
 		private LocalizedButton? _execute;
 		private LocalizedButton? _remove;
+
+		private IVisualElementScheduledItem? _scenePreviewSchedule;
+		private const int SCENE_PREVIEW_DEBOUNCE_MS = 150;
 
 		private NailPreviewController? _nailPreviewController;
 
@@ -69,8 +67,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private Label? _manualLink;
 		private LocalizedLabel? _contactLink;
-		
-		private GameObject? _scenePreviewObject;
 
 		#endregion
 
@@ -79,44 +75,68 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._avatarDropDowns?.SetValues(shop, avatar, variation);
 		}
 
-		private void CreateGUI()
+		public void CreateGUI()
 		{
-			this.MigrateUsageStats();
+			this.PrepareOnCreateGUI();
+			this.BuildRootUI();
+			this.BindCoreFields();
+			this.BindAvatarUI();
+			this.BindNailUI();
+			this.BindHandFootUI();
+			this.BindOptionsUI();
+			this.BindLinksUI();
+			this.BindActions();
+			this.PostInitSelection();
+		}
+
+
+		private void PrepareOnCreateGUI()
+		{
+			MDNailToolUsageStats.Migrate();
 			INailProcessor.ClearPreviewMaterialCash();
 			this.CleanupScenePreview();
-
-			using DBShop _dbShop = new();
-			using DBNailDesign _dbNailDesign = new();
-
-			string ussPath = AssetDatabase.GUIDToAssetPath(USS_GUID);
-			if (!string.IsNullOrEmpty(ussPath))
+		}
+		private void BuildRootUI()
+		{
+			var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss);
+			if (uss != null)
 			{
-				StyleSheet uss = AssetDatabase.LoadAssetAtPath<StyleSheet>(ussPath);
 				this.rootVisualElement.styleSheets.Add(uss);
 			}
 
-			string uxmlPath = AssetDatabase.GUIDToAssetPath(GUID);
-			VisualTreeAsset uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath);
-			uxml.CloneTree(this.rootVisualElement);
-
+			var uxml = MDNailToolAssetLoader.LoadByGuid<VisualTreeAsset>(MDNailToolGuids.WindowUxml);
+			if (uxml != null)
+			{
+				uxml.CloneTree(this.rootVisualElement);
+			}
+		}
+		private void BindCoreFields()
+		{
 			this._materialObjectField = this.rootVisualElement.Q<LocalizedObjectField>("material-object");
 			this._materialObjectField.RegisterValueChangedCallback(this.OnChangeMaterial);
 
 			this._avatarObjectField = this.rootVisualElement.Q<LocalizedObjectField>("avatar-object");
 			this._avatarObjectField.RegisterValueChangedCallback(this.OnChangeAvatar);
-
+		}
+		private void BindAvatarUI()
+		{
 			this._avatarDropDowns = this.rootVisualElement.Q<AvatarDropDowns>("avatar");
 			this._avatarDropDowns.SearchButtonClicked += this.ShowAvatarSearchWindow;
-			
-			this._avatarDropDowns.RegisterCallback<ChangeEvent<string>>(_ => {
+
+			this._avatarDropDowns.RegisterCallback<ChangeEvent<string>>(_ =>
+			{
 				this.CleanupScenePreview();
 				this.UpdatePreview();
+				this.RequestScenePreviewUpdate();
 			});
 
 			this._avatarSortDropdown = this.rootVisualElement.Q<AvatarSortDropdown>("avatar-sort");
 			this._avatarSortDropdown.Init();
 			this._avatarSortDropdown.RegisterValueChangedCallback(this.OnChangeAvatarSort);
+		}
 
+		private void BindNailUI()
+		{
 			this._nailDesignSelect = this.rootVisualElement.Q<NailDesignSelect>("nail-select");
 			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
 			this._nailDesignSelect.OnSearchButtonClicked += this.ShowNailSearchWindow;
@@ -133,13 +153,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			this._nailColorDropDown = this.rootVisualElement.Q<LocalizedDropDown>("nail-color");
 			this._nailColorDropDown.RegisterValueChangedCallback(this.OnChangeNailColorDropDown);
+		}
 
+		private void BindHandFootUI()
+		{
 			this.SetupFootVisualElements();
-
 			this.InitializeNailDesignDropDowns();
-
 			this.InitializeHandFootControl();
-
+		}
+		private void BindOptionsUI()
+		{
 			this._removeCurrentNail = this.rootVisualElement.Q<Toggle>("remove-current-nail");
 			this._removeCurrentNail.SetValueWithoutNotify(GlobalSetting.RemoveCurrentNail);
 			this._removeCurrentNail.RegisterValueChangedCallback(OnChangeRemoveCurrentNail);
@@ -148,13 +171,19 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._backup.SetValueWithoutNotify(GlobalSetting.Backup);
 			this._backup.RegisterValueChangedCallback(OnChangeBackup);
 
+			this._enableScenePreview = this.rootVisualElement.Q<Toggle>("enable-scene-preview");
+			if (this._enableScenePreview != null)
+			{
+				this._enableScenePreview.SetValueWithoutNotify(GlobalSetting.EnableScenePreview);
+				this._enableScenePreview.RegisterValueChangedCallback(this.OnChangeEnableScenePreview);
+			}
+
 			this._forModularAvatar = this.rootVisualElement.Q<Toggle>("for-modular-avatar");
 			this._forModularAvatar.SetValueWithoutNotify(GlobalSetting.UseModularAvatar);
 			this._forModularAvatar.RegisterValueChangedCallback(OnChangeForModularAvatar);
-
-			this._execute = this.rootVisualElement.Q<LocalizedButton>("execute");
-			this._remove = this.rootVisualElement.Q<LocalizedButton>("remove");
-
+		}
+		private void BindLinksUI()
+		{
 			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
 			this._manualLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
 
@@ -162,17 +191,28 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._contactLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
 
 			this.rootVisualElement.Q<Label>("version").text = MDNailToolDefines.Version;
+		}
+
+		private void BindActions()
+		{
+			this._execute = this.rootVisualElement.Q<LocalizedButton>("execute");
+			this._remove = this.rootVisualElement.Q<LocalizedButton>("remove");
 
 			this._execute.clicked += this.OnExecute;
 			this._remove.clicked += this.OnRemove;
+		}
 
-			if (this._nailDesignSelect.FirstDesignName != null)
+		private void PostInitSelection()
+		{
+			var nailDesignSelect = this._nailDesignSelect;
+			if (nailDesignSelect != null && nailDesignSelect.FirstDesignName != null)
 			{
-				this.OnSelectNail(this._nailDesignSelect.FirstDesignName);
+				this.OnSelectNail(nailDesignSelect.FirstDesignName);
 			}
 			else
 			{
 				this.UpdatePreview();
+				this.RequestScenePreviewUpdate();
 			}
 
 			if (Selection.activeGameObject != null)
@@ -180,7 +220,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				VRCAvatarDescriptor? descriptor = Selection.activeGameObject.GetComponentInParent<VRCAvatarDescriptor>();
 				if (descriptor != null)
 				{
-					this._avatarObjectField.value = descriptor;
+					var avatarObjectField = this._avatarObjectField;
+					if (avatarObjectField != null)
+					{
+						avatarObjectField.value = descriptor;
+					}
+
 					AvatarMatching avatarMatching = new(descriptor);
 					(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? variation = avatarMatching.Match();
 					if (variation != null && this._avatarDropDowns != null)
@@ -191,37 +236,47 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
+
 		private void SetupFootVisualElements()
 		{
-			this._footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
-			if (this._footSelects != null)
+			var footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
+			this._footSelects = footSelects;
+
+			if (footSelects == null) return;
+
+			footSelects.Clear();
+
+			var leftFootLabel = new LocalizedLabel { TextId = "window.left_foot", style = { marginBottom = 2, marginTop = 5 } };
+			footSelects.Add(leftFootLabel);
+
+			string[] leftToes = { "left-foot-thumb", "left-foot-index", "left-foot-middle", "left-foot-ring", "left-foot-little" };
+			string[] toeLabels = { "window.toe.thumb", "window.toe.index", "window.toe.middle", "window.toe.ring", "window.toe.little" };
+
+			for (int i = 0; i < 5; i++)
 			{
-				this._footSelects.Clear();
+				var dd = new NailDesignDropDowns { name = leftToes[i] };
+				footSelects.Add(dd);
 
-				var leftFootLabel = new LocalizedLabel { TextId = "window.left_foot", style = { marginBottom = 2, marginTop = 5 } };
-    			this._footSelects.Add(leftFootLabel);
-
-				string[] leftToes = { "left-foot-thumb", "left-foot-index", "left-foot-middle", "left-foot-ring", "left-foot-little" };
-				string[] toeLabels = { "window.thumb", "window.index_finger", "window.middle_finger", "window.ring_finger", "window.little_finger" };
-
-				for (int i = 0; i < 5; i++)
+				var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
+				if (innerDropdown is DropdownField ddf) 
 				{
-					var dd = new NailDesignDropDowns { name = leftToes[i] };
-					this._footSelects.Add(dd);
-					var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
-					if (innerDropdown != null) innerDropdown.label = S(toeLabels[i]) ?? toeLabels[i];
+					ddf.label = S(toeLabels[i]) ?? toeLabels[i];
 				}
+			}
 
-				var rightFootLabel = new LocalizedLabel { TextId = "window.right_foot", style = { marginBottom = 2, marginTop = 10 } };
-    			this._footSelects.Add(rightFootLabel);
+			var rightFootLabel = new LocalizedLabel { TextId = "window.right_foot", style = { marginBottom = 2, marginTop = 10 } };
+			footSelects.Add(rightFootLabel);
 
-				string[] rightToes = { "right-foot-thumb", "right-foot-index", "right-foot-middle", "right-foot-ring", "right-foot-little" };
-				for (int i = 0; i < 5; i++)
+			string[] rightToes = { "right-foot-thumb", "right-foot-index", "right-foot-middle", "right-foot-ring", "right-foot-little" };
+			for (int i = 0; i < 5; i++)
+			{
+				var dd = new NailDesignDropDowns { name = rightToes[i] };
+				footSelects.Add(dd);
+
+				var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
+				if (innerDropdown is DropdownField ddf)
 				{
-					var dd = new NailDesignDropDowns { name = rightToes[i] };
-					this._footSelects.Add(dd);
-					var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
-					if (innerDropdown != null) innerDropdown.label = S(toeLabels[i]) ?? toeLabels[i];
+					ddf.label = S(toeLabels[i]) ?? toeLabels[i];
 				}
 			}
 		}
@@ -265,19 +320,19 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._tglHandDetail = this.rootVisualElement.Q<Toggle>("toggle-hand-detail");
 			var lblHandActive = this.rootVisualElement.Q<Label>("label-hand-active");
 			var lblHandDetail = this.rootVisualElement.Q<Label>("label-hand-detail");
-			
+
 			this._tglFootActive = this.rootVisualElement.Q<Toggle>("toggle-foot-active");
 			this._tglFootDetail = this.rootVisualElement.Q<Toggle>("toggle-foot-detail");
 			var lblFootActive = this.rootVisualElement.Q<Label>("label-foot-active");
 			var lblFootDetail = this.rootVisualElement.Q<Label>("label-foot-detail");
 
 			this._handSelects = this.rootVisualElement.Q<VisualElement>("hand-selects");
-			if(this._footSelects == null) this._footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
+			if (this._footSelects == null) this._footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
 
 			if (_tglHandActive != null && _tglHandDetail != null)
 			{
-				_tglHandActive.SetValueWithoutNotify(EditorPrefs.GetBool(PREF_KEY_HAND_ACTIVE, true));
-				_tglHandDetail.SetValueWithoutNotify(EditorPrefs.GetBool(PREF_KEY_HAND_DETAIL, false));
+				_tglHandActive.SetValueWithoutNotify(MDNailToolPrefs.HandActive);
+				_tglHandDetail.SetValueWithoutNotify(MDNailToolPrefs.HandDetail);
 
 				lblHandActive?.RegisterCallback<ClickEvent>(_ => _tglHandActive.value = !_tglHandActive.value);
 				lblHandDetail?.RegisterCallback<ClickEvent>(_ => _tglHandDetail.value = !_tglHandDetail.value);
@@ -291,10 +346,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					this._handSelects.style.display = (isActive && isDetail) ? DisplayStyle.Flex : DisplayStyle.None;
 					_tglHandDetail.SetEnabled(isActive);
 
-					EditorPrefs.SetBool(PREF_KEY_HAND_ACTIVE, isActive);
-					EditorPrefs.SetBool(PREF_KEY_HAND_DETAIL, isDetail);
+					MDNailToolPrefs.HandActive = isActive;
+					MDNailToolPrefs.HandDetail = isDetail;
 
 					this.UpdatePreview();
+					this.RequestScenePreviewUpdate();
 				}
 
 				_tglHandActive.RegisterValueChangedCallback(_ => UpdateHandVisiblity());
@@ -305,7 +361,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (_tglFootActive != null && _tglFootDetail != null)
 			{
 				_tglFootActive.SetValueWithoutNotify(GlobalSetting.UseFootNail);
-				_tglFootDetail.SetValueWithoutNotify(EditorPrefs.GetBool(PREF_KEY_FOOT_DETAIL, false));
+				_tglFootDetail.SetValueWithoutNotify(MDNailToolPrefs.FootDetail);
 
 				lblFootActive?.RegisterCallback<ClickEvent>(_ => _tglFootActive.value = !_tglFootActive.value);
 				lblFootDetail?.RegisterCallback<ClickEvent>(_ => _tglFootDetail.value = !_tglFootDetail.value);
@@ -315,14 +371,15 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					if (this._footSelects == null) return;
 					bool isActive = _tglFootActive.value;
 					bool isDetail = _tglFootDetail.value;
-					
+
 					this._footSelects.style.display = (isActive && isDetail) ? DisplayStyle.Flex : DisplayStyle.None;
 					_tglFootDetail.SetEnabled(isActive);
-					
+
 					GlobalSetting.UseFootNail = isActive;
-					EditorPrefs.SetBool(PREF_KEY_FOOT_DETAIL, isDetail);
+					MDNailToolPrefs.FootDetail = isDetail;
 
 					this.UpdatePreview();
+					this.RequestScenePreviewUpdate();
 				}
 
 				_tglFootActive.RegisterValueChangedCallback(_ => UpdateFootVisibility());
@@ -332,33 +389,40 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		}
 
 		private void OnChangeAvatarSort(ChangeEvent<AvatarSortOrder> evt) { this._avatarDropDowns?.Sort(evt.newValue); }
-		
-		private void OnChangeAvatar(ChangeEvent<Object> evt) { 
-			if (evt.newValue is VRCAvatarDescriptor avatar) {
+
+		private void OnChangeAvatar(ChangeEvent<Object> evt)
+		{
+			if (evt.newValue is VRCAvatarDescriptor avatar)
+			{
 				AvatarMatching matching = new(avatar);
 				(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? result = matching.Match();
 				if (result != null) this._avatarDropDowns!.SetValues(result.Value.shop, result.Value.avatar, result.Value.variation);
-				
+
 				this.CleanupScenePreview();
 				this.UpdatePreview();
+				this.RequestScenePreviewUpdate();
 			}
 		}
 
-		private void OnDestroy() 
-		{ 
+		private void OnDestroy()
+		{
 			INailProcessor.ClearPreviewMaterialCash();
-			this.CleanupScenePreview(); 
+			this.CleanupScenePreview();
 		}
+
+		private world.anlabo.mdnailtool.Editor.Window.Controllers.MDNailScenePreviewController? _scenePreviewController;
+
 
 		private void OnExecute()
 		{
 			this.CleanupScenePreview();
-			
+
 			AssetDatabase.StartAssetEditing();
 			try
 			{
 				VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
-				if (avatar == null) {
+				if (avatar == null)
+				{
 					EditorUtility.DisplayDialog(S("dialog.error"), S("dialog.error.select_target_avatar"), "OK");
 					return;
 				}
@@ -367,13 +431,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				GameObject? prefab = this._avatarDropDowns!.GetSelectedPrefab();
 				string? nailShapeName = this._nailShapeDropDown!.value;
 
-				if (avatarVariationData == null || prefab == null || nailShapeName == null) {
+				if (avatarVariationData == null || prefab == null || nailShapeName == null)
+				{
 					Debug.LogError("Required settings are missing.");
 					return;
 				}
 
 				(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
-				
+
 				Mesh?[]? selectedMeshes = this._nailShapeDropDown!.GetSelectedShapeMeshes();
 				Mesh?[]? overrideMesh = (this._tglHandActive?.value ?? true) ? selectedMeshes : new Mesh?[10];
 
@@ -393,7 +458,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				if (!this._tglHandActive!.value) this.RemoveHandNailObjects(avatar);
 				if (!this._tglFootActive!.value) this.RemoveFootNailObjects(avatar);
 
-				this.UpdateUsageStats(designAndVariationNames);
+				string avatarKey = this._avatarDropDowns!.GetAvatarKey();
+				MDNailToolUsageStats.Update(designAndVariationNames, avatarKey);
 				this._nailDesignSelect!.Init();
 
 				EditorUtility.DisplayDialog(S("dialog.finished"), S("dialog.finished.success_attach_nail"), "OK");
@@ -431,40 +497,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
-		private void UpdateUsageStats((INailProcessor, string, string)[] designAndVariationNames)
-		{
-			Dictionary<string, DateTime> lastUsedTimes = GlobalSetting.DesignLastUsedTimes;
-			Dictionary<string, int> designUsedCounts = GlobalSetting.DesignUseCount;
-			Dictionary<string, int> avatarUseCount = GlobalSetting.AvatarUseCount;
-
-			HashSet<string> uniqueDesignNames = new();
-			foreach ((INailProcessor nailProcessor, string _, string _) in designAndVariationNames)
-			{
-				if (nailProcessor != null && !string.IsNullOrEmpty(nailProcessor.DesignName))
-				{
-					uniqueDesignNames.Add(nailProcessor.DesignName);
-				}
-			}
-
-			foreach (string dName in uniqueDesignNames)
-			{
-				lastUsedTimes[dName] = DateTime.Now;
-				designUsedCounts[dName] = designUsedCounts.GetValueOrDefault(dName, 0) + 1;
-			}
-
-			string avatarKey = this._avatarDropDowns!.GetAvatarKey();
-			avatarUseCount[avatarKey] = avatarUseCount.GetValueOrDefault(avatarKey, 0) + 1;
-
-			GlobalSetting.DesignLastUsedTimes = lastUsedTimes;
-			GlobalSetting.DesignUseCount = designUsedCounts;
-			GlobalSetting.AvatarUseCount = avatarUseCount;
-		}
-
 		private void OnRemove()
 		{
-			this.CleanupScenePreview(); 
+			this.CleanupScenePreview();
 			VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
-			if (avatar == null) {
+			if (avatar == null)
+			{
 				EditorUtility.DisplayDialog(S("dialog.error"), S("dialog.error.select_target_avatar"), "OK");
 				return;
 			}
@@ -478,8 +516,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(designName);
 			if (design?.DesignName == null) return;
 			INailProcessor nailProcessor = INailProcessor.CreateNailDesign(design.DesignName);
-			
-			List<string> materialPopupElements = design.MaterialVariation != null ? 
+
+			List<string> materialPopupElements = design.MaterialVariation != null ?
 				design.MaterialVariation.Where(pair => nailProcessor.IsInstalledMaterialVariation(pair.Value.MaterialName)).Select(pair => pair.Value.MaterialName).ToList() : new List<string> { "" };
 			string materialValue = materialPopupElements.FirstOrDefault() ?? "";
 
@@ -499,23 +537,30 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			this.UpdateNailShapeFilter(nailProcessor);
 			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
 		}
 
-		private void OnChangeMaterial(ChangeEvent<Object?> evt) { this.UpdateNailShapeFilter(); this.UpdatePreview(); }
-		private void OnChangeShapeDropDown(ChangeEvent<string> evt) { GlobalSetting.LastUseShapeName = evt.newValue; this.UpdatePreview(); }
-		private void OnChangeNailMaterialDropDown(ChangeEvent<string?> evt) {
+		private void OnChangeMaterial(ChangeEvent<Object?> evt) { this.UpdateNailShapeFilter(); this.UpdatePreview(); this.RequestScenePreviewUpdate(); }
+		private void OnChangeShapeDropDown(ChangeEvent<string> evt) { GlobalSetting.LastUseShapeName = evt.newValue; this.UpdatePreview(); this.RequestScenePreviewUpdate(); }
+		private void OnChangeNailMaterialDropDown(ChangeEvent<string?> evt)
+		{
 			if (evt.newValue == null) return;
 			foreach (var dd in this._nailDesignDropDowns!) dd.SetMaterialValue(evt.newValue);
 			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
 		}
-		private void OnChangeNailColorDropDown(ChangeEvent<string?> evt) {
+		private void OnChangeNailColorDropDown(ChangeEvent<string?> evt)
+		{
 			if (evt.newValue == null) return;
 			foreach (var dd in this._nailDesignDropDowns!) dd.SetColorValue(evt.newValue);
 			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
 		}
-		private void OnChangeNailDesign(ChangeEvent<string?> evt) {
+		private void OnChangeNailDesign(ChangeEvent<string?> evt)
+		{
 			if (evt.target is DropdownField { name: "NailDesignDropDowns-DesignDropDown" }) this.UpdateNailShapeFilter();
 			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
 		}
 
 		private void UpdateNailShapeFilter(INailProcessor? processor = null)
@@ -531,136 +576,86 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void UpdatePreview()
 		{
-			string? nailShapeName = this._nailShapeDropDown!.value;
-			if (nailShapeName == null) return;
-			Mesh?[]? overrideMeshes = this._nailShapeDropDown!.GetSelectedShapeMeshes();
+			string nailShapeName = this._nailShapeDropDown?.value ?? GlobalSetting.LastUseShapeName ?? "oval";
+			if (string.IsNullOrEmpty(nailShapeName)) nailShapeName = "oval";
+			if (string.IsNullOrEmpty(nailShapeName)) return;
+
+			Mesh?[]? overrideMeshes = this._nailShapeDropDown?.GetSelectedShapeMeshes();
 			if (overrideMeshes == null) return;
 
-			this._nailPreviewController!.ChangeNailShape(overrideMeshes);
-			this._nailPreviewController!.ChangeFootNailMesh(this._nailShapeDropDown!.value);
+			this._nailPreviewController?.ChangeNailShape(overrideMeshes);
+			this._nailPreviewController?.ChangeFootNailMesh(nailShapeName);
 
 			bool isHandActive = this._tglHandActive?.value ?? true;
 			bool isFootActive = this._tglFootActive?.value ?? false;
-			this._nailPreviewController.UpdateVisibility(isHandActive, isFootActive);
+			this._nailPreviewController?.UpdateVisibility(isHandActive, isFootActive);
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
 
-			this._nailPreviewController.ChangeNailMaterial(designAndVariationNames, nailShapeName);
-			this._nailPreviewController.ChangeAdditionalObjects(designAndVariationNames, nailShapeName);
-
-			this.UpdateScenePreview(overrideMeshes, nailShapeName, isHandActive, isFootActive, designAndVariationNames);
+			this._nailPreviewController?.ChangeNailMaterial(designAndVariationNames, nailShapeName);
+			this._nailPreviewController?.ChangeAdditionalObjects(designAndVariationNames, nailShapeName);
 		}
 
-		private void UpdateScenePreview(Mesh?[] overrideMeshes, string nailShapeName, bool isHandActive, bool isFootActive, (INailProcessor, string, string)[] designAndVariationNames)
+		private void RequestScenePreviewUpdate()
 		{
-			VRCAvatarDescriptor? avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
+			if (!GlobalSetting.EnableScenePreview) return;
+
+			this._scenePreviewSchedule?.Pause();
+			this._scenePreviewSchedule = this.rootVisualElement.schedule
+				.Execute(() => this.UpdateScenePreview(immediate: true))
+				.StartingIn(SCENE_PREVIEW_DEBOUNCE_MS);
+		}
+
+		private void UpdateScenePreview(bool immediate)
+		{
+			if (!GlobalSetting.EnableScenePreview) return;
+
+			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			if (avatar == null) return;
 
-			if (this._scenePreviewObject == null)
-			{
-				var existing = avatar.transform.Find(SCENE_PREVIEW_NAME);
-				if (existing != null)
-				{
-					this._scenePreviewObject = existing.gameObject;
-				}
-				else
-				{
-					GameObject? prefab = this._avatarDropDowns?.GetSelectedPrefab();
-					if (prefab == null) return;
+			var prefab = this._avatarDropDowns?.GetSelectedPrefab();
+			if (prefab == null) return;
 
-					this._scenePreviewObject = Instantiate(prefab);
-					this._scenePreviewObject.name = SCENE_PREVIEW_NAME;
-					this._scenePreviewObject.transform.SetParent(avatar.transform, false);
-					this._scenePreviewObject.hideFlags = HideFlags.DontSave; 
-				}
-			}
+			string nailShapeName = this._nailShapeDropDown?.value ?? GlobalSetting.LastUseShapeName ?? "oval";
+			if (string.IsNullOrEmpty(nailShapeName)) nailShapeName = "oval";
+			if (string.IsNullOrEmpty(nailShapeName)) return;
 
-			if (this._scenePreviewObject == null) return;
+			Mesh?[]? overrideMeshes = this._nailShapeDropDown?.GetSelectedShapeMeshes();
+			if (overrideMeshes == null) overrideMeshes = new Mesh?[0];
 
-			var allTransforms = this._scenePreviewObject.GetComponentsInChildren<Transform>(true);
-			Transform? FindByName(string name) => allTransforms.FirstOrDefault(t => t.name.Contains(name));
+			bool isHandActive = this._tglHandActive?.value ?? true;
+			bool isFootActive = this._tglFootActive?.value ?? false;
 
-			var hands = MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST.Select(FindByName).ToArray();
-			foreach (var t in hands) if(t != null) t.gameObject.SetActive(isHandActive);
+			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
 
-			var feet = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST
-				.Concat(MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST)
-				.Select(name => FindByName(name)).ToArray();
-			foreach (var t in feet) if(t != null) t.gameObject.SetActive(isFootActive);
-
-			if (isHandActive && overrideMeshes.Length > 0)
-			{
-				NailSetupUtil.ReplaceHandsNailMesh(hands, overrideMeshes);
-			}
-
-			if (isFootActive)
-			{
-				var leftFeet = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST.Select(FindByName).ToArray();
-				var rightFeet = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST.Select(FindByName).ToArray();
-				NailSetupUtil.ReplaceFootNailMesh(leftFeet, rightFeet, nailShapeName);
-			}
-
-			var pLeftFeet = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST.Select(FindByName);
-			var pRightFeet = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST.Select(FindByName);
-			
-			NailSetupUtil.ReplaceNailMaterial(hands, pLeftFeet, pRightFeet, designAndVariationNames, nailShapeName, true, true);
+			this._scenePreviewController ??= new MDNailScenePreviewController(SCENE_PREVIEW_NAME);
+			this._scenePreviewController.Update(
+				avatar,
+				prefab,
+				overrideMeshes,
+				nailShapeName,
+				isHandActive,
+				isFootActive,
+				designAndVariationNames
+			);
 		}
+
 
 		private void CleanupScenePreview()
 		{
-			if (this._scenePreviewObject != null)
-			{
-				DestroyImmediate(this._scenePreviewObject);
-				this._scenePreviewObject = null;
-			}
-			
-			VRCAvatarDescriptor? avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
-			if (avatar != null)
-			{
-				var existing = avatar.transform.Find(SCENE_PREVIEW_NAME);
-				if (existing != null) DestroyImmediate(existing.gameObject);
-			}
+			this._scenePreviewController?.Cleanup(this._avatarObjectField?.value as VRCAvatarDescriptor);
 		}
+
 
 		private (INailProcessor, string, string)[] GetNailProcessors()
 		{
-			(string d, string m, string c)[] allSelections = this._nailDesignDropDowns!
-				.Select(dropDowns => dropDowns.GetSelectedDesignAndVariationName())
-				.ToArray();
-
-			List<(string d, string m, string c)> finalSelectionList = new();
-			var emptyDummy = ("", "", "");
-			var globalMasterSource = allSelections.Length > 0 ? allSelections[0] : emptyDummy;
-
-			if (this._tglHandActive?.value ?? true) 
-			{
-				bool isHandDetail = this._tglHandDetail?.value ?? false;
-				var handSource = allSelections[0]; 
-				for (int i = 0; i < 10; i++) finalSelectionList.Add(isHandDetail ? allSelections[i] : handSource);
-			}
-			else
-			{
-				for (int i = 0; i < 10; i++) finalSelectionList.Add(emptyDummy);
-			}
-
-			if (this._tglFootActive?.value ?? false) 
-			{
-				bool isFootDetail = this._tglFootDetail?.value ?? false;
-				for (int i = 10; i < 20; i++) finalSelectionList.Add(isFootDetail ? allSelections[i] : globalMasterSource);
-			}
-			else
-			{
-				for (int i = 0; i < 10; i++) finalSelectionList.Add(emptyDummy);
-			}
-
-			Dictionary<string, INailProcessor> designDictionary = new();
-			return finalSelectionList.Select(tuple => {
-				if (string.IsNullOrEmpty(tuple.d)) return (null!, "", "");
-				if (designDictionary.TryGetValue(tuple.d, out INailProcessor nailDesign)) return (nailDesign, tuple.m, tuple.c);
-				INailProcessor newProcessor = INailProcessor.CreateNailDesign(tuple.d);
-				designDictionary.Add(tuple.d, newProcessor);
-				return (newProcessor, tuple.m, tuple.c);
-			}).ToArray();
+			return MDNailSelectionBuilder.Build(
+				this._nailDesignDropDowns!,
+				this._tglHandActive?.value ?? true,
+				this._tglHandDetail?.value ?? false,
+				this._tglFootActive?.value ?? false,
+				this._tglFootDetail?.value ?? false
+			);
 		}
 
 		private static void OnChangeRemoveCurrentNail(ChangeEvent<bool> evt) { GlobalSetting.RemoveCurrentNail = evt.newValue; }
@@ -670,18 +665,19 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void ShowNailSearchWindow() { SearchNailDesignWindow.ShowWindow(this); }
 		public void SelectNailFromSearch(string designName) { this.OnSelectNail(designName); }
 
-		private void MigrateUsageStats()
+		private void OnChangeEnableScenePreview(ChangeEvent<bool> evt)
 		{
-			const string OLD_DESIGN_KEY = "world.anlabo.mdnailtool.design_use_count";
-			if (!EditorPrefs.HasKey(OLD_DESIGN_KEY)) return;
-			var oldDesignCounts = JsonConvert.DeserializeObject<Dictionary<string, int>>(EditorPrefs.GetString(OLD_DESIGN_KEY));
-			if (oldDesignCounts != null) {
-				var migrated = new Dictionary<string, int>();
-				foreach (var kvp in oldDesignCounts) migrated[kvp.Key] = Mathf.CeilToInt(kvp.Value / 24.0f);
-				GlobalSetting.DesignUseCount = migrated;
+			GlobalSetting.EnableScenePreview = evt.newValue;
+
+			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
+			if (avatar != null)
+			{
+				this._scenePreviewController ??= new MDNailScenePreviewController(SCENE_PREVIEW_NAME);
+				this._scenePreviewController.SetScenePreviewActive(avatar, evt.newValue);
 			}
-			EditorPrefs.DeleteKey(OLD_DESIGN_KEY);
-			EditorPrefs.DeleteKey("world.anlabo.mdnailtool.avatar_use_count");
+
+			if (evt.newValue) this.UpdateScenePreview(immediate: true);
 		}
+
 	}
 }

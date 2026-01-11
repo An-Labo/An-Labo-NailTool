@@ -105,6 +105,10 @@
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.backup" />
                     </ui:VisualElement>
                     <ui:VisualElement style="flex-direction: row;">
+                        <ui:Toggle name="enable-scene-preview" value="true" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.enable_scene_preview" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row;">
                         <ui:Toggle name="for-modular-avatar"/>
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.use_modular_avatar" />
                     </ui:VisualElement>

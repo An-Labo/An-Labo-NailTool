@@ -6,9 +6,11 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace world.anlabo.mdnailtool.Editor {
+namespace world.anlabo.mdnailtool.Editor
+{
 	[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-	public static class MDNailToolDefines {
+	public static class MDNailToolDefines
+	{
 		public const string ROOT_ASSET_PATH = "Assets/[An-Labo.Virtual]/An-Labo Nail Tool/";
 		public const string GENERATED_ASSET_PATH = ROOT_ASSET_PATH + "Generated/";
 		public const string BACKUP_PATH = ROOT_ASSET_PATH + "Backup/";
@@ -24,12 +26,10 @@ namespace world.anlabo.mdnailtool.Editor {
 		public const string NAIL_DESIGN_PATH = RESOURCE_PATH + "Nail/Design/";
 
 		public const string LEGACY_DESIGN_PATH = "Assets/[An-Labo.Virtual]/【Nail】/";
+		public const string PREVIEW_SHADER_GUID = MDNailToolGuids.PreviewShader;
+		public const string PREVIEW_PREFAB_GUID = MDNailToolGuids.PreviewPrefab;
+		public const string GRAY_SHADER_GUID = MDNailToolGuids.GrayShader;
 
-		public const string PREVIEW_SHADER_GUID = "5f0e4274bce4492f833972c906cd3236";
-		public const string PREVIEW_PREFAB_GUID = "371bb8ffdf995444b823f1f4a1111dcb";
-
-		public const string GRAY_SHADER_GUID = "57969ef515a043528c7c5e39cb29d123";
-		
 		public const string LEFT_THUMB_DISTAL = "Left Thumb Distal";
 		public const string LEFT_INDEX_DISTAL = "Left Index Distal";
 		public const string LEFT_MIDDLE_DISTAL = "Left Middle Distal";
@@ -47,19 +47,19 @@ namespace world.anlabo.mdnailtool.Editor {
 		public const string LEFT_TOES = "LeftToes";
 		public const string RIGHT_FOOT = "RightFoot";
 		public const string RIGHT_TOES = "RightToes";
-		
+
 		public const string LEFT_FOOT_THUMB = "Left Foot Thumb";
 		public const string LEFT_FOOT_INDEX = "Left Foot Index";
 		public const string LEFT_FOOT_MIDDLE = "Left Foot Middle";
 		public const string LEFT_FOOT_RING = "Left Foot Ring";
 		public const string LEFT_FOOT_LITTLE = "Left Foot Little";
-		
+
 		public const string RIGHT_FOOT_THUMB = "Right Foot Thumb";
 		public const string RIGHT_FOOT_INDEX = "Right Foot Index";
 		public const string RIGHT_FOOT_MIDDLE = "Right Foot Middle";
 		public const string RIGHT_FOOT_RING = "Right Foot Ring";
 		public const string RIGHT_FOOT_LITTLE = "Right Foot Little";
-		
+
 		public const string HAND_L_THUMB = "HandL.Thumb";
 		public const string HAND_L_INDEX = "HandL.Index";
 		public const string HAND_L_MIDDLE = "HandL.Middle";
@@ -77,7 +77,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		public const string FOOT_L_MIDDLE = "FootL.Middle";
 		public const string FOOT_L_RING = "FootL.Ring";
 		public const string FOOT_L_LITTLE = "FootL.Little";
-		
+
 		public const string FOOT_R_THUMB = "FootR.Thumb";
 		public const string FOOT_R_INDEX = "FootR.Index";
 		public const string FOOT_R_MIDDLE = "FootR.Middle";
@@ -85,7 +85,8 @@ namespace world.anlabo.mdnailtool.Editor {
 		public const string FOOT_R_LITTLE = "FootR.Little";
 
 
-		public enum TargetFingerAndToe {
+		public enum TargetFingerAndToe
+		{
 			All = -1,
 			LeftThumb = 0,
 			LeftIndex = 1,
@@ -110,8 +111,9 @@ namespace world.anlabo.mdnailtool.Editor {
 			RightFootRing = 20,
 			RightFootLittle = 21,
 		}
-		
-		public enum TargetFinger {
+
+		public enum TargetFinger
+		{
 			All = -1,
 			LeftThumb = 0,
 			LeftIndex = 1,
@@ -140,8 +142,8 @@ namespace world.anlabo.mdnailtool.Editor {
 
 		public const HumanBodyBones LEFT_TOE_HUMAN_BODY_BONE = HumanBodyBones.LeftToes;
 		public const HumanBodyBones RIGHT_TOE_HUMAN_BODY_BONE = HumanBodyBones.RightToes;
-		
-		public static readonly IReadOnlyList<string> TARGET_BONE_NAME_LIST = Array.AsReadOnly( new[] {
+
+		public static readonly IReadOnlyList<string> TARGET_BONE_NAME_LIST = Array.AsReadOnly(new[] {
 			LEFT_THUMB_DISTAL,
 			LEFT_INDEX_DISTAL,
 			LEFT_MIDDLE_DISTAL,
@@ -165,8 +167,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			RIGHT_FOOT_RING,
 			RIGHT_FOOT_LITTLE
 		});
-		
-		public static readonly IReadOnlyList<string> TARGET_HANDS_BONE_NAME_LIST = Array.AsReadOnly( new[] {
+
+		public static readonly IReadOnlyList<string> TARGET_HANDS_BONE_NAME_LIST = Array.AsReadOnly(new[] {
 			LEFT_THUMB_DISTAL,
 			LEFT_INDEX_DISTAL,
 			LEFT_MIDDLE_DISTAL,
@@ -178,7 +180,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			RIGHT_RING_DISTAL,
 			RIGHT_LITTLE_DISTAL
 		});
-		
+
 		public static readonly IReadOnlyList<string> LEFT_FOOT_FINGER_BONE_NAME_LIST = Array.AsReadOnly(new[] {
 			LEFT_FOOT_THUMB,
 			LEFT_FOOT_INDEX,
@@ -217,7 +219,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			FOOT_L_RING,
 			FOOT_L_LITTLE
 		});
-		
+
 		public static readonly IReadOnlyList<string> RIGHT_FOOT_NAIL_OBJECT_NAME_LIST = Array.AsReadOnly(new[] {
 			FOOT_R_THUMB,
 			FOOT_R_INDEX,
@@ -228,8 +230,10 @@ namespace world.anlabo.mdnailtool.Editor {
 
 
 		private const string PACKAGE_JSON_GUID = "ebc756db0be878d4a9e25917bfb98ab4";
-		public static string Version {
-			get {
+		public static string Version
+		{
+			get
+			{
 				string packagePath = AssetDatabase.GUIDToAssetPath(PACKAGE_JSON_GUID);
 				JObject package = JObject.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>(packagePath).text);
 				return package.GetValue("version")!.Value<string>();
