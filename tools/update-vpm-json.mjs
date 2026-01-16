@@ -1,5 +1,5 @@
 // tools/update-vpm-json.mjs
-// docs/vpm.json の packages.world.anlabo.mdnailtool.versions に最新バージョンを追記/更新する
+// docs/vpm.json の packages.<pkg>.versions に最新バージョンを追記/更新する
 
 import fs from "fs";
 import path from "path";
@@ -20,7 +20,9 @@ const version = pkg.version;
 if (!version) throw new Error("package.json has no version");
 
 const zipUrl = `https://github.com/${repo}/releases/download/${version}/${pkgName}-${version}.zip`;
-const repoUrl = `https://${repo.split("/")[0]}.github.io/${repo.split("/")[1]}/vpm.json`;
+
+const [owner, repoName] = repo.split("/");
+const repoUrl = `https://${owner}.github.io/${repoName}/vpm.json`;
 
 vpm.packages ??= {};
 vpm.packages[pkgName] ??= { versions: {} };
@@ -46,3 +48,4 @@ fs.writeFileSync(vpmJsonPath, JSON.stringify(vpm, null, 2) + "\n", "utf8");
 
 console.log(`Updated docs/vpm.json: ${pkgName}@${version}`);
 console.log(`zip url: ${zipUrl}`);
+console.log(`repo url: ${repoUrl}`);
