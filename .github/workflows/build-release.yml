@@ -49,3 +49,30 @@ jobs:
           files: |
             ${{ env.zipFile }}
             Packages/${{ env.packageName }}/package.json
+
+                  - name: Update docs/vpm.json
+        run: |
+          node --version
+          PACKAGE_NAME="${{ env.packageName }}" node tools/update-vpm-json.mjs
+
+      - name: Commit vpm.json if changed
+        run: |
+          set -e
+          git status --porcelain
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/vpm.json
+          git commit -m "chore(vpm): update vpm.json for ${{ steps.version.outputs.prop }}"
+
+      - name: Push changes
+        run: |
+          # commit が無い場合は何もしない
+          if [ -z "$(git log -1 --pretty=%B | grep 'chore(vpm): update vpm.json' || true)" ]; then
+            echo "No vpm.json commit to push."
+            exit 0
+          fi
+          git push
