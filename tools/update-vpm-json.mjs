@@ -22,7 +22,7 @@ if (!version) throw new Error("package.json has no version");
 const zipUrl = `https://github.com/${repo}/releases/download/${version}/${pkgName}-${version}.zip`;
 
 const [owner, repoName] = repo.split("/");
-const repoUrl = `https://${owner}.github.io/${repoName}/vpm.json`;
+const repoUrl = `https://${owner.toLowerCase()}.github.io/${repoName}/vpm.json`;
 
 vpm.packages ??= {};
 vpm.packages[pkgName] ??= { versions: {} };
@@ -49,3 +49,4 @@ fs.writeFileSync(vpmJsonPath, JSON.stringify(vpm, null, 2) + "\n", "utf8");
 console.log(`Updated docs/vpm.json: ${pkgName}@${version}`);
 console.log(`zip url: ${zipUrl}`);
 console.log(`repo url: ${repoUrl}`);
+
