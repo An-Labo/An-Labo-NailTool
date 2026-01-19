@@ -258,7 +258,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				footSelects.Add(dd);
 
 				var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
-				if (innerDropdown is DropdownField ddf) 
+				if (innerDropdown is DropdownField ddf)
 				{
 					ddf.label = S(toeLabels[i]) ?? toeLabels[i];
 				}
@@ -442,15 +442,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				Mesh?[]? selectedMeshes = this._nailShapeDropDown!.GetSelectedShapeMeshes();
 				Mesh?[]? overrideMesh = (this._tglHandActive?.value ?? true) ? selectedMeshes : new Mesh?[10];
 
+				Material? directMaterial = this._materialObjectField!.value as Material;
+
 				NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName)
 				{
 					AvatarName = this._avatarDropDowns.GetAvatarName(),
 					OverrideMesh = overrideMesh,
 					UseFootNail = this._tglFootActive!.value,
 					RemoveCurrentNail = this._removeCurrentNail!.value,
-					GenerateMaterial = true,
+					GenerateMaterial = directMaterial == null,  // 直接指定時は生成OFF
 					Backup = this._backup!.value,
-					ForModularAvatar = this._forModularAvatar!.value
+					ForModularAvatar = this._forModularAvatar!.value,
+					OverrideMaterial = directMaterial
 				};
 
 				processor.Process();
@@ -591,8 +594,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailPreviewController?.UpdateVisibility(isHandActive, isFootActive);
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
+			Material? directMaterial = this._materialObjectField?.value as Material;
 
-			this._nailPreviewController?.ChangeNailMaterial(designAndVariationNames, nailShapeName);
+			this._nailPreviewController?.ChangeNailMaterial(designAndVariationNames, nailShapeName, directMaterial);
 			this._nailPreviewController?.ChangeAdditionalObjects(designAndVariationNames, nailShapeName);
 		}
 
@@ -627,6 +631,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			bool isFootActive = this._tglFootActive?.value ?? false;
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
+			Material? directMaterial = this._materialObjectField?.value as Material;
 
 			this._scenePreviewController ??= new MDNailScenePreviewController(SCENE_PREVIEW_NAME);
 			this._scenePreviewController.Update(
@@ -636,7 +641,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				nailShapeName,
 				isHandActive,
 				isFootActive,
-				designAndVariationNames
+				designAndVariationNames,
+				directMaterial
 			);
 		}
 

@@ -30,14 +30,14 @@ namespace world.anlabo.mdnailtool.Editor {
 			NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, nailShapeName);
 		}
 
-		public void ChangeNailMaterial((INailProcessor, string, string)[] designAndVariationNames, string nailShapeName) {
-			if (this._nailPreview.NailObj == null) return;
-			Transform?[] handsNailObjects = GetHandsNailObjectList(this._nailPreview.NailObj);
-			IEnumerable<Transform?> leftFootNailObjects = GetLeftFootNailObjectList(this._nailPreview.NailObj);
-			IEnumerable<Transform?> rightFootNailObjects = GetRightFootNailObjectList(this._nailPreview.NailObj);
+		public void ChangeNailMaterial((INailProcessor, string, string)[] designAndVariationNames, string nailShapeName, Material? overrideMaterial = null) {
+            if (this._nailPreview.NailObj == null) return;
+            Transform?[] handsNailObjects = GetHandsNailObjectList(this._nailPreview.NailObj);
+            IEnumerable<Transform?> leftFootNailObjects = GetLeftFootNailObjectList(this._nailPreview.NailObj);
+            IEnumerable<Transform?> rightFootNailObjects = GetRightFootNailObjectList(this._nailPreview.NailObj);
 
-			NailSetupUtil.ReplaceNailMaterial(handsNailObjects, leftFootNailObjects, rightFootNailObjects, designAndVariationNames, nailShapeName, true, true);
-		}
+            NailSetupUtil.ReplaceNailMaterial(handsNailObjects, leftFootNailObjects, rightFootNailObjects, designAndVariationNames, nailShapeName, true, true, overrideMaterial);
+        }
 
 		public void ChangeAdditionalObjects((INailProcessor, string, string)[] designAndVariationNames, string nailShapeName) {
 			if (this._nailPreview.NailObj == null) return;
