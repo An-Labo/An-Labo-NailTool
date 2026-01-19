@@ -27,9 +27,8 @@ namespace world.anlabo.mdnailtool.Editor {
 		private GameObject NailPrefab { get; set; }
 		private (INailProcessor, string, string)[] NailDesignAndVariationNames { get; }
 		private string NailShapeName { get; }
-
 		public Mesh?[]? OverrideMesh { get; set; }
-
+		public Material? OverrideMaterial { get; set; }
 		public string AvatarName { get; set; } = null!;
 		public bool UseFootNail { get; set; }
 		public bool RemoveCurrentNail { get; set; }
@@ -123,7 +122,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			// マテリアルの適用
 			try {
-				NailSetupUtil.ReplaceNailMaterial(handsNailObjects, leftFootNailObjects, rightFootNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, this.GenerateMaterial, false);
+				NailSetupUtil.ReplaceNailMaterial(handsNailObjects, leftFootNailObjects, rightFootNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, this.GenerateMaterial, false, this.OverrideMaterial);
 			} catch (Exception) {
 				Undo.RevertAllInCurrentGroup();
 				throw;

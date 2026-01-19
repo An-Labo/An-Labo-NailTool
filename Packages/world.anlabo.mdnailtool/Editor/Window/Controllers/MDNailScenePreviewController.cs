@@ -4,6 +4,7 @@ using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using world.anlabo.mdnailtool.Editor;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
+using world.anlabo.mdnailtool.Runtime;
 
 #nullable enable
 
@@ -50,19 +51,11 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
             string nailShapeName,
             bool isHandActive,
             bool isFootActive,
-            (INailProcessor, string, string)[] designAndVariationNames
+            (INailProcessor, string, string)[] designAndVariationNames,
+            Material? overrideMaterial = null
         )
         {
             if (avatar == null) return;
-
-            HideOriginalNails(avatar);
-
-            if (_scenePreviewObject != null)
-            {
-                _scenePreviewObject.SetActive(true);
-            }
-
-            HideOriginalNails(avatar);
 
             if (_scenePreviewObject == null)
             {
@@ -82,6 +75,13 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                 }
 
                 _scenePreviewRoot = _scenePreviewObject.transform;
+            }
+
+            HideOriginalNails(avatar);
+
+            if (_scenePreviewObject != null)
+            {
+                _scenePreviewObject.SetActive(true);
             }
 
             if (_scenePreviewObject == null) return;
@@ -112,7 +112,8 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                 designAndVariationNames,
                 nailShapeName,
                 true,
-                true
+                true,
+                overrideMaterial
             );
         }
 
@@ -124,14 +125,25 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                 return t == _scenePreviewRoot || t.IsChildOf(_scenePreviewRoot);
             }
 
+            foreach (var marker in avatar.GetComponentsInChildren<MDNailObjectMarker>(true))
+            {
+                if (IsUnderPreviewRoot(marker.transform)) continue;
+
+                foreach (var r in marker.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (IsUnderPreviewRoot(r.transform)) continue;
+                    yield return r;
+                }
+            }
+
             var avatarAll = avatar.GetComponentsInChildren<Transform>(true);
             Transform? FindInAvatarByContains(string name)
                 => avatarAll.FirstOrDefault(t => t.name.Contains(name) && !IsUnderPreviewRoot(t));
 
             IEnumerable<string> names =
-            MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
-            .Concat(MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST)
-            .Concat(MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST);
+                MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
+                .Concat(MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST)
+                .Concat(MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST);
 
             foreach (var n in names)
             {
