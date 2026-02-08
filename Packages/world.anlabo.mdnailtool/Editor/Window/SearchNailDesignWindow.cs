@@ -40,7 +40,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
         private int _pageIndex = 0;
         private const int ItemsPerPage = 12;
 
-        private static readonly Vector2 FixedWindowSize = new Vector2(740, 920);
+        private static readonly Vector2 FixedWindowSize = new Vector2(850, 950);
 
         private Color _windowBgColor;
         private Color _panelBgColor; 
@@ -48,6 +48,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
         private Color _textColor;
         private Color _linkColor;
         private Color _borderColor;
+        private Color _highlightColor;
 
         private readonly Dictionary<string, string> _tagMap = new() {
             {"tag.cute", "cute"}, {"tag.cool", "cool"},
@@ -93,6 +94,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
                 _textColor = new Color(0.9f, 0.9f, 0.9f);
                 _linkColor = new Color(0.4f, 0.7f, 1f);
                 _borderColor = new Color(0.15f, 0.15f, 0.15f);
+                _highlightColor = new Color(1f, 0.85f, 0.3f); // Gold
             } else {
                 _windowBgColor = new Color(0.76f, 0.76f, 0.76f);
                 _panelBgColor = new Color(0.65f, 0.65f, 0.65f);
@@ -100,6 +102,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
                 _textColor = Color.black;
                 _linkColor = new Color(0.1f, 0.1f, 0.8f);
                 _borderColor = Color.gray;
+                _highlightColor = new Color(0.2f, 0.5f, 0.9f); // Blue
             }
 
             var root = rootVisualElement;
@@ -107,9 +110,9 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             root.style.paddingTop = 8; root.style.paddingBottom = 8;
             root.style.paddingLeft = 8; root.style.paddingRight = 8;
 
-            var topBar = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 0, height = 20 } };
+            var topBar = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 4, height = 22 } };
             
-            _searchField = new ToolbarSearchField { style = { flexGrow = 1, marginRight = 0 } };
+            _searchField = new ToolbarSearchField { style = { flexGrow = 1, marginRight = 4 } };
             _searchField.RegisterValueChangedCallback(evt => { _searchText = evt.newValue; UpdateFilter(); });
             topBar.Add(_searchField);
 
@@ -117,12 +120,12 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             string sortName = LanguageManager.S("window.sort.name") ?? "Name";
             string sortUsage = LanguageManager.S("window.sort.usage") ?? "Usage Count";
             _sortDropdown = new DropdownField(new List<string> { sortNewest, sortName, sortUsage }, 0);
-            _sortDropdown.style.width = 80;
+            _sortDropdown.style.width = 85;
             _sortDropdown.style.marginLeft = 0;
             _sortDropdown.RegisterValueChangedCallback(_ => UpdateFilter());
             topBar.Add(_sortDropdown);
 
-            var resetBtn = new Button(ResetFilters) { text = "Reset", style = { width = 50, marginLeft = 2 } };
+            var resetBtn = new Button(ResetFilters) { text = "Reset", style = { width = 55, marginLeft = 4 } };
             topBar.Add(resetBtn);
             root.Add(topBar);
 
@@ -131,9 +134,9 @@ namespace world.anlabo.mdnailtool.Editor.Window {
                 style = { 
                     flexDirection = FlexDirection.Row,
                     backgroundColor = _panelBgColor,
-                    paddingTop = 8, paddingBottom = 8, paddingLeft = 8, paddingRight = 8,
-                    borderBottomLeftRadius = 5, borderBottomRightRadius = 5,
-                    marginBottom = 10
+                    paddingTop = 10, paddingBottom = 10, paddingLeft = 10, paddingRight = 10,
+                    borderBottomLeftRadius = 6, borderBottomRightRadius = 6,
+                    marginBottom = 12
                 }
             };
             root.Add(filterPanel);
@@ -184,14 +187,14 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
             filterPanel.Add(new VisualElement { style = { width = 1, backgroundColor = Color.gray, marginRight = 10 } });
 
-            var colorContainer = new VisualElement { style = { width = 100 } }; 
+            var colorContainer = new VisualElement { style = { width = 130 } }; 
             filterPanel.Add(colorContainer);
 
-            var rowColor1 = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 4 } };
+            var rowColor1 = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 5 } };
             foreach (var colorKey in _monoColors) AddColorButton(rowColor1, colorKey);
             colorContainer.Add(rowColor1);
 
-            var rowColor2 = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 4 } };
+            var rowColor2 = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 5 } };
             foreach (var colorKey in _colorsRow2) AddColorButton(rowColor2, colorKey);
             colorContainer.Add(rowColor2);
 
@@ -202,25 +205,25 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             var scroll = new ScrollView { style = { flexGrow = 1 } };
             _nailGrid = new VisualElement { 
                 style = { 
-                    flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap, justifyContent = Justify.FlexStart, width = 700
+                    flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap, justifyContent = Justify.Center
                 } 
             };
             scroll.Add(_nailGrid);
             root.Add(scroll);
 
-            var footer = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.Center, marginTop = 10, marginBottom = 5 } };
-var prevBtn = new Button(() => ChangePage(-1)) { 
+            var footer = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.Center, marginTop = 12, marginBottom = 6 } };
+            var prevBtn = new Button(() => ChangePage(-1)) { 
                 text = "◀", 
-                style = { width = 36, height = 36, paddingLeft = 1, paddingRight = 1 } 
+                style = { width = 40, height = 40, paddingLeft = 1, paddingRight = 1, fontSize = 16 } 
             };
             
             var nextBtn = new Button(() => ChangePage(1)) { 
                 text = "▶", 
-                style = { width = 36, height = 36, paddingLeft = 1, paddingRight = 1 } 
+                style = { width = 40, height = 40, paddingLeft = 1, paddingRight = 1, fontSize = 16 } 
             };
 
             _pageLabel = new Label("1 / 1") { 
-                style = { alignSelf = Align.Center, marginLeft = 10, marginRight = 10, color = _textColor } 
+                style = { alignSelf = Align.Center, marginLeft = 12, marginRight = 12, color = _textColor, fontSize = 14 } 
             };
             footer.Add(prevBtn);
             footer.Add(_pageLabel);
@@ -255,25 +258,25 @@ var prevBtn = new Button(() => ChangePage(-1)) {
 
             var btn = new Button {
                 style = {
-                    width = 20, height = 20,
-                    borderTopLeftRadius = 10, borderTopRightRadius = 10, borderBottomLeftRadius = 10, borderBottomRightRadius = 10,
+                    width = 26, height = 26,
+                    borderTopLeftRadius = 13, borderTopRightRadius = 13, borderBottomLeftRadius = 13, borderBottomRightRadius = 13,
                     backgroundColor = colorValue, 
                     marginRight = 4, marginBottom = 0,
-                    borderTopWidth = 1, borderBottomWidth = 1, borderLeftWidth = 1, borderRightWidth = 1,
+                    borderTopWidth = 2, borderBottomWidth = 2, borderLeftWidth = 2, borderRightWidth = 2,
                     borderTopColor = _borderColor, borderBottomColor = _borderColor, borderLeftColor = _borderColor, borderRightColor = _borderColor
                 }
             };
             btn.clicked += () => {
                 if (_activeColors.Contains(colorKey)) {
                     _activeColors.Remove(colorKey);
-                    SetBorderWidth(btn, 1);
+                    SetBorderWidth(btn, 2);
                     SetBorderColor(btn, _borderColor);
                     btn.transform.scale = Vector3.one;
                 } else {
                     _activeColors.Add(colorKey);
-                    SetBorderWidth(btn, 3);
-                    SetBorderColor(btn, Color.cyan);
-                    btn.transform.scale = new Vector3(1.2f, 1.2f, 1);
+                    SetBorderWidth(btn, 4);
+                    SetBorderColor(btn, _highlightColor);
+                    btn.transform.scale = new Vector3(1.15f, 1.15f, 1);
                 }
                 UpdateFilter();
             };
@@ -337,7 +340,7 @@ var prevBtn = new Button(() => ChangePage(-1)) {
 
             foreach (var t in _allToggles) t.SetValueWithoutNotify(false);
             foreach (var btn in _colorButtons) {
-                SetBorderWidth(btn, 1);
+                SetBorderWidth(btn, 2);
                 SetBorderColor(btn, _borderColor);
                 btn.transform.scale = Vector3.one;
             }
@@ -432,16 +435,23 @@ private void UpdateFilter() {
 
             var card = new VisualElement {
                 style = {
-                    width = 160, height = 210, 
-                    marginTop = 5, marginBottom = 5, marginLeft = 5, marginRight = 5,
-                    paddingTop = 5, paddingBottom = 5, paddingLeft = 5, paddingRight = 5,
+                    width = 165, height = 220, 
+                    marginTop = 8, marginBottom = 8, marginLeft = 4, marginRight = 4,
+                    paddingTop = 8, paddingBottom = 8, paddingLeft = 8, paddingRight = 8,
                     backgroundColor = _cardBgColor,
-                    borderTopLeftRadius = 5, borderTopRightRadius = 5, borderBottomLeftRadius = 5, borderBottomRightRadius = 5,
+                    borderTopLeftRadius = 8, borderTopRightRadius = 8, borderBottomLeftRadius = 8, borderBottomRightRadius = 8,
                     opacity = isInstalled ? 1.0f : 0.5f 
                 }
             };
+            SetBorderWidth(card, 1);
+            SetBorderColor(card, new Color(_borderColor.r, _borderColor.g, _borderColor.b, 0.3f));
 
-            var thumb = new Image { style = { width = 150, height = 150, alignSelf = Align.Center, marginBottom = 5 } };
+            var thumb = new Image { 
+                style = { 
+                    width = 150, height = 150, alignSelf = Align.Center, marginBottom = 6,
+                    borderTopLeftRadius = 6, borderTopRightRadius = 6, borderBottomLeftRadius = 6, borderBottomRightRadius = 6
+                } 
+            };
             if (!string.IsNullOrEmpty(design.ThumbnailGUID)) {
                 string path = AssetDatabase.GUIDToAssetPath(design.ThumbnailGUID);
                 thumb.image = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
