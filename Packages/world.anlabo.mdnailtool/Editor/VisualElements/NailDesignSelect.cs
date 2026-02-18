@@ -259,6 +259,9 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 			if (evt.target is not VisualElement element) return;
 			string designName = element.name;
 			if (string.IsNullOrEmpty(designName)) return;
+			
+			ResourceAutoExtractor.EnsureDesignExtracted(designName);
+			
 			this.OnSelectNail?.Invoke(designName);
 		}
 
