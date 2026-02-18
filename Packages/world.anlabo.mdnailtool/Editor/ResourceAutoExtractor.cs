@@ -323,7 +323,7 @@ namespace world.anlabo.mdnailtool.Editor {
             }
         }
 
-        [MenuItem("An-Labo/Import All Resources (this may take a few minutes)")]
+        [MenuItem("An-Labo/Import All Resources")]
         public static void ForceExtractAll() {
             if (_isExtracting) {
                 Debug.LogWarning("[MDNailTool] 既に展開中です");
