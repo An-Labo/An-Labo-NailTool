@@ -25,48 +25,63 @@ namespace world.anlabo.mdnailtool.Editor {
             "uss/"
         };
         
+        private static readonly string[] ESSENTIAL_FILES = {
+            "Lang/langs.json",
+            "DB/nailDesign.json",
+            "DB/shop.json"
+        };
+        
         private static string VersionFilePath => ASSETS_RESOURCE_PATH + VERSION_FILE_NAME;
         
         private static bool _isExtracting = false;
-        
         private static string? _zipRealPath = null;
         
-        private static bool ShouldSkipExtraction() {
-            string assetsLangFile = ASSETS_RESOURCE_PATH + "Lang/langs.json";
-            if (File.Exists(assetsLangFile)) {
-                return true;
-            }
-            
-            string packageLangFileFull = Path.GetFullPath(PACKAGE_RESOURCE_PATH + "Lang/langs.json");
-            if (File.Exists(packageLangFileFull)) {
-                return true;
-            }
-            
-            return false;
-        }
-
         static ResourceAutoExtractor() {
             EditorApplication.delayCall += CheckAndExtractEssentials;
         }
 
+        private static bool HasEssentialFiles() {
+            foreach (string file in ESSENTIAL_FILES) {
+                string assetsPath = ASSETS_RESOURCE_PATH + file;
+                string packagePath = PACKAGE_RESOURCE_PATH + file;
+                
+                if (File.Exists(assetsPath)) continue;
+                
+                string packageFullPath = Path.GetFullPath(packagePath);
+                if (File.Exists(packageFullPath)) continue;
+                
+                return false;
+            }
+            return true;
+        }
+
+        private static void CheckAndExtractEssentials() {
+            if (_isExtracting) return;
+            if (HasEssentialFiles()) return;
+            
+            string? zipPath = GetZipRealPath();
+            if (zipPath == null) return;
+            
+            StartEssentialExtraction(MDNailToolDefines.Version);
+        }
+
         public static void EnsureEssentialsExtractedSync() {
             if (_isExtracting) return;
-            
-            if (ShouldSkipExtraction()) return;
-            
-            string assetsLangFile = ASSETS_RESOURCE_PATH + "Lang/langs.json";
-            if (File.Exists(assetsLangFile)) return;
+            if (HasEssentialFiles()) return;
             
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
             
             try {
-                int copiedFiles = ExtractFoldersFromZip(ESSENTIAL_FOLDERS);
+                _isExtracting = true;
+                ExtractFoldersFromZip(ESSENTIAL_FOLDERS);
                 SaveInstalledVersion(MDNailToolDefines.Version);
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
             } catch (Exception e) {
                 Debug.LogError($"[MDNailTool] 同期展開失敗: {e.Message}");
+            } finally {
+                _isExtracting = false;
             }
         }
 
@@ -75,56 +90,50 @@ namespace world.anlabo.mdnailtool.Editor {
                 return _zipRealPath;
             }
             
-            string? fullPath = Path.GetFullPath(ZIP_ARCHIVE_PATH);
-            if (File.Exists(fullPath)) {
-                _zipRealPath = fullPath;
+            var zipAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(ZIP_ARCHIVE_PATH);
+            if (zipAsset != null) {
+                string assetPath = AssetDatabase.GetAssetPath(zipAsset);
+                string fullPath = Path.GetFullPath(assetPath);
+                if (File.Exists(fullPath)) {
+                    _zipRealPath = fullPath;
+                    return _zipRealPath;
+                }
+            }
+            
+            var zipObj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(ZIP_ARCHIVE_PATH);
+            if (zipObj != null) {
+                string assetPath = AssetDatabase.GetAssetPath(zipObj);
+                string fullPath = Path.GetFullPath(assetPath);
+                if (File.Exists(fullPath)) {
+                    _zipRealPath = fullPath;
+                    return _zipRealPath;
+                }
+            }
+            
+            string directPath = Path.GetFullPath(ZIP_ARCHIVE_PATH);
+            if (File.Exists(directPath)) {
+                _zipRealPath = directPath;
                 return _zipRealPath;
+            }
+            
+            string packageCachePath = Path.Combine("Library", "PackageCache");
+            if (Directory.Exists(packageCachePath)) {
+                foreach (string dir in Directory.GetDirectories(packageCachePath, "world.anlabo.mdnailtool*")) {
+                    string zipInCache = Path.Combine(dir, "ResourceArchive", "resource.zip.bytes");
+                    if (File.Exists(zipInCache)) {
+                        _zipRealPath = zipInCache;
+                        return _zipRealPath;
+                    }
+                }
             }
             
             return null;
         }
 
-        private static void CheckAndExtractEssentials() {
-            if (_isExtracting) return;
-            
-            if (ShouldSkipExtraction()) return;
-            
-            string packageVersion = MDNailToolDefines.Version;
-            string? installedVersion = GetInstalledVersion();
-            
-            if (installedVersion == packageVersion) {
-                return;
-            }
-            
-            StartEssentialExtraction(packageVersion);
-        }
-
-        private static string? GetInstalledVersion() {
-            if (!File.Exists(VersionFilePath)) return null;
-            try {
-                return File.ReadAllText(VersionFilePath).Trim();
-            } catch {
-                return null;
-            }
-        }
-
-        private static void SaveInstalledVersion(string version) {
-            string? directory = Path.GetDirectoryName(VersionFilePath);
-            if (directory != null && !Directory.Exists(directory)) {
-                Directory.CreateDirectory(directory);
-            }
-            File.WriteAllText(VersionFilePath, version);
-        }
-
         private static async void StartEssentialExtraction(string targetVersion) {
-            if (_isExtracting) return;
             _isExtracting = true;
 
-            int progressId = Progress.Start(
-                "MDNailTool リソース展開",
-                "必須ファイルを展開中...",
-                Progress.Options.Managed
-            );
+            int progressId = Progress.Start("MDNailTool リソース展開", "準備中...", Progress.Options.Managed);
 
             try {
                 int copiedFiles = 0;
@@ -136,10 +145,10 @@ namespace world.anlabo.mdnailtool.Editor {
                 Progress.Report(progressId, 0.95f, "インポート中...");
                 SaveInstalledVersion(targetVersion);
                 AssetDatabase.Refresh(ImportAssetOptions.Default);
-                
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
                 
                 Progress.Finish(progressId);
+                Debug.Log($"[MDNailTool] リソース展開完了 ({copiedFiles} files)");
                 
                 MDNailToolDefines.ClearResourcePathCache();
                 
@@ -153,10 +162,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
         private static int ExtractFoldersFromZip(string[] folders) {
             string? zipPath = GetZipRealPath();
-            if (zipPath == null) {
-                Debug.LogWarning("[MDNailTool] ZIPファイルが見つかりません");
-                return 0;
-            }
+            if (zipPath == null) return 0;
 
             if (!Directory.Exists(ASSETS_RESOURCE_PATH)) {
                 Directory.CreateDirectory(ASSETS_RESOURCE_PATH);
@@ -212,42 +218,36 @@ namespace world.anlabo.mdnailtool.Editor {
             return copiedFiles;
         }
 
-        public static string? EnsureAssetExtracted(string guid) {
-            string existingPath = AssetDatabase.GUIDToAssetPath(guid);
-            if (!string.IsNullOrEmpty(existingPath) && existingPath.StartsWith("Assets/")) {
-                return existingPath;
-            }
-            
-            return existingPath;
-        }
-
         public static void EnsureDesignExtracted(string designName) {
             string assetsDesignPath = ASSETS_RESOURCE_PATH + "Nail/Design/" + designName + "/";
             
-            if (Directory.Exists(assetsDesignPath)) {
-                return;
-            }
+            if (Directory.Exists(assetsDesignPath)) return;
             
             string packageDesignPath = Path.GetFullPath(PACKAGE_RESOURCE_PATH + "Nail/Design/" + designName + "/");
-            if (Directory.Exists(packageDesignPath)) {
-                return;
-            }
+            if (Directory.Exists(packageDesignPath)) return;
             
             string? zipPath = GetZipRealPath();
-            if (zipPath == null) {
-                return;
-            }
+            if (zipPath == null) return;
 
             string designPrefix = "Nail/Design/" + designName + "/";
 
             try {
                 int copiedFiles = 0;
                 
+                HashSet<string> folderMetaFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                folderMetaFiles.Add("Nail.meta");
+                folderMetaFiles.Add("Nail/Design.meta");
+                folderMetaFiles.Add("Nail/Design/" + designName + ".meta");
+                
                 using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
                     foreach (ZipArchiveEntry entry in archive.Entries) {
-                        if (!entry.FullName.StartsWith(designPrefix, StringComparison.OrdinalIgnoreCase)) {
-                            continue;
+                        bool shouldExtract = entry.FullName.StartsWith(designPrefix, StringComparison.OrdinalIgnoreCase);
+                        
+                        if (!shouldExtract && folderMetaFiles.Contains(entry.FullName)) {
+                            shouldExtract = true;
                         }
+                        
+                        if (!shouldExtract) continue;
                         if (string.IsNullOrEmpty(entry.Name)) continue;
 
                         string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
@@ -272,33 +272,69 @@ namespace world.anlabo.mdnailtool.Editor {
             }
         }
 
-        public static void EnsurePrefabExtracted(string prefabFolderName) {
-            string assetsPrefabPath = ASSETS_RESOURCE_PATH + "Nail/Prefab/" + prefabFolderName + "/";
-            
-            if (Directory.Exists(assetsPrefabPath)) {
-                return;
-            }
-            
-            string packagePrefabPath = Path.GetFullPath(PACKAGE_RESOURCE_PATH + "Nail/Prefab/" + prefabFolderName + "/");
-            if (Directory.Exists(packagePrefabPath)) {
-                return;
-            }
+        public static void EnsurePrefabExtractedByGuid(string guid) {
+            if (string.IsNullOrEmpty(guid)) return;
             
             string? zipPath = GetZipRealPath();
-            if (zipPath == null) {
-                return;
-            }
+            if (zipPath == null) return;
 
+            try {
+                string? targetFolder = null;
+                
+                using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
+                    foreach (ZipArchiveEntry entry in archive.Entries) {
+                        if (!entry.FullName.StartsWith("Nail/Prefab/", StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!entry.Name.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)) continue;
+                        
+                        using (StreamReader reader = new StreamReader(entry.Open())) {
+                            string content = reader.ReadToEnd();
+                            if (content.Contains(guid)) {
+                                string[] parts = entry.FullName.Split('/');
+                                if (parts.Length >= 3) {
+                                    targetFolder = parts[2];
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (targetFolder != null) {
+                    ExtractPrefabFolder(targetFolder);
+                }
+                
+            } catch (Exception e) {
+                Debug.LogError($"[MDNailTool] GUID検索失敗 ({guid}): {e.Message}");
+            }
+        }
+
+        private static void ExtractPrefabFolder(string prefabFolderName) {
+            string? zipPath = GetZipRealPath();
+            if (zipPath == null) return;
+
+            string assetsPrefabPath = ASSETS_RESOURCE_PATH + "Nail/Prefab/" + prefabFolderName + "/";
+            
+            if (Directory.Exists(assetsPrefabPath)) return;
+            
             string prefabPrefix = "Nail/Prefab/" + prefabFolderName + "/";
 
             try {
                 int copiedFiles = 0;
                 
+                HashSet<string> folderMetaFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                folderMetaFiles.Add("Nail.meta");
+                folderMetaFiles.Add("Nail/Prefab.meta");
+                folderMetaFiles.Add("Nail/Prefab/" + prefabFolderName + ".meta");
+                
                 using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
                     foreach (ZipArchiveEntry entry in archive.Entries) {
-                        if (!entry.FullName.StartsWith(prefabPrefix, StringComparison.OrdinalIgnoreCase)) {
-                            continue;
+                        bool shouldExtract = entry.FullName.StartsWith(prefabPrefix, StringComparison.OrdinalIgnoreCase);
+                        
+                        if (!shouldExtract && folderMetaFiles.Contains(entry.FullName)) {
+                            shouldExtract = true;
                         }
+                        
+                        if (!shouldExtract) continue;
                         if (string.IsNullOrEmpty(entry.Name)) continue;
 
                         string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
@@ -319,7 +355,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
                 
             } catch (Exception e) {
-                Debug.LogError($"[MDNailTool] Prefab展開失敗 ({prefabFolderName}): {e.Message}");
+                Debug.LogError($"[MDNailTool] Prefabフォルダ展開失敗 ({prefabFolderName}): {e.Message}");
             }
         }
 
@@ -332,7 +368,7 @@ namespace world.anlabo.mdnailtool.Editor {
             
             string? zipPath = GetZipRealPath();
             if (zipPath == null) {
-                Debug.LogWarning("[MDNailTool] ZIPファイルが見つかりません");
+                Debug.LogError("[MDNailTool] ZIPファイルが見つかりません");
                 return;
             }
             
@@ -351,11 +387,7 @@ namespace world.anlabo.mdnailtool.Editor {
         private static async void StartFullExtraction() {
             _isExtracting = true;
 
-            int progressId = Progress.Start(
-                "MDNailTool 全リソース展開",
-                "準備中...",
-                Progress.Options.Managed
-            );
+            int progressId = Progress.Start("MDNailTool 全リソース展開", "準備中...", Progress.Options.Managed);
 
             try {
                 int copiedFiles = 0;
@@ -367,7 +399,6 @@ namespace world.anlabo.mdnailtool.Editor {
                 Progress.Report(progressId, 0.95f, "インポート中...");
                 SaveInstalledVersion(MDNailToolDefines.Version);
                 AssetDatabase.Refresh(ImportAssetOptions.Default);
-                
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
                 
                 Progress.Finish(progressId);
@@ -413,7 +444,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
             return copiedFiles;
         }
-        
+
         [MenuItem("An-Labo/Reimport Resources")]
         public static void ForceExtractEssentials() {
             if (_isExtracting) {
@@ -423,7 +454,7 @@ namespace world.anlabo.mdnailtool.Editor {
             
             string? zipPath = GetZipRealPath();
             if (zipPath == null) {
-                Debug.LogWarning("[MDNailTool] ZIPファイルが見つかりません");
+                Debug.LogError("[MDNailTool] ZIPファイルが見つかりません");
                 return;
             }
             
@@ -433,12 +464,11 @@ namespace world.anlabo.mdnailtool.Editor {
             
             StartEssentialExtraction(MDNailToolDefines.Version);
         }
-        
+
         private static void FixTextureImportSettings(string folderPath) {
             if (!Directory.Exists(folderPath)) return;
             
             string[] textureExtensions = { "*.png", "*.jpg", "*.jpeg" };
-            int fixedCount = 0;
             
             foreach (string ext in textureExtensions) {
                 string[] files = Directory.GetFiles(folderPath, ext, SearchOption.AllDirectories);
@@ -451,9 +481,29 @@ namespace world.anlabo.mdnailtool.Editor {
                     if (importer.textureShape != TextureImporterShape.Texture2D) {
                         importer.textureShape = TextureImporterShape.Texture2D;
                         importer.SaveAndReimport();
-                        fixedCount++;
                     }
                 }
+            }
+        }
+
+        private static string? GetInstalledVersion() {
+            if (!File.Exists(VersionFilePath)) return null;
+            try {
+                return File.ReadAllText(VersionFilePath).Trim();
+            } catch {
+                return null;
+            }
+        }
+
+        private static void SaveInstalledVersion(string version) {
+            try {
+                string? dir = Path.GetDirectoryName(VersionFilePath);
+                if (dir != null && !Directory.Exists(dir)) {
+                    Directory.CreateDirectory(dir);
+                }
+                File.WriteAllText(VersionFilePath, version);
+            } catch (Exception e) {
+                Debug.LogWarning($"[MDNailTool] バージョン保存失敗: {e.Message}");
             }
         }
     }

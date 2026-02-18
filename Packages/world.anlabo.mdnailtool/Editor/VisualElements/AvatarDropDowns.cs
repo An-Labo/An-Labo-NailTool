@@ -286,10 +286,14 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			string guid = variation.NailPrefabGUID;
 			if (string.IsNullOrEmpty(guid)) return null;
 
-			ResourceAutoExtractor.EnsurePrefabExtracted($"{avatarName}_{variantName}");
-			ResourceAutoExtractor.EnsurePrefabExtracted(avatarName);
-
 			string? path = AssetDatabase.GUIDToAssetPath(guid);
+			
+			if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) {
+				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(guid);
+				AssetDatabase.Refresh();
+				path = AssetDatabase.GUIDToAssetPath(guid);
+			}
+			
 			if (string.IsNullOrEmpty(path)) return null;
 
 			GameObject? nailPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
