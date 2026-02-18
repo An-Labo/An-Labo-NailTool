@@ -1,0 +1,22 @@
+# VCCパッケージに含めないファイル
+# （Git経由では取得可能）
+
+# 非圧縮リソース（圧縮版を使用するため）
+# Resource/
+
+# エディタ・IDE設定
+.idea/
+.vs/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+
+# デバッグファイル
+*.pdb
+*.mdb
+
+# その他
+*.tmp
+*.log

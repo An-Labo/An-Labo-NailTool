@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -17,13 +18,47 @@ namespace world.anlabo.mdnailtool.Editor
 		public const string REPORT_PATH = ROOT_ASSET_PATH + "Report/";
 
 		public const string ROOT_PACKAGE_PATH = "Packages/world.anlabo.mdnailtool/";
-		public const string RESOURCE_PATH = ROOT_PACKAGE_PATH + "Resource/";
-		public const string LANG_FILE_PATH = RESOURCE_PATH + "Lang/langs.json";
-		public const string DB_PATH = RESOURCE_PATH + "DB/";
-		public const string DB_SHOP_FILE_PATH = DB_PATH + "shop.json";
-		public const string DB_NAIL_SHAPE_FILE_PATH = DB_PATH + "nailShape.json";
-		public const string DB_NAIL_DESIGN_FILE_PATH = DB_PATH + "nailDesign.json";
-		public const string NAIL_DESIGN_PATH = RESOURCE_PATH + "Nail/Design/";
+		
+		private const string ASSETS_RESOURCE_PATH = ROOT_ASSET_PATH + "Resource/";
+		private const string PACKAGE_RESOURCE_PATH = ROOT_PACKAGE_PATH + "Resource/";
+		
+		private static string _resourcePath = null;
+		public static string RESOURCE_PATH {
+			get {
+				string assetsLangFile = ASSETS_RESOURCE_PATH + "Lang/langs.json";
+				
+				if (File.Exists(assetsLangFile)) {
+					_resourcePath = ASSETS_RESOURCE_PATH;
+					return _resourcePath;
+				}
+				
+				string packageLangFileFull = Path.GetFullPath(PACKAGE_RESOURCE_PATH + "Lang/langs.json");
+				if (File.Exists(packageLangFileFull)) {
+					_resourcePath = PACKAGE_RESOURCE_PATH;
+					return _resourcePath;
+				}
+				
+				ResourceAutoExtractor.EnsureEssentialsExtractedSync();
+				
+				if (File.Exists(assetsLangFile)) {
+					_resourcePath = ASSETS_RESOURCE_PATH;
+					return _resourcePath;
+				}
+				
+				_resourcePath = ASSETS_RESOURCE_PATH;
+				return _resourcePath;
+			}
+		}
+		
+		public static void ClearResourcePathCache() {
+			_resourcePath = null;
+		}
+		public static string LANG_FILE_PATH => RESOURCE_PATH + "Lang/langs.json";
+		public static string DB_PATH => RESOURCE_PATH + "DB/";
+		public static string DB_SHOP_FILE_PATH => DB_PATH + "shop.json";
+		public static string DB_NAIL_SHAPE_FILE_PATH => DB_PATH + "nailShape.json";
+		public static string DB_NAIL_DESIGN_FILE_PATH => DB_PATH + "nailDesign.json";
+		public static string NAIL_DESIGN_PATH => RESOURCE_PATH + "Nail/Design/";
 
 		public const string LEGACY_DESIGN_PATH = "Assets/[An-Labo.Virtual]/【Nail】/";
 		public const string PREVIEW_SHADER_GUID = MDNailToolGuids.PreviewShader;

@@ -63,7 +63,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		public override void ReportDesign(StringBuilder builder) {
 			builder.Append("  - RefDir : ");
-			builder.AppendLine(AssetDatabase.GUIDToAssetPath(this.DesignData.Legacy?.DesignDirectoryGUID));
+			builder.AppendLine(this.GetDesignDirectoryPath());
 		}
 
 		public override void ReportVariation(string materialName, string colorName, StringBuilder builder) {
@@ -88,9 +88,26 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			return Directory.Exists(nailShapeDirectoryPath);
 		}
 
+		private string GetDesignDirectoryPath() {
+			string fixedPath = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】";
+			if (Directory.Exists(fixedPath)) {
+				return fixedPath;
+			}
+			
+			string? guid = this.DesignData.Legacy?.DesignDirectoryGUID;
+			if (!string.IsNullOrEmpty(guid)) {
+				string guidPath = AssetDatabase.GUIDToAssetPath(guid);
+				if (!string.IsNullOrEmpty(guidPath) && Directory.Exists(guidPath)) {
+					return guidPath;
+				}
+			}
+			
+			return fixedPath;
+		}
+
 		private string GetNailShapeDirectoryPath(string nailShapeName) {
 			StringBuilder builder = new();
-			builder.Append(AssetDatabase.GUIDToAssetPath(this.DesignData.Legacy?.DesignDirectoryGUID));
+			builder.Append(this.GetDesignDirectoryPath());
 			builder.Append('/');
 			builder.Append("[Data]/[Texture]/[");
 			builder.Append(nailShapeName);

@@ -28,14 +28,26 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		
 		protected static DesignData GetDesignData(string designName) {
 			string designPath = $"{MDNailToolDefines.NAIL_DESIGN_PATH}{designName}/";
-			if (!Directory.Exists(designPath)) throw new InvalidOperationException($"Not found design directory : {designName} : {designPath}");
 			string jsonPath = $"{designPath}_design.json";
-			if (!File.Exists(jsonPath)) throw new InvalidOperationException($"Not found _design.json : {designName} : {designPath}");
-			TextAsset textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(jsonPath);
-			return DesignData.ToObject(textAsset.text);
+			
+			if (Directory.Exists(designPath) && File.Exists(jsonPath)) {
+				TextAsset? textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(jsonPath);
+				if (textAsset != null) {
+					return DesignData.ToObject(textAsset.text);
+				}
+			}
+			
+			return new DesignData {
+				Type = DesignData.JsonType.Legacy,
+				Legacy = new LegacyDesignData {
+					DesignDirectoryGUID = string.Empty
+				}
+			};
 		}
 
 		public static INailProcessor CreateNailDesign(string designName) {
+			ResourceAutoExtractor.EnsureDesignExtracted(designName);
+			
 			DesignData designData = GetDesignData(designName);
 			switch (designData.Type) {
 				case DesignData.JsonType.Legacy:
@@ -48,11 +60,9 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		public static bool IsInstalledDesign(string? designName) {
 			if (designName == null) return false;
-			string designPath = $"{MDNailToolDefines.NAIL_DESIGN_PATH}{designName}/";
-			if (!Directory.Exists(designPath)) return false;
-
-			if (!File.Exists($"{designPath}_design.json")) return false;
-			return true;
+			
+			string userNailPath = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{designName}】";
+			return Directory.Exists(userNailPath);
 		}
 		
 		
