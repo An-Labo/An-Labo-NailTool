@@ -160,13 +160,10 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
 
         private void HideOriginalNails(VRCAvatarDescriptor avatar)
         {
-            if (_isOriginalHidden) return;
-
-            _originalRendererEnabled.Clear();
-
             foreach (var r in EnumerateOriginalNailRenderers(avatar))
             {
-                _originalRendererEnabled[r] = r.enabled;
+                if (!_originalRendererEnabled.ContainsKey(r))
+                    _originalRendererEnabled[r] = r.enabled;
                 r.enabled = false;
             }
 

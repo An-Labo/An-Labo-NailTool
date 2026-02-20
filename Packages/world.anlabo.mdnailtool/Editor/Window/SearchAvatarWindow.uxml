@@ -1,6 +1,20 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <uie:Toolbar>
-        <uie:ToolbarSearchField focusable="true" name="search-field" style="flex-grow: 1; margin-right: 4px;" />
-    </uie:Toolbar>
-    <world.anlabo.mdnailtool.Editor.VisualElements.AvatarTreeView focusable="true" name="avatar-tree-view" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
+         editor-extension-mode="True">
+
+    <ui:VisualElement class="mdn-avatar-search-root">
+
+        <!-- 検索バー -->
+        <ui:VisualElement class="mdn-avatar-search-topbar">
+            <uie:ToolbarSearchField focusable="true" name="search-field"
+                class="mdn-avatar-search-field" />
+        </ui:VisualElement>
+
+        <!-- アバターツリー -->
+        <world.anlabo.mdnailtool.Editor.VisualElements.AvatarTreeView
+            focusable="true"
+            name="avatar-tree-view"
+            class="mdn-avatar-tree" />
+
+    </ui:VisualElement>
+
 </ui:UXML>

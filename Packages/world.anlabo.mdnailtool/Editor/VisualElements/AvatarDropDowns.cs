@@ -18,9 +18,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			remove => this._searchButton.clicked -= value;
 		}
 
+		public event Action<AvatarSortOrder>? SortOrderSelected;
+
 		private const string ALL_ITEM = "<--all-->";
 		private const string SPLIT = "::";
 		private readonly Button _searchButton;
+		private readonly Button _sortButton;
 		private readonly DropdownField _shopPopup;
 		private readonly DropdownField _avatarPopup;
 		private readonly DropdownField _variantPopup;
@@ -55,11 +58,31 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					justifyContent = Justify.FlexStart,
 					flexDirection = FlexDirection.Row,
 					alignItems = Align.Center,
-					flexShrink = 0
+					flexShrink = 0,
+					paddingLeft = 3
 				}
 			};
 			labelGroup.Add(label);
-			labelGroup.Add(this._searchButton);
+
+			// ソートアイコンボタン
+			var sortTex = EditorGUIUtility.Load("d_SortingGroup Icon") as Texture2D;
+			this._sortButton = new Button(this.OnSortButtonClicked);
+			if (sortTex != null) {
+				this._sortButton.style.backgroundImage = sortTex;
+				this._sortButton.style.width = new Length(15, LengthUnit.Pixel);
+				this._sortButton.style.height = new Length(15, LengthUnit.Pixel);
+			} else {
+				this._sortButton.text = "⇅";
+				this._sortButton.style.width = new Length(18, LengthUnit.Pixel);
+				this._sortButton.style.height = new Length(15, LengthUnit.Pixel);
+				this._sortButton.style.fontSize = 11;
+			}
+			this._sortButton.style.paddingTop = 0;
+			this._sortButton.style.paddingBottom = 0;
+			this._sortButton.style.paddingLeft = 0;
+			this._sortButton.style.paddingRight = 0;
+			this._sortButton.style.marginLeft = 2;
+
 			Func<string?, string> getShopPopupDisplayNameFunc = this.GetShopPopupDisplayName;
 			this._shopPopup = new DropdownField {
 				style = {
@@ -100,9 +123,22 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				formatSelectedValueCallback = getVariantPopupDisplayNameFunc,
 				formatListItemCallback = getVariantPopupDisplayNameFunc
 			};
+			// 検索・ソートボタングループ（バリエーションの右）
+			VisualElement buttonGroup = new() {
+				style = {
+					flexDirection = FlexDirection.Row,
+					alignItems = Align.Center,
+					flexShrink = 0,
+					marginLeft = 2
+				}
+			};
+			buttonGroup.Add(this._searchButton);
+			buttonGroup.Add(this._sortButton);
+
 			this.Add(shopGroup);
 			this.Add(this._avatarPopup);
 			this.Add(this._variantPopup);
+			this.Add(buttonGroup);
 
 			this.style.flexDirection = FlexDirection.Row;
 
@@ -345,6 +381,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			this._avatarPopup.SetValueWithoutNotify(this._avatarPopup.value);
 			this._variantPopup.SetValueWithoutNotify(this._variantPopup.value);
+			this.tooltip = LanguageManager.S("tooltip.avatar_dropdowns") ?? "";
 		}
 
 		private void SortShopList(AvatarSortOrder order) {
@@ -458,6 +495,33 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				_ => 0
 			};
 		}
+
+		private void OnSortButtonClicked() {
+			var menu = new GenericMenu();
+			foreach (AvatarSortOrder order in Enum.GetValues(typeof(AvatarSortOrder))) {
+				AvatarSortOrder captured = order;
+				menu.AddItem(
+					new GUIContent(LanguageManager.S(GetSortOrderKey(captured))),
+					this._avatarSortOrder == captured,
+					() => {
+						this._avatarSortOrder = captured;
+						this.Sort(captured);
+						this.SortOrderSelected?.Invoke(captured);
+					});
+			}
+			menu.ShowAsContext();
+		}
+
+		private static string GetSortOrderKey(AvatarSortOrder order) => order switch {
+			AvatarSortOrder.Default => "sort_order.default",
+			AvatarSortOrder.ShopNameAsc => "sort_order.shop_name_asc",
+			AvatarSortOrder.ShopNameDesc => "sort_order.shop_name_desc",
+			AvatarSortOrder.AvatarNameAsc => "sort_order.avatar_name_asc",
+			AvatarSortOrder.AvatarNameDesc => "sort_order.avatar_name_desc",
+			AvatarSortOrder.NewerAsc => "sort_order.newer_asc",
+			AvatarSortOrder.NewerDesc => "sort_order.newer_desc",
+			_ => order.ToString()
+		};
 
 		internal new class UxmlFactory : UxmlFactory<AvatarDropDowns, UxmlTraits> { }
 

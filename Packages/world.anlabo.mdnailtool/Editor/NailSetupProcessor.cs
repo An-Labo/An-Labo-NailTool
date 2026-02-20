@@ -35,6 +35,9 @@ namespace world.anlabo.mdnailtool.Editor {
 		public bool GenerateMaterial { get; set; }
 		public bool Backup { get; set; }
 		public bool ForModularAvatar { get; set; }
+	public bool GenerateExpressionMenu { get; set; }
+	public bool SplitHandFoot { get; set; }
+	public bool MergeAnLabo { get; set; }
 
 		public NailSetupProcessor(VRCAvatarDescriptor avatar, AvatarVariation avatarVariationData, GameObject nailPrefab, (INailProcessor, string, string)[] nailDesignAndVariationNames,
 			string nailShapeName) {
@@ -81,7 +84,16 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 			GameObject nailPrefabObject = Object.Instantiate(this.NailPrefab, this.Avatar.transform);
-			nailPrefabObject.name = $"[An-Labo NailTool]{this.AvatarName}";
+			{
+				string designName = this.NailDesignAndVariationNames.Length > 0
+					? this.NailDesignAndVariationNames[0].Item1.DesignName
+					: "Unknown";
+				string colorName = this.NailDesignAndVariationNames.Length > 0
+					? this.NailDesignAndVariationNames[0].Item3
+					: "";
+				string nailLabel = string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}";
+				nailPrefabObject.name = $"[An-Labo]{nailLabel}";
+			}
 			Undo.RegisterCreatedObjectUndo(nailPrefabObject, "Nail Setup");
 
 			string prefix = this.getPrefabPrefix();
@@ -137,11 +149,49 @@ namespace world.anlabo.mdnailtool.Editor {
 
 
 			if (this.ForModularAvatar) {
-				// 装着処理(ModularAvatar)
 #if MD_NAIL_FOR_MA
-				// 手の装着処理
+				string variationName = this.AvatarVariationData.VariationName;
+				string handWrapperName = $"HandNail_{variationName}";
+				string footWrapperName = $"FootNail_{variationName}";
+
+				// ---- HandNailラッパー作成 ----
+				GameObject handWrapper = new GameObject(handWrapperName);
+				handWrapper.transform.SetParent(nailPrefabObject.transform, false);
+				foreach (Transform? nailObject in handsNailObjects)
+				{
+					if (nailObject == null) continue;
+					nailObject.SetParent(handWrapper.transform, false);
+				}
+
+				// ---- FootNailラッパー作成 ----
+				GameObject? footWrapper = null;
+				if (this.UseFootNail)
+				{
+					footWrapper = new GameObject(footWrapperName);
+					footWrapper.transform.SetParent(nailPrefabObject.transform, false);
+					foreach (Transform? nailObject in leftFootNailObjects)
+					{
+						if (nailObject == null) continue;
+						nailObject.SetParent(footWrapper.transform, false);
+					}
+					foreach (Transform? nailObject in rightFootNailObjects)
+					{
+						if (nailObject == null) continue;
+						nailObject.SetParent(footWrapper.transform, false);
+					}
+				}
+				else
+				{
+					foreach (Transform? nailObject in leftFootNailObjects)
+						if (nailObject != null) Object.DestroyImmediate(nailObject.gameObject);
+					foreach (Transform? nailObject in rightFootNailObjects)
+						if (nailObject != null) Object.DestroyImmediate(nailObject.gameObject);
+				}
+
+				// ---- BoneProxy設定（各ネイルオブジェクトに）----
 				int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
-				foreach (Transform? nailObject in handsNailObjects) {
+				foreach (Transform? nailObject in handsNailObjects)
+				{
 					index++;
 					if (nailObject == null) continue;
 					ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
@@ -149,49 +199,75 @@ namespace world.anlabo.mdnailtool.Editor {
 					boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 				}
 
-				if (this.UseFootNail) {
-					// 足の装着処理
+				if (this.UseFootNail)
+				{
 					index = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
-					foreach (Transform? nailObject in leftFootNailObjects) {
+					foreach (Transform? nailObject in leftFootNailObjects)
+					{
 						index++;
 						if (nailObject == null) continue;
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 						boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 					}
-
 					index = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
-					foreach (Transform? nailObject in rightFootNailObjects) {
+					foreach (Transform? nailObject in rightFootNailObjects)
+					{
 						index++;
 						if (nailObject == null) continue;
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 						boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
-					}
-				} else {
-					// 足ネイルを装着しない場合削除
-					foreach (Transform? nailObject in leftFootNailObjects) {
-						if (nailObject == null) continue;
-						Object.DestroyImmediate(nailObject.gameObject);
-					}
-
-					foreach (Transform? nailObject in rightFootNailObjects) {
-						if (nailObject == null) continue;
-						Object.DestroyImmediate(nailObject.gameObject);
 					}
 				}
 
-				// 削除処理のためのマーカーコンポーネント追加
-				nailPrefabObject.AddComponent<MDNailObjectMarker>();
+				// ---- re-wear / [An-Labo]まとめ処理 ----
+				if (this.MergeAnLabo)
+				{
+					Transform? anLaboParent = this.Avatar.transform.Find("[An-Labo]");
+					if (anLaboParent == null)
+					{
+						GameObject anLaboObj = new GameObject("[An-Labo]");
+						anLaboObj.transform.SetParent(this.Avatar.transform, false);
+						Undo.RegisterCreatedObjectUndo(anLaboObj, "Nail Setup");
+						anLaboParent = anLaboObj.transform;
+					}
+					Transform? existingNailRoot = anLaboParent.Find(nailPrefabObject.name);
+					if (existingNailRoot != null && existingNailRoot.GetComponent<MDNailObjectMarker>() != null)
+					{
+						handWrapper.transform.SetParent(existingNailRoot, false);
+						if (footWrapper != null) footWrapper.transform.SetParent(existingNailRoot, false);
+						Object.DestroyImmediate(nailPrefabObject);
+						nailPrefabObject = existingNailRoot.gameObject;
+					}
+					else
+					{
+						nailPrefabObject.transform.SetParent(anLaboParent, false);
+					}
+				}
+				else
+				{
+					Transform? existingRoot = this.Avatar.transform.Find(nailPrefabObject.name);
+					if (existingRoot != null && existingRoot.GetComponent<MDNailObjectMarker>() != null)
+					{
+						handWrapper.transform.SetParent(existingRoot, false);
+						if (footWrapper != null) footWrapper.transform.SetParent(existingRoot, false);
+						Object.DestroyImmediate(nailPrefabObject);
+						nailPrefabObject = existingRoot.gameObject;
+					}
+				}
+
+				// ---- マーカーコンポーネント追加（重複付与防止）----
+				if (nailPrefabObject.GetComponent<MDNailObjectMarker>() == null)
+					nailPrefabObject.AddComponent<MDNailObjectMarker>();
+
+				if (this.GenerateExpressionMenu)
+					this.SetupExpressionMenu(nailPrefabObject);
 #else
-				// Modular Avatar が導入されていない場合の処理は存在しない
-				// プロセスをロールバックして例外を出す
 				Undo.RevertAllInCurrentGroup();
 				throw new InvalidOperationException("The setup for ModularAvatar cannot be executed in environments where ModularAvatar is not installed.");
 #endif
 			} else {
-				// 装着処理(直接)
-				// 手の指のボーンの子に
 				int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
 				foreach (Transform? nailObject in handsNailObjects) {
 					index++;
@@ -206,7 +282,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 
 				if (this.UseFootNail) {
-					// 足の装着処理
 					index = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
 					foreach (Transform? nailObject in leftFootNailObjects) {
 						index++;
@@ -232,7 +307,6 @@ namespace world.anlabo.mdnailtool.Editor {
 						nailObject.SetParent(target);
 					}
 				} else {
-					// 足ネイルを装着しない場合削除
 					foreach (Transform? nailObject in leftFootNailObjects) {
 						if (nailObject == null) continue;
 						Object.DestroyImmediate(nailObject.gameObject);
@@ -244,7 +318,6 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 				}
 
-				// プレハブの元オブジェクトの削除
 				Object.DestroyImmediate(nailPrefabObject);
 			}
 		}
@@ -278,14 +351,10 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 		private static void RemoveNail(VRCAvatarDescriptor avatar, Dictionary<string, Transform?> targetBoneDictionary) {
-			// 既存のネイル削除処理
-			// ModularAvatar用の削除処理
 			foreach (MDNailObjectMarker mdNailObjectMarker in avatar.GetComponentsInChildren<MDNailObjectMarker>().ToArray()) {
 				Undo.DestroyObjectImmediate(mdNailObjectMarker.gameObject);
 			}
 
-			// 直接装着された物の削除処理
-			// 手のネイル削除処理
 			int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
 			foreach (string boneName in MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST) {
 				index++;
@@ -301,7 +370,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 
-			// 足のネイル削除処理
 			index = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
 			int objectIndex = -1;
 			foreach (string boneName in MDNailToolDefines.LEFT_FOOT_FINGER_BONE_NAME_LIST) {
@@ -408,5 +476,132 @@ namespace world.anlabo.mdnailtool.Editor {
 				.Select(name => nailPrefabObject.transform.Find(name))
 				.ToArray();
 		}
+
+#if MD_NAIL_FOR_MA
+	private void SetupExpressionMenu(GameObject nailRoot) {
+		string designName = this.NailDesignAndVariationNames.Length > 0
+			? this.NailDesignAndVariationNames[0].Item1.DesignName : "Nail";
+		string colorName = this.NailDesignAndVariationNames.Length > 0
+			? this.NailDesignAndVariationNames[0].Item3 : "";
+		string menuLabel = string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}";
+		string variationName = this.AvatarVariationData.VariationName;
+		string handWrapperName = $"HandNail_{variationName}";
+		string footWrapperName = $"FootNail_{variationName}";
+
+		// サムネイル取得
+		Texture2D? thumbnail = null;
+		{
+			using DBNailDesign db = new();
+			NailDesign? design = db.FindNailDesignByDesignName(designName);
+			if (design != null && !string.IsNullOrEmpty(design.ThumbnailGUID)) {
+				string path = AssetDatabase.GUIDToAssetPath(design.ThumbnailGUID);
+				if (!string.IsNullOrEmpty(path))
+					thumbnail = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+			}
+		}
+
+		// ---- MergeAnLabo: [An-Labo]親にMenuInstaller+SubMenuItem（まだ無ければ）----
+		if (this.MergeAnLabo) {
+			GameObject anLaboObj = nailRoot.transform.parent?.gameObject ?? this.Avatar.gameObject;
+			if (anLaboObj.GetComponent<ModularAvatarMenuInstaller>() == null) {
+				// [An-Labo]新規作成時: 最初のネイルのサムネイルを設定
+				anLaboObj.AddComponent<ModularAvatarMenuInstaller>();
+				var anLaboMenuItem = anLaboObj.AddComponent<ModularAvatarMenuItem>();
+				anLaboMenuItem.PortableControl.Type = PortableControlType.SubMenu;
+				anLaboMenuItem.PortableControl.Icon = thumbnail;
+				anLaboMenuItem.label = "An-Labo";
+				anLaboMenuItem.MenuSource = SubmenuSource.Children;
+			} else {
+				// [An-Labo]が既存（2本目以降のネイル追加時）: アイコンをnullに更新
+				var existingMenuItem = anLaboObj.GetComponent<ModularAvatarMenuItem>();
+				if (existingMenuItem != null)
+					existingMenuItem.PortableControl.Icon = null;
+			}
+		} else {
+			// MergeAnLabo=false: nailRoot自身にMenuInstaller
+			if (nailRoot.GetComponent<ModularAvatarMenuInstaller>() == null)
+				nailRoot.AddComponent<ModularAvatarMenuInstaller>();
+		}
+
+		// ---- nailRoot に MenuItem ----
+		ModularAvatarMenuItem rootMenuItem = nailRoot.AddComponent<ModularAvatarMenuItem>();
+		rootMenuItem.PortableControl.Icon = thumbnail;
+		rootMenuItem.label = menuLabel;
+		if (this.SplitHandFoot) {
+			rootMenuItem.PortableControl.Type = PortableControlType.SubMenu;
+			rootMenuItem.MenuSource = SubmenuSource.Children;
+		} else {
+			// SplitHandFoot=OFF: nailRoot自体にObjectToggle（HandNail/FootNailラッパーをまとめてON/OFF）
+			rootMenuItem.PortableControl.Type = PortableControlType.Toggle;
+			rootMenuItem.PortableControl.Value = 1;
+			rootMenuItem.isSaved = true;
+			rootMenuItem.isSynced = true;
+			rootMenuItem.automaticValue = true;
+
+			ModularAvatarObjectToggle rootToggle = nailRoot.AddComponent<ModularAvatarObjectToggle>();
+			var toggleTargets = new System.Collections.Generic.List<ToggledObject>();
+			// HandNailラッパー内の各ネイルオブジェクトを個別に登録
+			Transform? hw = nailRoot.transform.Find(handWrapperName);
+			if (hw != null) {
+				foreach (Transform child in hw)
+					toggleTargets.Add(new ToggledObject { Object = new AvatarObjectReference(child.gameObject), Active = false });
+			}
+			// FootNailラッパー内の各ネイルオブジェクトを個別に登録
+			if (this.UseFootNail) {
+				Transform? fw = nailRoot.transform.Find(footWrapperName);
+				if (fw != null) {
+					foreach (Transform child in fw)
+						toggleTargets.Add(new ToggledObject { Object = new AvatarObjectReference(child.gameObject), Active = false });
+				}
+			}
+			rootToggle.Objects = toggleTargets;
+		}
+
+		// ---- SplitHandFoot=ON: HandNail/FootNailにObjectToggle+MenuItem（アイコンなし）----
+		if (this.SplitHandFoot) {
+			Transform? handWrapperT = nailRoot.transform.Find(handWrapperName);
+			if (handWrapperT != null) {
+				ModularAvatarObjectToggle handToggle = handWrapperT.gameObject.AddComponent<ModularAvatarObjectToggle>();
+				handToggle.Objects = handWrapperT.Cast<Transform>()
+					.Select(t => new ToggledObject {
+						Object = new AvatarObjectReference(t.gameObject),
+						Active = false
+					})
+					.ToList();
+
+				ModularAvatarMenuItem handMenuItem = handWrapperT.gameObject.AddComponent<ModularAvatarMenuItem>();
+				handMenuItem.PortableControl.Type = PortableControlType.Toggle;
+				handMenuItem.PortableControl.Value = 1;
+				handMenuItem.PortableControl.Icon = null;
+				handMenuItem.isSaved = true;
+				handMenuItem.isSynced = true;
+				handMenuItem.automaticValue = true;
+				handMenuItem.label = $"HandNail - {variationName}";
+			}
+
+			if (this.UseFootNail) {
+				Transform? footWrapperT = nailRoot.transform.Find(footWrapperName);
+				if (footWrapperT != null) {
+					ModularAvatarObjectToggle footToggle = footWrapperT.gameObject.AddComponent<ModularAvatarObjectToggle>();
+					footToggle.Objects = footWrapperT.Cast<Transform>()
+						.Select(t => new ToggledObject {
+							Object = new AvatarObjectReference(t.gameObject),
+							Active = false
+						})
+						.ToList();
+
+					ModularAvatarMenuItem footMenuItem = footWrapperT.gameObject.AddComponent<ModularAvatarMenuItem>();
+					footMenuItem.PortableControl.Type = PortableControlType.Toggle;
+					footMenuItem.PortableControl.Value = 1;
+					footMenuItem.PortableControl.Icon = null;
+					footMenuItem.isSaved = true;
+					footMenuItem.isSynced = true;
+					footMenuItem.automaticValue = true;
+					footMenuItem.label = $"FootNail - {variationName}";
+				}
+			}
+		}
+	}
+#endif
 	}
 }

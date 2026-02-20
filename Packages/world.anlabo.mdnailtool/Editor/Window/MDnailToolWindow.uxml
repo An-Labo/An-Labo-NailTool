@@ -1,133 +1,304 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:ScrollView name="Root" style="flex-grow: 1;">
-        <ui:VisualElement name="Header">
-            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout text-id="window.treatment" value="false">
-                <ui:Label name="link-manual" text="Manual" style="color: #7070FF;" />
-                <ui:Label name="link-contact" text="FAQ" style="color: #7070FF;" />
-            </world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout>
-            <world.anlabo.mdnailtool.Editor.VisualElements.LanguageDropDown focusable="true" />
-            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedObjectField name="avatar-object" text-id="window.avatar" type="VRC.SDK3.Avatars.Components.VRCAvatarDescriptor, VRCSDK3A"/>
-            <world.anlabo.mdnailtool.Editor.VisualElements.AvatarDropDowns name="avatar"/>
-            <world.anlabo.mdnailtool.Editor.VisualElements.AvatarSortDropdown name="avatar-sort"/>
-        </ui:VisualElement>
-        <ui:VisualElement name="Body">
-            <ui:Box style="margin: 5px; padding: 5px;">
-                <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignSelect name="nail-select"/>
-            </ui:Box>
-            <ui:Box style="margin: 0px 5px; padding: 5px;">
-                <world.anlabo.mdnailtool.Editor.VisualElements.NailPreview name="nail-preview" background-color="#426C7F00" style="height: 250px; margin-top: 5px; margin-bottom: 5px;"/> 
-                <ui:VisualElement style="flex-direction: row;">
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailShapeDropDown name="nail-shape" text-id="window.nail_shape" style="width: 30%; margin-left: 0;" />
-                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown name="nail-material" text-id="window.nail_material" style="width: 30%; margin-left: 10px; margin-right: 10px;" />
-                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown name="nail-color" text-id="window.nail_color" style="width: 30%;" />
-                </ui:VisualElement>
-            </ui:Box>
+    <ui:ScrollView name="Root" class="mdn-root">
 
-            <ui:VisualElement style="margin-top: 5px; margin-bottom: 5px;">
-                
-                <ui:VisualElement style="flex-direction: row; height: 24px; align-items: center; margin-bottom: 2px;">
-                    
-                    <ui:VisualElement style="flex-direction: row; align-items: center;">
-                        <ui:Toggle name="toggle-hand-active" value="true" style="margin-right: 0px;"/>
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel name="label-hand-active" text-id="window.hand_nail" style="margin-left: 2px;" />
-                    </ui:VisualElement>
-
-                    <ui:VisualElement style="width: 20px;" />
-
-                    <ui:VisualElement style="flex-direction: row; align-items: center;">
-                        <ui:Toggle name="toggle-hand-detail" style="margin-right: 0px;"/>
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel name="label-hand-detail" text-id="window.set_per_finger" style="margin-left: 2px;" />
-                    </ui:VisualElement>
-
-                </ui:VisualElement>
-
-                <ui:Box name="hand-selects" style="margin: 0px 5px; padding: 5px;">
-                    <ui:VisualElement style="flex-direction: row;">
-                        <ui:VisualElement style="flex-direction: row; flex-grow: 0; flex-shrink: 0; width: 40%;">
-                            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.left_hand" style="min-width: 122px;" />
-                            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_design" />
-                        </ui:VisualElement>
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_material" style="width: 28%; padding-left: 4px;" />
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_color" style="width: 28%; padding-left: 4px;" />
-                    </ui:VisualElement>
-                    
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-thumb"  text-id="window.thumb"/>
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-index"  text-id="window.index_finger"/>
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-middle" text-id="window.middle_finger"/>
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-ring"   text-id="window.ring_finger"/>
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-little" text-id="window.little_finger"/>
-                    
-                    <ui:VisualElement style="flex-direction: row;">
-                        <ui:VisualElement style="flex-direction: row; flex-grow: 0; flex-shrink: 0; width: 60%;">
-                            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.right_hand" style="min-width: 150px;" />
-                        </ui:VisualElement>
-                    </ui:VisualElement>
-                    
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-thumb"  text-id="window.thumb"/>
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-index"  text-id="window.index_finger"/>
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-middle" text-id="window.middle_finger"/>
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-ring"   text-id="window.ring_finger"/>
-                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-little" text-id="window.little_finger"/>
-                </ui:Box>
+        <!-- ===== HEADER ===== -->
+        <ui:VisualElement name="Header" class="mdn-header">
+            <ui:VisualElement class="mdn-title-bar">
+                <ui:Label text="An-Labo NailTool" class="mdn-title-text" />
+                <ui:Label name="version" class="mdn-title-version" />
+                <ui:VisualElement class="mdn-spacer" />
+                <!-- Language label + dropdown -->
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                    text-id="window.language"
+                    class="mdn-lang-label" />
+                <world.anlabo.mdnailtool.Editor.VisualElements.LanguageDropDown focusable="true" class="mdn-lang-dropdown" />
             </ui:VisualElement>
 
-            <ui:VisualElement style="margin-top: 5px; margin-bottom: 5px;">
-                
-                <ui:VisualElement style="flex-direction: row; height: 24px; align-items: center; margin-bottom: 2px;">
-                    
-                    <ui:VisualElement style="flex-direction: row; align-items: center;">
-                        <ui:Toggle name="toggle-foot-active" style="margin-right: 0px;"/>
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel name="label-foot-active" text-id="window.foot_nail" style="margin-left: 2px;" />
-                    </ui:VisualElement>
-
-                    <ui:VisualElement style="width: 20px;" />
-
-                    <ui:VisualElement style="flex-direction: row; align-items: center;">
-                        <ui:Toggle name="toggle-foot-detail" style="margin-right: 0px;"/>
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel name="label-foot-detail" text-id="window.set_per_finger" style="margin-left: 2px;" />
-                    </ui:VisualElement>
-
-                </ui:VisualElement>
-
-                <ui:Box name="foot-selects" style="margin: 0px 5px; padding: 5px;">
-                </ui:Box>
-            </ui:VisualElement>
-
-            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout text-id="window.advanced_setting">
-                <ui:Box style="margin: 0px 5px 0px -10px; padding: 5px;">
-                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedObjectField name="material-object" text-id="window.direct_material" type="UnityEngine.Material, UnityEngine.CoreModule"/>
-                    <ui:VisualElement style="flex-direction: row;">
-                        <ui:Toggle name="remove-current-nail" value="true" />
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.remove_origin_nail" />
-                    </ui:VisualElement>
-                    <ui:VisualElement style="flex-direction: row;">
-                        <ui:Toggle name="backup" value="true" />
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.backup" />
-                    </ui:VisualElement>
-                    <ui:VisualElement style="flex-direction: row;">
-                        <ui:Toggle name="enable-scene-preview" value="true" />
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.enable_scene_preview" />
-                    </ui:VisualElement>
-                    <ui:VisualElement style="flex-direction: row;">
-                        <ui:Toggle name="for-modular-avatar"/>
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.use_modular_avatar" />
-                    </ui:VisualElement>
-                </ui:Box>
-            </world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout>
-            <ui:VisualElement style="flex-direction: row;">
-                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedButton name="execute" text-id="window.attach_nail" style="flex-grow: 3;" />
-                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedButton name="remove" text-id="window.remove_nail" style="flex-grow: 1;" />
+            <!-- Manual / FAQ リンク行 -->
+            <ui:VisualElement class="mdn-helplink-row">
+                <ui:Label text="[Manual]" name="link-manual" class="mdn-link mdn-helplink-item" />
+                <ui:Label text="[FAQ / Contact]" name="link-contact-header" class="mdn-link mdn-helplink-item" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="Footer">
-            <ui:VisualElement style="flex-direction: row; justify-content: flex-end; align-items: flex-end; margin-top: 0;">
-                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel name="link-contact" text-id="window.contact" style="color: #7070FF;"/>
+
+        <!-- ===== SECTION: AVATAR ===== -->
+        <ui:VisualElement class="mdn-section">
+            <ui:VisualElement class="mdn-section-header">
+                <ui:Label text="1. " class="mdn-section-step" />
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                    name="avatar-section-title"
+                    text-id="window.avatar_select"
+                    class="mdn-section-title" />
             </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; justify-content: flex-end; margin-top: 5px; margin-bottom: 0;">
-                <ui:Label text="An-Labo NailTool" />
-                <ui:Label text="Ver" style="font-size: 10px;" />
-                <ui:Label name="version" style="font-size: 10px;" />
+            <ui:VisualElement class="mdn-section-body">
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedObjectField
+                    name="avatar-object"
+                    text-id="window.avatar"
+                    tooltip-id="tooltip.avatar"
+                    type="VRC.SDK3.Avatars.Components.VRCAvatarDescriptor, VRCSDK3A"
+                    class="mdn-object-field mdn-required-field" />
+                <!-- AvatarDropDowns（ソートボタン・検索ボタン内蔵） -->
+                <world.anlabo.mdnailtool.Editor.VisualElements.AvatarDropDowns name="avatar" class="mdn-avatar-dropdowns" />
             </ui:VisualElement>
         </ui:VisualElement>
+
+        <!-- ===== SECTION: NAIL DESIGN ===== -->
+        <ui:VisualElement class="mdn-section">
+            <ui:VisualElement class="mdn-section-header">
+                <ui:Label text="2. " class="mdn-section-step" />
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                    text-id="window.nail_design"
+                    tooltip-id="tooltip.nail_design"
+                    class="mdn-section-title" />
+            </ui:VisualElement>
+            <ui:VisualElement class="mdn-section-body">
+                <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignSelect name="nail-select" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ===== SECTION: NAIL SETTINGS (Style) ===== -->
+        <ui:VisualElement class="mdn-section">
+            <ui:VisualElement class="mdn-section-header">
+                <ui:Label text="3. " class="mdn-section-step" />
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                    text-id="window.nail_settings"
+                    tooltip-id="tooltip.nail_settings"
+                    class="mdn-section-title" />
+            </ui:VisualElement>
+            <ui:VisualElement class="mdn-section-body">
+
+                <!-- Shape / Material / Color (プレビューより上) -->
+                <ui:VisualElement class="mdn-style-row">
+                    <ui:VisualElement class="mdn-style-item">
+                        <world.anlabo.mdnailtool.Editor.VisualElements.NailShapeDropDown
+                            name="nail-shape"
+                            text-id="window.nail_shape"
+                            tooltip-id="tooltip.nail_shape"
+                            class="mdn-style-dropdown" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mdn-style-item">
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown
+                            name="nail-material"
+                            text-id="window.nail_material"
+                            tooltip-id="tooltip.nail_material"
+                            class="mdn-style-dropdown" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mdn-style-item">
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown
+                            name="nail-color"
+                            text-id="window.nail_color"
+                            tooltip-id="tooltip.nail_color"
+                            class="mdn-style-dropdown" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- プレビューエリアヘッダー（ON/OFF トグル付き） -->
+                <ui:VisualElement class="mdn-preview-header">
+                    <ui:Toggle name="enable-scene-preview" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-preview-toggle"
+                        text-id="window.preview"
+                        tooltip-id="tooltip.preview_toggle"
+                        class="mdn-option-label mdn-preview-toggle-label mdn-option-clickable" />
+                    <ui:VisualElement class="mdn-spacer" />
+                </ui:VisualElement>
+
+                <!-- プレビューエリア（name="nail-preview-area" でC#から表示/非表示を制御） -->
+                <ui:VisualElement name="nail-preview-area">
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailPreview
+                        name="nail-preview"
+                        background-color="#446c7e"
+                        class="mdn-nail-preview" />
+                </ui:VisualElement>
+
+                <!-- ===== HAND NAIL ===== -->
+                <ui:VisualElement class="mdn-toggle-section-header">
+                    <ui:Toggle name="toggle-hand-active" value="true" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-hand-active"
+                        text-id="window.hand_nail"
+                        tooltip-id="tooltip.hand_nail"
+                        class="mdn-toggle-label mdn-section-title" />
+                    <ui:VisualElement class="mdn-spacer" />
+                    <ui:Toggle name="toggle-hand-detail" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-hand-detail"
+                        text-id="window.set_per_finger"
+                        tooltip-id="tooltip.hand_nail_detail"
+                        class="mdn-toggle-label mdn-detail-label" />
+                </ui:VisualElement>
+                <ui:Box name="hand-selects" class="mdn-finger-box">
+                    <ui:VisualElement class="mdn-finger-header">
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.left_hand" class="mdn-finger-name-col mdn-col-header" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_design" class="mdn-finger-design-col mdn-col-header" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_material" class="mdn-finger-mat-col mdn-col-header" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_color" class="mdn-finger-col-col mdn-col-header" />
+                    </ui:VisualElement>
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-thumb"  text-id="window.thumb"         class="mdn-finger-row" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-index"  text-id="window.index_finger"  class="mdn-finger-row" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-middle" text-id="window.middle_finger" class="mdn-finger-row" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-ring"   text-id="window.ring_finger"   class="mdn-finger-row" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-little" text-id="window.little_finger" class="mdn-finger-row" />
+                    <ui:VisualElement class="mdn-hand-divider">
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.right_hand" class="mdn-finger-name-col mdn-col-header" />
+                    </ui:VisualElement>
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-thumb"  text-id="window.thumb"         class="mdn-finger-row" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-index"  text-id="window.index_finger"  class="mdn-finger-row" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-middle" text-id="window.middle_finger" class="mdn-finger-row" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-ring"   text-id="window.ring_finger"   class="mdn-finger-row" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-little" text-id="window.little_finger" class="mdn-finger-row" />
+                </ui:Box>
+
+                <!-- ===== FOOT NAIL ===== -->
+                <ui:VisualElement class="mdn-toggle-section-header">
+                    <ui:Toggle name="toggle-foot-active" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-foot-active"
+                        text-id="window.foot_nail"
+                        tooltip-id="tooltip.foot_nail"
+                        class="mdn-toggle-label mdn-section-title" />
+                    <ui:VisualElement class="mdn-spacer" />
+                    <ui:Toggle name="toggle-foot-detail" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-foot-detail"
+                        text-id="window.set_per_finger"
+                        tooltip-id="tooltip.foot_nail_detail"
+                        class="mdn-toggle-label mdn-detail-label" />
+                </ui:VisualElement>
+                <!-- foot-selects はC#のSetupFootVisualElementsで動的に構築される -->
+                <ui:Box name="foot-selects" class="mdn-finger-box" />
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ===== SECTION: MODULAR AVATAR ===== -->
+        <ui:VisualElement class="mdn-section">
+            <ui:VisualElement class="mdn-section-header">
+                <ui:Label text="4. " class="mdn-section-step" />
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                    text-id="window.modular_avatar_section"
+                    class="mdn-section-title" />
+            </ui:VisualElement>
+            <ui:VisualElement class="mdn-section-body">
+                <ui:VisualElement class="mdn-option-row">
+                    <ui:Toggle name="for-modular-avatar" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-modular-avatar"
+                        text-id="window.use_modular_avatar"
+                        tooltip-id="tooltip.modular_avatar"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+                <ui:VisualElement name="ma-sub-options">
+                    <ui:VisualElement class="mdn-option-row mdn-option-indent">
+                        <ui:Toggle name="generate-expression-menu" class="mdn-toggle" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                            name="label-generate-expression-menu"
+                            text-id="window.generate_expression_menu"
+                            tooltip-id="tooltip.generate_expression_menu"
+                            class="mdn-option-label mdn-option-clickable" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mdn-option-row mdn-option-indent-2">
+                        <ui:Toggle name="split-hand-foot-expression-menu" class="mdn-toggle" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                            name="label-split-hand-foot"
+                            text-id="window.split_hand_foot_expression_menu"
+                            tooltip-id="tooltip.split_hand_foot_expression_menu"
+                            class="mdn-option-label mdn-option-clickable" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mdn-option-row mdn-option-indent-2">
+                        <ui:Toggle name="merge-anlabo-expression-menu" class="mdn-toggle" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                            name="label-merge-anlabo"
+                            text-id="window.merge_anlabo_expression_menu"
+                            tooltip-id="tooltip.merge_anlabo_expression_menu"
+                            class="mdn-option-label mdn-option-clickable" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ===== SECTION: ADVANCED ===== -->
+        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout
+            text-id="window.advanced_setting"
+            class="mdn-advanced-foldout">
+            <ui:VisualElement class="mdn-advanced-body">
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedObjectField
+                    name="material-object"
+                    text-id="window.direct_material"
+                    tooltip-id="tooltip.direct_material"
+                    type="UnityEngine.Material, UnityEngine.CoreModule"
+                    class="mdn-object-field" />
+                <ui:VisualElement class="mdn-option-row">
+                    <ui:Toggle name="remove-current-nail" value="true" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-remove-nail"
+                        text-id="window.remove_origin_nail"
+                        tooltip-id="tooltip.remove_current_nail"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+                <ui:VisualElement class="mdn-option-row">
+                    <ui:Toggle name="backup" value="true" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-backup"
+                        text-id="window.backup"
+                        tooltip-id="tooltip.backup"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+                <ui:VisualElement class="mdn-option-row">
+                    <ui:Toggle name="enable-wearing-preview" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-wearing-preview"
+                        text-id="window.scene_preview"
+                        tooltip-id="tooltip.scene_preview"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout>
+
+        <!-- ===== ERROR BANNER ===== -->
+        <ui:VisualElement name="error-banner" class="mdn-error-banner" style="display: none;">
+            <ui:VisualElement class="mdn-error-banner-top">
+                <ui:Label text="⚠" class="mdn-error-banner-icon" />
+                <ui:Label name="error-message" class="mdn-error-banner-message" />
+                <ui:VisualElement class="mdn-spacer" />
+                <ui:Button name="error-close" text="×" class="mdn-error-banner-close" />
+            </ui:VisualElement>
+            <ui:Label name="error-detail-toggle" class="mdn-error-detail-toggle" />
+            <ui:VisualElement name="error-detail-area" style="display: none;">
+                <ui:Label name="error-detail-text" class="mdn-error-detail-text" />
+                <ui:VisualElement class="mdn-error-detail-actions">
+                    <ui:Button name="error-copy" class="mdn-error-detail-action-btn" />
+                    <ui:Button name="error-contact" class="mdn-error-detail-action-btn mdn-error-contact-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ===== ACTION BUTTONS ===== -->
+        <ui:VisualElement class="mdn-action-bar">
+            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedButton
+                name="execute"
+                text-id="window.attach_nail"
+                tooltip-id="tooltip.attach_nail"
+                class="mdn-btn-execute" />
+            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedButton
+                name="remove"
+                text-id="window.remove_nail"
+                tooltip-id="tooltip.remove_nail"
+                class="mdn-btn-remove" />
+        </ui:VisualElement>
+
+        <!-- ===== FOOTER ===== -->
+        <ui:VisualElement name="Footer" class="mdn-footer">
+            <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                name="link-contact"
+                text-id="window.contact"
+                class="mdn-footer-link" />
+            <ui:VisualElement class="mdn-footer-version">
+                <ui:Label text="An-Labo NailTool" class="mdn-footer-brand" />
+                <ui:Label text=" v" class="mdn-footer-ver-prefix" />
+                <ui:Label name="version-footer" class="mdn-footer-ver" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
     </ui:ScrollView>
 </ui:UXML>

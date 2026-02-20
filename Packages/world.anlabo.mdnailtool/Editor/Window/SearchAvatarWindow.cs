@@ -24,6 +24,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 		private AvatarTreeView _avatarTreeView = null!;
 
 		private void CreateGUI() {
+			// 共有USSを先に読み込む
+			var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss);
+			if (uss != null) this.rootVisualElement.styleSheets.Add(uss);
+
 			string uxmlPath = AssetDatabase.GUIDToAssetPath(GUID);
 			VisualTreeAsset uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath);
 			uxml.CloneTree(this.rootVisualElement);
