@@ -1,0 +1,1065 @@
+/* ============================================================
+   MD Nail Tool – Shared Stylesheet
+   メインウィンドウ / 検索ウィンドウ 共通
+   ============================================================ */
+
+/* ===========================================================
+   MAIN WINDOW
+   =========================================================== */
+
+/* ---- Root / Scroll ---- */
+.mdn-root {
+    flex-grow: 1;
+    padding: 0;
+    background-color: #2b2b2b;
+}
+
+/* ---- Header ---- */
+.mdn-header {
+    background-color: #1e1e1e;
+    padding: 8px 10px 4px 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: #444;
+}
+
+.mdn-title-bar {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+    height: 28px;
+}
+
+.mdn-title-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background-color: #e06fa0;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.mdn-title-text {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: #f0f0f0;
+    letter-spacing: 0.5px;
+}
+
+.mdn-title-version {
+    font-size: 10px;
+    -unity-font-style: normal;
+    color: #888;
+    margin-left: 6px;
+    align-self: center;
+}
+
+.mdn-spacer {
+    flex-grow: 1;
+}
+
+.mdn-lang-label {
+    font-size: 11px;
+    color: #bbb;
+    margin-right: 4px;
+    align-self: center;
+    flex-shrink: 0;
+}
+
+.mdn-lang-dropdown {
+    width: 90px;
+    margin: 0;
+}
+
+/* PopupField内のlabel部分を非表示にしてドロップダウン部分だけ表示 */
+.mdn-lang-dropdown > .unity-base-field__label {
+    display: none;
+}
+
+.mdn-lang-dropdown > .unity-popup-field__input {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.mdn-link-bar {
+    margin-top: 0;
+}
+
+.mdn-link {
+    color: #80b0ff;
+    font-size: 11px;
+    margin-right: 12px;
+    cursor: link;
+}
+
+.mdn-link:hover {
+    color: #aad0ff;
+    text-decoration: underline;
+}
+
+/* ---- Section card ---- */
+.mdn-section {
+    background-color: #333333;
+    border-radius: 6px;
+    margin: 6px 8px 0 8px;
+    padding: 0;
+    border-width: 1px;
+    border-color: #444;
+    overflow: hidden;
+}
+
+.mdn-section-header {
+    background-color: #3a3a3a;
+    border-bottom-width: 1px;
+    border-bottom-color: #444;
+    padding: 5px 10px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.mdn-section-title {
+    font-size: 12px;
+    -unity-font-style: normal;
+    color: #e8e8e8;
+}
+
+.mdn-section-body {
+    padding: 8px 10px;
+}
+
+/* ---- Object field ---- */
+.mdn-object-field {
+    margin-bottom: 4px;
+}
+
+/* アバターセクションのObjectFieldのラベル幅をAvatarDropDownsのlabelGroupと揃える */
+#avatar-object > .unity-base-field__label {
+    min-width: 121px;
+    width: 121px;
+    flex-shrink: 0;
+    padding-left: 3px;
+}
+
+/* ---- Avatar row (AvatarDropDowns 単独配置) ---- */
+
+/* ---- Avatar dropdowns ---- */
+.mdn-avatar-dropdowns {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    height: auto;
+}
+
+/* ---- Preview area header (label + ON/OFF toggle) ---- */
+.mdn-preview-header {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    padding: 3px 4px;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #444;
+}
+
+.mdn-preview-header-label {
+    font-size: 11px;
+    color: #ccc;
+    -unity-font-style: normal;
+}
+
+/* ---- Preview toggle bar ---- */
+.mdn-preview-bar {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 3px 4px;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #444;
+}
+
+/* ---- Nail Preview ---- */
+.mdn-nail-preview {
+    height: 220px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #446c7e;
+}
+
+/* ---- Style row (Shape / Material / Color) ---- */
+.mdn-style-row {
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.mdn-style-item {
+    flex-direction: column;
+    flex-grow: 1;
+    flex-basis: 30%;
+    margin-right: 6px;
+    margin-top: 0;
+    min-width: 80px;
+}
+
+.mdn-style-item:last-child {
+    margin-right: 0;
+}
+
+.mdn-style-label {
+    font-size: 10px;
+    color: #aaa;
+    margin-bottom: 2px;
+    padding-left: 2px;
+}
+
+.mdn-style-dropdown {
+    margin: 0;
+    width: 100%;
+}
+
+/* ---- Toggle section header (Hand / Foot) ---- */
+.mdn-toggle-section-header {
+    background-color: #3a3a3a;
+    border-bottom-width: 1px;
+    border-bottom-color: #444;
+    padding: 5px 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+}
+
+.mdn-toggle-group {
+    flex-direction: row;
+    align-items: center;
+}
+
+.mdn-detail-toggle {
+    opacity: 0.8;
+}
+
+.mdn-toggle {
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.mdn-toggle-label {
+    font-size: 12px;
+    color: #e8e8e8;
+    -unity-font-style: normal;
+    cursor: link;
+}
+
+.mdn-toggle-label.mdn-detail-label {
+    font-size: 11px;
+    color: #bbb;
+    -unity-font-style: normal;
+}
+
+/* ---- Finger box ---- */
+.mdn-finger-box {
+    padding: 6px 8px;
+    background-color: #2e2e2e;
+    margin: 0;
+    border-radius: 0;
+    border-width: 0;
+}
+
+.mdn-finger-header {
+    flex-direction: row;
+    align-items: center;
+    padding-bottom: 4px;
+    border-bottom-width: 1px;
+    border-bottom-color: #484848;
+    margin-bottom: 3px;
+}
+
+.mdn-finger-name-col {
+    flex-shrink: 0;
+    min-width: 90px;
+    width: 28%;
+}
+
+.mdn-finger-design-col {
+    flex-grow: 1;
+    min-width: 60px;
+    padding-left: 4px;
+}
+
+.mdn-finger-mat-col {
+    width: 24%;
+    padding-left: 4px;
+}
+
+.mdn-finger-col-col {
+    width: 24%;
+    padding-left: 4px;
+}
+
+.mdn-col-header {
+    font-size: 10px;
+    color: #999;
+    -unity-font-style: normal;
+}
+
+.mdn-hand-divider {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 6px;
+    padding-bottom: 4px;
+    margin-top: 3px;
+    border-top-width: 1px;
+    border-top-color: #484848;
+    border-bottom-width: 1px;
+    border-bottom-color: #484848;
+    margin-bottom: 3px;
+}
+
+/* ---- Advanced foldout ---- */
+.mdn-advanced-foldout {
+    margin: 6px 8px 0 8px;
+    background-color: #333;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: #444;
+    overflow: hidden;
+}
+
+.mdn-advanced-body {
+    padding: 8px 10px;
+}
+
+.mdn-option-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.mdn-option-indent {
+    padding-left: 20px;
+}
+
+.mdn-option-indent-2 {
+    padding-left: 40px;
+}
+
+.mdn-option-label {
+    font-size: 12px;
+    color: #ccc;
+    margin-left: 4px;
+}
+
+/* ---- Action buttons ---- */
+.mdn-action-bar {
+    flex-direction: row;
+    margin: 10px 8px 4px 8px;
+    align-items: stretch;
+}
+
+.mdn-btn-execute {
+    flex-grow: 3;
+    margin-right: 6px;
+    height: 36px;
+    background-color: #c0507a;
+    color: #fff;
+    -unity-font-style: bold;
+    font-size: 13px;
+    border-radius: 6px;
+    border-width: 0;
+    cursor: link;
+    transition-duration: 0.1s;
+    transition-property: background-color;
+}
+
+.mdn-btn-execute:hover {
+    background-color: #d4607e;
+}
+
+.mdn-btn-execute:active {
+    background-color: #a04060;
+}
+
+.mdn-btn-remove {
+    flex-grow: 1;
+    height: 36px;
+    background-color: #505050;
+    color: #ddd;
+    font-size: 12px;
+    border-radius: 6px;
+    border-width: 0;
+    cursor: link;
+    transition-duration: 0.1s;
+    transition-property: background-color;
+}
+
+.mdn-btn-remove:hover {
+    background-color: #666;
+}
+
+.mdn-btn-remove:active {
+    background-color: #404040;
+}
+
+/* ---- Footer ---- */
+.mdn-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px 8px 10px;
+    margin-top: 6px;
+    border-top-width: 1px;
+    border-top-color: #444;
+}
+
+.mdn-footer-link {
+    color: #80b0ff;
+    font-size: 11px;
+    cursor: link;
+}
+
+.mdn-footer-link:hover {
+    color: #aad0ff;
+}
+
+.mdn-footer-version {
+    flex-direction: row;
+    align-items: center;
+}
+
+.mdn-footer-brand {
+    font-size: 10px;
+    color: #888;
+}
+
+.mdn-footer-ver-prefix {
+    font-size: 10px;
+    color: #666;
+}
+
+.mdn-footer-ver {
+    font-size: 10px;
+    color: #666;
+}
+
+/* ---- Section step number ---- */
+.mdn-section-step {
+    font-size: 12px;
+    color: #e8e8e8;
+    -unity-font-style: normal;
+    margin-right: 2px;
+    flex-shrink: 0;
+}
+
+/* ---- Preview toggle label (section header 右端) ---- */
+.mdn-preview-toggle-label {
+    font-size: 11px;
+    color: #bbb;
+    cursor: link;
+    flex-shrink: 0;
+}
+
+/* ---- Help links ---- */
+.mdn-helplink-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 3px 0 3px 2px;
+}
+
+.mdn-helplink-item {
+    margin-right: 16px;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: #3a5a9a;
+    background-color: rgba(40,70,140,0.18);
+}
+
+.mdn-helplink-item:hover {
+    background-color: rgba(60,100,200,0.28);
+}
+
+/* ---- Howto box ---- */
+.mdn-howto-box {
+    background-color: #262626;
+    border-radius: 4px;
+    padding: 6px 10px;
+    border-width: 1px;
+    border-color: #3a3a3a;
+    margin-top: 2px;
+}
+
+.mdn-howto-line {
+    font-size: 11px;
+    color: #bbb;
+    margin-bottom: 2px;
+    white-space: normal;
+}
+
+.mdn-howto-highlight {
+    color: #e06fa0;
+    -unity-font-style: bold;
+    margin-top: 4px;
+}
+
+/* ---- Option label clickable ---- */
+.mdn-option-clickable {
+    cursor: link;
+}
+
+.mdn-option-clickable:hover {
+    color: #e8e8e8;
+}
+
+/* ---- Nail design name labels ---- */
+.main-window-nail-design-name {
+    font-size: 10px;
+    color: #ccc;
+    -unity-text-align: upper-center;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===========================================================
+   SEARCH NAIL DESIGN WINDOW
+   =========================================================== */
+
+.mdn-search-root {
+    flex-grow: 1;
+    padding: 8px;
+    background-color: #2b2b2b;
+}
+
+/* トップバー（検索フィールド＋ソート＋リセット） */
+.mdn-search-topbar {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+    height: 28px;
+}
+
+.mdn-search-field {
+    flex-grow: 1;
+    margin-right: 6px;
+}
+
+.mdn-search-sort {
+    width: 90px;
+    margin-right: 6px;
+}
+
+.mdn-search-reset-btn {
+    width: 56px;
+    height: 26px;
+    background-color: #505050;
+    color: #ddd;
+    border-radius: 4px;
+    border-width: 0;
+    font-size: 11px;
+}
+
+.mdn-search-reset-btn:hover {
+    background-color: #666;
+}
+
+/* フィルターパネル */
+.mdn-filter-panel {
+    flex-direction: row;
+    background-color: #323232;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: #444;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+}
+
+.mdn-filter-col {
+    flex-direction: column;
+    margin-right: 10px;
+    width: 110px;
+}
+
+.mdn-filter-divider {
+    width: 1px;
+    background-color: #484848;
+    margin-right: 10px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.mdn-filter-color-area {
+    width: 130px;
+}
+
+.mdn-filter-color-row {
+    flex-direction: row;
+    margin-bottom: 5px;
+}
+
+/* フィルターチェックボックス行 */
+.mdn-filter-check-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.mdn-filter-check-label {
+    font-size: 11px;
+    color: #ccc;
+    margin-left: 3px;
+}
+
+/* ネイルカードグリッド外側ラッパー – 全体を中央揃え */
+.mdn-nail-grid-outer {
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+}
+
+/* ネイルカードグリッド – 4列固定幅で左寄せ */
+.mdn-nail-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 716px;
+}
+
+/* ネイルカード */
+.mdn-nail-card {
+    width: 165px;
+    height: 220px;
+    margin: 6px 4px;
+    padding: 8px;
+    background-color: #363636;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #484848;
+}
+
+.mdn-nail-card:hover {
+    border-color: #e06fa0;
+    background-color: #3d3d3d;
+}
+
+.mdn-nail-card--disabled {
+    opacity: 0.45;
+}
+
+.mdn-nail-thumb {
+    width: 150px;
+    height: 150px;
+    align-self: center;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    background-color: #222;
+}
+
+.mdn-nail-name-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.mdn-nail-name {
+    font-size: 12px;
+    -unity-font-style: bold;
+    white-space: normal;
+    width: 120px;
+    overflow: hidden;
+    color: #e8e8e8;
+    height: 30px;
+}
+
+.mdn-nail-fav {
+    font-size: 16px;
+    color: #e06fa0;
+    cursor: link;
+}
+
+.mdn-nail-link {
+    font-size: 11px;
+    color: #80b0ff;
+    margin-top: 2px;
+    cursor: link;
+}
+
+.mdn-nail-link:hover {
+    color: #aad0ff;
+    text-decoration: underline;
+}
+
+.mdn-nail-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 10px;
+    background-color: rgba(0,0,0,0.6);
+    color: #fff;
+    padding-left: 4px;
+    padding-right: 4px;
+    border-radius: 3px;
+}
+
+/* ページネーション */
+.mdn-search-footer {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.mdn-page-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+    background-color: #404040;
+    border-radius: 4px;
+    border-width: 0;
+    color: #ddd;
+}
+
+.mdn-page-btn:hover {
+    background-color: #555;
+}
+
+.mdn-page-label {
+    font-size: 13px;
+    color: #ccc;
+    margin-left: 12px;
+    margin-right: 12px;
+    align-self: center;
+}
+
+/* ===========================================================
+   SEARCH AVATAR WINDOW
+   =========================================================== */
+
+.mdn-avatar-search-root {
+    flex-grow: 1;
+    background-color: #2b2b2b;
+}
+
+.mdn-avatar-search-topbar {
+    flex-direction: row;
+    align-items: center;
+    background-color: #1e1e1e;
+    padding: 6px 8px;
+    border-bottom-width: 1px;
+    border-bottom-color: #444;
+}
+
+.mdn-avatar-search-field {
+    flex-grow: 1;
+}
+
+.mdn-avatar-tree {
+    flex-grow: 1;
+    background-color: #2b2b2b;
+    border-width: 0;
+}
+
+/* ===========================================================
+   LIGHT SKIN OVERRIDES
+   =========================================================== */
+
+:root[data-unity-skin="light"] .mdn-root,
+:root[data-unity-skin="light"] .mdn-search-root,
+:root[data-unity-skin="light"] .mdn-avatar-search-root {
+    background-color: #ebebeb;
+}
+
+:root[data-unity-skin="light"] .mdn-header,
+:root[data-unity-skin="light"] .mdn-avatar-search-topbar {
+    background-color: #d8d8d8;
+    border-bottom-color: #bbb;
+}
+
+:root[data-unity-skin="light"] .mdn-title-text {
+    color: #1a1a1a;
+}
+
+:root[data-unity-skin="light"] .mdn-title-version {
+    color: #666;
+}
+
+:root[data-unity-skin="light"] .mdn-section {
+    background-color: #f2f2f2;
+    border-color: #ccc;
+}
+
+:root[data-unity-skin="light"] .mdn-section-header {
+    background-color: #e6e6e6;
+    border-bottom-color: #ccc;
+}
+
+:root[data-unity-skin="light"] .mdn-section-title {
+    color: #222;
+}
+
+:root[data-unity-skin="light"] .mdn-toggle-section-header {
+    background-color: #e6e6e6;
+    border-bottom-color: #ccc;
+}
+
+:root[data-unity-skin="light"] .mdn-toggle-label {
+    color: #222;
+}
+
+:root[data-unity-skin="light"] .mdn-toggle-label.mdn-detail-label {
+    color: #555;
+}
+
+:root[data-unity-skin="light"] .mdn-finger-box {
+    background-color: #ececec;
+}
+
+:root[data-unity-skin="light"] .mdn-col-header {
+    color: #666;
+}
+
+:root[data-unity-skin="light"] .mdn-advanced-foldout {
+    background-color: #f2f2f2;
+    border-color: #ccc;
+}
+
+:root[data-unity-skin="light"] .mdn-option-label {
+    color: #333;
+}
+
+:root[data-unity-skin="light"] .mdn-footer {
+    border-top-color: #ccc;
+}
+
+:root[data-unity-skin="light"] .mdn-footer-brand,
+:root[data-unity-skin="light"] .mdn-footer-ver-prefix,
+:root[data-unity-skin="light"] .mdn-footer-ver {
+    color: #888;
+}
+
+:root[data-unity-skin="light"] .mdn-link,
+:root[data-unity-skin="light"] .mdn-footer-link,
+:root[data-unity-skin="light"] .mdn-nail-link {
+    color: #3060c0;
+}
+
+:root[data-unity-skin="light"] .mdn-filter-panel {
+    background-color: #dedede;
+    border-color: #bbb;
+}
+
+:root[data-unity-skin="light"] .mdn-filter-divider {
+    background-color: #bbb;
+}
+
+:root[data-unity-skin="light"] .mdn-filter-check-label {
+    color: #222;
+}
+
+:root[data-unity-skin="light"] .mdn-nail-card {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+
+:root[data-unity-skin="light"] .mdn-nail-card:hover {
+    border-color: #c0507a;
+    background-color: #f8f0f4;
+}
+
+:root[data-unity-skin="light"] .mdn-nail-name {
+    color: #111;
+}
+
+:root[data-unity-skin="light"] .mdn-nail-thumb {
+    background-color: #ccc;
+}
+
+:root[data-unity-skin="light"] .mdn-page-label {
+    color: #333;
+}
+
+:root[data-unity-skin="light"] .mdn-page-btn {
+    background-color: #d0d0d0;
+    color: #333;
+}
+
+:root[data-unity-skin="light"] .mdn-page-btn:hover {
+    background-color: #bbb;
+}
+
+:root[data-unity-skin="light"] .mdn-avatar-tree {
+    background-color: #ebebeb;
+}
+
+:root[data-unity-skin="light"] .mdn-search-root {
+    background-color: #ebebeb;
+}
+
+:root[data-unity-skin="light"] .mdn-search-reset-btn {
+    background-color: #d0d0d0;
+    color: #333;
+}
+
+:root[data-unity-skin="light"] .mdn-lang-label {
+    color: #444;
+}
+
+:root[data-unity-skin="light"] .mdn-preview-header {
+    background-color: #e0e0e0;
+    border-color: #bbb;
+}
+
+:root[data-unity-skin="light"] .mdn-preview-header-label {
+    color: #333;
+}
+
+:root[data-unity-skin="light"] .mdn-section-step {
+    color: #222;
+}
+
+/* ============================================================
+   REQUIRED FIELD MARKER
+   ============================================================ */
+
+/* アスタリスク（*）を ObjectField のラベル末尾に表示（ニュートラルカラー） */
+.mdn-required-field > .unity-base-field__label::after {
+    content: " *";
+    color: #aaaaaa;
+}
+
+/* エラー時のフィールド枠線ハイライト（枠線のみ、ラベル色変更なし） */
+.mdn-field-error {
+    border-color: #c03030 !important;
+    border-width: 1px !important;
+    border-radius: 3px;
+}
+
+/* Light skin overrides */
+:root[data-unity-skin="light"] .mdn-required-field > .unity-base-field__label::after {
+    color: #888888;
+}
+
+:root[data-unity-skin="light"] .mdn-field-error {
+    border-color: #c03030 !important;
+}
+
+/* ============================================================
+   ERROR BANNER
+   ============================================================ */
+
+.mdn-error-banner {
+    background-color: #3d2222;
+    border-width: 1px;
+    border-color: #8b4040;
+    border-radius: 4px;
+    padding: 8px 10px 6px 10px;
+    margin: 4px 8px 0 8px;
+}
+
+.mdn-error-banner-top {
+    flex-direction: row;
+    align-items: center;
+}
+
+.mdn-error-banner-icon {
+    color: #d07070;
+    font-size: 13px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    -unity-font-style: bold;
+}
+
+.mdn-error-banner-message {
+    color: #e0a0a0;
+    font-size: 11px;
+    flex-grow: 1;
+    white-space: normal;
+}
+
+.mdn-error-banner-close {
+    color: #888;
+    font-size: 13px;
+    background-color: rgba(0,0,0,0);
+    border-width: 0;
+    padding: 0 4px;
+    margin-left: 4px;
+    flex-shrink: 0;
+    cursor: link;
+}
+
+.mdn-error-banner-close:hover {
+    color: #bbb;
+}
+
+.mdn-error-detail-toggle {
+    color: #b08080;
+    font-size: 10px;
+    cursor: link;
+    margin-top: 4px;
+}
+
+.mdn-error-detail-toggle:hover {
+    color: #d0a0a0;
+}
+
+.mdn-error-detail-text {
+    color: #c09090;
+    font-size: 10px;
+    white-space: normal;
+    border-width: 1px;
+    border-color: #6b4040;
+    border-radius: 3px;
+    padding: 4px 6px;
+    margin-top: 4px;
+    background-color: #2a1818;
+}
+
+.mdn-error-detail-actions {
+    flex-direction: row;
+    margin-top: 6px;
+}
+
+.mdn-error-detail-action-btn {
+    font-size: 10px;
+    padding: 2px 8px;
+    margin-right: 6px;
+    height: 18px;
+}
+
+.mdn-error-contact-btn {
+    color: #88b0d0;
+    border-color: #5080a0;
+}
+
+/* Light skin overrides */
+:root[data-unity-skin="light"] .mdn-error-banner {
+    background-color: #fff0ee;
+    border-color: #d4a0a0;
+}
+
+:root[data-unity-skin="light"] .mdn-error-banner-message {
+    color: #8b3a3a;
+}
+
+:root[data-unity-skin="light"] .mdn-error-banner-icon {
+    color: #c05050;
+}
+
+:root[data-unity-skin="light"] .mdn-error-detail-text {
+    background-color: #ffe8e8;
+    border-color: #d4a0a0;
+    color: #7a3a3a;
+}
+
+:root[data-unity-skin="light"] .mdn-error-detail-toggle {
+    color: #a06060;
+}
+
+:root[data-unity-skin="light"] .mdn-error-contact-btn {
+    color: #3060a0;
+    border-color: #3060a0;
+}

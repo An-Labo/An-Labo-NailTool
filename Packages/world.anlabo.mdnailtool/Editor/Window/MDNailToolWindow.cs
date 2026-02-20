@@ -26,6 +26,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		public static void ShowWindow()
 		{
 			MDNailToolWindow window = CreateWindow<MDNailToolWindow>();
+			window.titleContent = new GUIContent("An-Labo NailTool");
 			window.Show();
 		}
 
@@ -36,7 +37,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private LocalizedObjectField? _materialObjectField;
 		private LocalizedObjectField? _avatarObjectField;
 		private AvatarDropDowns? _avatarDropDowns;
-		private AvatarSortDropdown? _avatarSortDropdown;
 		private NailDesignSelect? _nailDesignSelect;
 		private NailPreview? _nailPreview;
 		private NailShapeDropDown? _nailShapeDropDown;
@@ -54,6 +54,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _backup;
 		private Toggle? _enableScenePreview;
 		private Toggle? _forModularAvatar;
+		private Toggle? _generateExpressionMenu;
+		private Toggle? _splitHandFootExpressionMenu;
+		private Toggle? _mergeAnLaboExpressionMenu;
 		private LocalizedButton? _execute;
 		private LocalizedButton? _remove;
 
@@ -68,6 +71,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Label? _manualLink;
 		private LocalizedLabel? _contactLink;
 
+		// ---- Hand/Foot section headers (for error highlight) ----
+		private VisualElement? _handSectionHeader;
+		private VisualElement? _footSectionHeader;
+
+		// ---- Error Banner ----
+		private VisualElement? _errorBanner;
+		private Label? _errorMessage;
+		private Label? _errorDetailToggle;
+		private VisualElement? _errorDetailArea;
+		private Label? _errorDetailText;
+		private bool _errorDetailExpanded = false;
+
 		#endregion
 
 		public void SetAvatar(Shop shop, Avatar? avatar, AvatarVariation? variation)
@@ -77,6 +92,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		public void CreateGUI()
 		{
+			this.titleContent = new GUIContent("An-Labo NailTool");
 			this.PrepareOnCreateGUI();
 			this.BuildRootUI();
 			this.BindCoreFields();
@@ -85,6 +101,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this.BindHandFootUI();
 			this.BindOptionsUI();
 			this.BindLinksUI();
+			this.BindErrorBanner();
 			this.BindActions();
 			this.PostInitSelection();
 		}
@@ -121,7 +138,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void BindAvatarUI()
 		{
 			this._avatarDropDowns = this.rootVisualElement.Q<AvatarDropDowns>("avatar");
+			if (this._avatarDropDowns == null) return;
+
+			// tooltip.avatar_dropdowns はUxmlTraitsが非対応のためC#で設定
+			this._avatarDropDowns.tooltip = S("tooltip.avatar_dropdowns");
+
 			this._avatarDropDowns.SearchButtonClicked += this.ShowAvatarSearchWindow;
+			this._avatarDropDowns.SortOrderSelected += this.OnChangeAvatarSortOrder;
 
 			this._avatarDropDowns.RegisterCallback<ChangeEvent<string>>(_ =>
 			{
@@ -129,10 +152,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this.UpdatePreview();
 				this.RequestScenePreviewUpdate();
 			});
-
-			this._avatarSortDropdown = this.rootVisualElement.Q<AvatarSortDropdown>("avatar-sort");
-			this._avatarSortDropdown.Init();
-			this._avatarSortDropdown.RegisterValueChangedCallback(this.OnChangeAvatarSort);
 		}
 
 		private void BindNailUI()
@@ -166,31 +185,218 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._removeCurrentNail = this.rootVisualElement.Q<Toggle>("remove-current-nail");
 			this._removeCurrentNail.SetValueWithoutNotify(GlobalSetting.RemoveCurrentNail);
 			this._removeCurrentNail.RegisterValueChangedCallback(OnChangeRemoveCurrentNail);
+			// ラベルクリックでトグル
+			var lblRemove = this.rootVisualElement.Q<LocalizedLabel>("label-remove-nail");
+			lblRemove?.RegisterCallback<ClickEvent>(_ => { if (this._removeCurrentNail != null) this._removeCurrentNail.value = !this._removeCurrentNail.value; });
 
 			this._backup = this.rootVisualElement.Q<Toggle>("backup");
 			this._backup.SetValueWithoutNotify(GlobalSetting.Backup);
 			this._backup.RegisterValueChangedCallback(OnChangeBackup);
+			var lblBackup = this.rootVisualElement.Q<LocalizedLabel>("label-backup");
+			lblBackup?.RegisterCallback<ClickEvent>(_ => { if (this._backup != null) this._backup.value = !this._backup.value; });
 
+			// プレビューウィンドウ表示ON/OFFトグル（プレビューヘッダー内）
 			this._enableScenePreview = this.rootVisualElement.Q<Toggle>("enable-scene-preview");
 			if (this._enableScenePreview != null)
 			{
 				this._enableScenePreview.SetValueWithoutNotify(GlobalSetting.EnableScenePreview);
-				this._enableScenePreview.RegisterValueChangedCallback(this.OnChangeEnableScenePreview);
+				this._enableScenePreview.RegisterValueChangedCallback(this.OnChangePreviewWindowVisible);
+				this.UpdatePreviewAreaVisibility(GlobalSetting.EnableScenePreview);
 			}
+			var lblPreview = this.rootVisualElement.Q<LocalizedLabel>("label-preview-toggle");
+			lblPreview?.RegisterCallback<ClickEvent>(_ => { if (this._enableScenePreview != null) this._enableScenePreview.value = !this._enableScenePreview.value; });
+
+			// 着用プレビュー（Sceneプレビュー）トグル（詳細設定内）
+			var tglWearingPreview = this.rootVisualElement.Q<Toggle>("enable-wearing-preview");
+			if (tglWearingPreview != null)
+			{
+				tglWearingPreview.SetValueWithoutNotify(GlobalSetting.EnableSceneWearingPreview);
+				tglWearingPreview.RegisterValueChangedCallback(this.OnChangeEnableScenePreview);
+			}
+			var lblWearingPreview = this.rootVisualElement.Q<LocalizedLabel>("label-wearing-preview");
+			lblWearingPreview?.RegisterCallback<ClickEvent>(_ => { if (tglWearingPreview != null) tglWearingPreview.value = !tglWearingPreview.value; });
 
 			this._forModularAvatar = this.rootVisualElement.Q<Toggle>("for-modular-avatar");
-			this._forModularAvatar.SetValueWithoutNotify(GlobalSetting.UseModularAvatar);
-			this._forModularAvatar.RegisterValueChangedCallback(OnChangeForModularAvatar);
+			if (this._forModularAvatar != null)
+			{
+				this._forModularAvatar.SetValueWithoutNotify(GlobalSetting.UseModularAvatar);
+				this._forModularAvatar.RegisterValueChangedCallback(this.OnChangeForModularAvatar);
+				var lblMA = this.rootVisualElement.Q<LocalizedLabel>("label-modular-avatar");
+				lblMA?.RegisterCallback<ClickEvent>(_ => {
+					if (this._forModularAvatar != null) this._forModularAvatar.value = !this._forModularAvatar.value;
+				});
+			}
+
+			this._generateExpressionMenu = this.rootVisualElement.Q<Toggle>("generate-expression-menu");
+			if (this._generateExpressionMenu != null)
+			{
+				this._generateExpressionMenu.SetValueWithoutNotify(GlobalSetting.GenerateExpressionMenu);
+				this._generateExpressionMenu.RegisterValueChangedCallback(evt => {
+					GlobalSetting.GenerateExpressionMenu = evt.newValue;
+					this.UpdateExpressionMenuSubOptions(evt.newValue);
+				});
+				this._generateExpressionMenu.SetEnabled(GlobalSetting.UseModularAvatar);
+				var lblGenMenu = this.rootVisualElement.Q<LocalizedLabel>("label-generate-expression-menu");
+				lblGenMenu?.RegisterCallback<ClickEvent>(_ => {
+					if (this._generateExpressionMenu != null && this._generateExpressionMenu.enabledSelf)
+						this._generateExpressionMenu.value = !this._generateExpressionMenu.value;
+				});
+			}
+
+			this._splitHandFootExpressionMenu = this.rootVisualElement.Q<Toggle>("split-hand-foot-expression-menu");
+			if (this._splitHandFootExpressionMenu != null)
+			{
+				this._splitHandFootExpressionMenu.SetValueWithoutNotify(GlobalSetting.SplitHandFootExpressionMenu);
+				this._splitHandFootExpressionMenu.RegisterValueChangedCallback(
+					evt => GlobalSetting.SplitHandFootExpressionMenu = evt.newValue);
+				this._splitHandFootExpressionMenu.SetEnabled(GlobalSetting.UseModularAvatar && GlobalSetting.GenerateExpressionMenu);
+				var lbl = this.rootVisualElement.Q<LocalizedLabel>("label-split-hand-foot");
+				lbl?.RegisterCallback<ClickEvent>(_ => {
+					if (this._splitHandFootExpressionMenu != null && this._splitHandFootExpressionMenu.enabledSelf)
+						this._splitHandFootExpressionMenu.value = !this._splitHandFootExpressionMenu.value;
+				});
+			}
+
+			this._mergeAnLaboExpressionMenu = this.rootVisualElement.Q<Toggle>("merge-anlabo-expression-menu");
+			if (this._mergeAnLaboExpressionMenu != null)
+			{
+				this._mergeAnLaboExpressionMenu.SetValueWithoutNotify(GlobalSetting.MergeAnLaboExpressionMenu);
+				this._mergeAnLaboExpressionMenu.RegisterValueChangedCallback(
+					evt => GlobalSetting.MergeAnLaboExpressionMenu = evt.newValue);
+				this._mergeAnLaboExpressionMenu.SetEnabled(GlobalSetting.UseModularAvatar && GlobalSetting.GenerateExpressionMenu);
+				var lbl = this.rootVisualElement.Q<LocalizedLabel>("label-merge-anlabo");
+				lbl?.RegisterCallback<ClickEvent>(_ => {
+					if (this._mergeAnLaboExpressionMenu != null && this._mergeAnLaboExpressionMenu.enabledSelf)
+						this._mergeAnLaboExpressionMenu.value = !this._mergeAnLaboExpressionMenu.value;
+				});
+			}
+		}
+
+		private void UpdateExpressionMenuSubOptions(bool exprMenuEnabled)
+		{
+			this._splitHandFootExpressionMenu?.SetEnabled(exprMenuEnabled);
+			this._mergeAnLaboExpressionMenu?.SetEnabled(exprMenuEnabled);
+		}
+
+		private void UpdatePreviewAreaVisibility(bool visible)
+		{
+			var area = this.rootVisualElement.Q<VisualElement>("nail-preview-area");
+			if (area != null)
+				area.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
 		}
 		private void BindLinksUI()
 		{
 			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
-			this._manualLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
+			this._manualLink?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
 
+			// ヘッダーのFAQリンク
+			var headerContact = this.rootVisualElement.Q<Label>("link-contact-header");
+			headerContact?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
+
+			// フッターのコンタクトリンク
 			this._contactLink = this.rootVisualElement.Q<LocalizedLabel>("link-contact");
-			this._contactLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
+			this._contactLink?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
 
-			this.rootVisualElement.Q<Label>("version").text = MDNailToolDefines.Version;
+			// ヘッダーのバージョン表記
+		var versionStr = MDNailToolDefines.Version;
+		var headerVersion = this.rootVisualElement.Q<Label>("version");
+		if (headerVersion != null)
+			headerVersion.text = "v" + versionStr;
+
+		// フッターのバージョン表記
+		var footerVersion = this.rootVisualElement.Q<Label>("version-footer");
+		if (footerVersion != null)
+			footerVersion.text = versionStr;
+		}
+
+		private void BindErrorBanner()
+		{
+			this._errorBanner = this.rootVisualElement.Q<VisualElement>("error-banner");
+			this._errorMessage = this.rootVisualElement.Q<Label>("error-message");
+			this._errorDetailToggle = this.rootVisualElement.Q<Label>("error-detail-toggle");
+			this._errorDetailArea = this.rootVisualElement.Q<VisualElement>("error-detail-area");
+			this._errorDetailText = this.rootVisualElement.Q<Label>("error-detail-text");
+
+			this.rootVisualElement.Q<Button>("error-close")
+				?.RegisterCallback<ClickEvent>(_ => {
+					this.HideErrorBanner();
+					this.ClearHandFootError();
+					this.ClearAvatarFieldError();
+				});
+
+			this._errorDetailToggle?.RegisterCallback<ClickEvent>(_ => this.ToggleErrorDetail());
+
+			var copyBtn = this.rootVisualElement.Q<Button>("error-copy");
+			if (copyBtn != null)
+			{
+				copyBtn.text = S("error.copy") ?? "Copy to Clipboard";
+				copyBtn.RegisterCallback<ClickEvent>(_ =>
+					GUIUtility.systemCopyBuffer = this._errorDetailText?.text ?? "");
+			}
+
+			var contactBtn = this.rootVisualElement.Q<Button>("error-contact");
+			if (contactBtn != null)
+			{
+				contactBtn.text = S("window.contact") ?? "Contact";
+				contactBtn.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
+			}
+		}
+
+		private void ShowErrorBanner(string? userMessage, Exception? ex = null)
+		{
+			if (this._errorBanner == null) return;
+			this._errorBanner.style.display = DisplayStyle.Flex;
+			if (this._errorMessage != null) this._errorMessage.text = userMessage ?? "";
+			if (this._errorDetailText != null) this._errorDetailText.text = ex?.ToString() ?? "";
+			this._errorDetailExpanded = false;
+			if (this._errorDetailArea != null) this._errorDetailArea.style.display = DisplayStyle.None;
+			if (this._errorDetailToggle != null)
+				this._errorDetailToggle.text = S("error.show_detail") ?? "▶ Show Details";
+			// Only show the detail toggle when there's exception detail to show
+			if (this._errorDetailToggle != null)
+				this._errorDetailToggle.style.display = ex != null ? DisplayStyle.Flex : DisplayStyle.None;
+			// ScrollView内でエラーバナーが見えるようにスクロール
+			var scrollView = this.rootVisualElement.Q<ScrollView>("Root");
+			if (scrollView != null && this._errorBanner != null)
+				this._errorBanner.schedule.Execute(() => scrollView.ScrollTo(this._errorBanner));
+		}
+
+		private void HideErrorBanner()
+		{
+			if (this._errorBanner != null) this._errorBanner.style.display = DisplayStyle.None;
+		}
+
+		private void ToggleErrorDetail()
+		{
+			this._errorDetailExpanded = !this._errorDetailExpanded;
+			if (this._errorDetailArea != null)
+				this._errorDetailArea.style.display = this._errorDetailExpanded ? DisplayStyle.Flex : DisplayStyle.None;
+			if (this._errorDetailToggle != null)
+				this._errorDetailToggle.text = this._errorDetailExpanded
+					? (S("error.hide_detail") ?? "▼ Hide Details")
+					: (S("error.show_detail") ?? "▶ Show Details");
+		}
+
+		private void ShowAvatarFieldError()
+		{
+			this._avatarObjectField?.AddToClassList("mdn-field-error");
+		}
+
+		private void ClearAvatarFieldError()
+		{
+			this._avatarObjectField?.RemoveFromClassList("mdn-field-error");
+		}
+
+		private void ShowHandFootError()
+		{
+			this._handSectionHeader?.AddToClassList("mdn-field-error");
+			this._footSectionHeader?.AddToClassList("mdn-field-error");
+		}
+
+		private void ClearHandFootError()
+		{
+			this._handSectionHeader?.RemoveFromClassList("mdn-field-error");
+			this._footSectionHeader?.RemoveFromClassList("mdn-field-error");
 		}
 
 		private void BindActions()
@@ -215,23 +421,38 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this.RequestScenePreviewUpdate();
 			}
 
+			// Selection.activeGameObject からアバターを検出
+			VRCAvatarDescriptor? descriptor = null;
 			if (Selection.activeGameObject != null)
 			{
-				VRCAvatarDescriptor? descriptor = Selection.activeGameObject.GetComponentInParent<VRCAvatarDescriptor>();
-				if (descriptor != null)
-				{
-					var avatarObjectField = this._avatarObjectField;
-					if (avatarObjectField != null)
-					{
-						avatarObjectField.value = descriptor;
-					}
+				descriptor = Selection.activeGameObject.GetComponentInParent<VRCAvatarDescriptor>();
+			}
 
-					AvatarMatching avatarMatching = new(descriptor);
-					(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? variation = avatarMatching.Match();
-					if (variation != null && this._avatarDropDowns != null)
-					{
-						this._avatarDropDowns.SetValues(variation.Value.shop, variation.Value.avatar, variation.Value.variation);
-					}
+			// 見つからなかった場合、Hierarchy全体をスキャンして1体だけなら自動設定
+			if (descriptor == null)
+			{
+				VRCAvatarDescriptor[] allDescriptors = Object.FindObjectsByType<VRCAvatarDescriptor>(
+					FindObjectsInactive.Exclude,
+					FindObjectsSortMode.None);
+				if (allDescriptors.Length == 1)
+				{
+					descriptor = allDescriptors[0];
+				}
+			}
+
+			if (descriptor != null)
+			{
+				var avatarObjectField = this._avatarObjectField;
+				if (avatarObjectField != null)
+				{
+					avatarObjectField.value = descriptor;
+				}
+
+				AvatarMatching avatarMatching = new(descriptor);
+				(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? variation = avatarMatching.Match();
+				if (variation != null && this._avatarDropDowns != null)
+				{
+					this._avatarDropDowns.SetValues(variation.Value.shop, variation.Value.avatar, variation.Value.variation);
 				}
 			}
 		}
@@ -246,12 +467,36 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			footSelects.Clear();
 
-			var leftFootLabel = new LocalizedLabel { TextId = "window.left_foot", style = { marginBottom = 2, marginTop = 5 } };
-			footSelects.Add(leftFootLabel);
+			string[] toeTextIds = { "window.thumb", "window.index_finger", "window.middle_finger", "window.ring_finger", "window.little_finger" };
 
+			// ---- 左足ヘッダー行（ハンドネイルと同じ構造） ----
+			var leftHeader = new VisualElement();
+			leftHeader.AddToClassList("mdn-finger-header");
+
+			var leftFootColLabel = new LocalizedLabel { TextId = "window.left_foot" };
+			leftFootColLabel.AddToClassList("mdn-finger-name-col");
+			leftFootColLabel.AddToClassList("mdn-col-header");
+			leftHeader.Add(leftFootColLabel);
+
+			var leftDesignHeader = new LocalizedLabel { TextId = "window.nail_design" };
+			leftDesignHeader.AddToClassList("mdn-finger-design-col");
+			leftDesignHeader.AddToClassList("mdn-col-header");
+			leftHeader.Add(leftDesignHeader);
+
+			var leftMatHeader = new LocalizedLabel { TextId = "window.nail_material" };
+			leftMatHeader.AddToClassList("mdn-finger-mat-col");
+			leftMatHeader.AddToClassList("mdn-col-header");
+			leftHeader.Add(leftMatHeader);
+
+			var leftColHeader = new LocalizedLabel { TextId = "window.nail_color" };
+			leftColHeader.AddToClassList("mdn-finger-col-col");
+			leftColHeader.AddToClassList("mdn-col-header");
+			leftHeader.Add(leftColHeader);
+
+			footSelects.Add(leftHeader);
+
+			// ---- 左足 5本 ----
 			string[] leftToes = { "left-foot-thumb", "left-foot-index", "left-foot-middle", "left-foot-ring", "left-foot-little" };
-			string[] toeLabels = { "window.toe.thumb", "window.toe.index", "window.toe.middle", "window.toe.ring", "window.toe.little" };
-
 			for (int i = 0; i < 5; i++)
 			{
 				var dd = new NailDesignDropDowns { name = leftToes[i] };
@@ -260,13 +505,22 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
 				if (innerDropdown is DropdownField ddf)
 				{
-					ddf.label = S(toeLabels[i]) ?? toeLabels[i];
+					ddf.label = S(toeTextIds[i]) ?? toeTextIds[i];
 				}
 			}
 
-			var rightFootLabel = new LocalizedLabel { TextId = "window.right_foot", style = { marginBottom = 2, marginTop = 10 } };
-			footSelects.Add(rightFootLabel);
+			// ---- 右足区切り行 ----
+			var divider = new VisualElement();
+			divider.AddToClassList("mdn-hand-divider");
 
+			var rightFootDivLabel = new LocalizedLabel { TextId = "window.right_foot" };
+			rightFootDivLabel.AddToClassList("mdn-finger-name-col");
+			rightFootDivLabel.AddToClassList("mdn-col-header");
+			divider.Add(rightFootDivLabel);
+
+			footSelects.Add(divider);
+
+			// ---- 右足 5本 ----
 			string[] rightToes = { "right-foot-thumb", "right-foot-index", "right-foot-middle", "right-foot-ring", "right-foot-little" };
 			for (int i = 0; i < 5; i++)
 			{
@@ -276,7 +530,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
 				if (innerDropdown is DropdownField ddf)
 				{
-					ddf.label = S(toeLabels[i]) ?? toeLabels[i];
+					ddf.label = S(toeTextIds[i]) ?? toeTextIds[i];
 				}
 			}
 		}
@@ -329,6 +583,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._handSelects = this.rootVisualElement.Q<VisualElement>("hand-selects");
 			if (this._footSelects == null) this._footSelects = this.rootVisualElement.Q<VisualElement>("foot-selects");
 
+			// ハンド/フットセクションヘッダーを保存（エラーハイライト用）
+			this._handSectionHeader = this._tglHandActive?.parent;
+			this._footSectionHeader = this._tglFootActive?.parent;
+
 			if (_tglHandActive != null && _tglHandDetail != null)
 			{
 				_tglHandActive.SetValueWithoutNotify(MDNailToolPrefs.HandActive);
@@ -351,6 +609,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 					this.UpdatePreview();
 					this.RequestScenePreviewUpdate();
+
+					// どちらかがONになったらエラーハイライトとバナーを解除
+					if (isActive || (this._tglFootActive?.value ?? false))
+					{
+						this.ClearHandFootError();
+						if (this._errorMessage?.text == S("error.execute.no_target"))
+							this.HideErrorBanner();
+					}
 				}
 
 				_tglHandActive.RegisterValueChangedCallback(_ => UpdateHandVisiblity());
@@ -380,6 +646,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 					this.UpdatePreview();
 					this.RequestScenePreviewUpdate();
+
+					// どちらかがONになったらエラーハイライトとバナーを解除
+					if (isActive || (this._tglHandActive?.value ?? false))
+					{
+						this.ClearHandFootError();
+						if (this._errorMessage?.text == S("error.execute.no_target"))
+							this.HideErrorBanner();
+					}
 				}
 
 				_tglFootActive.RegisterValueChangedCallback(_ => UpdateFootVisibility());
@@ -388,12 +662,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
-		private void OnChangeAvatarSort(ChangeEvent<AvatarSortOrder> evt) { this._avatarDropDowns?.Sort(evt.newValue); }
+		private void OnChangeAvatarSortOrder(AvatarSortOrder order) { this._avatarDropDowns?.Sort(order); }
 
 		private void OnChangeAvatar(ChangeEvent<Object> evt)
 		{
 			if (evt.newValue is VRCAvatarDescriptor avatar)
 			{
+				// アバターが設定されたらエラー枠・バナーを解除
+				this.ClearAvatarFieldError();
+				this.HideErrorBanner();
+
 				AvatarMatching matching = new(avatar);
 				(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? result = matching.Match();
 				if (result != null) this._avatarDropDowns!.SetValues(result.Value.shop, result.Value.avatar, result.Value.variation);
@@ -416,31 +694,58 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void OnExecute()
 		{
 			this.CleanupScenePreview();
+			this.HideErrorBanner();
 
+			// ---- Validation ----
+			VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
+			if (avatar == null)
+			{
+				this.ShowErrorBanner(S("dialog.error.select_target_avatar"));
+				this.ShowAvatarFieldError();
+				return;
+			}
+			this.ClearAvatarFieldError();
+
+			bool isHandActive = this._tglHandActive?.value ?? true;
+			bool isFootActive = this._tglFootActive?.value ?? false;
+
+			if (!isHandActive && !isFootActive)
+			{
+				this.ShowErrorBanner(S("error.execute.no_target"));
+				this.ShowHandFootError();
+				return;
+			}
+			this.ClearHandFootError();
+
+			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
+			if (avatarVariationData == null)
+			{
+				this.ShowErrorBanner(S("error.execute.no_avatar_variation"));
+				return;
+			}
+
+			GameObject? prefab = this._avatarDropDowns!.GetSelectedPrefab();
+			if (prefab == null)
+			{
+				this.ShowErrorBanner(S("error.execute.no_prefab"));
+				return;
+			}
+
+			string? nailShapeName = this._nailShapeDropDown!.value;
+			if (nailShapeName == null)
+			{
+				this.ShowErrorBanner(S("error.execute.no_nail_shape"));
+				return;
+			}
+
+			// ---- Process ----
 			AssetDatabase.StartAssetEditing();
 			try
 			{
-				VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
-				if (avatar == null)
-				{
-					EditorUtility.DisplayDialog(S("dialog.error"), S("dialog.error.select_target_avatar"), "OK");
-					return;
-				}
-
-				AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
-				GameObject? prefab = this._avatarDropDowns!.GetSelectedPrefab();
-				string? nailShapeName = this._nailShapeDropDown!.value;
-
-				if (avatarVariationData == null || prefab == null || nailShapeName == null)
-				{
-					Debug.LogError("Required settings are missing.");
-					return;
-				}
-
 				(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
 
 				Mesh?[]? selectedMeshes = this._nailShapeDropDown!.GetSelectedShapeMeshes();
-				Mesh?[]? overrideMesh = (this._tglHandActive?.value ?? true) ? selectedMeshes : new Mesh?[10];
+				Mesh?[]? overrideMesh = isHandActive ? selectedMeshes : new Mesh?[10];
 
 				Material? directMaterial = this._materialObjectField!.value as Material;
 
@@ -448,34 +753,60 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				{
 					AvatarName = this._avatarDropDowns.GetAvatarName(),
 					OverrideMesh = overrideMesh,
-					UseFootNail = this._tglFootActive!.value,
+					UseFootNail = isFootActive,
 					RemoveCurrentNail = this._removeCurrentNail!.value,
 					GenerateMaterial = directMaterial == null,  // 直接指定時は生成OFF
 					Backup = this._backup!.value,
 					ForModularAvatar = this._forModularAvatar!.value,
-					OverrideMaterial = directMaterial
+					OverrideMaterial = directMaterial,
+					GenerateExpressionMenu = (this._forModularAvatar?.value == true)
+					                      && (this._generateExpressionMenu?.value == true),
+					SplitHandFoot = (this._forModularAvatar?.value == true)
+					             && (this._generateExpressionMenu?.value == true)
+					             && (this._splitHandFootExpressionMenu?.value == true),
+					MergeAnLabo = (this._forModularAvatar?.value == true)
+					           && (this._generateExpressionMenu?.value == true)
+					           && (this._mergeAnLaboExpressionMenu?.value == true),
 				};
 
 				processor.Process();
 
-				if (!this._tglHandActive!.value) this.RemoveHandNailObjects(avatar);
-				if (!this._tglFootActive!.value) this.RemoveFootNailObjects(avatar);
+				if (!isHandActive) this.RemoveHandNailObjects(avatar);
+				if (!isFootActive) this.RemoveFootNailObjects(avatar);
 
 				string avatarKey = this._avatarDropDowns!.GetAvatarKey();
 				MDNailToolUsageStats.Update(designAndVariationNames, avatarKey);
 				this._nailDesignSelect!.Init();
 
-				EditorUtility.DisplayDialog(S("dialog.finished"), S("dialog.finished.success_attach_nail"), "OK");
+				this.HideErrorBanner();
+				string successMessage = BuildSuccessMessage(isHandActive, isFootActive);
+				EditorUtility.DisplayDialog(S("dialog.finished"), successMessage, "OK");
 			}
 			catch (Exception e)
 			{
 				Debug.LogError(e);
+				this.ShowErrorBanner(S("error.execute.failed"), e);
 			}
 			finally
 			{
 				AssetDatabase.StopAssetEditing();
 				AssetDatabase.Refresh();
 			}
+		}
+
+		private static string BuildSuccessMessage(bool handActive, bool footActive)
+		{
+			string handLabel = S("window.hand_nail") ?? "Hand Nail";
+			string footLabel = S("window.foot_nail") ?? "Foot Nail";
+			string suffix    = S("dialog.finished.attached_suffix") ?? " attachment is complete.";
+
+			string target = (handActive, footActive) switch {
+				(true,  true)  => handLabel + " " + (S("dialog.finished.and") ?? "&") + " " + footLabel,
+				(true,  false) => handLabel,
+				(false, true)  => footLabel,
+				_              => ""
+			};
+			return target + suffix;
 		}
 
 		private void RemoveHandNailObjects(VRCAvatarDescriptor avatar)
@@ -503,12 +834,17 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void OnRemove()
 		{
 			this.CleanupScenePreview();
+			this.HideErrorBanner();
+
 			VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
 			if (avatar == null)
 			{
-				EditorUtility.DisplayDialog(S("dialog.error"), S("dialog.error.select_target_avatar"), "OK");
+				this.ShowErrorBanner(S("dialog.error.select_target_avatar"));
+				this.ShowAvatarFieldError();
 				return;
 			}
+			this.ClearAvatarFieldError();
+
 			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
 			if (avatarVariationData != null) NailSetupProcessor.RemoveNail(avatar, avatarVariationData.BoneMappingOverride);
 		}
@@ -602,7 +938,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void RequestScenePreviewUpdate()
 		{
-			if (!GlobalSetting.EnableScenePreview) return;
+			if (!GlobalSetting.EnableSceneWearingPreview) return;
 
 			this._scenePreviewSchedule?.Pause();
 			this._scenePreviewSchedule = this.rootVisualElement.schedule
@@ -612,7 +948,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void UpdateScenePreview(bool immediate)
 		{
-			if (!GlobalSetting.EnableScenePreview) return;
+			if (!GlobalSetting.EnableSceneWearingPreview) return;
 
 			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			if (avatar == null) return;
@@ -650,6 +986,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void CleanupScenePreview()
 		{
 			this._scenePreviewController?.Cleanup(this._avatarObjectField?.value as VRCAvatarDescriptor);
+			this._scenePreviewController = null;
 		}
 
 
@@ -666,14 +1003,31 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private static void OnChangeRemoveCurrentNail(ChangeEvent<bool> evt) { GlobalSetting.RemoveCurrentNail = evt.newValue; }
 		private static void OnChangeBackup(ChangeEvent<bool> evt) { GlobalSetting.Backup = evt.newValue; }
-		private static void OnChangeForModularAvatar(ChangeEvent<bool> evt) { GlobalSetting.UseModularAvatar = evt.newValue; }
+		private void OnChangeForModularAvatar(ChangeEvent<bool> evt)
+		{
+			GlobalSetting.UseModularAvatar = evt.newValue;
+			if (this._generateExpressionMenu != null)
+			{
+				this._generateExpressionMenu.SetEnabled(evt.newValue);
+				this._splitHandFootExpressionMenu?.SetEnabled(evt.newValue && this._generateExpressionMenu.value);
+				this._mergeAnLaboExpressionMenu?.SetEnabled(evt.newValue && this._generateExpressionMenu.value);
+			}
+		}
 		private void ShowAvatarSearchWindow() { SearchAvatarWindow.ShowWindow(this); }
 		private void ShowNailSearchWindow() { SearchNailDesignWindow.ShowWindow(this); }
 		public void SelectNailFromSearch(string designName) { this.OnSelectNail(designName); }
 
-		private void OnChangeEnableScenePreview(ChangeEvent<bool> evt)
+		// プレビューウィンドウ（NailPreview）の表示/非表示
+		private void OnChangePreviewWindowVisible(ChangeEvent<bool> evt)
 		{
 			GlobalSetting.EnableScenePreview = evt.newValue;
+			this.UpdatePreviewAreaVisibility(evt.newValue);
+		}
+
+		// 着用プレビュー（Sceneへの仮着用）のON/OFF
+		private void OnChangeEnableScenePreview(ChangeEvent<bool> evt)
+		{
+			GlobalSetting.EnableSceneWearingPreview = evt.newValue;
 
 			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			if (avatar != null)

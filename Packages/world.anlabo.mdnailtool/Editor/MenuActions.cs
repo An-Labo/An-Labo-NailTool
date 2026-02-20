@@ -7,7 +7,7 @@ namespace world.anlabo.mdnailtool.Editor {
 	public static class MenuActions {
 		private const string MENU_ROOT = "An-Labo/";
 
-		[MenuItem(MENU_ROOT + "MDNail Setup Tool", false, 0)]
+		[MenuItem(MENU_ROOT + "An-Labo NailTool", false, 0)]
 		private static void ShowMDNailToolWindow() {
 			MDNailToolWindow.ShowWindow();
 		}

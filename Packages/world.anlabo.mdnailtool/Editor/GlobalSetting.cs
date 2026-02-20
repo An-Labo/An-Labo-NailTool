@@ -99,7 +99,17 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(ENABLE_SCENE_PREVIEW_KEY, value);
 		}
 
-		
+		private const string ENABLE_SCENE_WEARING_PREVIEW_KEY = "world.anlabo.mdnailtool.enable_scene_wearing_preview";
+
+		internal static bool EnableSceneWearingPreview
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ENABLE_SCENE_WEARING_PREVIEW_KEY)) return false;
+				return EditorPrefs.GetBool(ENABLE_SCENE_WEARING_PREVIEW_KEY);
+			}
+			set => EditorPrefs.SetBool(ENABLE_SCENE_WEARING_PREVIEW_KEY, value);
+		}
 
 		private const string USE_MODULAR_AVATAR_KEY = "world.anlabo.mdnailtool.use_modular_avatar";
 		internal static bool UseModularAvatar
@@ -110,6 +120,39 @@ namespace world.anlabo.mdnailtool.Editor
 				return EditorPrefs.GetBool(USE_MODULAR_AVATAR_KEY);
 			}
 			set => EditorPrefs.SetBool(USE_MODULAR_AVATAR_KEY, value);
+		}
+
+		private const string GENERATE_EXPRESSION_MENU_KEY = "world.anlabo.mdnailtool.generate_expression_menu";
+		internal static bool GenerateExpressionMenu
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(GENERATE_EXPRESSION_MENU_KEY)) return false;
+				return EditorPrefs.GetBool(GENERATE_EXPRESSION_MENU_KEY);
+			}
+			set => EditorPrefs.SetBool(GENERATE_EXPRESSION_MENU_KEY, value);
+		}
+
+		private const string SPLIT_HAND_FOOT_EXPRESSION_MENU_KEY = "world.anlabo.mdnailtool.split_hand_foot_expression_menu";
+		internal static bool SplitHandFootExpressionMenu
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(SPLIT_HAND_FOOT_EXPRESSION_MENU_KEY)) return false;
+				return EditorPrefs.GetBool(SPLIT_HAND_FOOT_EXPRESSION_MENU_KEY);
+			}
+			set => EditorPrefs.SetBool(SPLIT_HAND_FOOT_EXPRESSION_MENU_KEY, value);
+		}
+
+		private const string MERGE_ANLABO_EXPRESSION_MENU_KEY = "world.anlabo.mdnailtool.merge_anlabo_expression_menu";
+		internal static bool MergeAnLaboExpressionMenu
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(MERGE_ANLABO_EXPRESSION_MENU_KEY)) return false;
+				return EditorPrefs.GetBool(MERGE_ANLABO_EXPRESSION_MENU_KEY);
+			}
+			set => EditorPrefs.SetBool(MERGE_ANLABO_EXPRESSION_MENU_KEY, value);
 		}
 
 		private const string DESIGN_LAST_USED_TIMES_KEY = "world.anlabo.mdnailtool.design_last_used_times";
@@ -162,6 +205,9 @@ namespace world.anlabo.mdnailtool.Editor
 			EditorPrefs.DeleteKey(REMOVE_CURRENT_NAIL_KEY);
 			EditorPrefs.DeleteKey(BACKUP_KEY);
 			EditorPrefs.DeleteKey(USE_MODULAR_AVATAR_KEY);
+			EditorPrefs.DeleteKey(GENERATE_EXPRESSION_MENU_KEY);
+			EditorPrefs.DeleteKey(SPLIT_HAND_FOOT_EXPRESSION_MENU_KEY);
+			EditorPrefs.DeleteKey(MERGE_ANLABO_EXPRESSION_MENU_KEY);
 			EditorPrefs.DeleteKey(DESIGN_LAST_USED_TIMES_KEY);
 			EditorPrefs.DeleteKey(DESIGN_USE_COUNT_KEY);
 			EditorPrefs.DeleteKey(AVATAR_USE_COUNT_KEY);

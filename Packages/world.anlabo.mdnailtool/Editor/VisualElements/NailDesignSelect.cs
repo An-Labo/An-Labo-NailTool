@@ -12,7 +12,7 @@ using world.anlabo.mdnailtool.Editor.NailDesigns;
 #nullable enable
 
 namespace world.anlabo.mdnailtool.Editor.VisualElements {
-	public class NailDesignSelect : VisualElement {
+	public class NailDesignSelect : VisualElement, ILocalizedElement {
 
 		public event Action<string>? OnSelectNail;
 		public event Action? OnSearchButtonClicked;
@@ -24,6 +24,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		private readonly Button _leftButton;
 		private readonly Button _rightButton;
 		private readonly Button _searchButton;
+		private Label? _searchButtonLabel;
+		private Label? _pageLabel;
 
 		private int _pageIndex;
 		private int _onePageCount;
@@ -78,43 +80,49 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			
 			this._leftButton = new Button {
+				text = "◀",
 				style = {
 					flexShrink = 0,
-					width = new Length(36, LengthUnit.Pixel),
-					height = new Length(36, LengthUnit.Pixel),
-					paddingLeft = 1, paddingRight = 1
+					width = new Length(38, LengthUnit.Pixel),
+					height = new Length(38, LengthUnit.Pixel),
+					fontSize = 16,
+					unityFontStyleAndWeight = FontStyle.Normal,
+					backgroundColor = new Color(0.25f, 0.25f, 0.25f),
+					borderTopWidth = 0, borderBottomWidth = 0,
+					borderLeftWidth = 0, borderRightWidth = 0,
+					borderTopLeftRadius = 4, borderTopRightRadius = 4,
+					borderBottomLeftRadius = 4, borderBottomRightRadius = 4,
 				}
 			};
 			this._leftButton.clicked += this.OnLeftButton;
-			this._leftButton.Add(new Image {
-				image = EditorGUIUtility.Load("d_tab_prev@2x") as Texture2D
-			});
 			arrowsContainer.Add(this._leftButton);
 
-			LocalizedLabel viewLargeLabel = new() {
-				TextId = "window.view_large",
+			this._pageLabel = new Label("- / -") {
 				style = {
-					width = new Length(200, LengthUnit.Pixel),
+					width = new Length(60, LengthUnit.Pixel),
 					unityTextAlign = TextAnchor.MiddleCenter,
-					visibility = Visibility.Hidden,
-					display = DisplayStyle.Flex
+					fontSize = 11,
 				}
 			};
-			arrowsContainer.Add(viewLargeLabel); 
+			arrowsContainer.Add(this._pageLabel);
 
 			this._rightButton = new Button {
+				text = "▶",
 				style = {
 					flexShrink = 0,
-					width = new Length(36, LengthUnit.Pixel),
-					height = new Length(36, LengthUnit.Pixel),
-					paddingLeft = 1, paddingRight = 1
+					width = new Length(38, LengthUnit.Pixel),
+					height = new Length(38, LengthUnit.Pixel),
+					fontSize = 16,
+					unityFontStyleAndWeight = FontStyle.Normal,
+					backgroundColor = new Color(0.25f, 0.25f, 0.25f),
+					borderTopWidth = 0, borderBottomWidth = 0,
+					borderLeftWidth = 0, borderRightWidth = 0,
+					borderTopLeftRadius = 4, borderTopRightRadius = 4,
+					borderBottomLeftRadius = 4, borderBottomRightRadius = 4,
 				}
 			};
 			this._rightButton.clicked += this.OnRightButton;
-			this._rightButton.Add(new Image {
-				image = EditorGUIUtility.Load("d_tab_next@2x") as Texture2D
-			});
-			arrowsContainer.Add(this._rightButton); 
+			arrowsContainer.Add(this._rightButton);
 
 
 			this._searchButton = new Button {
@@ -139,19 +147,23 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			searchIcon.tintColor = EditorGUIUtility.isProSkin ? new Color(0.9f, 0.9f, 0.9f) : Color.black;
 			this._searchButton.Add(searchIcon);
 
-			string buttonText = LanguageManager.S("window.search_nail") ?? "Search Nail";
-			
-			this._searchButton.Add(new Label(buttonText) {
-				style = { 
-					unityTextAlign = TextAnchor.MiddleCenter, 
+			this._searchButtonLabel = new Label(LanguageManager.S("window.search_nail") ?? "Search Nail") {
+				style = {
+					unityTextAlign = TextAnchor.MiddleCenter,
 					paddingTop = 0, paddingBottom = 0,
 				}
-			});
+			};
+			this._searchButton.Add(this._searchButtonLabel);
 
 			this._searchButton.clicked += () => OnSearchButtonClicked?.Invoke();
 			footer.Add(this._searchButton);
 
 			this.Init();
+		}
+
+		public void UpdateLanguage() {
+			if (this._searchButtonLabel != null)
+				this._searchButtonLabel.text = LanguageManager.S("window.search_nail") ?? "Search Nail";
 		}
 
 		public void Init() {
@@ -306,11 +318,18 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 			if (this._maxPageCount < this._pageIndex) {
 				this._pageIndex = this._maxPageCount;
 			}
+			this.UpdatePageLabel();
 		}
 
 		private void CalculatePageOffset() {
 			int offset = this._elementSize * this._pageIndex * this._onePageCount;
 			this._list.style.left = new Length(-offset, LengthUnit.Pixel);
+			this.UpdatePageLabel();
+		}
+
+		private void UpdatePageLabel() {
+			if (this._pageLabel == null) return;
+			this._pageLabel.text = $"{this._pageIndex + 1} / {this._maxPageCount + 1}";
 		}
 
 		protected override void ExecuteDefaultAction(EventBase evt) {

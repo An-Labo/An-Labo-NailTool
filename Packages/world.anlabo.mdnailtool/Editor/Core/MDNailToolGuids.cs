@@ -4,7 +4,7 @@ namespace world.anlabo.mdnailtool.Editor
     {
         // ---- UI (UXML/USS) ----
         internal const string WindowUxml = "f44afb5feae822a4b9308df804788d69";
-        internal const string WindowUss  = "518510ce88e1451e8f8f06ab4add9daf";
+        internal const string WindowUss  = "ca65ecd8fc57f96478259ade7f795697";
 
         // ---- Preview assets ----
         internal const string PreviewShader = "5f0e4274bce4492f833972c906cd3236";
