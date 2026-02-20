@@ -24,6 +24,10 @@ namespace world.anlabo.mdnailtool.Editor {
             "Preview/",
             "uss/"
         };
+
+        private static readonly string[] ADD_ONLY_FOLDERS = {
+            "Nail/Thumbnails/"
+        };
         
         private static readonly string[] ESSENTIAL_FILES = {
             "Lang/langs.json",
@@ -212,9 +216,21 @@ namespace world.anlabo.mdnailtool.Editor {
 
                     string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
                     string? destDir = Path.GetDirectoryName(destPath);
-                    
+
                     if (destDir != null && !Directory.Exists(destDir)) {
                         Directory.CreateDirectory(destDir);
+                    }
+
+                    bool addOnly = false;
+                    foreach (string addOnlyFolder in ADD_ONLY_FOLDERS) {
+                        if (entry.FullName.StartsWith(addOnlyFolder, StringComparison.OrdinalIgnoreCase)) {
+                            addOnly = true;
+                            break;
+                        }
+                    }
+
+                    if (addOnly && File.Exists(destPath)) {
+                        continue;
                     }
 
                     entry.ExtractToFile(destPath, overwrite: true);
