@@ -57,12 +57,19 @@ namespace world.anlabo.mdnailtool.Editor {
 
         private static void CheckAndExtractEssentials() {
             if (_isExtracting) return;
-            if (HasEssentialFiles()) return;
-            
+
+            string currentVersion = MDNailToolDefines.Version;
+            string? installedVersion = GetInstalledVersion();
+
+            bool versionMismatch = installedVersion != currentVersion;
+            bool missingFiles = !HasEssentialFiles();
+
+            if (!versionMismatch && !missingFiles) return;
+
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
-            
-            StartEssentialExtraction(MDNailToolDefines.Version);
+
+            StartEssentialExtraction(currentVersion);
         }
 
         public static void EnsureEssentialsExtractedSync() {
