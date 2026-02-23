@@ -569,7 +569,6 @@
 /* フィルターパネル */
 .mdn-filter-panel {
     flex-direction: row;
-    flex-wrap: wrap;
     background-color: #323232;
     border-radius: 6px;
     border-width: 1px;
@@ -581,8 +580,7 @@
 .mdn-filter-col {
     flex-direction: column;
     margin-right: 10px;
-    min-width: 100px;
-    flex-shrink: 1;
+    width: 110px;
 }
 
 .mdn-filter-divider {
@@ -591,12 +589,10 @@
     margin-right: 10px;
     margin-top: 2px;
     margin-bottom: 2px;
-    flex-shrink: 0;
 }
 
 .mdn-filter-color-area {
-    min-width: 120px;
-    flex-shrink: 1;
+    width: 130px;
 }
 
 .mdn-filter-color-row {
@@ -624,12 +620,11 @@
     flex-grow: 1;
 }
 
-/* ネイルカードグリッド – 折り返しで左寄せ */
 .mdn-nail-grid {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: flex-start;
-    width: 100%;
+    width: 716px;
 }
 
 /* ネイルカード */

@@ -213,6 +213,22 @@
                             tooltip-id="tooltip.merge_anlabo_expression_menu"
                             class="mdn-option-label mdn-option-clickable" />
                     </ui:VisualElement>
+                    <ui:VisualElement class="mdn-option-row mdn-option-indent">
+                        <ui:Toggle name="bake-blendshapes" class="mdn-toggle" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                            name="label-bake-blendshapes"
+                            text-id="window.bake_blendshapes"
+                            tooltip-id="tooltip.bake_blendshapes"
+                            class="mdn-option-label mdn-option-clickable" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mdn-option-row mdn-option-indent-2">
+                        <ui:Toggle name="sync-blendshapes-with-ma" class="mdn-toggle" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                            name="label-sync-blendshapes"
+                            text-id="window.sync_blendshapes_with_ma"
+                            tooltip-id="tooltip.sync_blendshapes_with_ma"
+                            class="mdn-option-label mdn-option-clickable" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

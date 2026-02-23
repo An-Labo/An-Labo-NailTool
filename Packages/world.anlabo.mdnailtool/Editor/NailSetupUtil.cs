@@ -242,7 +242,6 @@ namespace world.anlabo.mdnailtool.Editor
 				Renderer? renderer = nailObject.GetComponent<Renderer>();
 				if (renderer == null) continue;
 
-				// 全スロットを同一マテリアルで上書き
 				Material[] materials = renderer.sharedMaterials;
 				for (int i = 0; i < materials.Length; i++)
 				{
@@ -250,6 +249,334 @@ namespace world.anlabo.mdnailtool.Editor
 				}
 				renderer.sharedMaterials = materials;
 			}
+		}
+
+		public static (Vector3[] deltaV, Vector3[] deltaN, Vector3[] deltaT) ComputeBlendShapeDelta(Mesh baseMesh, Mesh variantMesh)
+		{
+			int count = baseMesh.vertexCount;
+			Vector3[] baseV = baseMesh.vertices;
+			Vector3[] baseN = baseMesh.normals;
+			Vector4[] baseT = baseMesh.tangents;
+			Vector3[] varV = variantMesh.vertices;
+			Vector3[] varN = variantMesh.normals;
+			Vector4[] varT = variantMesh.tangents;
+
+			Vector3[] deltaV = new Vector3[count];
+			Vector3[] deltaN = new Vector3[count];
+			Vector3[] deltaT = new Vector3[count];
+
+			for (int i = 0; i < count; i++)
+			{
+				deltaV[i] = varV[i] - baseV[i];
+				deltaN[i] = (varN.Length > i ? varN[i] : Vector3.zero) - (baseN.Length > i ? baseN[i] : Vector3.zero);
+				Vector4 bt = baseT.Length > i ? baseT[i] : Vector4.zero;
+				Vector4 vt = varT.Length > i ? varT[i] : Vector4.zero;
+				deltaT[i] = new Vector3(vt.x - bt.x, vt.y - bt.y, vt.z - bt.z);
+			}
+			return (deltaV, deltaN, deltaT);
+		}
+
+		public static void BakeBlendShapesToNails(
+			IEnumerable<Transform?> nailObjects,
+			IEnumerable<SkinnedMeshRenderer> sourceSmrs,
+			string saveBasePath,
+			IReadOnlyDictionary<string, float>? initialWeights = null)
+		{
+			if (!Directory.Exists(saveBasePath))
+				Directory.CreateDirectory(saveBasePath);
+
+			foreach (Transform? nailObj in nailObjects)
+			{
+				if (nailObj == null) continue;
+				SkinnedMeshRenderer? nailSmr = nailObj.GetComponent<SkinnedMeshRenderer>();
+				if (nailSmr == null || nailSmr.sharedMesh == null) continue;
+
+				Mesh originalMesh = nailSmr.sharedMesh;
+				Mesh newMesh = UnityEngine.Object.Instantiate(originalMesh);
+				newMesh.name = $"{originalMesh.name}_bs";
+
+				foreach (SkinnedMeshRenderer sourceSmr in sourceSmrs)
+				{
+					Mesh? sourceMesh = sourceSmr.sharedMesh;
+					if (sourceMesh == null) continue;
+
+					for (int si = 0; si < sourceMesh.blendShapeCount; si++)
+					{
+						string shapeName = sourceMesh.GetBlendShapeName(si);
+						if (newMesh.GetBlendShapeIndex(shapeName) >= 0) continue;
+
+						int frameCount = sourceMesh.GetBlendShapeFrameCount(si);
+						for (int fi = 0; fi < frameCount; fi++)
+						{
+							float weight = sourceMesh.GetBlendShapeFrameWeight(si, fi);
+							var dv = new Vector3[newMesh.vertexCount];
+							var dn = new Vector3[newMesh.vertexCount];
+							var dt = new Vector3[newMesh.vertexCount];
+							newMesh.AddBlendShapeFrame(shapeName, weight, dv, dn, dt);
+						}
+					}
+				}
+
+				string assetPath = $"{saveBasePath}/{newMesh.name}.asset";
+				AssetDatabase.CreateAsset(newMesh, assetPath);
+				nailSmr.sharedMesh = newMesh;
+
+				if (initialWeights != null)
+				{
+					foreach (var (shapeNameKey, weight) in initialWeights)
+					{
+						string normalizedKey = shapeNameKey.Replace(" ", "").Replace("　", "");
+
+						for (int i = 0; i < newMesh.blendShapeCount; i++)
+						{
+							string bn = newMesh.GetBlendShapeName(i);
+							if (bn.Replace(" ", "").Replace("　", "") == normalizedKey)
+							{
+								nailSmr.SetBlendShapeWeight(i, weight);
+								break;
+							}
+						}
+					}
+				}
+
+				foreach (SkinnedMeshRenderer sourceSmr in sourceSmrs)
+				{
+					Mesh? sourceMesh = sourceSmr.sharedMesh;
+					if (sourceMesh == null) continue;
+
+					for (int si = 0; si < sourceMesh.blendShapeCount; si++)
+					{
+						string shapeName = sourceMesh.GetBlendShapeName(si);
+						int nailIdx = newMesh.GetBlendShapeIndex(shapeName);
+						if (nailIdx >= 0)
+						{
+							float srcWeight = sourceSmr.GetBlendShapeWeight(si);
+							if (srcWeight != 0f)
+								nailSmr.SetBlendShapeWeight(nailIdx, srcWeight);
+						}
+					}
+				}
+			}
+			AssetDatabase.SaveAssets();
+		}
+
+		public static GameObject? BakeAndCombineNailMeshes(
+			Transform?[] nailObjects,
+			GameObject nailPrefabObject,
+			string zoneName,
+			string saveBasePath,
+			(string Name, Transform?[] VariantNails)[]? variants = null)
+		{
+			var validPairs = nailObjects
+				.Where(t => t != null && t.GetComponent<SkinnedMeshRenderer>() != null
+				            && t.GetComponent<SkinnedMeshRenderer>()!.sharedMesh != null)
+				.Select(t => (transform: t!, smr: t!.GetComponent<SkinnedMeshRenderer>()!))
+				.ToArray();
+			if (validPairs.Length == 0) return null;
+
+			GameObject combinedGo = new GameObject(zoneName);
+			combinedGo.transform.SetParent(nailPrefabObject.transform, false);
+			combinedGo.transform.localPosition = Vector3.zero;
+			combinedGo.transform.localRotation = Quaternion.identity;
+			combinedGo.transform.localScale    = Vector3.one;
+
+			var boneTransforms = new Transform[validPairs.Length];
+			for (int i = 0; i < validPairs.Length; i++)
+			{
+				boneTransforms[i] = validPairs[i].transform.parent;
+			}
+
+			var combinedMesh = new Mesh();
+			combinedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+			combinedMesh.name = zoneName;
+
+			var allVerts    = new List<Vector3>();
+			var allNormals  = new List<Vector3>();
+			var allUVs      = new List<Vector2>();
+			var allWeights  = new List<BoneWeight>();
+			int[] vertexOffsets = new int[validPairs.Length];
+			int vertexOffset = 0;
+
+			Matrix4x4 combinedGoW2L = combinedGo.transform.worldToLocalMatrix;
+
+			for (int si = 0; si < validPairs.Length; si++)
+			{
+				vertexOffsets[si] = vertexOffset;
+				Mesh mesh = validPairs[si].smr.sharedMesh;
+
+				Mesh bakedMesh = new Mesh();
+				validPairs[si].smr.BakeMesh(bakedMesh);
+
+				Matrix4x4 toLocal = combinedGoW2L * validPairs[si].transform.localToWorldMatrix;
+
+				Vector3[] srcVerts   = bakedMesh.vertices;
+				Vector3[] srcNormals = bakedMesh.normals;
+				for (int vi = 0; vi < mesh.vertexCount; vi++)
+				{
+					allVerts.Add(toLocal.MultiplyPoint3x4(srcVerts[vi]));
+					Vector3 n = srcNormals.Length > vi ? srcNormals[vi] : Vector3.up;
+					allNormals.Add(toLocal.MultiplyVector(n).normalized);
+				}
+
+				Vector2[] uvs = mesh.uv;
+				allUVs.AddRange(uvs.Length == mesh.vertexCount ? uvs : new Vector2[mesh.vertexCount]);
+
+				for (int vi = 0; vi < mesh.vertexCount; vi++)
+					allWeights.Add(new BoneWeight { boneIndex0 = si, weight0 = 1f });
+
+				vertexOffset += mesh.vertexCount;
+
+				UnityEngine.Object.DestroyImmediate(bakedMesh);
+			}
+
+			combinedMesh.vertices    = allVerts.ToArray();
+			combinedMesh.normals     = allNormals.ToArray();
+			combinedMesh.uv          = allUVs.ToArray();
+			combinedMesh.boneWeights = allWeights.ToArray();
+
+			var materialGroups = new Dictionary<Material, List<int>>();
+			var materialList = new List<Material>();
+
+			for (int si = 0; si < validPairs.Length; si++)
+			{
+				Material mat = validPairs[si].smr.sharedMaterials.Length > 0 ? validPairs[si].smr.sharedMaterials[0] : null!;
+				if (mat == null) continue;
+
+				if (!materialGroups.ContainsKey(mat))
+				{
+					materialGroups[mat] = new List<int>();
+					materialList.Add(mat);
+				}
+
+				int[] srcTris = validPairs[si].smr.sharedMesh.triangles;
+				int vOff = vertexOffsets[si];
+				for (int ti = 0; ti < srcTris.Length; ti++)
+				{
+					materialGroups[mat].Add(srcTris[ti] + vOff);
+				}
+			}
+
+			combinedMesh.subMeshCount = materialList.Count;
+			for (int mi = 0; mi < materialList.Count; mi++)
+			{
+				Material mat = materialList[mi];
+				combinedMesh.SetTriangles(materialGroups[mat].ToArray(), mi);
+			}
+
+			Matrix4x4 combinedL2W = combinedGo.transform.localToWorldMatrix;
+			combinedMesh.bindposes = boneTransforms
+				.Select(b => b.worldToLocalMatrix * combinedL2W)
+				.ToArray();
+
+			var allOriginalShapeNames = new List<string>();
+			foreach (var (_, smr) in validPairs)
+				for (int shi = 0; shi < smr.sharedMesh.blendShapeCount; shi++)
+				{
+					string sn = smr.sharedMesh.GetBlendShapeName(shi);
+					if (!allOriginalShapeNames.Contains(sn)) allOriginalShapeNames.Add(sn);
+				}
+
+			int totalVertCount = allVerts.Count;
+
+			if (variants != null)
+			{
+				foreach (var variant in variants)
+				{
+					string shapeName = variant.Name;
+					string normalizedVariantName = variant.Name.Replace(" ", "").Replace("　", "");
+					foreach (var originalName in allOriginalShapeNames) {
+						if (originalName.Replace(" ", "").Replace("　", "") == normalizedVariantName) {
+							shapeName = originalName;
+							break;
+						}
+					}
+					var fullDv = new Vector3[totalVertCount];
+					var fullDn = new Vector3[totalVertCount];
+					var fullDt = new Vector3[totalVertCount];
+
+					int vOff = 0;
+					bool hasAnyDelta = false;
+
+					for (int si = 0; si < validPairs.Length; si++)
+					{
+						Transform baseNail = validPairs[si].transform;
+						Mesh baseMesh = validPairs[si].smr.sharedMesh;
+						int siVertCount = baseMesh.vertexCount;
+
+						Transform? variantNail = variant.VariantNails.FirstOrDefault(t => t != null && t.name == baseNail.name);
+
+						if (variantNail != null)
+						{
+						SkinnedMeshRenderer? varSmr = variantNail.GetComponent<SkinnedMeshRenderer>();
+						if (varSmr != null && varSmr.sharedMesh != null && varSmr.sharedMesh.vertexCount == siVertCount)
+						{
+							hasAnyDelta = true;
+
+							Mesh bakedBaseMesh = new Mesh();
+							validPairs[si].smr.BakeMesh(bakedBaseMesh);
+
+							Mesh bakedVarMesh = new Mesh();
+							varSmr.BakeMesh(bakedVarMesh);
+
+							Matrix4x4 variantToLocal = combinedGoW2L * variantNail.localToWorldMatrix;
+							Matrix4x4 baseToLocal = combinedGoW2L * baseNail.localToWorldMatrix;
+
+							Vector3[] varVerts = bakedVarMesh.vertices;
+							Vector3[] baseVerts = bakedBaseMesh.vertices;
+							Vector3[] varNormals = bakedVarMesh.normals;
+							Vector3[] baseNormals = bakedBaseMesh.normals;
+
+							for (int vi = 0; vi < siVertCount; vi++)
+							{
+								Vector3 vv = variantToLocal.MultiplyPoint3x4(varVerts[vi]);
+								Vector3 bv = baseToLocal.MultiplyPoint3x4(baseVerts[vi]);
+								fullDv[vOff + vi] = vv - bv;
+
+								Vector3 vn = varNormals.Length > vi ? varNormals[vi] : Vector3.up;
+								Vector3 bn = baseNormals.Length > vi ? baseNormals[vi] : Vector3.up;
+								Vector3 w_vn = variantToLocal.MultiplyVector(vn).normalized;
+								Vector3 w_bn = baseToLocal.MultiplyVector(bn).normalized;
+								fullDn[vOff + vi] = w_vn - w_bn;
+
+								fullDt[vOff + vi] = Vector3.zero;
+							}
+
+							UnityEngine.Object.DestroyImmediate(bakedBaseMesh);
+							UnityEngine.Object.DestroyImmediate(bakedVarMesh);
+							}
+						}
+
+						vOff += siVertCount;
+					}
+
+					if (hasAnyDelta)
+					{
+						combinedMesh.AddBlendShapeFrame(shapeName, 100f, fullDv, fullDn, fullDt);
+					}
+				}
+			}
+
+			if (!Directory.Exists(saveBasePath))
+				Directory.CreateDirectory(saveBasePath);
+			string assetPath = $"{saveBasePath}/{zoneName}.asset";
+			AssetDatabase.CreateAsset(combinedMesh, assetPath);
+
+			SkinnedMeshRenderer combinedSmr = combinedGo.AddComponent<SkinnedMeshRenderer>();
+			combinedSmr.sharedMesh = combinedMesh;
+			combinedSmr.bones      = boneTransforms;
+			combinedSmr.rootBone   = boneTransforms[0];
+
+			combinedSmr.sharedMaterials = materialList.ToArray();
+
+			for (int bsIdx = 0; bsIdx < combinedMesh.blendShapeCount; bsIdx++)
+			{
+				combinedSmr.SetBlendShapeWeight(bsIdx, 0f);
+			}
+
+			foreach (var (t, _) in validPairs)
+				UnityEngine.Object.DestroyImmediate(t.gameObject);
+
+			return combinedGo;
 		}
 	}
 }

@@ -57,6 +57,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _generateExpressionMenu;
 		private Toggle? _splitHandFootExpressionMenu;
 		private Toggle? _mergeAnLaboExpressionMenu;
+		private Toggle? _bakeBlendShapes;
+		private Toggle? _syncBlendShapesWithMA;
 		private LocalizedButton? _execute;
 		private LocalizedButton? _remove;
 
@@ -146,11 +148,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._avatarDropDowns.SearchButtonClicked += this.ShowAvatarSearchWindow;
 			this._avatarDropDowns.SortOrderSelected += this.OnChangeAvatarSortOrder;
 
-			this._avatarDropDowns.RegisterCallback<ChangeEvent<string>>(_ =>
+			this._avatarDropDowns.RegisterCallback<ChangeEvent<string>>(evt =>
 			{
 				this.CleanupScenePreview();
 				this.UpdatePreview();
 				this.RequestScenePreviewUpdate();
+				
+				if (evt.target != this._avatarDropDowns.BlendShapeVariantPopup)
+				{
+					this.UpdateBlendShapeVariantDropDown();
+				}
 			});
 		}
 
@@ -270,12 +277,100 @@ namespace world.anlabo.mdnailtool.Editor.Window
 						this._mergeAnLaboExpressionMenu.value = !this._mergeAnLaboExpressionMenu.value;
 				});
 			}
+
+			this._bakeBlendShapes = this.rootVisualElement.Q<Toggle>("bake-blendshapes");
+			if (this._bakeBlendShapes != null)
+			{
+				this._bakeBlendShapes.SetValueWithoutNotify(GlobalSetting.BakeBlendShapes);
+				this._bakeBlendShapes.RegisterValueChangedCallback(evt => {
+					GlobalSetting.BakeBlendShapes = evt.newValue;
+					this._syncBlendShapesWithMA?.SetEnabled(evt.newValue);
+					this.UpdateBlendShapeVariantVisibility();
+				});
+				this._bakeBlendShapes.SetEnabled(GlobalSetting.UseModularAvatar);
+				var lblBake = this.rootVisualElement.Q<LocalizedLabel>("label-bake-blendshapes");
+				lblBake?.RegisterCallback<ClickEvent>(_ => {
+					if (this._bakeBlendShapes != null && this._bakeBlendShapes.enabledSelf)
+						this._bakeBlendShapes.value = !this._bakeBlendShapes.value;
+				});
+			}
+
+			this._syncBlendShapesWithMA = this.rootVisualElement.Q<Toggle>("sync-blendshapes-with-ma");
+			if (this._syncBlendShapesWithMA != null)
+			{
+				this._syncBlendShapesWithMA.SetValueWithoutNotify(GlobalSetting.SyncBlendShapesWithMA);
+				this._syncBlendShapesWithMA.RegisterValueChangedCallback(
+					evt => GlobalSetting.SyncBlendShapesWithMA = evt.newValue);
+				this._syncBlendShapesWithMA.SetEnabled(GlobalSetting.UseModularAvatar && GlobalSetting.BakeBlendShapes);
+				var lblSync = this.rootVisualElement.Q<LocalizedLabel>("label-sync-blendshapes");
+				lblSync?.RegisterCallback<ClickEvent>(_ => {
+					if (this._syncBlendShapesWithMA != null && this._syncBlendShapesWithMA.enabledSelf)
+						this._syncBlendShapesWithMA.value = !this._syncBlendShapesWithMA.value;
+				});
+			}
 		}
 
 		private void UpdateExpressionMenuSubOptions(bool exprMenuEnabled)
 		{
 			this._splitHandFootExpressionMenu?.SetEnabled(exprMenuEnabled);
 			this._mergeAnLaboExpressionMenu?.SetEnabled(exprMenuEnabled);
+		}
+
+		private void UpdateBlendShapeVariantDropDown()
+		{
+			if (this._avatarDropDowns == null) return;
+			var popup = this._avatarDropDowns.BlendShapeVariantPopup;
+			if (popup == null) return;
+
+			var choices = new List<string> { S("window.none") ?? "None" };
+			popup.choices = choices;
+			popup.index = 0;
+
+			var avatarVariationData = this._avatarDropDowns.GetSelectedAvatarVariation();
+			if (avatarVariationData == null) 
+			{
+				this.UpdateBlendShapeVariantVisibility();
+				return;
+			}
+
+			AvatarBlendShapeVariant[]? variants = avatarVariationData.BlendShapeVariants;
+			if (variants == null)
+			{
+				using DBShop dbShop = new();
+				string avatarName = this._avatarDropDowns.GetAvatarName();
+				foreach (Shop s in dbShop.collection)
+				{
+					Avatar? av = s.FindAvatarByName(avatarName);
+					if (av?.BlendShapeVariants != null)
+					{
+						variants = av.BlendShapeVariants;
+						break;
+					}
+				}
+			}
+
+			if (variants != null && variants.Length > 0)
+			{
+				choices.AddRange(variants.Select(v => v.Name));
+				popup.choices = choices;
+			}
+			
+			this.UpdateBlendShapeVariantVisibility();
+		}
+
+		private void UpdateBlendShapeVariantVisibility()
+		{
+			if (this._avatarDropDowns == null) return;
+			var popup = this._avatarDropDowns.BlendShapeVariantPopup;
+			if (popup == null) return;
+
+			bool maEnabled = GlobalSetting.UseModularAvatar;
+			bool bakeEnabled = GlobalSetting.BakeBlendShapes;
+			
+			bool hasVariants = popup.choices.Count > 1;
+			
+			popup.style.display = DisplayStyle.Flex;
+			popup.SetEnabled(maEnabled && !bakeEnabled && hasVariants);
 		}
 
 		private void UpdatePreviewAreaVisibility(bool visible)
@@ -455,6 +550,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					this._avatarDropDowns.SetValues(variation.Value.shop, variation.Value.avatar, variation.Value.variation);
 				}
 			}
+
+			this.UpdateBlendShapeVariantDropDown();
 		}
 
 
@@ -767,7 +864,28 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					MergeAnLabo = (this._forModularAvatar?.value == true)
 					           && (this._generateExpressionMenu?.value == true)
 					           && (this._mergeAnLaboExpressionMenu?.value == true),
+					BakeBlendShapes = (this._forModularAvatar?.value == true)
+					               && (this._bakeBlendShapes?.value == true),
+					SyncBlendShapesWithMA = (this._forModularAvatar?.value == true)
+					                     && (this._bakeBlendShapes?.value == true)
+					                     && (this._syncBlendShapesWithMA?.value == true),
+					SelectedBlendShapeVariantName = (this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == false && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
 				};
+
+				// AvatarEntityをprocessorにセット（shop.jsonのblendShapeVariantsを参照するため）
+				{
+					using DBShop dbShop = new();
+					string avatarName = this._avatarDropDowns.GetAvatarName();
+					foreach (Shop s in dbShop.collection)
+					{
+						Avatar? av = s.FindAvatarByName(avatarName);
+						if (av != null)
+						{
+							processor.AvatarEntity = av;
+							break;
+						}
+					}
+				}
 
 				processor.Process();
 
@@ -1012,6 +1130,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._splitHandFootExpressionMenu?.SetEnabled(evt.newValue && this._generateExpressionMenu.value);
 				this._mergeAnLaboExpressionMenu?.SetEnabled(evt.newValue && this._generateExpressionMenu.value);
 			}
+			this._bakeBlendShapes?.SetEnabled(evt.newValue);
+			this._syncBlendShapesWithMA?.SetEnabled(evt.newValue && (this._bakeBlendShapes?.value == true));
+			this.UpdateBlendShapeVariantVisibility();
 		}
 		private void ShowAvatarSearchWindow() { SearchAvatarWindow.ShowWindow(this); }
 		private void ShowNailSearchWindow() { SearchNailDesignWindow.ShowWindow(this); }

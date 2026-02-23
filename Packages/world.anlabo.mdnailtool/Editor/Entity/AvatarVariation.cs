@@ -16,9 +16,18 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 
 		[JsonProperty("displayNames")]
 		public IReadOnlyDictionary<string, string>? DisplayNames { get; set; }
-		
+
 		[JsonProperty("boneMappingOverride")]
 		public IReadOnlyDictionary<string, string>? BoneMappingOverride { get; set; }
+
+		[JsonProperty("blendShapeSyncSources")]
+		public string[]? BlendShapeSyncSources { get; set; }
+
+		[JsonProperty("blendShapeInitialWeights")]
+		public IReadOnlyDictionary<string, float>? BlendShapeInitialWeights { get; set; }
+
+		[JsonProperty("blendShapeVariants")]
+		public AvatarBlendShapeVariant[]? BlendShapeVariants { get; set; }
 
 		[JsonRequired]
 		[JsonProperty("avatarPrefabs")]
