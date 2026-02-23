@@ -93,7 +93,6 @@
 
 .mdn-link:hover {
     color: #aad0ff;
-    text-decoration: underline;
 }
 
 /* ---- Section card ---- */
@@ -204,7 +203,7 @@
     min-width: 80px;
 }
 
-.mdn-style-item:last-child {
+.mdn-style-item-last {
     margin-right: 0;
 }
 
@@ -688,7 +687,6 @@
 
 .mdn-nail-link:hover {
     color: #aad0ff;
-    text-decoration: underline;
 }
 
 .mdn-nail-badge {
@@ -924,11 +922,7 @@
    REQUIRED FIELD MARKER
    ============================================================ */
 
-/* アスタリスク（*）を ObjectField のラベル末尾に表示（ニュートラルカラー） */
-.mdn-required-field > .unity-base-field__label::after {
-    content: " *";
-    color: #aaaaaa;
-}
+/* アスタリスク（*）は C# の LocalizedObjectField でラベル末尾に追加されます */
 
 /* エラー時のフィールド枠線ハイライト（枠線のみ、ラベル色変更なし） */
 .mdn-field-error {
@@ -938,9 +932,6 @@
 }
 
 /* Light skin overrides */
-:root[data-unity-skin="light"] .mdn-required-field > .unity-base-field__label::after {
-    color: #888888;
-}
 
 :root[data-unity-skin="light"] .mdn-field-error {
     border-color: #c03030 !important;

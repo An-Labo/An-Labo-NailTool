@@ -875,7 +875,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				// AvatarEntityをprocessorにセット（shop.jsonのblendShapeVariantsを参照するため）
 				{
 					using DBShop dbShop = new();
-					string avatarName = this._avatarDropDowns.GetAvatarName();
+					string avatarName = this._avatarDropDowns!.GetAvatarName();
 					foreach (Shop s in dbShop.collection)
 					{
 						Avatar? av = s.FindAvatarByName(avatarName);
