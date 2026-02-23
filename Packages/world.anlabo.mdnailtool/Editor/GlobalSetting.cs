@@ -155,6 +155,28 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(MERGE_ANLABO_EXPRESSION_MENU_KEY, value);
 		}
 
+		private const string BAKE_BLENDSHAPES_KEY = "world.anlabo.mdnailtool.bake_blendshapes";
+		internal static bool BakeBlendShapes
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(BAKE_BLENDSHAPES_KEY)) return false;
+				return EditorPrefs.GetBool(BAKE_BLENDSHAPES_KEY);
+			}
+			set => EditorPrefs.SetBool(BAKE_BLENDSHAPES_KEY, value);
+		}
+
+		private const string SYNC_BLENDSHAPES_WITH_MA_KEY = "world.anlabo.mdnailtool.sync_blendshapes_with_ma";
+		internal static bool SyncBlendShapesWithMA
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(SYNC_BLENDSHAPES_WITH_MA_KEY)) return false;
+				return EditorPrefs.GetBool(SYNC_BLENDSHAPES_WITH_MA_KEY);
+			}
+			set => EditorPrefs.SetBool(SYNC_BLENDSHAPES_WITH_MA_KEY, value);
+		}
+
 		private const string DESIGN_LAST_USED_TIMES_KEY = "world.anlabo.mdnailtool.design_last_used_times";
 		internal static Dictionary<string, DateTime> DesignLastUsedTimes
 		{

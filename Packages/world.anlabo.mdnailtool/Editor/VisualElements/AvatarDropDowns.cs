@@ -27,6 +27,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		private readonly DropdownField _shopPopup;
 		private readonly DropdownField _avatarPopup;
 		private readonly DropdownField _variantPopup;
+		public DropdownField BlendShapeVariantPopup { get; }
 
 		private List<string>? _shopPopupElements;
 		private List<string>? _avatarPopupElements;
@@ -86,28 +87,19 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			Func<string?, string> getShopPopupDisplayNameFunc = this.GetShopPopupDisplayName;
 			this._shopPopup = new DropdownField {
 				style = {
-					flexGrow = 1
+					flexGrow = 1,
+					width = new Length(0, LengthUnit.Pixel)
 				},
 				formatSelectedValueCallback = getShopPopupDisplayNameFunc,
 				formatListItemCallback = getShopPopupDisplayNameFunc
 			};
 			this._shopPopup.RegisterValueChangedCallback(this.OnChangeShopPopup);
 
-
-			VisualElement shopGroup = new() {
-				style = {
-					width = new Length(40, LengthUnit.Percent),
-					flexDirection = FlexDirection.Row
-				},
-			};
-			shopGroup.Add(labelGroup);
-			shopGroup.Add(this._shopPopup);
-
-
 			Func<string?, string> getAvatarPopupDisplayNameFunc = this.GetAvatarPopupDisplayName;
 			this._avatarPopup = new DropdownField {
 				style = {
-					width = new Length(30, LengthUnit.Percent)
+					flexGrow = 1,
+					width = new Length(0, LengthUnit.Pixel)
 				},
 				formatSelectedValueCallback = getAvatarPopupDisplayNameFunc,
 				formatListItemCallback = getAvatarPopupDisplayNameFunc
@@ -117,12 +109,22 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			Func<string?, string> getVariantPopupDisplayNameFunc = this.GetVariantPopupDisplayName;
 			this._variantPopup = new DropdownField {
 				style = {
-					width = StyleKeyword.Auto,
-					flexGrow = 1
+					flexGrow = 1,
+					width = new Length(0, LengthUnit.Pixel)
 				},
 				formatSelectedValueCallback = getVariantPopupDisplayNameFunc,
 				formatListItemCallback = getVariantPopupDisplayNameFunc
 			};
+
+			this.BlendShapeVariantPopup = new DropdownField {
+				style = {
+					flexGrow = 1,
+					width = new Length(0, LengthUnit.Pixel),
+					display = DisplayStyle.None
+				},
+				tooltip = LanguageManager.S("tooltip.blendshape_variant")
+			};
+
 			// 検索・ソートボタングループ（バリエーションの右）
 			VisualElement buttonGroup = new() {
 				style = {
@@ -135,9 +137,11 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			buttonGroup.Add(this._searchButton);
 			buttonGroup.Add(this._sortButton);
 
-			this.Add(shopGroup);
+			this.Add(labelGroup);
+			this.Add(this._shopPopup);
 			this.Add(this._avatarPopup);
 			this.Add(this._variantPopup);
+			this.Add(this.BlendShapeVariantPopup);
 			this.Add(buttonGroup);
 
 			this.style.flexDirection = FlexDirection.Row;
@@ -382,6 +386,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._avatarPopup.SetValueWithoutNotify(this._avatarPopup.value);
 			this._variantPopup.SetValueWithoutNotify(this._variantPopup.value);
 			this.tooltip = LanguageManager.S("tooltip.avatar_dropdowns") ?? "";
+			this.BlendShapeVariantPopup.tooltip = LanguageManager.S("tooltip.blendshape_variant") ?? "";
 		}
 
 		private void SortShopList(AvatarSortOrder order) {

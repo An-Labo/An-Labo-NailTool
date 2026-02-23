@@ -40,7 +40,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
         private int _pageIndex = 0;
         private const int ItemsPerPage = 12;
 
-        private static readonly Vector2 MinWindowSize = new Vector2(700, 600);
+        private static readonly Vector2 FixedWindowSize = new Vector2(850, 950);
+        
 
         private Color _highlightColor;
         private Color _borderColor;
@@ -69,7 +70,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             string title = LanguageManager.S("window.search_nail") ?? "Search Nail";
             window.titleContent = new GUIContent(title);
             window._parentWindow = parentWindow;
-            window.minSize = MinWindowSize;
+            window.minSize = FixedWindowSize;
+            window.maxSize = FixedWindowSize;
             window.ShowAuxWindow();
         }
 
