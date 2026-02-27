@@ -112,12 +112,11 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 			GameObject nailPrefabObject = Object.Instantiate(this.NailPrefab, this.Avatar.transform);
 			{
-				string designName = this.NailDesignAndVariationNames.Length > 0 && this.NailDesignAndVariationNames[0].Item1 != null
-					? this.NailDesignAndVariationNames[0].Item1.DesignName
+				var firstEntry = this.NailDesignAndVariationNames.FirstOrDefault(t => t.Item1 != null);
+				string designName = firstEntry.Item1 != null
+					? firstEntry.Item1.DesignName
 					: (this.OverrideMaterial?.name ?? "Unknown");
-				string colorName = this.NailDesignAndVariationNames.Length > 0
-					? this.NailDesignAndVariationNames[0].Item3
-					: "";
+				string colorName = firstEntry.Item1 != null ? firstEntry.Item3 : "";
 				string nailLabel = string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}";
 				nailPrefabObject.name = $"[An-Labo]{nailLabel}";
 			}
@@ -811,10 +810,10 @@ namespace world.anlabo.mdnailtool.Editor {
 
 #if MD_NAIL_FOR_MA
 	private void SetupExpressionMenu(GameObject nailRoot) {
-		string designName = this.NailDesignAndVariationNames.Length > 0 && this.NailDesignAndVariationNames[0].Item1 != null
-			? this.NailDesignAndVariationNames[0].Item1.DesignName : (this.OverrideMaterial?.name ?? "Nail");
-		string colorName = this.NailDesignAndVariationNames.Length > 0
-			? this.NailDesignAndVariationNames[0].Item3 : "";
+		var firstEntry = this.NailDesignAndVariationNames.FirstOrDefault(t => t.Item1 != null);
+		string designName = firstEntry.Item1 != null
+			? firstEntry.Item1.DesignName : (this.OverrideMaterial?.name ?? "Nail");
+		string colorName = firstEntry.Item1 != null ? firstEntry.Item3 : "";
 		string menuLabel = string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}";
 		string variationName = this.AvatarVariationData.VariationName;
 		string handWrapperName = $"HandNail_{variationName}";
