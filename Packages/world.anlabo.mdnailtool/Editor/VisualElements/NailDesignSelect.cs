@@ -177,10 +177,12 @@ IReadOnlyDictionary<string, int> useCounts = GlobalSetting.DesignUseCount;
 string langKey = LanguageManager.CurrentLanguageData.language;
 
 foreach (NailDesign nailDesign in dbNailDesign.collection
-         .OrderByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName)) 
-         .ThenByDescending(design => useCounts.GetValueOrDefault(design.DesignName, 0)) 
+         // 子バリ（parentVariant が設定されているもの）はメインリストに表示しない
+         .Where(design => string.IsNullOrEmpty(design.ParentVariant))
+         .OrderByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName))
+         .ThenByDescending(design => useCounts.GetValueOrDefault(design.DesignName, 0))
          .ThenByDescending(design => lastUsedTime.GetValueOrDefault(design.DesignName, DateTime.MinValue))
-         .ThenByDescending(design => design.Id)) 
+         .ThenByDescending(design => design.Id))
 {
 {
 				VisualElement nailElement = new() {
@@ -271,9 +273,7 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 			if (evt.target is not VisualElement element) return;
 			string designName = element.name;
 			if (string.IsNullOrEmpty(designName)) return;
-			
 			ResourceAutoExtractor.EnsureDesignExtracted(designName);
-			
 			this.OnSelectNail?.Invoke(designName);
 		}
 

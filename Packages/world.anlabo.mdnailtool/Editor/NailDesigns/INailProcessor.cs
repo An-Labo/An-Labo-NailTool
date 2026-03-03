@@ -26,7 +26,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		bool IsSupportedNailShape(string shapeName);
 		
 		
-		protected static DesignData GetDesignData(string designName) {
+		public static DesignData GetDesignData(string designName) {
 			string designPath = $"{MDNailToolDefines.NAIL_DESIGN_PATH}{designName}/";
 			string jsonPath = $"{designPath}_design.json";
 			

@@ -38,10 +38,14 @@ namespace world.anlabo.mdnailtool.Editor {
 	public bool GenerateExpressionMenu { get; set; }
 	public bool SplitHandFoot { get; set; }
 	public bool MergeAnLabo { get; set; }
+		public bool ArmatureScaleCompensation { get; set; }
 		public bool BakeBlendShapes { get; set; }
 		public bool SyncBlendShapesWithMA { get; set; }
 		public string? SelectedBlendShapeVariantName { get; set; }
 		public Entity.Avatar? AvatarEntity { get; set; }
+		public bool EnableAdditionalMaterials { get; set; } = true;
+		public IEnumerable<Material>?[]? PerFingerAdditionalMaterials { get; set; }
+		public IEnumerable<Transform>?[]? PerFingerAdditionalObjects { get; set; }
 
 		public NailSetupProcessor(VRCAvatarDescriptor avatar, AvatarVariation avatarVariationData, GameObject nailPrefab, (INailProcessor, string, string)[] nailDesignAndVariationNames,
 			string nailShapeName) {
@@ -160,19 +164,53 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			// マテリアルの適用
 			try {
-				NailSetupUtil.ReplaceNailMaterial(handsNailObjects, leftFootNailObjects, rightFootNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, this.GenerateMaterial, false, this.OverrideMaterial);
+				NailSetupUtil.ReplaceNailMaterial(handsNailObjects, leftFootNailObjects, rightFootNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, this.GenerateMaterial, false, this.OverrideMaterial,
+					this.EnableAdditionalMaterials, this.PerFingerAdditionalMaterials);
 			} catch (Exception) {
 				Undo.RevertAllInCurrentGroup();
 				throw;
 			}
 
 			try {
-				NailSetupUtil.AttachAdditionalObjects(handsNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, false);
+				NailSetupUtil.AttachAdditionalObjects(handsNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, false, this.PerFingerAdditionalObjects);
 			} catch (Exception) {
 				Undo.RevertAllInCurrentGroup();
 				throw;
 			}
 
+			// 足の追加オブジェクト（per-finger indices 10-19）
+			if (this.UseFootNail && this.PerFingerAdditionalObjects != null)
+			{
+				try {
+					Transform?[] footNailObjects = leftFootNailObjects.Concat(rightFootNailObjects).ToArray();
+					for (int fi = 0; fi < footNailObjects.Length; fi++)
+					{
+						int perFingerIdx = fi + 10;
+						if (footNailObjects[fi] == null || perFingerIdx >= this.PerFingerAdditionalObjects.Length) continue;
+						var fingerObjects = this.PerFingerAdditionalObjects[perFingerIdx];
+						if (fingerObjects == null) continue;
+						foreach (Transform additionalObject in fingerObjects)
+							additionalObject.SetParent(footNailObjects[fi], false);
+					}
+				} catch (Exception) {
+					Undo.RevertAllInCurrentGroup();
+					throw;
+				}
+			}
+
+			// Mip Streaming有効化
+			try {
+				var allRenderers = handsNailObjects
+					.Concat(this.UseFootNail
+						? leftFootNailObjects.Concat(rightFootNailObjects)
+						: Enumerable.Empty<Transform?>())
+					.Where(t => t != null)
+					.SelectMany(t => t!.GetComponentsInChildren<Renderer>(true))
+					.Cast<Renderer?>();
+				NailSetupUtil.EnableMipStreamingForRenderers(allRenderers);
+			} catch (Exception e) {
+				Debug.LogWarning($"[MDNailTool] Mip Streaming有効化中にエラー: {e.Message}");
+			}
 
 			// ---- BlendShapeのベイクとMA同期設定 ----
 			// AvatarVariationにblendShapeSyncSourcesが設定されている場合、ネイルメッシュにブレンドシェイプをコピーする
@@ -180,10 +218,18 @@ namespace world.anlabo.mdnailtool.Editor {
 			List<(SkinnedMeshRenderer sourceSmr, string sourcePath)> resolvedSourceSmrs = new();
 			if (blendShapeSyncSources != null && blendShapeSyncSources.Length > 0) {
 				foreach (string sourcePath in blendShapeSyncSources) {
+					// Step 1: パスで検索
 					Transform? sourceTransform = this.Avatar.transform.Find(sourcePath);
+					// Step 2: 名前完全一致で検索
 					if (sourceTransform == null) {
 						sourceTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
 							.FirstOrDefault(t => t.name == System.IO.Path.GetFileName(sourcePath));
+					}
+					// Step 3: 名前の大文字小文字を無視して検索
+					if (sourceTransform == null) {
+						string sourceName = System.IO.Path.GetFileName(sourcePath);
+						sourceTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
+							.FirstOrDefault(t => string.Equals(t.name, sourceName, System.StringComparison.OrdinalIgnoreCase));
 					}
 					if (sourceTransform == null) {
 						Debug.LogWarning($"[MDNailTool] BlendShapeSyncSource が見つかりません: {sourcePath}");
@@ -195,6 +241,20 @@ namespace world.anlabo.mdnailtool.Editor {
 						continue;
 					}
 					resolvedSourceSmrs.Add((sourceSmr, sourcePath));
+				}
+
+				// フォールバック: 指定された名前で見つからない場合、
+				// VisemeSkinnedMesh以外でBlendShapeを持つSmRから体メッシュを推測する
+				if (resolvedSourceSmrs.Count == 0) {
+					SkinnedMeshRenderer? visemeSmr = this.Avatar.VisemeSkinnedMesh;
+					var fallbackCandidate = this.Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+						.Where(smr => smr != visemeSmr && smr.sharedMesh != null && smr.sharedMesh.blendShapeCount > 0)
+						.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
+						.FirstOrDefault();
+					if (fallbackCandidate != null) {
+						resolvedSourceSmrs.Add((fallbackCandidate, fallbackCandidate.gameObject.name));
+						Debug.Log($"[MDNailTool] BlendShapeSyncSource フォールバック: '{fallbackCandidate.gameObject.name}' を使用します");
+					}
 				}
 
 				if (resolvedSourceSmrs.Count > 0) {
@@ -218,6 +278,41 @@ namespace world.anlabo.mdnailtool.Editor {
 			// BlendShapeバリアントのデルタ計算（メッシュ統合はボーン設定後）
 			// BakeBlendShapeDeltasメソッドは削除され、BakeAndCombineNailMeshesに統合されました。
 
+			// ---- Armature補正の計算（MA/非MA共通）----
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? corrections = null;
+			if (this.ArmatureScaleCompensation)
+			{
+				var allNails = new List<Transform?>();
+				var allBoneIndices = new List<int>();
+				int ci = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
+				foreach (Transform? nail in handsNailObjects)
+				{
+					ci++;
+					allNails.Add(nail);
+					allBoneIndices.Add(ci);
+				}
+				if (this.UseFootNail)
+				{
+					ci = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
+					foreach (Transform? nail in leftFootNailObjects)
+					{
+						ci++;
+						allNails.Add(nail);
+						allBoneIndices.Add(ci);
+					}
+					ci = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
+					foreach (Transform? nail in rightFootNailObjects)
+					{
+						ci++;
+						allNails.Add(nail);
+						allBoneIndices.Add(ci);
+					}
+				}
+				corrections = ComputeScaleCompensatedTransforms(
+					this.Avatar, targetBoneDictionary,
+					allNails.ToArray(), allBoneIndices.ToArray());
+			}
+
 			if (this.ForModularAvatar) {
 #if MD_NAIL_FOR_MA
 				string variationName = this.AvatarVariationData.VariationName;
@@ -238,7 +333,14 @@ namespace world.anlabo.mdnailtool.Editor {
 						bpIndex++;
 						if (nailObject == null) continue;
 						Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
-						if (targetBone != null) nailObject.SetParent(targetBone, true);
+						if (targetBone == null) continue;
+						if (corrections != null && corrections.TryGetValue(nailObject, out var c))
+						{
+							nailObject.position = c.position;
+							nailObject.rotation = c.rotation;
+							nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+						}
+						nailObject.SetParent(targetBone, true);
 					}
 					if (this.UseFootNail)
 					{
@@ -248,7 +350,14 @@ namespace world.anlabo.mdnailtool.Editor {
 							bpIndex++;
 							if (nailObject == null) continue;
 							Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
-							if (targetBone != null) nailObject.SetParent(targetBone, true);
+							if (targetBone == null) continue;
+							if (corrections != null && corrections.TryGetValue(nailObject, out var c))
+							{
+								nailObject.position = c.position;
+								nailObject.rotation = c.rotation;
+								nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+							}
+							nailObject.SetParent(targetBone, true);
 						}
 						bpIndex = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
 						foreach (Transform? nailObject in rightFootNailObjects)
@@ -256,7 +365,14 @@ namespace world.anlabo.mdnailtool.Editor {
 							bpIndex++;
 							if (nailObject == null) continue;
 							Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
-							if (targetBone != null) nailObject.SetParent(targetBone, true);
+							if (targetBone == null) continue;
+							if (corrections != null && corrections.TryGetValue(nailObject, out var c))
+							{
+								nailObject.position = c.position;
+								nailObject.rotation = c.rotation;
+								nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+							}
+							nailObject.SetParent(targetBone, true);
 						}
 					}
 					else
@@ -279,17 +395,71 @@ namespace world.anlabo.mdnailtool.Editor {
 						foreach (AvatarBlendShapeVariant variant in activeVariants)
 						{
 							string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-							if (string.IsNullOrEmpty(variantPath)) continue;
+							if (string.IsNullOrEmpty(variantPath)) { Debug.LogWarning($"[MDNailTool] Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"); continue; }
 							GameObject? variantPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
-							if (variantPrefabAsset == null) continue;
+							if (variantPrefabAsset == null) { Debug.LogWarning($"[MDNailTool] Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})"); continue; }
 
 							GameObject resolvedVariantPrefab = this.ResolveShapePrefab(variantPrefabAsset, this.NailShapeName);
 							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab);
 							objectsToDestroy.Add(instVariant);
 
+							// バリアントプレハブの子名からシェイプ接頭辞([Oval]等)を除去
+							// ベースプレハブと同様の処理（行125-129相当）
+							{
+								Regex varPrefixRegex = new(@"(?<prefix>\[.+\]).+");
+								Match varPrefixMatch = varPrefixRegex.Match(resolvedVariantPrefab.name);
+								if (varPrefixMatch.Success)
+								{
+									string varPrefix = varPrefixMatch.Groups["prefix"].Value;
+									foreach (Transform child in instVariant.transform)
+										child.name = child.name.Replace(varPrefix, "");
+								}
+							}
+
 							Transform?[] varHands = GetHandsNailObjectList(instVariant);
 							Transform?[] varLeftFoot = GetLeftFootNailObjectList(instVariant);
 							Transform?[] varRightFoot = GetRightFootNailObjectList(instVariant);
+
+							// バリアントネイルのメッシュが未解決(null)の場合、ベースネイルのメッシュをコピー
+							// （プレハブが参照するFBXが存在しない場合の対策）
+							CopyMeshIfNull(varHands, handsNailObjects);
+							CopyMeshIfNull(varLeftFoot, leftFootNailObjects);
+							CopyMeshIfNull(varRightFoot, rightFootNailObjects);
+
+							// Armatureスケール補正をバリアントネイルにも適用
+							Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? variantCorrections = null;
+							if (corrections != null)
+							{
+								var varAllNails = new List<Transform?>();
+								var varAllBoneIndices = new List<int>();
+								int vci = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
+								foreach (Transform? vn in varHands)
+								{
+									vci++;
+									varAllNails.Add(vn);
+									varAllBoneIndices.Add(vci);
+								}
+								if (this.UseFootNail)
+								{
+									vci = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
+									foreach (Transform? vn in varLeftFoot)
+									{
+										vci++;
+										varAllNails.Add(vn);
+										varAllBoneIndices.Add(vci);
+									}
+									vci = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
+									foreach (Transform? vn in varRightFoot)
+									{
+										vci++;
+										varAllNails.Add(vn);
+										varAllBoneIndices.Add(vci);
+									}
+								}
+								variantCorrections = ComputeScaleCompensatedTransforms(
+									this.Avatar, targetBoneDictionary,
+									varAllNails.ToArray(), varAllBoneIndices.ToArray());
+							}
 
 							// バリアントネイルも実際の指ボーンの子にして、ローカル座標差分を計算できるようにする
 							bpIndex = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
@@ -299,7 +469,14 @@ namespace world.anlabo.mdnailtool.Editor {
 								if (vNail == null) continue;
 								objectsToDestroy.Add(vNail.gameObject);
 								Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
-								if (targetBone != null) vNail.SetParent(targetBone, true);
+								if (targetBone == null) continue;
+								if (variantCorrections != null && variantCorrections.TryGetValue(vNail, out var vc))
+								{
+									vNail.position = vc.position;
+									vNail.rotation = vc.rotation;
+									vNail.localScale = Vector3.Scale(vNail.localScale, vc.scaleRatio);
+								}
+								vNail.SetParent(targetBone, true);
 							}
 							handVariants.Add((variant.Name, varHands));
 
@@ -312,7 +489,14 @@ namespace world.anlabo.mdnailtool.Editor {
 									if (vNail == null) continue;
 									objectsToDestroy.Add(vNail.gameObject);
 									Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
-									if (targetBone != null) vNail.SetParent(targetBone, true);
+									if (targetBone == null) continue;
+									if (variantCorrections != null && variantCorrections.TryGetValue(vNail, out var vc))
+									{
+										vNail.position = vc.position;
+										vNail.rotation = vc.rotation;
+										vNail.localScale = Vector3.Scale(vNail.localScale, vc.scaleRatio);
+									}
+									vNail.SetParent(targetBone, true);
 								}
 								bpIndex = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
 								foreach (Transform? vNail in varRightFoot)
@@ -321,10 +505,31 @@ namespace world.anlabo.mdnailtool.Editor {
 									if (vNail == null) continue;
 									objectsToDestroy.Add(vNail.gameObject);
 									Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
-									if (targetBone != null) vNail.SetParent(targetBone, true);
+									if (targetBone == null) continue;
+									if (variantCorrections != null && variantCorrections.TryGetValue(vNail, out var vc))
+									{
+										vNail.position = vc.position;
+										vNail.rotation = vc.rotation;
+										vNail.localScale = Vector3.Scale(vNail.localScale, vc.scaleRatio);
+									}
+									vNail.SetParent(targetBone, true);
 								}
 								footVariants.Add((variant.Name, varLeftFoot.Concat(varRightFoot).ToArray()));
 							}
+						}
+					}
+
+					// 追加オブジェクトの退避（BakeAndCombineがネイルオブジェクトを破棄するため）
+					var preservedAdditionalObjects = new List<(Transform additionalObj, Transform targetBone)>();
+					foreach (Transform? nailObject in handsNailObjects)
+					{
+						if (nailObject == null) continue;
+						Transform? targetBone = nailObject.parent;
+						if (targetBone == null) continue;
+						foreach (Transform child in nailObject.Cast<Transform>().ToArray())
+						{
+							child.SetParent(null, true);
+							preservedAdditionalObjects.Add((child, targetBone));
 						}
 					}
 
@@ -339,6 +544,19 @@ namespace world.anlabo.mdnailtool.Editor {
 							leftFootNailObjects.Concat(rightFootNailObjects).ToArray(),
 							nailPrefabObject, footWrapperName, bsPath,
 							footVariants.Count > 0 ? footVariants.ToArray() : null);
+					}
+
+					// 退避した追加オブジェクトを統合ラッパーに復元（BoneProxy付き）
+					if (preservedAdditionalObjects.Count > 0 && handCombinedGo != null)
+					{
+						foreach (var (additionalObj, targetBone) in preservedAdditionalObjects)
+						{
+							if (additionalObj == null) continue;
+							additionalObj.SetParent(handCombinedGo.transform, true);
+							ModularAvatarBoneProxy bp = additionalObj.gameObject.AddComponent<ModularAvatarBoneProxy>();
+							bp.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
+							bp.target = targetBone;
+						}
 					}
 
 					// バリアントインスタンスの破棄
@@ -406,6 +624,12 @@ namespace world.anlabo.mdnailtool.Editor {
 					{
 						index++;
 						if (nailObject == null) continue;
+						if (corrections != null && corrections.TryGetValue(nailObject, out var c))
+						{
+							nailObject.position = c.position;
+							nailObject.rotation = c.rotation;
+							nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+						}
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 						boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
@@ -418,6 +642,12 @@ namespace world.anlabo.mdnailtool.Editor {
 						{
 							index++;
 							if (nailObject == null) continue;
+							if (corrections != null && corrections.TryGetValue(nailObject, out var c))
+							{
+								nailObject.position = c.position;
+								nailObject.rotation = c.rotation;
+								nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+							}
 							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 							boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
@@ -427,6 +657,12 @@ namespace world.anlabo.mdnailtool.Editor {
 						{
 							index++;
 							if (nailObject == null) continue;
+							if (corrections != null && corrections.TryGetValue(nailObject, out var c))
+							{
+								nailObject.position = c.position;
+								nailObject.rotation = c.rotation;
+								nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+							}
 							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 							boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
@@ -508,28 +744,46 @@ namespace world.anlabo.mdnailtool.Editor {
 				// ---- avatar-levelブレンドシェイプバリアントのBlendShapeSync設定 ----
 				// ※ nailPrefabObjectがアバター階層下に配置された後に実行する必要がある
 				// （AvatarObjectReferenceがアバタールートからの相対パスを正しく解決するため）
-				Debug.Log($"[MDNailTool] BlendShapeSync check: SyncBlendShapesWithMA={this.SyncBlendShapesWithMA}, AvatarEntity null={this.AvatarEntity == null}, BlendShapeVariants null={this.AvatarEntity?.BlendShapeVariants == null}");
 				AvatarBlendShapeVariant[]? syncVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
 				if (this.SyncBlendShapesWithMA && syncVariants != null)
 				{
-					Debug.Log($"[MDNailTool] BlendShapeSync: nailPrefabObject={nailPrefabObject.name}, childCount={nailPrefabObject.transform.childCount}, variants={syncVariants.Length}");
 					// BakeAndCombineで生成されたCombined SMRを含む全子オブジェクトを対象
 					foreach (Transform child in nailPrefabObject.transform)
 					{
 						SkinnedMeshRenderer? bsSmr = child.GetComponent<SkinnedMeshRenderer>();
-						if (bsSmr == null || bsSmr.sharedMesh == null) { Debug.Log($"[MDNailTool] BlendShapeSync: child={child.name} has no SMR, skip"); continue; }
-						if (bsSmr.sharedMesh.blendShapeCount == 0) { Debug.Log($"[MDNailTool] BlendShapeSync: child={child.name} has 0 blendshapes, skip"); continue; }
-						Debug.Log($"[MDNailTool] BlendShapeSync: child={child.name} has {bsSmr.sharedMesh.blendShapeCount} blendshapes, adding sync component");
-						for (int dbi = 0; dbi < bsSmr.sharedMesh.blendShapeCount; dbi++)
-							Debug.Log($"[MDNailTool]   BS[{dbi}] = '{bsSmr.sharedMesh.GetBlendShapeName(dbi)}'");
+						if (bsSmr == null || bsSmr.sharedMesh == null) continue;
+						if (bsSmr.sharedMesh.blendShapeCount == 0) continue;
 						ModularAvatarBlendshapeSync variantBsSync = child.gameObject.AddComponent<ModularAvatarBlendshapeSync>();
 						foreach (AvatarBlendShapeVariant variant in syncVariants)
 						{
-							if (string.IsNullOrEmpty(variant.SyncSourceSmrName)) { Debug.Log($"[MDNailTool] BlendShapeSync: variant={variant.Name} has no syncSourceSmrName, skip"); continue; }
+							if (string.IsNullOrEmpty(variant.SyncSourceSmrName)) continue;
+							// Step 1: 名前完全一致
 							Transform? srcSmrTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
 								.FirstOrDefault(t => t.name == variant.SyncSourceSmrName);
-							if (srcSmrTransform == null) { Debug.Log($"[MDNailTool] BlendShapeSync: source SMR '{variant.SyncSourceSmrName}' not found on avatar, skip"); continue; }
-							
+							// Step 2: 大文字小文字無視
+							if (srcSmrTransform == null) {
+								srcSmrTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
+									.FirstOrDefault(t => string.Equals(t.name, variant.SyncSourceSmrName, System.StringComparison.OrdinalIgnoreCase));
+							}
+							// Step 3: 部分一致（"Body" → "Body all" など）
+							if (srcSmrTransform == null) {
+								srcSmrTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
+									.FirstOrDefault(t => t.GetComponent<SkinnedMeshRenderer>() != null
+										&& (t.name.Contains(variant.SyncSourceSmrName) || variant.SyncSourceSmrName.Contains(t.name)));
+							}
+							// Step 4: BlendShapeを持つ非顔SmRから推測
+							if (srcSmrTransform == null) {
+								SkinnedMeshRenderer? visemeSmr = this.Avatar.VisemeSkinnedMesh;
+								srcSmrTransform = this.Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+									.Where(smr => smr != visemeSmr && smr.sharedMesh != null && smr.sharedMesh.blendShapeCount > 0)
+									.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
+									.FirstOrDefault()?.transform;
+								if (srcSmrTransform != null) {
+									Debug.Log($"[MDNailTool] BlendShapeSync: '{variant.SyncSourceSmrName}' が見つからないため、フォールバック '{srcSmrTransform.name}' を使用します");
+								}
+							}
+							if (srcSmrTransform == null) { Debug.LogWarning($"[MDNailTool] BlendShapeSync: ソースSMR '{variant.SyncSourceSmrName}' がアバターに見つかりません"); continue; }
+
 							// バリアント名（スペース無し）に対応する実際のブレンドシェイプ名（スペース有り）を検索
 							string actualShapeName = variant.Name;
 							string normalizedVariantName = variant.Name.Replace(" ", "").Replace("　", "");
@@ -544,20 +798,16 @@ namespace world.anlabo.mdnailtool.Editor {
 							}
 
 							int bsIndex = bsSmr.sharedMesh.GetBlendShapeIndex(actualShapeName);
-							Debug.Log($"[MDNailTool] BlendShapeSync: variant={variant.Name}, actualShapeName='{actualShapeName}', bsIndex={bsIndex}, src={srcSmrTransform.name}");
 							if (bsIndex < 0) continue;
-							
+
 							AvatarObjectReference aoRef = new AvatarObjectReference(srcSmrTransform.gameObject);
-							Debug.Log($"[MDNailTool] BlendShapeSync: AvatarObjectReference referencePath='{aoRef.referencePath}'");
 							variantBsSync.Bindings.Add(new BlendshapeBinding
 							{
 								ReferenceMesh = aoRef,
 								Blendshape = actualShapeName,
 								LocalBlendshape = actualShapeName
 							});
-							Debug.Log($"[MDNailTool] BlendShapeSync: Added binding Blendshape='{actualShapeName}', LocalBlendshape='{actualShapeName}'");
 						}
-						Debug.Log($"[MDNailTool] BlendShapeSync: Total bindings for {child.name}: {variantBsSync.Bindings.Count}");
 					}
 				}
 
@@ -578,7 +828,12 @@ namespace world.anlabo.mdnailtool.Editor {
 						continue;
 					}
 
-					nailObject.SetParent(target);
+					if (corrections != null && corrections.TryGetValue(nailObject, out var c)) {
+						nailObject.position = c.position;
+						nailObject.rotation = c.rotation;
+						nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+					}
+					nailObject.SetParent(target, true);
 				}
 
 				if (this.UseFootNail) {
@@ -592,7 +847,12 @@ namespace world.anlabo.mdnailtool.Editor {
 							continue;
 						}
 
-						nailObject.SetParent(target);
+						if (corrections != null && corrections.TryGetValue(nailObject, out var c)) {
+							nailObject.position = c.position;
+							nailObject.rotation = c.rotation;
+							nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+						}
+						nailObject.SetParent(target, true);
 					}
 
 					foreach (Transform? nailObject in rightFootNailObjects) {
@@ -604,7 +864,12 @@ namespace world.anlabo.mdnailtool.Editor {
 							continue;
 						}
 
-						nailObject.SetParent(target);
+						if (corrections != null && corrections.TryGetValue(nailObject, out var c)) {
+							nailObject.position = c.position;
+							nailObject.rotation = c.rotation;
+							nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+						}
+						nailObject.SetParent(target, true);
 					}
 				} else {
 					foreach (Transform? nailObject in leftFootNailObjects) {
@@ -707,7 +972,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		private static Dictionary<string, Transform?> GetTargetBoneDictionary(VRCAvatarDescriptor avatar, IReadOnlyDictionary<string, string>? boneMappingOverride) {
+		internal static Dictionary<string, Transform?> GetTargetBoneDictionary(VRCAvatarDescriptor avatar, IReadOnlyDictionary<string, string>? boneMappingOverride) {
 			Animator? avatarAnimator = avatar.GetComponent<Animator>();
 			UEAvatar? animatorAvatar = avatarAnimator.avatar;
 			HumanDescription humanDescription = animatorAvatar.humanDescription;
@@ -777,6 +1042,24 @@ namespace world.anlabo.mdnailtool.Editor {
 				.ToArray();
 		}
 
+		/// <summary>
+		/// バリアントネイルのsharedMeshがnullの場合、対応するベースネイルからメッシュをコピーする。
+		/// プレハブが参照するFBXが存在しない場合でも、ベースネイルのメッシュ(ReplaceFootNailMesh等で
+		/// 置き換え済み)を使ってBlendShape差分を計算可能にする。
+		/// </summary>
+		private static void CopyMeshIfNull(Transform?[] variantNails, Transform?[] baseNails) {
+			int count = Math.Min(variantNails.Length, baseNails.Length);
+			for (int i = 0; i < count; i++) {
+				if (variantNails[i] == null || baseNails[i] == null) continue;
+				SkinnedMeshRenderer? varSmr = variantNails[i]!.GetComponent<SkinnedMeshRenderer>();
+				if (varSmr == null) continue;
+				if (varSmr.sharedMesh != null) continue;
+				SkinnedMeshRenderer? baseSmr = baseNails[i]!.GetComponent<SkinnedMeshRenderer>();
+				if (baseSmr == null || baseSmr.sharedMesh == null) continue;
+				varSmr.sharedMesh = baseSmr.sharedMesh;
+			}
+		}
+
 		private GameObject ResolveShapePrefab(GameObject basePrefab, string targetShape) {
 			System.Text.RegularExpressions.Regex nailPrefabNamePattern = new(@"(?<prefix>\[.+\])(?<prefabName>.+)");
 			System.Text.RegularExpressions.Match match = nailPrefabNamePattern.Match(basePrefab.name);
@@ -806,6 +1089,105 @@ namespace world.anlabo.mdnailtool.Editor {
 				current = current.parent;
 			}
 			return string.Join("/", parts);
+		}
+
+		/// <summary>
+		/// アバターのプリファブ（またはFBX）を一時的にインスタンス化し、標準ボーンtransformを参照して
+		/// ネイルの補正済みワールド位置・回転・スケールを計算する。
+		/// プリファブを優先的に使用することで、アバター制作者がFBXインポート後に調整したボーン位置も
+		/// 正確に反映できる（特に足ボーンで重要）。プリファブが取得できない場合はFBXにフォールバック。
+		/// 実際のアバターのボーンは一切変更しないため、復元処理が不要で精度劣化がない。
+		/// </summary>
+		internal static Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>
+			ComputeScaleCompensatedTransforms(
+				VRCAvatarDescriptor avatar,
+				Dictionary<string, Transform?> targetBoneDictionary,
+				Transform?[] nailObjects,
+				int[] boneIndices)
+		{
+			var result = new Dictionary<Transform, (Vector3, Quaternion, Vector3)>();
+
+			// 1. 基準となるアバターアセットを取得
+			//    優先: プリファブソース（制作者の調整が反映されている）
+			//    フォールバック: FBXモデル（インポート時の標準状態）
+			GameObject? referenceAsset = null;
+
+			// プリファブソースを試行
+			GameObject? prefabSource = PrefabUtility.GetCorrespondingObjectFromOriginalSource(avatar.gameObject);
+			if (prefabSource != null)
+			{
+				referenceAsset = prefabSource;
+			}
+			else
+			{
+				// FBXにフォールバック
+				Animator? avatarAnimator = avatar.GetComponent<Animator>();
+				if (avatarAnimator == null || avatarAnimator.avatar == null) return result;
+
+				string modelPath = AssetDatabase.GetAssetPath(avatarAnimator.avatar);
+				if (!string.IsNullOrEmpty(modelPath))
+					referenceAsset = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+			}
+
+			if (referenceAsset == null) return result;
+
+			GameObject tempInstance = Object.Instantiate(referenceAsset);
+			try
+			{
+				// アバターと同じ位置・回転に配置
+				tempInstance.transform.SetPositionAndRotation(avatar.transform.position, avatar.transform.rotation);
+				tempInstance.transform.localScale = avatar.transform.lossyScale;
+
+				// 2. 一時インスタンスのボーン名→Transform辞書を構築
+				Dictionary<string, Transform> tempBonesByName = new();
+				foreach (Transform t in tempInstance.GetComponentsInChildren<Transform>())
+				{
+					// 同名ボーンがある場合は最初のものを使用
+					if (!tempBonesByName.ContainsKey(t.name))
+						tempBonesByName[t.name] = t;
+				}
+
+				// 3. 各ネイルの補正位置を計算
+				for (int i = 0; i < nailObjects.Length; i++)
+				{
+					Transform? nail = nailObjects[i];
+					if (nail == null) continue;
+					if (boneIndices[i] < 0 || boneIndices[i] >= MDNailToolDefines.TARGET_BONE_NAME_LIST.Count) continue;
+
+					string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[boneIndices[i]];
+					Transform? actualBone = targetBoneDictionary.GetValueOrDefault(boneName);
+					if (actualBone == null) continue;
+
+					// 一時インスタンスから対応するボーンを検索
+					if (!tempBonesByName.TryGetValue(actualBone.name, out Transform? tempBone)) continue;
+
+					// 基準ボーン空間でのネイルのローカルオフセットを算出
+					Vector3 localPos = tempBone.InverseTransformPoint(nail.position);
+					Quaternion localRot = Quaternion.Inverse(tempBone.rotation) * nail.rotation;
+
+					// 実アバターのボーンにオフセットを適用 → 補正済みワールド位置
+					Vector3 correctedWorldPos = actualBone.TransformPoint(localPos);
+					Quaternion correctedWorldRot = actualBone.rotation * localRot;
+
+					// スケール比率を計算（基準ボーン→実ボーンの変化率）
+					// 絶対値ではなく比率にすることで、ネイルの元のスケールを基にした相対補正になる
+					Vector3 tempScale = tempBone.lossyScale;
+					Vector3 actualScale = actualBone.lossyScale;
+					Vector3 scaleRatio = new Vector3(
+						tempScale.x != 0 ? actualScale.x / tempScale.x : 1f,
+						tempScale.y != 0 ? actualScale.y / tempScale.y : 1f,
+						tempScale.z != 0 ? actualScale.z / tempScale.z : 1f
+					);
+					result[nail] = (correctedWorldPos, correctedWorldRot, scaleRatio);
+				}
+			}
+			finally
+			{
+				// 一時インスタンスを確実に破棄
+				Object.DestroyImmediate(tempInstance);
+			}
+
+			return result;
 		}
 
 #if MD_NAIL_FOR_MA

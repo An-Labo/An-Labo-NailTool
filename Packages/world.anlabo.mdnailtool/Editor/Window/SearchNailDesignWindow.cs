@@ -322,7 +322,11 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
         private void LoadData() {
             using DBNailDesign db = new DBNailDesign();
-            _allDesigns = db.collection.OrderByDescending(d => d.Id).ToList();
+            // 子バリ（parentVariant が設定されているもの）はメインリストに表示しない
+            _allDesigns = db.collection
+                .Where(d => string.IsNullOrEmpty(d.ParentVariant))
+                .OrderByDescending(d => d.Id)
+                .ToList();
             UpdateFilter();
         }
 

@@ -42,6 +42,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private NailShapeDropDown? _nailShapeDropDown;
 		private LocalizedDropDown? _nailMaterialDropDown;
 		private LocalizedDropDown? _nailColorDropDown;
+		private DropdownField? _nailVariantDropDown;
+		private Dictionary<string, string>? _variantDisplayNames;
 
 		private NailDesignDropDowns[]? _nailDesignDropDowns;
 
@@ -57,8 +59,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _generateExpressionMenu;
 		private Toggle? _splitHandFootExpressionMenu;
 		private Toggle? _mergeAnLaboExpressionMenu;
+		private Toggle? _armatureScaleCompensation;
 		private Toggle? _bakeBlendShapes;
 		private Toggle? _syncBlendShapesWithMA;
+		private DropdownField? _additionalMaterialSourceDropdown;
+		private DropdownField? _additionalObjectSourceDropdown;
 		private LocalizedButton? _execute;
 		private LocalizedButton? _remove;
 
@@ -84,6 +89,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private VisualElement? _errorDetailArea;
 		private Label? _errorDetailText;
 		private bool _errorDetailExpanded = false;
+
+		// ---- Tool Console ----
+		private Toggle? _enableToolConsole;
+		private VisualElement? _toolConsoleContainer;
+		private ScrollView? _toolConsoleScroll;
 
 		#endregion
 
@@ -173,12 +183,27 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailShapeDropDown = this.rootVisualElement.Q<NailShapeDropDown>("nail-shape");
 			this._nailShapeDropDown.SetNailShape(GlobalSetting.LastUseShapeName);
 			this._nailShapeDropDown.RegisterValueChangedCallback(this.OnChangeShapeDropDown);
+			NailDesignDropDowns.AddArrowKeyNavigation(this._nailShapeDropDown);
 
 			this._nailMaterialDropDown = this.rootVisualElement.Q<LocalizedDropDown>("nail-material");
 			this._nailMaterialDropDown.RegisterValueChangedCallback(this.OnChangeNailMaterialDropDown);
+			NailDesignDropDowns.AddArrowKeyNavigation(this._nailMaterialDropDown);
 
 			this._nailColorDropDown = this.rootVisualElement.Q<LocalizedDropDown>("nail-color");
 			this._nailColorDropDown.RegisterValueChangedCallback(this.OnChangeNailColorDropDown);
+			NailDesignDropDowns.AddArrowKeyNavigation(this._nailColorDropDown);
+
+			// バリアント選択ドロップダウンをマテリアルバリエーション欄に配置（初期は非表示）
+			// バリアントがあるデザインの場合、マテリアルドロップダウンを隠してこちらを表示する
+			this._nailVariantDropDown = new DropdownField { label = "バリアント" };
+			this._nailVariantDropDown.AddToClassList("mdn-style-dropdown");
+			this._nailVariantDropDown.style.display = DisplayStyle.None;
+			this._nailVariantDropDown.RegisterValueChangedCallback(this.OnChangeNailVariantDropDown);
+			NailDesignDropDowns.AddArrowKeyNavigation(this._nailVariantDropDown);
+			// マテリアルドロップダウンの直後に挿入（同じmdn-style-item内）
+			this._nailMaterialDropDown!.parent.Insert(
+				this._nailMaterialDropDown.parent.IndexOf(this._nailMaterialDropDown) + 1,
+				this._nailVariantDropDown);
 		}
 
 		private void BindHandFootUI()
@@ -278,6 +303,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				});
 			}
 
+			this._armatureScaleCompensation = this.rootVisualElement.Q<Toggle>("armature-scale-compensation");
+			if (this._armatureScaleCompensation != null)
+			{
+				this._armatureScaleCompensation.SetValueWithoutNotify(GlobalSetting.ArmatureScaleCompensation);
+				this._armatureScaleCompensation.RegisterValueChangedCallback(evt => {
+					GlobalSetting.ArmatureScaleCompensation = evt.newValue;
+				});
+				var lblArmatureScale = this.rootVisualElement.Q<LocalizedLabel>("label-armature-scale-compensation");
+				lblArmatureScale?.RegisterCallback<ClickEvent>(_ => {
+					if (this._armatureScaleCompensation != null && this._armatureScaleCompensation.enabledSelf)
+						this._armatureScaleCompensation.value = !this._armatureScaleCompensation.value;
+				});
+			}
+
 			this._bakeBlendShapes = this.rootVisualElement.Q<Toggle>("bake-blendshapes");
 			if (this._bakeBlendShapes != null)
 			{
@@ -285,7 +324,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._bakeBlendShapes.RegisterValueChangedCallback(evt => {
 					GlobalSetting.BakeBlendShapes = evt.newValue;
 					this._syncBlendShapesWithMA?.SetEnabled(evt.newValue);
-					this.UpdateBlendShapeVariantVisibility();
+					this.UpdateBlendShapeVariantDropDown();
 				});
 				this._bakeBlendShapes.SetEnabled(GlobalSetting.UseModularAvatar);
 				var lblBake = this.rootVisualElement.Q<LocalizedLabel>("label-bake-blendshapes");
@@ -308,6 +347,453 @@ namespace world.anlabo.mdnailtool.Editor.Window
 						this._syncBlendShapesWithMA.value = !this._syncBlendShapesWithMA.value;
 				});
 			}
+
+			// 追加マテリアルソース選択ドロップダウン
+			this._additionalMaterialSourceDropdown = this.rootVisualElement.Q<DropdownField>("additional-material-source");
+			if (this._additionalMaterialSourceDropdown != null)
+			{
+				this.PopulateAdditionalMaterialSourceDropdown();
+				NailDesignDropDowns.AddArrowKeyNavigation(this._additionalMaterialSourceDropdown);
+				this._additionalMaterialSourceDropdown.RegisterValueChangedCallback(evt =>
+				{
+					string? noneLabel = this._additionalMaterialSourceDropdown.choices.FirstOrDefault();
+					string? selected = evt.newValue == noneLabel ? null : evt.newValue;
+					GlobalSetting.AdditionalMaterialSourceDesign = selected;
+
+					this.SyncPerFingerAdditionalMaterial(evt.newValue);
+					this.UpdatePreview();
+					this.RequestScenePreviewUpdate();
+				});
+			}
+
+			// 追加オブジェクトソース選択ドロップダウン
+			this._additionalObjectSourceDropdown = this.rootVisualElement.Q<DropdownField>("additional-object-source");
+			if (this._additionalObjectSourceDropdown != null)
+			{
+				this.PopulateAdditionalObjectSourceDropdown();
+				NailDesignDropDowns.AddArrowKeyNavigation(this._additionalObjectSourceDropdown);
+				this._additionalObjectSourceDropdown.RegisterValueChangedCallback(evt =>
+				{
+					string? noneLabel = this._additionalObjectSourceDropdown.choices.FirstOrDefault();
+					string? selected = evt.newValue == noneLabel ? null : evt.newValue;
+					GlobalSetting.AdditionalObjectSourceDesign = selected;
+
+					this.SyncPerFingerAdditionalObject(evt.newValue);
+					this.UpdatePreview();
+					this.RequestScenePreviewUpdate();
+				});
+			}
+
+			// ツール内Console
+			this._enableToolConsole = this.rootVisualElement.Q<Toggle>("enable-tool-console");
+			this._toolConsoleContainer = this.rootVisualElement.Q<VisualElement>("tool-console-container");
+			this._toolConsoleScroll = this.rootVisualElement.Q<ScrollView>("tool-console-scroll");
+			if (this._enableToolConsole != null)
+			{
+				this._enableToolConsole.SetValueWithoutNotify(GlobalSetting.EnableToolConsole);
+				this._enableToolConsole.RegisterValueChangedCallback(evt =>
+				{
+					GlobalSetting.EnableToolConsole = evt.newValue;
+					this.UpdateToolConsoleVisibility(evt.newValue);
+				});
+				this.UpdateToolConsoleVisibility(GlobalSetting.EnableToolConsole);
+			}
+			var lblConsole = this.rootVisualElement.Q<Label>("label-tool-console");
+			lblConsole?.RegisterCallback<ClickEvent>(_ =>
+			{
+				if (this._enableToolConsole != null) this._enableToolConsole.value = !this._enableToolConsole.value;
+			});
+
+			// Copyボタン
+			var copyBtn = this.rootVisualElement.Q<Button>("tool-console-copy");
+			copyBtn?.RegisterCallback<ClickEvent>(_ =>
+			{
+				if (this._toolConsoleScroll == null) return;
+				var lines = this._toolConsoleScroll.Children()
+					.OfType<Label>()
+					.Select(l => l.text);
+				string text = string.Join("\n", lines);
+				EditorGUIUtility.systemCopyBuffer = text;
+			});
+
+			// Clearボタン
+			var clearBtn = this.rootVisualElement.Q<Button>("tool-console-clear");
+			clearBtn?.RegisterCallback<ClickEvent>(_ =>
+			{
+				this._toolConsoleScroll?.Clear();
+				ToolConsole.Clear();
+			});
+
+			// ToolConsole コールバック接続
+			ToolConsole.OnLog = this.AppendConsoleLog;
+			ToolConsole.Flush();
+		}
+
+		private void PopulateAdditionalMaterialSourceDropdown()
+		{
+			if (this._additionalMaterialSourceDropdown == null) return;
+
+			var choices = new List<string>();
+			string noneLabel = S("window.additional_material_source_none") ?? "なし";
+			choices.Add(noneLabel);
+
+			// レジストリの名前を表示（GUIDが1つでも有効なもののみ）
+			var registry = DBAdditionalAssets.Load();
+			if (registry.Materials != null)
+			{
+				foreach (var kv in registry.Materials)
+				{
+					if (HasAnyValidGuid(kv.Value))
+						choices.Add(kv.Key);
+				}
+			}
+
+			this._additionalMaterialSourceDropdown.choices = choices;
+			this.PopulatePerFingerAdditionalMaterialDropdowns(choices);
+
+			// 保存された選択を復元
+			string? saved = GlobalSetting.AdditionalMaterialSourceDesign;
+			if (!string.IsNullOrEmpty(saved) && choices.Contains(saved))
+			{
+				this._additionalMaterialSourceDropdown.SetValueWithoutNotify(saved);
+				this.SyncPerFingerAdditionalMaterial(saved);
+				return;
+			}
+
+			this._additionalMaterialSourceDropdown.SetValueWithoutNotify(noneLabel);
+			this.SyncPerFingerAdditionalMaterial(noneLabel);
+		}
+
+		private void PopulatePerFingerAdditionalMaterialDropdowns(List<string> choices)
+		{
+			if (this._nailDesignDropDowns == null) return;
+			foreach (var dd in this._nailDesignDropDowns)
+			{
+				dd.SetAdditionalMaterialChoices(new List<string>(choices));
+			}
+		}
+
+		private void UpdateAdditionalMaterialSourceDefault()
+		{
+			if (this._additionalMaterialSourceDropdown == null) return;
+
+			string noneLabel = this._additionalMaterialSourceDropdown.choices.FirstOrDefault() ?? "";
+
+			// 現在選択中のデザインを取得
+			string? currentDesignName = this._nailDesignDropDowns?.FirstOrDefault()?.GetSelectedDesignName();
+			if (string.IsNullOrEmpty(currentDesignName))
+			{
+				this._additionalMaterialSourceDropdown.SetValueWithoutNotify(noneLabel);
+				GlobalSetting.AdditionalMaterialSourceDesign = null;
+				this.SyncPerFingerAdditionalMaterial(noneLabel);
+				return;
+			}
+
+			// デザインの追加マテリアルGUIDからレジストリ名を逆引き
+			using DBNailDesign dbNailDesign = new();
+			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(currentDesignName);
+			if (design?.AdditionalMaterialGUIDs is { Length: > 0 })
+			{
+				var registry = DBAdditionalAssets.Load();
+				var names = registry.FindMaterialNames(design.AdditionalMaterialGUIDs);
+				if (names.Count > 0)
+				{
+					string registryName = names.First();
+					if (this._additionalMaterialSourceDropdown.choices.Contains(registryName))
+					{
+						this._additionalMaterialSourceDropdown.SetValueWithoutNotify(registryName);
+						GlobalSetting.AdditionalMaterialSourceDesign = registryName;
+						this.SyncPerFingerAdditionalMaterial(registryName);
+						return;
+					}
+				}
+			}
+
+			// デザインに追加マテリアルがない → なしにリセット
+			this._additionalMaterialSourceDropdown.SetValueWithoutNotify(noneLabel);
+			GlobalSetting.AdditionalMaterialSourceDesign = null;
+			this.SyncPerFingerAdditionalMaterial(noneLabel);
+		}
+
+		private void SyncPerFingerAdditionalMaterial(string? displayValue)
+		{
+			if (this._nailDesignDropDowns == null) return;
+			foreach (var dd in this._nailDesignDropDowns)
+			{
+				dd.SetAdditionalMaterialSource(displayValue);
+			}
+		}
+
+		private IEnumerable<Material>?[]? BuildPerFingerAdditionalMaterials(bool isPreview)
+		{
+			if (this._nailDesignDropDowns == null) return null;
+
+			string? noneLabel = this._additionalMaterialSourceDropdown?.choices.FirstOrDefault();
+			string? globalValue = this._additionalMaterialSourceDropdown?.value;
+			string? globalSource = (globalValue == noneLabel) ? null : globalValue;
+
+			string?[] sources = MDNailSelectionBuilder.BuildAdditionalMaterialSources(
+				this._nailDesignDropDowns,
+				this._tglHandActive?.value ?? true,
+				this._tglHandDetail?.value ?? false,
+				this._tglFootActive?.value ?? false,
+				this._tglFootDetail?.value ?? false,
+				globalSource
+			);
+
+			var result = new IEnumerable<Material>?[20];
+			bool anyNonNull = false;
+
+			// レジストリ名 → GUID → マテリアル を直接解決
+			var registry = DBAdditionalAssets.Load();
+			for (int i = 0; i < 20; i++)
+			{
+				string? registryName = sources[i];
+				if (string.IsNullOrEmpty(registryName) || registryName == noneLabel) continue;
+
+				var mats = new List<Material>();
+				foreach (string resolvedGuid in registry.ResolveMaterialGuids(registryName!))
+				{
+					string matPath = AssetDatabase.GUIDToAssetPath(resolvedGuid);
+					if (string.IsNullOrEmpty(matPath)) continue;
+					Material? mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+					if (mat != null) mats.Add(mat);
+				}
+
+				if (mats.Count > 0)
+				{
+					result[i] = mats;
+					anyNonNull = true;
+				}
+			}
+
+			return anyNonNull ? result : null;
+		}
+
+		// ---- 追加オブジェクト関連メソッド ----
+
+		/// <summary>GUIDリスト内に1つでも有効なアセットが存在するか</summary>
+		private static bool HasAnyValidGuid(IEnumerable<string> guids)
+		{
+			foreach (string guid in guids)
+			{
+				if (string.IsNullOrEmpty(guid)) continue;
+				string path = AssetDatabase.GUIDToAssetPath(guid);
+				if (!string.IsNullOrEmpty(path)) return true;
+			}
+			return false;
+		}
+
+		private void PopulateAdditionalObjectSourceDropdown()
+		{
+			ToolConsole.Log("PopulateAdditionalObjectSourceDropdown 開始");
+			if (this._additionalObjectSourceDropdown == null) return;
+
+			var choices = new List<string>();
+			string noneLabel = S("window.additional_object_source_none") ?? "なし";
+			choices.Add(noneLabel);
+
+			// レジストリの名前を表示（GUIDが1つでも有効なもののみ）
+			var registry = DBAdditionalAssets.Load();
+			if (registry.Objects != null)
+			{
+				foreach (var kv in registry.Objects)
+				{
+					if (HasAnyValidGuid(kv.Value.ResolveGuidsForFinger(0))
+					    || (kv.Value.Guids != null && HasAnyValidGuid(kv.Value.Guids)))
+						choices.Add(kv.Key);
+				}
+			}
+
+			this._additionalObjectSourceDropdown.choices = choices;
+			ToolConsole.Log($"  choices.Count={choices.Count}");
+
+			// per-finger ドロップダウンにも同じ選択肢を設定
+			this.PopulatePerFingerAdditionalObjectDropdowns(choices);
+
+			// 保存された選択を復元
+			string? saved = GlobalSetting.AdditionalObjectSourceDesign;
+			ToolConsole.Log($"  saved={saved ?? "(null)"}");
+			if (!string.IsNullOrEmpty(saved) && choices.Contains(saved))
+			{
+				this._additionalObjectSourceDropdown.SetValueWithoutNotify(saved);
+				this.SyncPerFingerAdditionalObject(saved);
+				return;
+			}
+
+			this._additionalObjectSourceDropdown.SetValueWithoutNotify(noneLabel);
+			this.SyncPerFingerAdditionalObject(noneLabel);
+		}
+
+		private void PopulatePerFingerAdditionalObjectDropdowns(List<string> allChoices)
+		{
+			if (this._nailDesignDropDowns == null) return;
+
+			var registry = DBAdditionalAssets.Load();
+			string noneLabel = allChoices.Count > 0 ? allChoices[0] : "";
+
+			foreach (var dd in this._nailDesignDropDowns)
+			{
+				int fi = dd.GetFingerIndex();
+				if (fi < 0 || registry.Objects == null)
+				{
+					dd.SetAdditionalObjectChoices(new List<string>(allChoices));
+					continue;
+				}
+
+				// 指インデックスに基づいてフィルタリング + GUID有効性チェック
+				var filtered = new List<string> { noneLabel };
+				foreach (var kv in registry.Objects)
+				{
+					if (kv.Value.IsAllowedForFinger(fi) && HasAnyValidGuid(kv.Value.ResolveGuidsForFinger(fi)))
+						filtered.Add(kv.Key);
+				}
+				dd.SetAdditionalObjectChoices(filtered);
+			}
+		}
+
+		private void UpdateAdditionalObjectSourceDefault()
+		{
+			if (this._additionalObjectSourceDropdown == null) return;
+
+			string noneLabel = this._additionalObjectSourceDropdown.choices.FirstOrDefault() ?? "";
+
+			// 現在選択中のデザインを取得
+			string? currentDesignName = this._nailDesignDropDowns?.FirstOrDefault()?.GetSelectedDesignName();
+			if (string.IsNullOrEmpty(currentDesignName))
+			{
+				this._additionalObjectSourceDropdown.SetValueWithoutNotify(noneLabel);
+				GlobalSetting.AdditionalObjectSourceDesign = null;
+				this.SyncPerFingerAdditionalObject(noneLabel);
+				return;
+			}
+
+			// デザインの追加オブジェクトGUIDからレジストリ名を逆引き
+			using DBNailDesign dbNailDesign = new();
+			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(currentDesignName);
+			if (design?.AdditionalObjectGUIDs is { Count: > 0 })
+			{
+				var registry = DBAdditionalAssets.Load();
+				var allGuids = design.AdditionalObjectGUIDs.Values.SelectMany(g => g);
+				var names = registry.FindObjectNames(allGuids);
+				if (names.Count > 0)
+				{
+					string registryName = names.First();
+					if (this._additionalObjectSourceDropdown.choices.Contains(registryName))
+					{
+						this._additionalObjectSourceDropdown.SetValueWithoutNotify(registryName);
+						GlobalSetting.AdditionalObjectSourceDesign = registryName;
+						this.SyncPerFingerAdditionalObject(registryName);
+						return;
+					}
+				}
+			}
+
+			// デザインに追加オブジェクトがない → なしにリセット
+			this._additionalObjectSourceDropdown.SetValueWithoutNotify(noneLabel);
+			GlobalSetting.AdditionalObjectSourceDesign = null;
+			this.SyncPerFingerAdditionalObject(noneLabel);
+		}
+
+		private void SyncPerFingerAdditionalObject(string? displayValue)
+		{
+			ToolConsole.Log($"SyncPerFingerAdditionalObject: displayValue={displayValue ?? "(null)"}");
+			if (this._nailDesignDropDowns == null) return;
+
+			var registry = DBAdditionalAssets.Load();
+			string noneLabel = this._additionalObjectSourceDropdown?.choices.FirstOrDefault() ?? "";
+
+			foreach (var dd in this._nailDesignDropDowns)
+			{
+				if (string.IsNullOrEmpty(displayValue) || displayValue == noneLabel)
+				{
+					dd.SetAdditionalObjectSource(displayValue);
+					continue;
+				}
+
+				int fi = dd.GetFingerIndex();
+				if (fi >= 0 && registry.Objects != null &&
+				    registry.Objects.TryGetValue(displayValue!, out var entry) &&
+				    !entry.IsAllowedForFinger(fi))
+				{
+					dd.SetAdditionalObjectSource(noneLabel);
+				}
+				else
+				{
+					dd.SetAdditionalObjectSource(displayValue);
+				}
+			}
+		}
+
+		private IEnumerable<Transform>?[]? BuildPerFingerAdditionalObjects(bool isPreview)
+		{
+			ToolConsole.Log($"BuildPerFingerAdditionalObjects: isPreview={isPreview}");
+			if (this._nailDesignDropDowns == null)
+			{
+				ToolConsole.Log("  _nailDesignDropDowns == null → return null");
+				return null;
+			}
+
+			string? noneLabel = this._additionalObjectSourceDropdown?.choices.FirstOrDefault();
+			string? globalValue = this._additionalObjectSourceDropdown?.value;
+			string? globalSource = (globalValue == noneLabel) ? null : globalValue;
+
+			ToolConsole.Log($"  globalSource={globalSource ?? "(null)"}, dropdownValue={globalValue ?? "(null)"}");
+
+			// 指ごとのソースを決定（MDNailSelectionBuilder経由）
+			string?[] sources = MDNailSelectionBuilder.BuildAdditionalObjectSources(
+				this._nailDesignDropDowns,
+				this._tglHandActive?.value ?? true,
+				this._tglHandDetail?.value ?? false,
+				this._tglFootActive?.value ?? false,
+				this._tglFootDetail?.value ?? false,
+				globalSource
+			);
+
+			var result = new IEnumerable<Transform>?[20];
+			bool anyNonNull = false;
+
+			// レジストリ名 → GUID → オブジェクト を直接解決（手0-9 + 足10-19）
+			var registry = DBAdditionalAssets.Load();
+			for (int i = 0; i < 20; i++)
+			{
+				string? registryName = sources[i];
+				if (string.IsNullOrEmpty(registryName) || registryName == noneLabel)
+				{
+					ToolConsole.Log($"  finger[{i}]: registryName is empty/none → skip");
+					continue;
+				}
+
+				var transforms = new List<Transform>();
+				foreach (string resolvedGuid in registry.ResolveObjectGuids(registryName!, i))
+				{
+					string objectPath = AssetDatabase.GUIDToAssetPath(resolvedGuid);
+					if (string.IsNullOrEmpty(objectPath))
+					{
+						ToolConsole.Log($"  finger[{i}]: GUID not found: {resolvedGuid} (registryName={registryName})");
+						Debug.LogWarning($"[MDNailTool] AdditionalObject GUID not found: {resolvedGuid} (registryName={registryName})");
+						continue;
+					}
+					GameObject? obj = AssetDatabase.LoadAssetAtPath<GameObject>(objectPath);
+					if (obj == null)
+					{
+						ToolConsole.Log($"  finger[{i}]: could not load: {objectPath}");
+						Debug.LogWarning($"[MDNailTool] AdditionalObject could not load: {objectPath} (registryName={registryName})");
+						continue;
+					}
+					ToolConsole.Log($"  finger[{i}]: instantiated {obj.name} from {objectPath}");
+					transforms.Add(Object.Instantiate(obj, Vector3.zero, Quaternion.identity).transform);
+				}
+
+				if (transforms.Count > 0)
+				{
+					result[i] = transforms;
+					anyNonNull = true;
+				}
+			}
+
+			ToolConsole.Log($"  → result: anyNonNull={anyNonNull}");
+			return anyNonNull ? result : null;
 		}
 
 		private void UpdateExpressionMenuSubOptions(bool exprMenuEnabled)
@@ -327,7 +813,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			popup.index = 0;
 
 			var avatarVariationData = this._avatarDropDowns.GetSelectedAvatarVariation();
-			if (avatarVariationData == null) 
+			if (avatarVariationData == null)
 			{
 				this.UpdateBlendShapeVariantVisibility();
 				return;
@@ -354,7 +840,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				choices.AddRange(variants.Select(v => v.Name));
 				popup.choices = choices;
 			}
-			
+
 			this.UpdateBlendShapeVariantVisibility();
 		}
 
@@ -366,11 +852,27 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			bool maEnabled = GlobalSetting.UseModularAvatar;
 			bool bakeEnabled = GlobalSetting.BakeBlendShapes;
-			
+
 			bool hasVariants = popup.choices.Count > 1;
-			
+
 			popup.style.display = DisplayStyle.Flex;
-			popup.SetEnabled(maEnabled && !bakeEnabled && hasVariants);
+
+			if (bakeEnabled)
+			{
+				popup.SetEnabled(false);
+				popup.choices = new List<string> { S("window.blendshape_variant_bake_active") ?? "BlendShape generation is enabled" };
+				popup.index = 0;
+			}
+			else if (!hasVariants)
+			{
+				popup.SetEnabled(false);
+				popup.choices = new List<string> { S("window.blendshape_variant_none") ?? "No BlendShape" };
+				popup.index = 0;
+			}
+			else
+			{
+				popup.SetEnabled(maEnabled);
+			}
 		}
 
 		private void UpdatePreviewAreaVisibility(bool visible)
@@ -379,6 +881,27 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (area != null)
 				area.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
 		}
+
+		private void UpdateToolConsoleVisibility(bool visible)
+		{
+			if (this._toolConsoleContainer != null)
+				this._toolConsoleContainer.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+		}
+
+		private void AppendConsoleLog(string message)
+		{
+			if (this._toolConsoleScroll == null) return;
+			var label = new Label(message);
+			label.AddToClassList("mdn-tool-console-entry");
+			this._toolConsoleScroll.Add(label);
+
+			// 自動スクロール
+			this._toolConsoleScroll.schedule.Execute(() =>
+			{
+				this._toolConsoleScroll.scrollOffset = new Vector2(0, float.MaxValue);
+			});
+		}
+
 		private void BindLinksUI()
 		{
 			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
@@ -590,6 +1113,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			leftColHeader.AddToClassList("mdn-col-header");
 			leftHeader.Add(leftColHeader);
 
+			var leftAddMatHeader = new LocalizedLabel { TextId = "window.additional_material" };
+			leftAddMatHeader.AddToClassList("mdn-finger-addmat-col");
+			leftAddMatHeader.AddToClassList("mdn-col-header");
+			leftHeader.Add(leftAddMatHeader);
+
+			var leftAddObjHeader = new LocalizedLabel { TextId = "window.additional_object" };
+			leftAddObjHeader.AddToClassList("mdn-finger-addobj-col");
+			leftAddObjHeader.AddToClassList("mdn-col-header");
+			leftHeader.Add(leftAddObjHeader);
+
 			footSelects.Add(leftHeader);
 
 			// ---- 左足 5本 ----
@@ -597,13 +1130,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			for (int i = 0; i < 5; i++)
 			{
 				var dd = new NailDesignDropDowns { name = leftToes[i] };
+				dd.SetFingerName(toeTextIds[i]);
 				footSelects.Add(dd);
-
-				var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
-				if (innerDropdown is DropdownField ddf)
-				{
-					ddf.label = S(toeTextIds[i]) ?? toeTextIds[i];
-				}
 			}
 
 			// ---- 右足区切り行 ----
@@ -622,19 +1150,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			for (int i = 0; i < 5; i++)
 			{
 				var dd = new NailDesignDropDowns { name = rightToes[i] };
+				dd.SetFingerName(toeTextIds[i]);
 				footSelects.Add(dd);
-
-				var innerDropdown = dd.Q<DropdownField>("NailDesignDropDowns-DesignDropDown");
-				if (innerDropdown is DropdownField ddf)
-				{
-					ddf.label = S(toeTextIds[i]) ?? toeTextIds[i];
-				}
 			}
 		}
 
 		private void InitializeNailDesignDropDowns()
 		{
-			this._nailDesignDropDowns = new[] {
+			var allDropdowns = new NailDesignDropDowns?[] {
 				this.rootVisualElement.Q<NailDesignDropDowns>("left-thumb"),
 				this.rootVisualElement.Q<NailDesignDropDowns>("left-index"),
 				this.rootVisualElement.Q<NailDesignDropDowns>("left-middle"),
@@ -657,7 +1180,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this.rootVisualElement.Q<NailDesignDropDowns>("right-foot-little")
 			};
 
-			this._nailDesignDropDowns = this._nailDesignDropDowns.Where(d => d != null).ToArray();
+			// null除去前に指インデックスを設定（配列インデックス = 指インデックス）
+			for (int i = 0; i < allDropdowns.Length; i++)
+				allDropdowns[i]?.SetFingerIndex(i);
+
+			this._nailDesignDropDowns = allDropdowns.Where(d => d != null).ToArray()!;
 
 			foreach (NailDesignDropDowns nailDesignDropDown in this._nailDesignDropDowns)
 			{
@@ -783,6 +1310,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			INailProcessor.ClearPreviewMaterialCash();
 			this.CleanupScenePreview();
+			ToolConsole.OnLog = null;
 		}
 
 		private world.anlabo.mdnailtool.Editor.Window.Controllers.MDNailScenePreviewController? _scenePreviewController;
@@ -790,7 +1318,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnExecute()
 		{
+			ToolConsole.Log("=== OnExecute 開始 ===");
 			this.CleanupScenePreview();
+			this._nailPreviewController?.CleanupAdditionalObjects();
 			this.HideErrorBanner();
 
 			// ---- Validation ----
@@ -864,13 +1394,25 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					MergeAnLabo = (this._forModularAvatar?.value == true)
 					           && (this._generateExpressionMenu?.value == true)
 					           && (this._mergeAnLaboExpressionMenu?.value == true),
+					ArmatureScaleCompensation = (this._armatureScaleCompensation?.value == true),
 					BakeBlendShapes = (this._forModularAvatar?.value == true)
 					               && (this._bakeBlendShapes?.value == true),
 					SyncBlendShapesWithMA = (this._forModularAvatar?.value == true)
 					                     && (this._bakeBlendShapes?.value == true)
 					                     && (this._syncBlendShapesWithMA?.value == true),
 					SelectedBlendShapeVariantName = (this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == false && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
+					EnableAdditionalMaterials = true,
+					PerFingerAdditionalMaterials = this.BuildPerFingerAdditionalMaterials(false),
+					PerFingerAdditionalObjects = this.BuildPerFingerAdditionalObjects(false),
 				};
+
+				// ToolConsole: PerFingerAdditionalObjects の状態をログ
+				ToolConsole.Log($"  PerFingerAdditionalObjects null? {processor.PerFingerAdditionalObjects == null}");
+				if (processor.PerFingerAdditionalObjects != null)
+				{
+					for (int i = 0; i < processor.PerFingerAdditionalObjects.Length; i++)
+						ToolConsole.Log($"    finger[{i}]: {(processor.PerFingerAdditionalObjects[i] != null ? "あり" : "null")}");
+				}
 
 				// AvatarEntityをprocessorにセット（shop.jsonのblendShapeVariantsを参照するため）
 				{
@@ -887,7 +1429,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					}
 				}
 
+				ToolConsole.Log("  processor.Process() 開始");
 				processor.Process();
+				ToolConsole.Log("  processor.Process() 完了");
 
 				if (!isHandActive) this.RemoveHandNailObjects(avatar);
 				if (!isFootActive) this.RemoveFootNailObjects(avatar);
@@ -992,9 +1536,69 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailColorDropDown!.choices = colorPopupElements;
 			this._nailColorDropDown!.SetValueWithoutNotify(colorValue);
 
+			// 追加マテリアル・追加オブジェクトのデフォルトをプレビュー前に設定
+			this.UpdateAdditionalMaterialSourceDefault();
+			this.UpdateAdditionalObjectSourceDefault();
+
 			this.UpdateNailShapeFilter(nailProcessor);
 			this.UpdatePreview();
 			this.RequestScenePreviewUpdate();
+
+			// バリアントドロップダウンを更新（マテリアルバリエーション欄と入れ替え表示）
+			string? parentName = design.ParentVariant;
+			string parentDesignName = !string.IsNullOrEmpty(parentName) ? parentName! : designName;
+			IReadOnlyList<NailDesign> variantChildren = dbNailDesign.FindChildVariants(parentDesignName);
+			if (variantChildren.Count > 0 && this._nailVariantDropDown != null)
+			{
+				string langKey = CurrentLanguageData.language;
+				this._variantDisplayNames = new Dictionary<string, string>();
+				var variantChoices = new List<string>();
+
+				// 親
+				NailDesign? parentDesign = dbNailDesign.FindNailDesignByDesignName(parentDesignName);
+				if (parentDesign != null)
+				{
+					string pDisplay = parentDesign.DisplayNames?.GetValueOrDefault(langKey, parentDesign.DesignName) ?? parentDesign.DesignName;
+					this._variantDisplayNames[parentDesignName] = pDisplay;
+					variantChoices.Add(parentDesignName);
+				}
+
+				// 子
+				foreach (NailDesign child in variantChildren)
+				{
+					string cDisplay = child.DisplayNames?.GetValueOrDefault(langKey, child.DesignName) ?? child.DesignName;
+					this._variantDisplayNames[child.DesignName] = cDisplay;
+					variantChoices.Add(child.DesignName);
+				}
+
+				var displayMap = this._variantDisplayNames;
+				this._nailVariantDropDown.choices = variantChoices;
+				this._nailVariantDropDown.SetValueWithoutNotify(designName);
+				this._nailVariantDropDown.formatListItemCallback = name =>
+					name != null && displayMap.TryGetValue(name, out string? dn) ? dn : name ?? "";
+				this._nailVariantDropDown.formatSelectedValueCallback = name =>
+					name != null && displayMap.TryGetValue(name, out string? dn) ? dn : name ?? "";
+
+				// マテリアルドロップダウンを隠し、バリアントドロップダウンを表示
+				this._nailMaterialDropDown!.style.display = DisplayStyle.None;
+				this._nailVariantDropDown.style.display = DisplayStyle.Flex;
+			}
+			else
+			{
+				// バリアントなし → マテリアルドロップダウンを表示、バリアントを隠す
+				this._nailMaterialDropDown!.style.display = DisplayStyle.Flex;
+				if (this._nailVariantDropDown != null)
+				{
+					this._nailVariantDropDown.style.display = DisplayStyle.None;
+				}
+			}
+		}
+
+		private void OnChangeNailVariantDropDown(ChangeEvent<string> evt)
+		{
+			if (string.IsNullOrEmpty(evt.newValue)) return;
+			ResourceAutoExtractor.EnsureDesignExtracted(evt.newValue);
+			this.OnSelectNail(evt.newValue);
 		}
 
 		private void OnChangeMaterial(ChangeEvent<Object?> evt) { this.UpdateNailShapeFilter(); this.UpdatePreview(); this.RequestScenePreviewUpdate(); }
@@ -1050,8 +1654,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
 			Material? directMaterial = this._materialObjectField?.value as Material;
 
-			this._nailPreviewController?.ChangeNailMaterial(designAndVariationNames, nailShapeName, directMaterial);
-			this._nailPreviewController?.ChangeAdditionalObjects(designAndVariationNames, nailShapeName);
+			var perFingerAddMats = this.BuildPerFingerAdditionalMaterials(true);
+			var perFingerAddObjs = this.BuildPerFingerAdditionalObjects(true);
+
+			this._nailPreviewController?.ChangeNailMaterial(designAndVariationNames, nailShapeName, directMaterial,
+				true, perFingerAddMats);
+			this._nailPreviewController?.ChangeAdditionalObjects(designAndVariationNames, nailShapeName, perFingerAddObjs);
 		}
 
 		private void RequestScenePreviewUpdate()
@@ -1087,6 +1695,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
 			Material? directMaterial = this._materialObjectField?.value as Material;
 
+			var perFingerAddMats = this.BuildPerFingerAdditionalMaterials(true);
+			var perFingerAddObjs = this.BuildPerFingerAdditionalObjects(true);
+
+			bool armatureCompensation = this._armatureScaleCompensation?.value == true;
+
 			this._scenePreviewController ??= new MDNailScenePreviewController(SCENE_PREVIEW_NAME);
 			this._scenePreviewController.Update(
 				avatar,
@@ -1096,7 +1709,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				isHandActive,
 				isFootActive,
 				designAndVariationNames,
-				directMaterial
+				directMaterial,
+				true,
+				perFingerAddMats,
+				perFingerAddObjs,
+				armatureCompensation
 			);
 		}
 
