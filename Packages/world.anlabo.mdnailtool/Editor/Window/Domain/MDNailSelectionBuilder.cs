@@ -62,5 +62,74 @@ namespace world.anlabo.mdnailtool.Editor.Window.Domain
 				return (newProcessor, tuple.m, tuple.c);
 			}).ToArray();
 		}
+
+		internal static string?[] BuildAdditionalMaterialSources(
+			NailDesignDropDowns[] nailDesignDropDowns,
+			bool isHandActive,
+			bool isHandDetail,
+			bool isFootActive,
+			bool isFootDetail,
+			string? globalSource)
+		{
+			string?[] result = new string?[20];
+
+			string?[] perFingerSources = nailDesignDropDowns
+				.Select(dd => dd.GetSelectedAdditionalMaterialSource())
+				.ToArray();
+
+			if (isHandActive)
+			{
+				string? handSource = isHandDetail ? null : (perFingerSources.Length > 0 ? perFingerSources[0] : globalSource);
+				for (int i = 0; i < 10; i++)
+				{
+					result[i] = isHandDetail ? perFingerSources[i] : (handSource ?? globalSource);
+				}
+			}
+
+			if (isFootActive)
+			{
+				for (int i = 10; i < 20; i++)
+				{
+					result[i] = isFootDetail ? perFingerSources[i] : globalSource;
+				}
+			}
+
+			return result;
+		}
+
+		internal static string?[] BuildAdditionalObjectSources(
+			NailDesignDropDowns[] nailDesignDropDowns,
+			bool isHandActive,
+			bool isHandDetail,
+			bool isFootActive,
+			bool isFootDetail,
+			string? globalSource)
+		{
+			string?[] result = new string?[20];
+
+			string?[] perFingerSources = nailDesignDropDowns
+				.Select(dd => dd.GetSelectedAdditionalObjectSource())
+				.ToArray();
+
+			if (isHandActive)
+			{
+				string? handSource = isHandDetail ? null : (perFingerSources.Length > 0 ? perFingerSources[0] : globalSource);
+				for (int i = 0; i < 10; i++)
+				{
+					result[i] = isHandDetail ? perFingerSources[i] : (handSource ?? globalSource);
+				}
+			}
+
+			// 追加オブジェクトは手のみ（TargetFingerは0-9）だが、将来のため足も同じロジック
+			if (isFootActive)
+			{
+				for (int i = 10; i < 20; i++)
+				{
+					result[i] = isFootDetail ? perFingerSources[i] : globalSource;
+				}
+			}
+
+			return result;
+		}
 	}
 }

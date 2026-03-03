@@ -19,6 +19,9 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
         private readonly Dictionary<Renderer, bool> _originalRendererEnabled = new();
         private bool _isOriginalHidden = false;
 
+        // Armature補正前のネイルローカルトランスフォームを保存
+        private readonly Dictionary<string, (Vector3 localPos, Quaternion localRot, Vector3 localScale)> _originalNailLocalTransforms = new();
+
         public MDNailScenePreviewController(string scenePreviewName)
         {
             _scenePreviewName = scenePreviewName;
@@ -33,6 +36,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                 Object.DestroyImmediate(_scenePreviewObject);
                 _scenePreviewObject = null;
                 _scenePreviewRoot = null;
+                _originalNailLocalTransforms.Clear();
             }
 
             if (avatar == null) return;
@@ -52,7 +56,11 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
             bool isHandActive,
             bool isFootActive,
             (INailProcessor, string, string)[] designAndVariationNames,
-            Material? overrideMaterial = null
+            Material? overrideMaterial = null,
+            bool enableAdditionalMaterials = true,
+            IEnumerable<Material>?[]? perFingerAdditionalMaterials = null,
+            IEnumerable<Transform>?[]? perFingerAdditionalObjects = null,
+            bool armatureScaleCompensation = false
         )
         {
             if (avatar == null) return;
@@ -97,6 +105,10 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                 .Select(FindByName).ToArray();
             foreach (var t in feet) if (t != null) t.gameObject.SetActive(isFootActive);
 
+            // 初回のみローカルトランスフォームを保存（Armature補正リセット用）
+            SaveNailLocalTransforms(hands);
+            SaveNailLocalTransforms(feet);
+
             if (isHandActive && overrideMeshes.Length > 0)
             {
                 NailSetupUtil.ReplaceHandsNailMesh(hands, overrideMeshes);
@@ -113,8 +125,141 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                 nailShapeName,
                 true,
                 true,
-                overrideMaterial
+                overrideMaterial,
+                enableAdditionalMaterials,
+                perFingerAdditionalMaterials
             );
+
+            // 追加オブジェクトの適用（手 + 足）
+            {
+                // 手の既存子をクリーンアップ
+                foreach (var hand in hands)
+                {
+                    if (hand == null) continue;
+                    foreach (Transform child in hand.Cast<Transform>().ToArray())
+                        Object.DestroyImmediate(child.gameObject);
+                }
+                // 足の既存子をクリーンアップ
+                foreach (var foot in feet)
+                {
+                    if (foot == null) continue;
+                    foreach (Transform child in foot.Cast<Transform>().ToArray())
+                        Object.DestroyImmediate(child.gameObject);
+                }
+
+                // perFingerAdditionalObjects[0..9]=手, [10..19]=足
+                if (isHandActive)
+                    NailSetupUtil.AttachAdditionalObjects(hands, designAndVariationNames, nailShapeName, true, perFingerAdditionalObjects);
+
+                if (isFootActive && perFingerAdditionalObjects != null)
+                {
+                    // 足の追加オブジェクト（10-19）を feet に親付け
+                    for (int fi = 0; fi < feet.Length && fi + 10 < perFingerAdditionalObjects.Length; fi++)
+                    {
+                        var footTransform = feet[fi];
+                        var footObjects = perFingerAdditionalObjects[fi + 10];
+                        if (footTransform == null || footObjects == null) continue;
+                        foreach (Transform obj in footObjects)
+                            obj.SetParent(footTransform, false);
+                    }
+                }
+            }
+
+            // ---- ネイルトランスフォームをリセット（Armature補正の累積防止）----
+            RestoreNailLocalTransforms(hands);
+            RestoreNailLocalTransforms(feet);
+
+            // ---- Armature補正の適用 ----
+            if (armatureScaleCompensation && avatar != null)
+            {
+                ApplyArmatureCompensation(avatar, hands, feet, isHandActive, isFootActive);
+            }
+        }
+
+        /// <summary>ネイルのローカル座標を初期値として保存（未保存の場合のみ）</summary>
+        private void SaveNailLocalTransforms(Transform?[] nails)
+        {
+            foreach (var nail in nails)
+            {
+                if (nail == null) continue;
+                string key = nail.name;
+                if (!_originalNailLocalTransforms.ContainsKey(key))
+                    _originalNailLocalTransforms[key] = (nail.localPosition, nail.localRotation, nail.localScale);
+            }
+        }
+
+        /// <summary>保存したローカル座標に復元</summary>
+        private void RestoreNailLocalTransforms(Transform?[] nails)
+        {
+            foreach (var nail in nails)
+            {
+                if (nail == null) continue;
+                if (_originalNailLocalTransforms.TryGetValue(nail.name, out var orig))
+                {
+                    nail.localPosition = orig.localPos;
+                    nail.localRotation = orig.localRot;
+                    nail.localScale = orig.localScale;
+                }
+            }
+        }
+
+        private void ApplyArmatureCompensation(
+            VRCAvatarDescriptor avatar,
+            Transform?[] hands,
+            Transform?[] feet,
+            bool isHandActive,
+            bool isFootActive)
+        {
+            var targetBoneDictionary = NailSetupProcessor.GetTargetBoneDictionary(avatar, null);
+
+            var allNails = new List<Transform?>();
+            var allBoneIndices = new List<int>();
+
+            if (isHandActive)
+            {
+                int ci = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
+                foreach (var nail in hands)
+                {
+                    ci++;
+                    allNails.Add(nail);
+                    allBoneIndices.Add(ci);
+                }
+            }
+
+            if (isFootActive)
+            {
+                var leftFeetNames = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST;
+                int lci = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
+                for (int i = 0; i < leftFeetNames.Count && i < feet.Length; i++)
+                {
+                    lci++;
+                    allNails.Add(feet[i]);
+                    allBoneIndices.Add(lci);
+                }
+                int rci = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
+                for (int i = 0; i < MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST.Count && i + leftFeetNames.Count < feet.Length; i++)
+                {
+                    rci++;
+                    allNails.Add(feet[i + leftFeetNames.Count]);
+                    allBoneIndices.Add(rci);
+                }
+            }
+
+            if (allNails.Count == 0) return;
+
+            var corrections = NailSetupProcessor.ComputeScaleCompensatedTransforms(
+                avatar, targetBoneDictionary,
+                allNails.ToArray(), allBoneIndices.ToArray());
+
+            if (corrections == null || corrections.Count == 0) return;
+
+            foreach (var kv in corrections)
+            {
+                Transform nail = kv.Key;
+                nail.position = kv.Value.position;
+                nail.rotation = kv.Value.rotation;
+                nail.localScale = Vector3.Scale(nail.localScale, kv.Value.scaleRatio);
+            }
         }
 
         private IEnumerable<Renderer> EnumerateOriginalNailRenderers(VRCAvatarDescriptor avatar)

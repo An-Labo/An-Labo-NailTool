@@ -187,20 +187,22 @@
     background-color: #446c7e;
 }
 
-/* ---- Style row (Shape / Material / Color) ---- */
+/* ---- Style row (Shape / Material / Color / Additional Material) ---- */
 .mdn-style-row {
     flex-direction: row;
     align-items: flex-start;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .mdn-style-item {
     flex-direction: column;
     flex-grow: 1;
-    flex-basis: 30%;
-    margin-right: 6px;
+    flex-shrink: 1;
+    flex-basis: 0;
+    margin-right: 4px;
     margin-top: 0;
-    min-width: 80px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .mdn-style-item-last {
@@ -217,6 +219,20 @@
 .mdn-style-dropdown {
     margin: 0;
     width: 100%;
+}
+
+/* ドロップダウン内のラベルを均等に縮小させ、5列で崩れないようにする */
+.mdn-style-dropdown > .unity-base-field__label {
+    min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+}
+
+.mdn-style-dropdown > .unity-popup-field__input {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 20px;
 }
 
 /* ---- Toggle section header (Hand / Foot) ---- */
@@ -276,25 +292,76 @@
     margin-bottom: 3px;
 }
 
-.mdn-finger-name-col {
+/* ---- Per-finger row: name label (separated from dropdown) ---- */
+.mdn-finger-name-label {
+    width: 13%;
+    min-width: 50px;
     flex-shrink: 0;
-    min-width: 90px;
-    width: 28%;
+    font-size: 11px;
+    color: #ccc;
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+}
+
+/* ---- Per-finger row: design dropdown ---- */
+.mdn-finger-design-dropdown {
+    width: 16%;
+    flex-shrink: 1;
+    min-width: 40px;
+}
+
+/* デザインドロップダウンのラベル部分を非表示（指名は別ラベルに分離済み） */
+.mdn-finger-design-dropdown > .unity-base-field__label {
+    display: none;
+}
+
+.mdn-finger-mat-dropdown {
+    width: 16%;
+}
+
+.mdn-finger-col-dropdown {
+    width: 16%;
+}
+
+.mdn-finger-addmat-dropdown {
+    width: 16%;
+}
+
+.mdn-finger-addobj-dropdown {
+    width: 16%;
+}
+
+/* ---- Per-finger header columns (match dropdown widths) ---- */
+.mdn-finger-name-col {
+    width: 13%;
+    min-width: 50px;
+    flex-shrink: 0;
 }
 
 .mdn-finger-design-col {
-    flex-grow: 1;
-    min-width: 60px;
+    width: 16%;
+    flex-shrink: 1;
+    min-width: 40px;
     padding-left: 4px;
 }
 
 .mdn-finger-mat-col {
-    width: 24%;
+    width: 16%;
     padding-left: 4px;
 }
 
 .mdn-finger-col-col {
-    width: 24%;
+    width: 16%;
+    padding-left: 4px;
+}
+
+.mdn-finger-addmat-col {
+    width: 16%;
+    padding-left: 4px;
+}
+
+.mdn-finger-addobj-col {
+    width: 16%;
     padding-left: 4px;
 }
 
@@ -819,6 +886,10 @@
     color: #666;
 }
 
+:root[data-unity-skin="light"] .mdn-finger-name-label {
+    color: #333;
+}
+
 :root[data-unity-skin="light"] .mdn-advanced-foldout {
     background-color: #f2f2f2;
     border-color: #ccc;
@@ -1052,4 +1123,82 @@
 :root[data-unity-skin="light"] .mdn-error-contact-btn {
     color: #3060a0;
     border-color: #3060a0;
+}
+
+/* ============================================================
+   TOOL CONSOLE
+   ============================================================ */
+
+.mdn-tool-console-container {
+    margin-top: 6px;
+    background-color: #1e1e1e;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #555;
+    overflow: hidden;
+}
+
+.mdn-tool-console-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 6px;
+    background-color: #2a2a2a;
+    border-bottom-width: 1px;
+    border-bottom-color: #444;
+}
+
+.mdn-tool-console-title {
+    font-size: 11px;
+    color: #aaa;
+    -unity-font-style: bold;
+    flex-grow: 1;
+}
+
+.mdn-tool-console-header-btn {
+    font-size: 10px;
+    padding: 1px 8px;
+    height: 18px;
+    margin-left: 4px;
+}
+
+.mdn-tool-console-scroll {
+    height: 48px;
+    padding: 4px;
+}
+
+.mdn-tool-console-entry {
+    font-size: 11px;
+    color: #ccc;
+    -unity-font-style: normal;
+    white-space: normal;
+    margin-bottom: 1px;
+    padding: 1px 2px;
+}
+
+.mdn-tool-console-entry-warn {
+    color: #e8c44a;
+}
+
+.mdn-tool-console-entry-error {
+    color: #f44;
+}
+
+/* Light skin overrides */
+:root[data-unity-skin="light"] .mdn-tool-console-container {
+    background-color: #f8f8f8;
+    border-color: #bbb;
+}
+
+:root[data-unity-skin="light"] .mdn-tool-console-header {
+    background-color: #e8e8e8;
+    border-bottom-color: #ccc;
+}
+
+:root[data-unity-skin="light"] .mdn-tool-console-title {
+    color: #555;
+}
+
+:root[data-unity-skin="light"] .mdn-tool-console-entry {
+    color: #333;
 }

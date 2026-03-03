@@ -87,11 +87,6 @@ namespace world.anlabo.mdnailtool.Editor
 
 				rightFootOverrideMesh = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST
 					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName.Replace('.', '_')}.fbx")
-					.Select(name =>
-					{
-						Debug.Log(name);
-						return name;
-					})
 					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
 					.ToArray();
 
@@ -137,7 +132,8 @@ namespace world.anlabo.mdnailtool.Editor
 		}
 
 		public static void ReplaceNailMaterial(Transform?[] handsNailObjects, IEnumerable<Transform?> leftFootNailObjects, IEnumerable<Transform?> rightFootNailObjects,
-			(INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isGenerate, bool isPreview, Material? overrideMaterial = null)
+			(INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isGenerate, bool isPreview, Material? overrideMaterial = null,
+			bool enableAdditionalMaterials = true, IEnumerable<Material>?[]? perFingerAdditionalMaterials = null)
 		{
 
 			if (overrideMaterial != null)
@@ -163,7 +159,9 @@ namespace world.anlabo.mdnailtool.Editor
 					continue;
 				}
 
-				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
+				IEnumerable<Material>? fingerAdditional = perFingerAdditionalMaterials != null && index < perFingerAdditionalMaterials.Length
+					? perFingerAdditionalMaterials[index] : null;
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview, enableAdditionalMaterials, fingerAdditional);
 			}
 
 			var leftFootArray = leftFootNailObjects.ToArray();
@@ -176,7 +174,9 @@ namespace world.anlabo.mdnailtool.Editor
 				Transform? transform = leftFootArray[i];
 
 				if (transform == null) continue;
-				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
+				IEnumerable<Material>? fingerAdditional = perFingerAdditionalMaterials != null && designIndex < perFingerAdditionalMaterials.Length
+					? perFingerAdditionalMaterials[designIndex] : null;
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview, enableAdditionalMaterials, fingerAdditional);
 			}
 
 			var rightFootArray = rightFootNailObjects.ToArray();
@@ -189,11 +189,14 @@ namespace world.anlabo.mdnailtool.Editor
 				Transform? transform = rightFootArray[i];
 
 				if (transform == null) continue;
-				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview);
+				IEnumerable<Material>? fingerAdditional = perFingerAdditionalMaterials != null && designIndex < perFingerAdditionalMaterials.Length
+					? perFingerAdditionalMaterials[designIndex] : null;
+				ApplyMaterial(transform, processor, materialName, colorName, nailShapeName, isGenerate, isPreview, enableAdditionalMaterials, fingerAdditional);
 			}
 		}
 
-		private static void ApplyMaterial(Transform transform, INailProcessor processor, string materialName, string colorName, string nailShapeName, bool isGenerate, bool isPreview)
+		private static void ApplyMaterial(Transform transform, INailProcessor processor, string materialName, string colorName, string nailShapeName, bool isGenerate, bool isPreview,
+			bool enableAdditionalMaterials = true, IEnumerable<Material>? overrideAdditionalMaterials = null)
 		{
 			Renderer? renderer = transform.GetComponent<Renderer>();
 			if (renderer == null)
@@ -205,12 +208,23 @@ namespace world.anlabo.mdnailtool.Editor
 			if (processor == null) return;
 
 			Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
-			IEnumerable<Material> additionalMaterial = processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
-			renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
+
+			if (enableAdditionalMaterials)
+			{
+				IEnumerable<Material> additionalMaterial = overrideAdditionalMaterials
+					?? processor.GetAdditionalMaterials(colorName, nailShapeName, isPreview);
+				renderer.sharedMaterials = additionalMaterial.Prepend(mainMaterial).ToArray();
+			}
+			else
+			{
+				renderer.sharedMaterials = new[] { mainMaterial };
+			}
 		}
 
-		public static void AttachAdditionalObjects(Transform?[] handsNailObjects, (INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isPreview)
+		public static void AttachAdditionalObjects(Transform?[] handsNailObjects, (INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isPreview,
+			IEnumerable<Transform>?[]? perFingerAdditionalObjects = null)
 		{
+			ToolConsole.Log($"AttachAdditionalObjects: perFinger null? {perFingerAdditionalObjects == null}, isPreview={isPreview}");
 			if (handsNailObjects.Length != 10)
 			{
 				throw new ArgumentException($"Incorrect length of {nameof(handsNailObjects)} parameter : {handsNailObjects.Length}");
@@ -218,22 +232,96 @@ namespace world.anlabo.mdnailtool.Editor
 
 			for (int index = 0; index < handsNailObjects.Length; index++)
 			{
-				(INailProcessor processor, string _, string colorName) = nailDesignAndVariationNames[index];
-
 				Transform? transform = handsNailObjects[index];
 				if (transform == null)
 				{
+					ToolConsole.Log($"  index={index}: transform=null → skip");
 					continue;
 				}
 
-				if (processor == null) continue;
+				// per-finger オーバーライドがあればそちらを使用
+				IEnumerable<Transform>? fingerObjects = perFingerAdditionalObjects != null && index < perFingerAdditionalObjects.Length
+					? perFingerAdditionalObjects[index] : null;
 
-				foreach (Transform additionalObject in processor.GetAdditionalObjects(colorName, nailShapeName, (MDNailToolDefines.TargetFinger)index, isPreview))
+				ToolConsole.Log($"  index={index}: transform={transform.name}, fingerObjects null? {fingerObjects == null}");
+
+				if (fingerObjects != null)
 				{
-					additionalObject.SetParent(transform, false);
+					int count = 0;
+					foreach (Transform additionalObject in fingerObjects)
+					{
+						additionalObject.SetParent(transform, false);
+						count++;
+					}
+					ToolConsole.Log($"  index={index}: attached {count} per-finger objects");
+				}
+				else
+				{
+					// フォールバック: processor から取得
+					(INailProcessor processor, string _, string colorName) = nailDesignAndVariationNames[index];
+					if (processor == null)
+					{
+						ToolConsole.Log($"  index={index}: processor=null → skip");
+						continue;
+					}
+
+					int count = 0;
+					foreach (Transform additionalObject in processor.GetAdditionalObjects(colorName, nailShapeName, (MDNailToolDefines.TargetFinger)index, isPreview))
+					{
+						additionalObject.SetParent(transform, false);
+						count++;
+					}
+					ToolConsole.Log($"  index={index}: attached {count} fallback objects via processor");
 				}
 			}
 		}
+
+		/// <summary>
+		/// レンダラーが使用する全テクスチャのMip Streamingを有効化する。
+		/// mipmapEnabled=falseのテクスチャはスキップ（ミップマップ自体が無いため）。
+		/// </summary>
+		public static void EnableMipStreamingForRenderers(IEnumerable<Renderer?> renderers)
+		{
+			var pathsToReimport = new HashSet<string>();
+
+			foreach (Renderer? renderer in renderers)
+			{
+				if (renderer == null) continue;
+				foreach (Material mat in renderer.sharedMaterials)
+				{
+					if (mat == null) continue;
+					foreach (int propId in mat.GetTexturePropertyNameIDs())
+					{
+						Texture? tex = mat.GetTexture(propId);
+						if (tex == null) continue;
+						string texPath = AssetDatabase.GetAssetPath(tex);
+						if (string.IsNullOrEmpty(texPath) || pathsToReimport.Contains(texPath)) continue;
+
+						TextureImporter? importer = AssetImporter.GetAtPath(texPath) as TextureImporter;
+						if (importer == null) continue;
+						if (importer.streamingMipmaps) continue;
+						if (!importer.mipmapEnabled) continue;
+
+						importer.streamingMipmaps = true;
+						pathsToReimport.Add(texPath);
+					}
+				}
+			}
+
+			if (pathsToReimport.Count == 0) return;
+
+			AssetDatabase.StartAssetEditing();
+			try
+			{
+				foreach (string path in pathsToReimport)
+					AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+			}
+			finally
+			{
+				AssetDatabase.StopAssetEditing();
+			}
+		}
+
 		private static void ApplyOverrideMaterialToAll(IEnumerable<Transform?> nailObjects, Material overrideMaterial)
 		{
 			foreach (Transform? nailObject in nailObjects)
@@ -439,20 +527,30 @@ namespace world.anlabo.mdnailtool.Editor
 
 			for (int si = 0; si < validPairs.Length; si++)
 			{
-				Material mat = validPairs[si].smr.sharedMaterials.Length > 0 ? validPairs[si].smr.sharedMaterials[0] : null!;
-				if (mat == null) continue;
+				Material[] mats = validPairs[si].smr.sharedMaterials;
+				if (mats.Length == 0) continue;
 
-				if (!materialGroups.ContainsKey(mat))
-				{
-					materialGroups[mat] = new List<int>();
-					materialList.Add(mat);
-				}
-
-				int[] srcTris = validPairs[si].smr.sharedMesh.triangles;
+				Mesh mesh = validPairs[si].smr.sharedMesh;
 				int vOff = vertexOffsets[si];
-				for (int ti = 0; ti < srcTris.Length; ti++)
+
+				for (int matIdx = 0; matIdx < mats.Length; matIdx++)
 				{
-					materialGroups[mat].Add(srcTris[ti] + vOff);
+					Material mat = mats[matIdx];
+					if (mat == null) continue;
+
+					if (!materialGroups.ContainsKey(mat))
+					{
+						materialGroups[mat] = new List<int>();
+						materialList.Add(mat);
+					}
+
+					// メッシュのサブメッシュ数以上のマテリアルはサブメッシュ0のジオメトリを使用（オーバーレイ）
+					int subMeshIdx = matIdx < mesh.subMeshCount ? matIdx : 0;
+					int[] srcTris = mesh.GetTriangles(subMeshIdx);
+					for (int ti = 0; ti < srcTris.Length; ti++)
+					{
+						materialGroups[mat].Add(srcTris[ti] + vOff);
+					}
 				}
 			}
 
@@ -490,6 +588,7 @@ namespace world.anlabo.mdnailtool.Editor
 							break;
 						}
 					}
+
 					var fullDv = new Vector3[totalVertCount];
 					var fullDn = new Vector3[totalVertCount];
 					var fullDt = new Vector3[totalVertCount];
@@ -503,11 +602,33 @@ namespace world.anlabo.mdnailtool.Editor
 						Mesh baseMesh = validPairs[si].smr.sharedMesh;
 						int siVertCount = baseMesh.vertexCount;
 
+						// Step 1: 名前完全一致
 						Transform? variantNail = variant.VariantNails.FirstOrDefault(t => t != null && t.name == baseNail.name);
+						// Step 2: 大文字小文字無視
+						if (variantNail == null)
+							variantNail = variant.VariantNails.FirstOrDefault(t => t != null && string.Equals(t.name, baseNail.name, System.StringComparison.OrdinalIgnoreCase));
+						// Step 3: インデックスでフォールバック（同じ指の位置にあるネイルを使用）
+						if (variantNail == null && si < variant.VariantNails.Length && variant.VariantNails[si] != null)
+						{
+							variantNail = variant.VariantNails[si];
+							Debug.Log($"[MDNailTool] BakeAndCombine: '{shapeName}' '{baseNail.name}' 名前不一致 → インデックス {si} のバリアント '{variantNail.name}' を使用");
+						}
 
-						if (variantNail != null)
+						if (variantNail == null)
+						{
+							Debug.LogWarning($"[MDNailTool] BakeAndCombine: '{shapeName}' バリアントに '{baseNail.name}' に一致するネイルが見つかりません（スキップ）");
+						}
+						else
 						{
 						SkinnedMeshRenderer? varSmr = variantNail.GetComponent<SkinnedMeshRenderer>();
+						if (varSmr == null || varSmr.sharedMesh == null)
+						{
+							Debug.LogWarning($"[MDNailTool] BakeAndCombine: '{baseNail.name}' のバリアントに SkinnedMeshRenderer またはメッシュがありません");
+						}
+						else if (varSmr.sharedMesh.vertexCount != siVertCount)
+						{
+							Debug.LogWarning($"[MDNailTool] BakeAndCombine: base='{baseNail.name}' vertCount={siVertCount}, variant vertCount={varSmr.sharedMesh.vertexCount} → MISMATCH");
+						}
 						if (varSmr != null && varSmr.sharedMesh != null && varSmr.sharedMesh.vertexCount == siVertCount)
 						{
 							hasAnyDelta = true;
@@ -549,9 +670,12 @@ namespace world.anlabo.mdnailtool.Editor
 						vOff += siVertCount;
 					}
 
-					if (hasAnyDelta)
+					// ベイク設定オン時は常にBlendShapeを生成する（デルタなしでもゼロデルタで作成）
+					// MAのBlendShapeSyncで名前ベースの同期を行うため、BlendShapeの存在自体が必要
+					combinedMesh.AddBlendShapeFrame(shapeName, 100f, fullDv, fullDn, fullDt);
+					if (!hasAnyDelta)
 					{
-						combinedMesh.AddBlendShapeFrame(shapeName, 100f, fullDv, fullDn, fullDt);
+						Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName}' デルタなし → ゼロデルタで生成しました");
 					}
 				}
 			}

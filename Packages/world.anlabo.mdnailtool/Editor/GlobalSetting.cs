@@ -111,6 +111,17 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(ENABLE_SCENE_WEARING_PREVIEW_KEY, value);
 		}
 
+		private const string ENABLE_TOOL_CONSOLE_KEY = "world.anlabo.mdnailtool.enable_tool_console";
+		internal static bool EnableToolConsole
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ENABLE_TOOL_CONSOLE_KEY)) return false;
+				return EditorPrefs.GetBool(ENABLE_TOOL_CONSOLE_KEY);
+			}
+			set => EditorPrefs.SetBool(ENABLE_TOOL_CONSOLE_KEY, value);
+		}
+
 		private const string USE_MODULAR_AVATAR_KEY = "world.anlabo.mdnailtool.use_modular_avatar";
 		internal static bool UseModularAvatar
 		{
@@ -155,6 +166,17 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(MERGE_ANLABO_EXPRESSION_MENU_KEY, value);
 		}
 
+		private const string ARMATURE_SCALE_COMPENSATION_KEY = "world.anlabo.mdnailtool.armature_scale_compensation";
+		internal static bool ArmatureScaleCompensation
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ARMATURE_SCALE_COMPENSATION_KEY)) return false;
+				return EditorPrefs.GetBool(ARMATURE_SCALE_COMPENSATION_KEY);
+			}
+			set => EditorPrefs.SetBool(ARMATURE_SCALE_COMPENSATION_KEY, value);
+		}
+
 		private const string BAKE_BLENDSHAPES_KEY = "world.anlabo.mdnailtool.bake_blendshapes";
 		internal static bool BakeBlendShapes
 		{
@@ -175,6 +197,41 @@ namespace world.anlabo.mdnailtool.Editor
 				return EditorPrefs.GetBool(SYNC_BLENDSHAPES_WITH_MA_KEY);
 			}
 			set => EditorPrefs.SetBool(SYNC_BLENDSHAPES_WITH_MA_KEY, value);
+		}
+
+		private const string ENABLE_ADDITIONAL_MATERIALS_KEY = "world.anlabo.mdnailtool.enable_additional_materials";
+		internal static bool EnableAdditionalMaterials
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ENABLE_ADDITIONAL_MATERIALS_KEY)) return true;
+				return EditorPrefs.GetBool(ENABLE_ADDITIONAL_MATERIALS_KEY);
+			}
+			set => EditorPrefs.SetBool(ENABLE_ADDITIONAL_MATERIALS_KEY, value);
+		}
+
+		private const string ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY = "world.anlabo.mdnailtool.additional_material_source_design";
+		internal static string? AdditionalMaterialSourceDesign
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY)) return null;
+				string val = EditorPrefs.GetString(ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY);
+				return string.IsNullOrEmpty(val) ? null : val;
+			}
+			set => EditorPrefs.SetString(ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY, value ?? "");
+		}
+
+		private const string ADDITIONAL_OBJECT_SOURCE_DESIGN_KEY = "world.anlabo.mdnailtool.additional_object_source_design";
+		internal static string? AdditionalObjectSourceDesign
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ADDITIONAL_OBJECT_SOURCE_DESIGN_KEY)) return null;
+				string val = EditorPrefs.GetString(ADDITIONAL_OBJECT_SOURCE_DESIGN_KEY);
+				return string.IsNullOrEmpty(val) ? null : val;
+			}
+			set => EditorPrefs.SetString(ADDITIONAL_OBJECT_SOURCE_DESIGN_KEY, value ?? "");
 		}
 
 		private const string DESIGN_LAST_USED_TIMES_KEY = "world.anlabo.mdnailtool.design_last_used_times";
@@ -234,6 +291,11 @@ namespace world.anlabo.mdnailtool.Editor
 			EditorPrefs.DeleteKey(DESIGN_USE_COUNT_KEY);
 			EditorPrefs.DeleteKey(AVATAR_USE_COUNT_KEY);
 			EditorPrefs.DeleteKey(ENABLE_SCENE_PREVIEW_KEY);
+			EditorPrefs.DeleteKey(ENABLE_ADDITIONAL_MATERIALS_KEY);
+			EditorPrefs.DeleteKey(ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY);
+			EditorPrefs.DeleteKey(ADDITIONAL_OBJECT_SOURCE_DESIGN_KEY);
+			EditorPrefs.DeleteKey(ENABLE_TOOL_CONSOLE_KEY);
+			EditorPrefs.DeleteKey(ARMATURE_SCALE_COMPENSATION_KEY);
 		}
 
 	}

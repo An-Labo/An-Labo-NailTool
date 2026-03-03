@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -67,43 +69,15 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 				};
 
-				switch (designName) {
-					case "HoroNail": {
-						designData.Legacy.AdditionalMaterialGUIDs = new[] { "b301cdf847023624b9d9b3f9b48a78e4" };
-						break;
-					}
-					case "MagicNail": {
-						designData.Legacy.AdditionalObjectGUIDs = new Dictionary<MDNailToolDefines.TargetFinger, string[]> {
-							{ MDNailToolDefines.TargetFinger.LeftRing, new[] { "6396c8acd4b391f4a872050feedd8b0b" } },
-							{ MDNailToolDefines.TargetFinger.RightRing, new[] { "6396c8acd4b391f4a872050feedd8b0b" } }
-						};
-						break;
-					}
-					case "LILITHYNail": {
-						designData.Legacy.AdditionalObjectGUIDs = new Dictionary<MDNailToolDefines.TargetFinger, string[]> {
-							{ MDNailToolDefines.TargetFinger.LeftRing, new[] { "13a4d9bebb685a04bb0f4a797f2b1f47" }},
-							{ MDNailToolDefines.TargetFinger.RightRing, new[] { "13a4d9bebb685a04bb0f4a797f2b1f47" }},
-						};
-						break;
-					}
-					case "WeatherNail-falling star": {
-						designData.Legacy.AdditionalMaterialGUIDs = new[] { "203d5349fc7378f479dd251156ff0a73" };
-						break;
-					}
-					case "WeatherNail-rain": {
-						designData.Legacy.AdditionalMaterialGUIDs = new[] { "40cd7558714d88547b4ff556a1438aff",
-																			"ee55a6dcda4337642aa17c4aaa559acc",
-																			"571f8c9bcd281e94a990aabdff8ba5f3",
-																			"c8821d596c605c9459518797f7f5dabc" };
-						break;
-					}
-					case "WeatherNail-snow": {
-						designData.Legacy.AdditionalMaterialGUIDs = new[] { "db388f72784d3f241a0f2b5da0a605ce",
-																			"310bd38e86d65d1418cd69b389a70b9b",
-																			"73eb6039e82e68e4aab95b7201df4158",
-																			"9d3b17d5b3af6974693492ea548f2975" };
-						break;
-					}
+				if (nailDesign.AdditionalMaterialGUIDs is { Length: > 0 }) {
+					var registry = DBAdditionalAssets.Load();
+					designData.Legacy.AdditionalMaterialGUIDs = nailDesign.AdditionalMaterialGUIDs
+						.SelectMany(g => registry.ResolveMaterialGuids(g))
+						.ToArray();
+				}
+
+				if (nailDesign.AdditionalObjectGUIDs is { Count: > 0 }) {
+					designData.Legacy.AdditionalObjectGUIDs = ParseObjectGUIDs(nailDesign.AdditionalObjectGUIDs);
 				}
 
 				File.WriteAllText($"{targetPath}_design.json", designData.ToJson());
@@ -112,6 +86,16 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
+		private static Dictionary<MDNailToolDefines.TargetFinger, string[]> ParseObjectGUIDs(
+			IReadOnlyDictionary<string, string[]> source) {
+			var registry = DBAdditionalAssets.Load();
+			return source
+				.Where(kvp => Enum.TryParse<MDNailToolDefines.TargetFinger>(kvp.Key, out _))
+				.ToDictionary(
+					kvp => Enum.Parse<MDNailToolDefines.TargetFinger>(kvp.Key),
+					kvp => kvp.Value.SelectMany(g => registry.ResolveObjectGuids(g)).ToArray()
+				);
+		}
 
 		private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths) {
 			InstallLegacyNail();

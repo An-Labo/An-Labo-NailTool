@@ -67,7 +67,7 @@
             </ui:VisualElement>
             <ui:VisualElement class="mdn-section-body">
 
-                <!-- Shape / Material / Color (プレビューより上) -->
+                <!-- Shape / Material / Color / Additional Material (プレビューより上) -->
                 <ui:VisualElement class="mdn-style-row">
                     <ui:VisualElement class="mdn-style-item">
                         <world.anlabo.mdnailtool.Editor.VisualElements.NailShapeDropDown
@@ -83,11 +83,23 @@
                             tooltip-id="tooltip.nail_material"
                             class="mdn-style-dropdown" />
                     </ui:VisualElement>
-                    <ui:VisualElement class="mdn-style-item mdn-style-item-last">
+                    <ui:VisualElement class="mdn-style-item">
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown
                             name="nail-color"
                             text-id="window.nail_color"
                             tooltip-id="tooltip.nail_color"
+                            class="mdn-style-dropdown" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mdn-style-item">
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown
+                            name="additional-material-source"
+                            text-id="window.additional_material"
+                            class="mdn-style-dropdown" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mdn-style-item mdn-style-item-last">
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedDropDown
+                            name="additional-object-source"
+                            text-id="window.additional_object"
                             class="mdn-style-dropdown" />
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -133,6 +145,8 @@
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_design" class="mdn-finger-design-col mdn-col-header" />
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_material" class="mdn-finger-mat-col mdn-col-header" />
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_color" class="mdn-finger-col-col mdn-col-header" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.additional_material" class="mdn-finger-addmat-col mdn-col-header" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.additional_object" class="mdn-finger-addobj-col mdn-col-header" />
                     </ui:VisualElement>
                     <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-thumb"  text-id="window.thumb"         class="mdn-finger-row" />
                     <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-index"  text-id="window.index_finger"  class="mdn-finger-row" />
@@ -267,6 +281,35 @@
                         text-id="window.scene_preview"
                         tooltip-id="tooltip.scene_preview"
                         class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+                <!-- 追加マテリアルはスタイル行で常時有効 -->
+
+                <ui:VisualElement class="mdn-option-row">
+                    <ui:Toggle name="armature-scale-compensation" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-armature-scale-compensation"
+                        text-id="window.armature_scale_compensation"
+                        tooltip-id="tooltip.armature_scale_compensation"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+
+                <!-- デバッグモード -->
+                <ui:VisualElement class="mdn-option-row">
+                    <ui:Toggle name="enable-tool-console" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-tool-console"
+                        text-id="window.debug_mode"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+
+                <!-- Console表示領域 -->
+                <ui:VisualElement name="tool-console-container" class="mdn-tool-console-container">
+                    <ui:VisualElement class="mdn-tool-console-header">
+                        <ui:Label text="Console" class="mdn-tool-console-title" />
+                        <ui:Button name="tool-console-copy" text="Copy" class="mdn-tool-console-header-btn" />
+                        <ui:Button name="tool-console-clear" text="Clear" class="mdn-tool-console-header-btn" />
+                    </ui:VisualElement>
+                    <ui:ScrollView name="tool-console-scroll" class="mdn-tool-console-scroll" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </world.anlabo.mdnailtool.Editor.VisualElements.LocalizedFoldout>

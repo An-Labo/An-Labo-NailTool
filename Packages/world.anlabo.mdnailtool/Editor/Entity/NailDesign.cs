@@ -27,6 +27,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("url")]
 		public string? Url { get; set; }
 
+		[JsonProperty("parentVariant")]
+		public string? ParentVariant { get; set; }
+
 		[JsonProperty("displayNames")]
 		public IReadOnlyDictionary<string, string>? DisplayNames { get; set; }
 
@@ -36,6 +39,12 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonRequired]
 		[JsonProperty("colorVariation")]
 		public IReadOnlyDictionary<string, NailColorVariation> ColorVariation { get; set; } = null!;
+
+		[JsonProperty("additionalMaterialGUIDs")]
+		public string[]? AdditionalMaterialGUIDs { get; set; }
+
+		[JsonProperty("additionalObjectGUIDs")]
+		public IReadOnlyDictionary<string, string[]>? AdditionalObjectGUIDs { get; set; }
 
 		public NailColorVariation? FindVariationByName(string? variationName) {
 			if (variationName == null) return null;
