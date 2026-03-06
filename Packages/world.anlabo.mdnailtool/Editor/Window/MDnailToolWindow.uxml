@@ -332,6 +332,20 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ===== WARNING BANNER ===== -->
+        <ui:VisualElement name="warning-banner" class="mdn-warning-banner" style="display: none;">
+            <ui:VisualElement class="mdn-warning-banner-top">
+                <ui:Label text="⚠" class="mdn-warning-banner-icon" />
+                <ui:Label name="warning-message" class="mdn-warning-banner-message" />
+                <ui:VisualElement class="mdn-spacer" />
+                <ui:Button name="warning-close" text="×" class="mdn-warning-banner-close" />
+            </ui:VisualElement>
+            <ui:Label name="warning-detail-toggle" class="mdn-warning-detail-toggle" />
+            <ui:VisualElement name="warning-detail-area" style="display: none;">
+                <ui:Label name="warning-detail-text" class="mdn-warning-detail-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <!-- ===== ACTION BUTTONS ===== -->
         <ui:VisualElement class="mdn-action-bar">
             <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedButton

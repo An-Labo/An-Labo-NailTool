@@ -1126,6 +1126,101 @@
 }
 
 /* ============================================================
+   WARNING BANNER
+   ============================================================ */
+
+.mdn-warning-banner {
+    background-color: #3d3522;
+    border-width: 1px;
+    border-color: #8b7840;
+    border-radius: 4px;
+    padding: 8px 10px 6px 10px;
+    margin: 4px 8px 0 8px;
+}
+
+.mdn-warning-banner-top {
+    flex-direction: row;
+    align-items: center;
+}
+
+.mdn-warning-banner-icon {
+    color: #d0b060;
+    font-size: 13px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    -unity-font-style: bold;
+}
+
+.mdn-warning-banner-message {
+    color: #e0d0a0;
+    font-size: 11px;
+    flex-grow: 1;
+    white-space: normal;
+}
+
+.mdn-warning-banner-close {
+    color: #888;
+    font-size: 13px;
+    background-color: rgba(0,0,0,0);
+    border-width: 0;
+    padding: 0 4px;
+    margin-left: 4px;
+    flex-shrink: 0;
+    cursor: link;
+}
+
+.mdn-warning-banner-close:hover {
+    color: #bbb;
+}
+
+.mdn-warning-detail-toggle {
+    color: #b0a060;
+    font-size: 10px;
+    cursor: link;
+    margin-top: 4px;
+}
+
+.mdn-warning-detail-toggle:hover {
+    color: #d0c080;
+}
+
+.mdn-warning-detail-text {
+    color: #c0b080;
+    font-size: 10px;
+    white-space: normal;
+    border-width: 1px;
+    border-color: #6b5f30;
+    border-radius: 3px;
+    padding: 4px 6px;
+    margin-top: 4px;
+    background-color: #2a2518;
+}
+
+/* Light skin overrides */
+:root[data-unity-skin="light"] .mdn-warning-banner {
+    background-color: #fff8ee;
+    border-color: #d4c0a0;
+}
+
+:root[data-unity-skin="light"] .mdn-warning-banner-message {
+    color: #6b5a2a;
+}
+
+:root[data-unity-skin="light"] .mdn-warning-banner-icon {
+    color: #c09020;
+}
+
+:root[data-unity-skin="light"] .mdn-warning-detail-text {
+    background-color: #fff0d8;
+    border-color: #d4c0a0;
+    color: #6b5a2a;
+}
+
+:root[data-unity-skin="light"] .mdn-warning-detail-toggle {
+    color: #a08040;
+}
+
+/* ============================================================
    TOOL CONSOLE
    ============================================================ */
 
