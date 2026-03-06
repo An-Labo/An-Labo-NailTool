@@ -47,6 +47,9 @@ namespace world.anlabo.mdnailtool.Editor {
 		public IEnumerable<Material>?[]? PerFingerAdditionalMaterials { get; set; }
 		public IEnumerable<Transform>?[]? PerFingerAdditionalObjects { get; set; }
 
+		/// <summary>Process中に発生した非致命的な警告メッセージ</summary>
+		public List<string> Warnings { get; } = new();
+
 		public NailSetupProcessor(VRCAvatarDescriptor avatar, AvatarVariation avatarVariationData, GameObject nailPrefab, (INailProcessor, string, string)[] nailDesignAndVariationNames,
 			string nailShapeName) {
 			this.Avatar = avatar;
@@ -420,6 +423,11 @@ namespace world.anlabo.mdnailtool.Editor {
 					AvatarBlendShapeVariant[]? activeVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
 					if (activeVariants != null)
 					{
+						// バリアント解決にはアセットのインポートが必要な場合があるため、
+						// StartAssetEditingのバッチモードを一時中断する
+						AssetDatabase.StopAssetEditing();
+						try
+						{
 						foreach (AvatarBlendShapeVariant variant in activeVariants)
 						{
 							string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
@@ -451,9 +459,23 @@ namespace world.anlabo.mdnailtool.Editor {
 									Debug.Log($"[MDNailTool] Variant '{variant.Name}': フォルダ構成から検出 → {folderPath}");
 								}
 							}
-							if (string.IsNullOrEmpty(variantPath)) { Debug.LogWarning($"[MDNailTool] Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"); continue; }
+							if (string.IsNullOrEmpty(variantPath))
+							{
+								string msg = $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません";
+								Debug.LogWarning($"[MDNailTool] {msg}");
+								this.Warnings.Add(msg);
+								continue;
+							}
+							// 展開直後はAssetDatabaseに未登録の場合があるため強制同期インポート
+							AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceSynchronousImport);
 							GameObject? variantPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
-							if (variantPrefabAsset == null) { Debug.LogWarning($"[MDNailTool] Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})"); continue; }
+							if (variantPrefabAsset == null)
+							{
+								string msg = $"Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})";
+								Debug.LogWarning($"[MDNailTool] {msg}");
+								this.Warnings.Add(msg);
+								continue;
+							}
 
 							GameObject resolvedVariantPrefab = this.ResolveShapePrefab(variantPrefabAsset, this.NailShapeName);
 							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab);
@@ -572,6 +594,11 @@ namespace world.anlabo.mdnailtool.Editor {
 								}
 								footVariants.Add((variant.Name, varLeftFoot.Concat(varRightFoot).ToArray()));
 							}
+						}
+						}
+						finally
+						{
+							AssetDatabase.StartAssetEditing();
 						}
 					}
 

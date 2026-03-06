@@ -90,6 +90,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Label? _errorDetailText;
 		private bool _errorDetailExpanded = false;
 
+		// ---- Warning Banner ----
+		private VisualElement? _warningBanner;
+		private Label? _warningMessage;
+		private Label? _warningDetailToggle;
+		private VisualElement? _warningDetailArea;
+		private Label? _warningDetailText;
+		private bool _warningDetailExpanded = false;
+
 		// ---- Tool Console ----
 		private Toggle? _enableToolConsole;
 		private VisualElement? _toolConsoleContainer;
@@ -114,6 +122,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this.BindOptionsUI();
 			this.BindLinksUI();
 			this.BindErrorBanner();
+			this.BindWarningBanner();
 			this.BindActions();
 			this.PostInitSelection();
 		}
@@ -995,6 +1004,53 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					: (S("error.show_detail") ?? "▶ Show Details");
 		}
 
+		private void BindWarningBanner()
+		{
+			this._warningBanner = this.rootVisualElement.Q<VisualElement>("warning-banner");
+			this._warningMessage = this.rootVisualElement.Q<Label>("warning-message");
+			this._warningDetailToggle = this.rootVisualElement.Q<Label>("warning-detail-toggle");
+			this._warningDetailArea = this.rootVisualElement.Q<VisualElement>("warning-detail-area");
+			this._warningDetailText = this.rootVisualElement.Q<Label>("warning-detail-text");
+			var closeBtn = this.rootVisualElement.Q<Button>("warning-close");
+			if (closeBtn != null) closeBtn.clicked += this.HideWarningBanner;
+			if (this._warningDetailToggle != null)
+				this._warningDetailToggle.RegisterCallback<ClickEvent>(_ => this.ToggleWarningDetail());
+		}
+
+		private void ShowWarningBanner(string summary, IReadOnlyList<string> details)
+		{
+			if (this._warningBanner == null) return;
+			this._warningBanner.style.display = DisplayStyle.Flex;
+			if (this._warningMessage != null) this._warningMessage.text = summary;
+			this._warningDetailExpanded = false;
+			if (this._warningDetailArea != null) this._warningDetailArea.style.display = DisplayStyle.None;
+			if (this._warningDetailText != null) this._warningDetailText.text = string.Join("\n", details);
+			if (this._warningDetailToggle != null)
+			{
+				this._warningDetailToggle.style.display = details.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+				this._warningDetailToggle.text = S("error.show_detail") ?? "▶ Show Details";
+			}
+			var scrollView = this.rootVisualElement.Q<ScrollView>("Root");
+			if (scrollView != null && this._warningBanner != null)
+				this._warningBanner.schedule.Execute(() => scrollView.ScrollTo(this._warningBanner));
+		}
+
+		private void HideWarningBanner()
+		{
+			if (this._warningBanner != null) this._warningBanner.style.display = DisplayStyle.None;
+		}
+
+		private void ToggleWarningDetail()
+		{
+			this._warningDetailExpanded = !this._warningDetailExpanded;
+			if (this._warningDetailArea != null)
+				this._warningDetailArea.style.display = this._warningDetailExpanded ? DisplayStyle.Flex : DisplayStyle.None;
+			if (this._warningDetailToggle != null)
+				this._warningDetailToggle.text = this._warningDetailExpanded
+					? (S("error.hide_detail") ?? "▼ Hide Details")
+					: (S("error.show_detail") ?? "▶ Show Details");
+		}
+
 		private void ShowAvatarFieldError()
 		{
 			this._avatarObjectField?.AddToClassList("mdn-field-error");
@@ -1441,6 +1497,17 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._nailDesignSelect!.Init();
 
 				this.HideErrorBanner();
+				if (processor.Warnings.Count > 0)
+				{
+					string warnSummary = string.Format(
+						S("warning.variant_load_failed") ?? "一部のバリアントの読み込みに失敗しました ({0}件)",
+						processor.Warnings.Count);
+					this.ShowWarningBanner(warnSummary, processor.Warnings);
+				}
+				else
+				{
+					this.HideWarningBanner();
+				}
 				string successMessage = BuildSuccessMessage(isHandActive, isFootActive);
 				EditorUtility.DisplayDialog(S("dialog.finished"), successMessage, "OK");
 			}
@@ -1497,6 +1564,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			this.CleanupScenePreview();
 			this.HideErrorBanner();
+			this.HideWarningBanner();
 
 			VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
 			if (avatar == null)
