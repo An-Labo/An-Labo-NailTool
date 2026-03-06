@@ -518,6 +518,101 @@ namespace world.anlabo.mdnailtool.Editor {
             }
         }
 
+        /// <summary>
+        /// GUIDがAssetDatabaseで解決できない場合、ディスク上のPrefabフォルダの
+        /// .metaファイルからGUIDを検索してアセットパスを返す。
+        /// </summary>
+        public static string? TryResolvePrefabFromDiskMeta(string guid) {
+            if (string.IsNullOrEmpty(guid)) return null;
+
+            string[] searchRoots = {
+                ASSETS_RESOURCE_PATH + "Nail/Prefab",
+                PACKAGE_RESOURCE_PATH + "Nail/Prefab"
+            };
+
+            foreach (string root in searchRoots) {
+                string fullRoot = Path.GetFullPath(root);
+                if (!Directory.Exists(fullRoot)) continue;
+
+                try {
+                    foreach (string metaFile in Directory.EnumerateFiles(fullRoot, "*.prefab.meta", SearchOption.AllDirectories)) {
+                        string content = File.ReadAllText(metaFile);
+                        if (!content.Contains(guid)) continue;
+
+                        string prefabFile = metaFile.Substring(0, metaFile.Length - 5); // .meta 除去
+                        if (!File.Exists(prefabFile)) continue;
+
+                        string assetPath = prefabFile.Replace("\\", "/");
+                        int idx = assetPath.IndexOf("Assets/", StringComparison.Ordinal);
+                        if (idx < 0) idx = assetPath.IndexOf("Packages/", StringComparison.Ordinal);
+                        if (idx >= 0) assetPath = assetPath.Substring(idx);
+
+                        return assetPath;
+                    }
+                } catch (Exception e) {
+                    Debug.LogWarning($"[MDNailTool] .meta検索エラー ({root}): {e.Message}");
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// メインNailPrefabの所在フォルダを基に、同ディレクトリ内から
+        /// 指定名パターンのPrefabを検索して返す（GUIDに依存しない最終フォールバック）。
+        /// </summary>
+        public static string? TryResolvePrefabByFolderSearch(string mainPrefabPath, string variantName) {
+            if (string.IsNullOrEmpty(mainPrefabPath) || string.IsNullOrEmpty(variantName)) return null;
+
+            // メインPrefabのフォルダを取得
+            string? prefabDir = Path.GetDirectoryName(mainPrefabPath);
+            if (string.IsNullOrEmpty(prefabDir)) return null;
+
+            // メインPrefabからベースネームを抽出 (例: "[Oval]Julius" → "Julius")
+            string mainFileName = Path.GetFileNameWithoutExtension(mainPrefabPath);
+            System.Text.RegularExpressions.Match m =
+                System.Text.RegularExpressions.Regex.Match(mainFileName, @"\[.+\](?<baseName>.+)");
+            string baseName = m.Success ? m.Groups["baseName"].Value : mainFileName;
+
+            // 同ディレクトリ内で [VariantName]BaseName.prefab を検索
+            string candidate = Path.Combine(prefabDir, $"[{variantName}]{baseName}.prefab").Replace("\\", "/");
+            if (File.Exists(candidate)) {
+                return candidate;
+            }
+
+            // 全Prefabフォルダから [*]<名前にvariantNameを含む>.prefab を検索
+            string[] searchRoots = {
+                ASSETS_RESOURCE_PATH + "Nail/Prefab",
+                PACKAGE_RESOURCE_PATH + "Nail/Prefab"
+            };
+
+            foreach (string root in searchRoots) {
+                string fullRoot = Path.GetFullPath(root);
+                if (!Directory.Exists(fullRoot)) continue;
+
+                try {
+                    foreach (string file in Directory.EnumerateFiles(fullRoot, "*.prefab", SearchOption.AllDirectories)) {
+                        string fileName = Path.GetFileNameWithoutExtension(file);
+                        // [VariantName]で始まるPrefabを探す
+                        if (!fileName.StartsWith($"[{variantName}]", StringComparison.OrdinalIgnoreCase)) continue;
+
+                        string assetPath = file.Replace("\\", "/");
+                        int idx = assetPath.IndexOf("Assets/", StringComparison.Ordinal);
+                        if (idx < 0) idx = assetPath.IndexOf("Packages/", StringComparison.Ordinal);
+                        if (idx >= 0) assetPath = assetPath.Substring(idx);
+
+                        // ベースネームが一致するものを優先
+                        string foundBase = fileName.Substring($"[{variantName}]".Length);
+                        if (string.Equals(foundBase, baseName, StringComparison.OrdinalIgnoreCase)) {
+                            return assetPath;
+                        }
+                    }
+                } catch { /* skip */ }
+            }
+
+            return null;
+        }
+
         private static void SaveInstalledVersion(string version) {
             try {
                 string? dir = Path.GetDirectoryName(VersionFilePath);

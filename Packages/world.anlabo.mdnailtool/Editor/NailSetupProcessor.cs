@@ -76,6 +76,34 @@ namespace world.anlabo.mdnailtool.Editor {
 					if (variant != null && !string.IsNullOrEmpty(variant.NailPrefabGUID))
 					{
 						string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+						if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+						{
+							ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
+							AssetDatabase.Refresh();
+							variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+						}
+						// ディスク上の.metaファイルからGUID検索
+						if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+						{
+							string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
+							if (!string.IsNullOrEmpty(diskPath))
+							{
+								AssetDatabase.ImportAsset(diskPath);
+								variantPath = diskPath;
+							}
+						}
+						// フォルダ構成からプレハブ名で検索（最終フォールバック）
+						if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+						{
+							string mainPrefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
+							string? folderPath = ResourceAutoExtractor.TryResolvePrefabByFolderSearch(mainPrefabPath, variant.Name);
+							if (!string.IsNullOrEmpty(folderPath))
+							{
+								AssetDatabase.ImportAsset(folderPath);
+								variantPath = folderPath;
+								Debug.Log($"[MDNailTool] Variant '{variant.Name}': フォルダ構成から検出 → {folderPath}");
+							}
+						}
 						if (!string.IsNullOrEmpty(variantPath))
 						{
 							GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
@@ -395,6 +423,34 @@ namespace world.anlabo.mdnailtool.Editor {
 						foreach (AvatarBlendShapeVariant variant in activeVariants)
 						{
 							string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+							if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+							{
+								ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
+								AssetDatabase.Refresh();
+								variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+							}
+							// ディスク上の.metaファイルからGUID検索
+							if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+							{
+								string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
+								if (!string.IsNullOrEmpty(diskPath))
+								{
+									AssetDatabase.ImportAsset(diskPath);
+									variantPath = diskPath;
+								}
+							}
+							// フォルダ構成からプレハブ名で検索（最終フォールバック）
+							if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+							{
+								string mainPrefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
+								string? folderPath = ResourceAutoExtractor.TryResolvePrefabByFolderSearch(mainPrefabPath, variant.Name);
+								if (!string.IsNullOrEmpty(folderPath))
+								{
+									AssetDatabase.ImportAsset(folderPath);
+									variantPath = folderPath;
+									Debug.Log($"[MDNailTool] Variant '{variant.Name}': フォルダ構成から検出 → {folderPath}");
+								}
+							}
 							if (string.IsNullOrEmpty(variantPath)) { Debug.LogWarning($"[MDNailTool] Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"); continue; }
 							GameObject? variantPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
 							if (variantPrefabAsset == null) { Debug.LogWarning($"[MDNailTool] Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})"); continue; }
