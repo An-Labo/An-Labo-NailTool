@@ -611,7 +611,7 @@ namespace world.anlabo.mdnailtool.Editor
 						if (variantNail == null && si < variant.VariantNails.Length && variant.VariantNails[si] != null)
 						{
 							variantNail = variant.VariantNails[si];
-							Debug.Log($"[MDNailTool] BakeAndCombine: '{shapeName}' '{baseNail.name}' 名前不一致 → インデックス {si} のバリアント '{variantNail.name}' を使用");
+							Debug.Log($"[MDNailTool] BakeAndCombine: '{shapeName}' '{baseNail.name}' 名前不一致 → インデックス {si} のバリアント '{variantNail!.name}' を使用");
 						}
 
 						if (variantNail == null)

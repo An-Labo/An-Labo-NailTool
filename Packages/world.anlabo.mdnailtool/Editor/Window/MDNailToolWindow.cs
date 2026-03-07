@@ -462,10 +462,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			// 保存された選択を復元
 			string? saved = GlobalSetting.AdditionalMaterialSourceDesign;
-			if (!string.IsNullOrEmpty(saved) && choices.Contains(saved))
+			if (!string.IsNullOrEmpty(saved) && choices.Contains(saved!))
 			{
-				this._additionalMaterialSourceDropdown.SetValueWithoutNotify(saved);
-				this.SyncPerFingerAdditionalMaterial(saved);
+				this._additionalMaterialSourceDropdown.SetValueWithoutNotify(saved!);
+				this.SyncPerFingerAdditionalMaterial(saved!);
 				return;
 			}
 
@@ -623,10 +623,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			// 保存された選択を復元
 			string? saved = GlobalSetting.AdditionalObjectSourceDesign;
 			ToolConsole.Log($"  saved={saved ?? "(null)"}");
-			if (!string.IsNullOrEmpty(saved) && choices.Contains(saved))
+			if (!string.IsNullOrEmpty(saved) && choices.Contains(saved!))
 			{
-				this._additionalObjectSourceDropdown.SetValueWithoutNotify(saved);
-				this.SyncPerFingerAdditionalObject(saved);
+				this._additionalObjectSourceDropdown.SetValueWithoutNotify(saved!);
+				this.SyncPerFingerAdditionalObject(saved!);
 				return;
 			}
 
@@ -1761,6 +1761,21 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (string.IsNullOrEmpty(nailShapeName)) nailShapeName = "oval";
 			if (string.IsNullOrEmpty(nailShapeName)) return;
 
+			// BakeBS OFF + バリアント選択時: バリアントプレハブを使用
+			bool bakeBS = this._bakeBlendShapes?.value == true && this._forModularAvatar?.value == true;
+			if (!bakeBS)
+			{
+				var bsPopup = this._avatarDropDowns?.BlendShapeVariantPopup;
+				if (bsPopup != null && bsPopup.index > 0)
+				{
+					GameObject? variantPrefab = this.ResolveVariantPrefabForPreview(bsPopup.value);
+					if (variantPrefab != null)
+					{
+						prefab = variantPrefab;
+					}
+				}
+			}
+
 			Mesh?[]? overrideMeshes = this._nailShapeDropDown?.GetSelectedShapeMeshes();
 			if (overrideMeshes == null) overrideMeshes = new Mesh?[0];
 
@@ -1799,6 +1814,55 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._scenePreviewController = null;
 		}
 
+		/// <summary>
+		/// BlendShapeバリアント名からバリアントプレハブを解決する（着用プレビュー用）。
+		/// 選択中のネイルシェイプに対応するプレハブまで解決して返す。
+		/// </summary>
+		private GameObject? ResolveVariantPrefabForPreview(string variantName)
+		{
+			var avatarVariationData = this._avatarDropDowns?.GetSelectedAvatarVariation();
+			if (avatarVariationData == null) return null;
+
+			AvatarBlendShapeVariant[]? variants = avatarVariationData.BlendShapeVariants;
+			if (variants == null)
+			{
+				using DBShop dbShop = new();
+				string avatarName = this._avatarDropDowns!.GetAvatarName();
+				foreach (Shop s in dbShop.collection)
+				{
+					Avatar? av = s.FindAvatarByName(avatarName);
+					if (av?.BlendShapeVariants != null)
+					{
+						variants = av.BlendShapeVariants;
+						break;
+					}
+				}
+			}
+			if (variants == null) return null;
+
+			AvatarBlendShapeVariant? variant = variants.FirstOrDefault(v => v.Name == variantName);
+			if (variant == null || string.IsNullOrEmpty(variant.NailPrefabGUID)) return null;
+
+			string path = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+			if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
+			{
+				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
+				AssetDatabase.Refresh();
+				path = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+			}
+			if (string.IsNullOrEmpty(path)) return null;
+
+			GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+			if (variantPrefab == null) return null;
+
+			string nailShapeName = this._nailShapeDropDown?.value ?? GlobalSetting.LastUseShapeName ?? "oval";
+			if (!string.IsNullOrEmpty(nailShapeName))
+			{
+				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName);
+			}
+
+			return variantPrefab;
+		}
 
 		private (INailProcessor, string, string)[] GetNailProcessors()
 		{

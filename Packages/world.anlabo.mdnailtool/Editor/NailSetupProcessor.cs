@@ -78,7 +78,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					AvatarBlendShapeVariant variant = activeVariants.FirstOrDefault(v => v.Name == this.SelectedBlendShapeVariantName);
 					if (variant != null && !string.IsNullOrEmpty(variant.NailPrefabGUID))
 					{
-						string variantPath = ResolveVariantPath(variant);
+						string? variantPath = ResolveVariantPath(variant);
 						if (!string.IsNullOrEmpty(variantPath))
 						{
 							AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceSynchronousImport);
@@ -421,7 +421,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								continue;
 							}
 
-							GameObject resolvedVariantPrefab = this.ResolveShapePrefab(variantPrefabAsset, this.NailShapeName);
+							GameObject resolvedVariantPrefab = ResolveShapePrefab(variantPrefabAsset, this.NailShapeName);
 							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab);
 							objectsToDestroy.Add(instVariant);
 
@@ -773,6 +773,28 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (nailPrefabObject.GetComponent<MDNailObjectMarker>() == null)
 					nailPrefabObject.AddComponent<MDNailObjectMarker>();
 
+				// ---- MA Mesh Settings（バウンディングボックスによるカリング防止）----
+				if (nailPrefabObject.GetComponent<ModularAvatarMeshSettings>() == null)
+				{
+					ModularAvatarMeshSettings meshSettings = nailPrefabObject.AddComponent<ModularAvatarMeshSettings>();
+					meshSettings.InheritProbeAnchor = ModularAvatarMeshSettings.InheritMode.SetOrInherit;
+					meshSettings.InheritBounds = ModularAvatarMeshSettings.InheritMode.SetOrInherit;
+
+					Animator? animator = this.Avatar.GetComponent<Animator>();
+					if (animator != null)
+					{
+						Transform? chest = animator.GetBoneTransform(HumanBodyBones.Chest);
+						if (chest != null)
+							meshSettings.ProbeAnchor = new AvatarObjectReference(chest.gameObject);
+
+						Transform? hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+						if (hips != null)
+							meshSettings.RootBone = new AvatarObjectReference(hips.gameObject);
+					}
+
+					meshSettings.Bounds = new Bounds(Vector3.zero, Vector3.one * 2);
+				}
+
 				// ---- avatar-levelブレンドシェイプバリアントのBlendShapeSync設定 ----
 				// ※ nailPrefabObjectがアバター階層下に配置された後に実行する必要がある
 				// （AvatarObjectReferenceがアバタールートからの相対パスを正しく解決するため）
@@ -801,7 +823,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							if (srcSmrTransform == null) {
 								srcSmrTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
 									.FirstOrDefault(t => t.GetComponent<SkinnedMeshRenderer>() != null
-										&& (t.name.Contains(variant.SyncSourceSmrName) || variant.SyncSourceSmrName.Contains(t.name)));
+										&& (t.name.Contains(variant.SyncSourceSmrName!) || variant.SyncSourceSmrName!.Contains(t.name)));
 							}
 							// Step 4: BlendShapeを持つ非顔SmRから推測
 							if (srcSmrTransform == null) {
@@ -1097,7 +1119,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		private GameObject ResolveShapePrefab(GameObject basePrefab, string targetShape) {
+		internal static GameObject ResolveShapePrefab(GameObject basePrefab, string targetShape) {
 			System.Text.RegularExpressions.Regex nailPrefabNamePattern = new(@"(?<prefix>\[.+\])(?<prefabName>.+)");
 			System.Text.RegularExpressions.Match match = nailPrefabNamePattern.Match(basePrefab.name);
 			if (!match.Success) return basePrefab;
@@ -1397,8 +1419,8 @@ namespace world.anlabo.mdnailtool.Editor {
 				string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
 				if (!string.IsNullOrEmpty(diskPath))
 				{
-					AssetDatabase.ImportAsset(diskPath);
-					variantPath = diskPath;
+					AssetDatabase.ImportAsset(diskPath!);
+					variantPath = diskPath!;
 				}
 			}
 			// Step 2: [ShapeName]VariantName.prefab をファイル名で検索
