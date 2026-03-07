@@ -1015,6 +1015,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (closeBtn != null) closeBtn.clicked += this.HideWarningBanner;
 			if (this._warningDetailToggle != null)
 				this._warningDetailToggle.RegisterCallback<ClickEvent>(_ => this.ToggleWarningDetail());
+			var copyBtn = this.rootVisualElement.Q<Button>("warning-copy");
+			if (copyBtn != null)
+			{
+				copyBtn.text = S("error.copy") ?? "Copy to Clipboard";
+				copyBtn.RegisterCallback<ClickEvent>(_ =>
+					GUIUtility.systemCopyBuffer = this._warningDetailText?.text ?? "");
+			}
 		}
 
 		private void ShowWarningBanner(string summary, IReadOnlyList<string> details)

@@ -78,37 +78,10 @@ namespace world.anlabo.mdnailtool.Editor {
 					AvatarBlendShapeVariant variant = activeVariants.FirstOrDefault(v => v.Name == this.SelectedBlendShapeVariantName);
 					if (variant != null && !string.IsNullOrEmpty(variant.NailPrefabGUID))
 					{
-						string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-						if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
-						{
-							ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
-							AssetDatabase.Refresh();
-							variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-						}
-						// ディスク上の.metaファイルからGUID検索
-						if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
-						{
-							string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
-							if (!string.IsNullOrEmpty(diskPath))
-							{
-								AssetDatabase.ImportAsset(diskPath);
-								variantPath = diskPath;
-							}
-						}
-						// フォルダ構成からプレハブ名で検索（最終フォールバック）
-						if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
-						{
-							string mainPrefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
-							string? folderPath = ResourceAutoExtractor.TryResolvePrefabByFolderSearch(mainPrefabPath, variant.Name);
-							if (!string.IsNullOrEmpty(folderPath))
-							{
-								AssetDatabase.ImportAsset(folderPath);
-								variantPath = folderPath;
-								Debug.Log($"[MDNailTool] Variant '{variant.Name}': フォルダ構成から検出 → {folderPath}");
-							}
-						}
+						string variantPath = ResolveVariantPath(variant);
 						if (!string.IsNullOrEmpty(variantPath))
 						{
+							AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceSynchronousImport);
 							GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
 							if (variantPrefab != null)
 							{
@@ -430,35 +403,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						{
 						foreach (AvatarBlendShapeVariant variant in activeVariants)
 						{
-							string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-							if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
-							{
-								ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
-								AssetDatabase.Refresh();
-								variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-							}
-							// ディスク上の.metaファイルからGUID検索
-							if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
-							{
-								string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
-								if (!string.IsNullOrEmpty(diskPath))
-								{
-									AssetDatabase.ImportAsset(diskPath);
-									variantPath = diskPath;
-								}
-							}
-							// フォルダ構成からプレハブ名で検索（最終フォールバック）
-							if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
-							{
-								string mainPrefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
-								string? folderPath = ResourceAutoExtractor.TryResolvePrefabByFolderSearch(mainPrefabPath, variant.Name);
-								if (!string.IsNullOrEmpty(folderPath))
-								{
-									AssetDatabase.ImportAsset(folderPath);
-									variantPath = folderPath;
-									Debug.Log($"[MDNailTool] Variant '{variant.Name}': フォルダ構成から検出 → {folderPath}");
-								}
-							}
+							string? variantPath = ResolveVariantPath(variant);
 							if (string.IsNullOrEmpty(variantPath))
 							{
 								string msg = $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません";
@@ -466,7 +411,6 @@ namespace world.anlabo.mdnailtool.Editor {
 								this.Warnings.Add(msg);
 								continue;
 							}
-							// 展開直後はAssetDatabaseに未登録の場合があるため強制同期インポート
 							AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceSynchronousImport);
 							GameObject? variantPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
 							if (variantPrefabAsset == null)
@@ -764,7 +708,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						SkinnedMeshRenderer? nailSmr = nailObject.GetComponent<SkinnedMeshRenderer>();
 						if (nailSmr == null || nailSmr.sharedMesh == null) continue;
 
-						ModularAvatarBlendshapeSync bsSync = nailObject.gameObject.AddComponent<ModularAvatarBlendshapeSync>();
+						var bindings = new List<BlendshapeBinding>();
 						foreach ((SkinnedMeshRenderer sourceSmr, string _) in resolvedSourceSmrs)
 						{
 							Mesh? sourceMesh = sourceSmr.sharedMesh;
@@ -773,13 +717,18 @@ namespace world.anlabo.mdnailtool.Editor {
 							{
 								string shapeName = sourceMesh.GetBlendShapeName(si);
 								if (nailSmr.sharedMesh.GetBlendShapeIndex(shapeName) < 0) continue;
-								bsSync.Bindings.Add(new BlendshapeBinding
+								bindings.Add(new BlendshapeBinding
 								{
 									ReferenceMesh = new AvatarObjectReference(sourceSmr.gameObject),
 									Blendshape = shapeName,
 									LocalBlendshape = shapeName
 								});
 							}
+						}
+						if (bindings.Count > 0)
+						{
+							ModularAvatarBlendshapeSync bsSync = nailObject.gameObject.AddComponent<ModularAvatarBlendshapeSync>();
+							bsSync.Bindings = bindings;
 						}
 					}
 				}
@@ -836,7 +785,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						SkinnedMeshRenderer? bsSmr = child.GetComponent<SkinnedMeshRenderer>();
 						if (bsSmr == null || bsSmr.sharedMesh == null) continue;
 						if (bsSmr.sharedMesh.blendShapeCount == 0) continue;
-						ModularAvatarBlendshapeSync variantBsSync = child.gameObject.AddComponent<ModularAvatarBlendshapeSync>();
+						var variantBindings = new List<BlendshapeBinding>();
 						foreach (AvatarBlendShapeVariant variant in syncVariants)
 						{
 							if (string.IsNullOrEmpty(variant.SyncSourceSmrName)) continue;
@@ -884,12 +833,17 @@ namespace world.anlabo.mdnailtool.Editor {
 							if (bsIndex < 0) continue;
 
 							AvatarObjectReference aoRef = new AvatarObjectReference(srcSmrTransform.gameObject);
-							variantBsSync.Bindings.Add(new BlendshapeBinding
+							variantBindings.Add(new BlendshapeBinding
 							{
 								ReferenceMesh = aoRef,
 								Blendshape = actualShapeName,
 								LocalBlendshape = actualShapeName
 							});
+						}
+						if (variantBindings.Count > 0)
+						{
+							ModularAvatarBlendshapeSync variantBsSync = child.gameObject.AddComponent<ModularAvatarBlendshapeSync>();
+							variantBsSync.Bindings = variantBindings;
 						}
 					}
 				}
@@ -1399,5 +1353,114 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 	}
 #endif
+
+		/// <summary>アバターのPrefabまたはFBXのGUIDからアセットフォルダを特定する</summary>
+		private string? GetAvatarAssetFolder()
+		{
+			// AvatarVariationDataのPrefab/FBXからフォルダを特定
+			if (this.AvatarVariationData.AvatarPrefabs != null)
+			{
+				foreach (AvatarPrefab ap in this.AvatarVariationData.AvatarPrefabs)
+				{
+					if (string.IsNullOrEmpty(ap.PrefabGUID)) continue;
+					string path = AssetDatabase.GUIDToAssetPath(ap.PrefabGUID);
+					if (!string.IsNullOrEmpty(path))
+						return Path.GetDirectoryName(path)?.Replace("\\", "/");
+				}
+			}
+			if (this.AvatarVariationData.AvatarFbxs != null)
+			{
+				foreach (AvatarFbx fbx in this.AvatarVariationData.AvatarFbxs)
+				{
+					if (string.IsNullOrEmpty(fbx.FbxGUID)) continue;
+					string path = AssetDatabase.GUIDToAssetPath(fbx.FbxGUID);
+					if (!string.IsNullOrEmpty(path))
+						return Path.GetDirectoryName(path)?.Replace("\\", "/");
+				}
+			}
+			return null;
+		}
+
+		/// <summary>バリアントのパスを解決する共通メソッド（GUID検索 → ファイル名検索）</summary>
+		private string? ResolveVariantPath(AvatarBlendShapeVariant variant)
+		{
+			// Step 1: GUID検索
+			string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+			{
+				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
+				AssetDatabase.Refresh();
+				variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+			}
+			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+			{
+				string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
+				if (!string.IsNullOrEmpty(diskPath))
+				{
+					AssetDatabase.ImportAsset(diskPath);
+					variantPath = diskPath;
+				}
+			}
+			// Step 2: [ShapeName]VariantName.prefab をファイル名で検索
+			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+			{
+				string? found = FindVariantPrefabByName(variant.Name);
+				if (!string.IsNullOrEmpty(found))
+				{
+#if MD_NAIL_DEVELOP
+					Debug.Log($"[MDNailTool] Variant '{variant.Name}': ファイル名から検出 → {found}");
+#endif
+					variantPath = found!;
+				}
+			}
+			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+				return null;
+			return variantPath;
+		}
+
+		/// <summary>
+		/// Prefabフォルダ内で [ShapeName]VariantName.prefab を検索する。
+		/// 正しい命名規則: [ShapeName]VariantName.prefab
+		/// </summary>
+		private string? FindVariantPrefabByName(string variantName)
+		{
+			string mainPrefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
+			string mainFileName = Path.GetFileNameWithoutExtension(mainPrefabPath);
+			var shapeMatch = Regex.Match(mainFileName, @"\[(?<shape>.+)\].+");
+			string shapeName = shapeMatch.Success ? shapeMatch.Groups["shape"].Value : "Natural";
+
+			// 期待されるファイル名: [ShapeName]VariantName.prefab
+			string expectedFileName = $"[{shapeName}]{variantName}.prefab";
+
+			string[] searchRoots = {
+				"Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab",
+				"Packages/world.anlabo.mdnailtool/Nail/Prefab"
+			};
+
+			// アバターフォルダも検索対象に追加
+			string? avatarFolder = GetAvatarAssetFolder();
+			List<string> allRoots = new(searchRoots);
+			if (!string.IsNullOrEmpty(avatarFolder)) allRoots.Add(avatarFolder!);
+
+			foreach (string root in allRoots)
+			{
+				string fullRoot = Path.GetFullPath(root);
+				if (!Directory.Exists(fullRoot)) continue;
+
+				try
+				{
+					foreach (string file in Directory.EnumerateFiles(fullRoot, expectedFileName, SearchOption.AllDirectories))
+					{
+						string assetPath = file.Replace("\\", "/");
+						int idx = assetPath.IndexOf("Assets/", StringComparison.Ordinal);
+						if (idx >= 0) assetPath = assetPath.Substring(idx);
+						return assetPath;
+					}
+				}
+				catch { /* skip */ }
+			}
+
+			return null;
+		}
 	}
 }

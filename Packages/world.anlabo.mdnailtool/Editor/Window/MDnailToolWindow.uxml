@@ -343,6 +343,9 @@
             <ui:Label name="warning-detail-toggle" class="mdn-warning-detail-toggle" />
             <ui:VisualElement name="warning-detail-area" style="display: none;">
                 <ui:Label name="warning-detail-text" class="mdn-warning-detail-text" />
+                <ui:VisualElement class="mdn-error-detail-actions">
+                    <ui:Button name="warning-copy" class="mdn-error-detail-action-btn" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 

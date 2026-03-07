@@ -96,7 +96,7 @@ namespace world.anlabo.mdnailtool.Editor {
             }
         }
 
-        private static string? GetZipRealPath() {
+        internal static string? GetZipRealPath() {
             if (_zipRealPath != null && File.Exists(_zipRealPath)) {
                 return _zipRealPath;
             }
@@ -580,12 +580,16 @@ namespace world.anlabo.mdnailtool.Editor {
                 return candidate;
             }
 
-            // 全Prefabフォルダから [*]<名前にvariantNameを含む>.prefab を検索
+            // メインPrefabからシェイプ名を抽出 (例: "[Natural]Sio" → "Natural")
+            var shapeMatch = System.Text.RegularExpressions.Regex.Match(mainFileName, @"\[(?<shape>.+)\].+");
+            string shapeName = shapeMatch.Success ? shapeMatch.Groups["shape"].Value : "";
+
             string[] searchRoots = {
                 ASSETS_RESOURCE_PATH + "Nail/Prefab",
                 PACKAGE_RESOURCE_PATH + "Nail/Prefab"
             };
 
+            // 全Prefabフォルダから [VariantName]BaseName.prefab を検索
             foreach (string root in searchRoots) {
                 string fullRoot = Path.GetFullPath(root);
                 if (!Directory.Exists(fullRoot)) continue;
@@ -593,7 +597,6 @@ namespace world.anlabo.mdnailtool.Editor {
                 try {
                     foreach (string file in Directory.EnumerateFiles(fullRoot, "*.prefab", SearchOption.AllDirectories)) {
                         string fileName = Path.GetFileNameWithoutExtension(file);
-                        // [VariantName]で始まるPrefabを探す
                         if (!fileName.StartsWith($"[{variantName}]", StringComparison.OrdinalIgnoreCase)) continue;
 
                         string assetPath = file.Replace("\\", "/");
@@ -601,13 +604,36 @@ namespace world.anlabo.mdnailtool.Editor {
                         if (idx < 0) idx = assetPath.IndexOf("Packages/", StringComparison.Ordinal);
                         if (idx >= 0) assetPath = assetPath.Substring(idx);
 
-                        // ベースネームが一致するものを優先
                         string foundBase = fileName.Substring($"[{variantName}]".Length);
                         if (string.Equals(foundBase, baseName, StringComparison.OrdinalIgnoreCase)) {
                             return assetPath;
                         }
                     }
                 } catch { /* skip */ }
+            }
+
+            // フォルダ名にバリアント名を含むフォルダから、同じシェイプのプレハブを検索
+            // 例: variant="Heel_Feet", shape="Natural" → Sio_Heel_Feet/[Natural]Sio_Heel_Feet.prefab
+            if (!string.IsNullOrEmpty(shapeName)) {
+                foreach (string root in searchRoots) {
+                    string fullRoot = Path.GetFullPath(root);
+                    if (!Directory.Exists(fullRoot)) continue;
+
+                    try {
+                        foreach (string dir in Directory.EnumerateDirectories(fullRoot)) {
+                            string dirName = Path.GetFileName(dir);
+                            if (dirName.IndexOf(variantName, StringComparison.OrdinalIgnoreCase) < 0) continue;
+
+                            foreach (string file in Directory.EnumerateFiles(dir, $"[{shapeName}]*.prefab")) {
+                                string assetPath = file.Replace("\\", "/");
+                                int idx = assetPath.IndexOf("Assets/", StringComparison.Ordinal);
+                                if (idx < 0) idx = assetPath.IndexOf("Packages/", StringComparison.Ordinal);
+                                if (idx >= 0) assetPath = assetPath.Substring(idx);
+                                return assetPath;
+                            }
+                        }
+                    } catch { /* skip */ }
+                }
             }
 
             return null;
