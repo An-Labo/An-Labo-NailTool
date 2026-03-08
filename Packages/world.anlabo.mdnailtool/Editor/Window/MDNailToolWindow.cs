@@ -1761,7 +1761,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (string.IsNullOrEmpty(nailShapeName)) nailShapeName = "oval";
 			if (string.IsNullOrEmpty(nailShapeName)) return;
 
-			// BakeBS OFF + バリアント選択時: バリアントプレハブを使用
+			// BakeBS OFF: バリアント選択時はプレハブを丸ごと差し替え
 			bool bakeBS = this._bakeBlendShapes?.value == true && this._forModularAvatar?.value == true;
 			if (!bakeBS)
 			{
@@ -1805,6 +1805,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				perFingerAddObjs,
 				armatureCompensation
 			);
+
+			// BakeBS ON: 体のBlendShape値に基づいてネイル位置を補間
+			if (bakeBS)
+			{
+				this.ApplyVariantPositionBlend(avatar, prefab, nailShapeName);
+			}
 		}
 
 
@@ -1820,24 +1826,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		/// </summary>
 		private GameObject? ResolveVariantPrefabForPreview(string variantName)
 		{
-			var avatarVariationData = this._avatarDropDowns?.GetSelectedAvatarVariation();
-			if (avatarVariationData == null) return null;
-
-			AvatarBlendShapeVariant[]? variants = avatarVariationData.BlendShapeVariants;
-			if (variants == null)
-			{
-				using DBShop dbShop = new();
-				string avatarName = this._avatarDropDowns!.GetAvatarName();
-				foreach (Shop s in dbShop.collection)
-				{
-					Avatar? av = s.FindAvatarByName(avatarName);
-					if (av?.BlendShapeVariants != null)
-					{
-						variants = av.BlendShapeVariants;
-						break;
-					}
-				}
-			}
+			AvatarBlendShapeVariant[]? variants = this.GetBlendShapeVariants();
 			if (variants == null) return null;
 
 			AvatarBlendShapeVariant? variant = variants.FirstOrDefault(v => v.Name == variantName);
@@ -1862,6 +1851,128 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 
 			return variantPrefab;
+		}
+
+		/// <summary>
+		/// BakeBS ON時: 体のBlendShape値に基づいてプレビューネイルの位置を補間する。
+		/// 各バリアントの体BlendShape重みを読み取り、ベースとバリアントの位置デルタを加算する。
+		/// </summary>
+		private void ApplyVariantPositionBlend(VRCAvatarDescriptor avatar, GameObject basePrefab, string nailShapeName)
+		{
+			Transform? previewRoot = avatar.transform.Find(SCENE_PREVIEW_NAME);
+			if (previewRoot == null) return;
+
+			AvatarBlendShapeVariant[]? variants = this.GetBlendShapeVariants();
+			if (variants == null || variants.Length == 0) return;
+
+			var previewTransforms = previewRoot.GetComponentsInChildren<Transform>(true);
+			var baseTransforms = basePrefab.GetComponentsInChildren<Transform>(true);
+
+			foreach (var variant in variants)
+			{
+				if (string.IsNullOrEmpty(variant.SyncSourceSmrName)) continue;
+
+				// 体のSMRからBlendShape重みを取得
+				float weight = GetBodyBlendShapeWeight(avatar, variant);
+				if (weight <= 0f) continue;
+
+				// バリアントプレハブをロード
+				if (string.IsNullOrEmpty(variant.NailPrefabGUID)) continue;
+				string varPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+				if (string.IsNullOrEmpty(varPath)) continue;
+				GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(varPath);
+				if (variantPrefab == null) continue;
+
+				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName);
+				var variantTransforms = variantPrefab.GetComponentsInChildren<Transform>(true);
+
+				// 各ネイルの位置・回転デルタを補間適用
+				foreach (Transform previewNail in previewTransforms)
+				{
+					if (previewNail == previewRoot) continue;
+
+					Transform? baseNail = System.Array.Find(baseTransforms, t => t.name == previewNail.name);
+					Transform? variantNail = System.Array.Find(variantTransforms, t => t.name == previewNail.name);
+					if (baseNail == null || variantNail == null) continue;
+
+					Vector3 posDelta = variantNail.localPosition - baseNail.localPosition;
+					previewNail.localPosition += weight * posDelta;
+
+					Quaternion rotDelta = variantNail.localRotation * Quaternion.Inverse(baseNail.localRotation);
+					previewNail.localRotation = Quaternion.Slerp(Quaternion.identity, rotDelta, weight) * previewNail.localRotation;
+				}
+			}
+		}
+
+		/// <summary>バリアント一覧を取得する共通メソッド</summary>
+		private AvatarBlendShapeVariant[]? GetBlendShapeVariants()
+		{
+			var avatarVariationData = this._avatarDropDowns?.GetSelectedAvatarVariation();
+			if (avatarVariationData == null) return null;
+
+			AvatarBlendShapeVariant[]? variants = avatarVariationData.BlendShapeVariants;
+			if (variants == null)
+			{
+				using DBShop dbShop = new();
+				string avatarName = this._avatarDropDowns!.GetAvatarName();
+				foreach (Shop s in dbShop.collection)
+				{
+					Avatar? av = s.FindAvatarByName(avatarName);
+					if (av?.BlendShapeVariants != null)
+					{
+						variants = av.BlendShapeVariants;
+						break;
+					}
+				}
+			}
+			return variants;
+		}
+
+		/// <summary>体のSMRからバリアントに対応するBlendShapeの重み（0〜1）を取得する</summary>
+		private static float GetBodyBlendShapeWeight(VRCAvatarDescriptor avatar, AvatarBlendShapeVariant variant)
+		{
+			Transform? srcSmrTransform = FindSyncSourceSmr(avatar, variant.SyncSourceSmrName!);
+			if (srcSmrTransform == null) return 0f;
+
+			SkinnedMeshRenderer? srcSmr = srcSmrTransform.GetComponent<SkinnedMeshRenderer>();
+			if (srcSmr == null || srcSmr.sharedMesh == null) return 0f;
+
+			string normalizedName = variant.Name.Replace(" ", "").Replace("　", "");
+			for (int i = 0; i < srcSmr.sharedMesh.blendShapeCount; i++)
+			{
+				string bsName = srcSmr.sharedMesh.GetBlendShapeName(i);
+				if (bsName.Replace(" ", "").Replace("　", "") == normalizedName)
+				{
+					return srcSmr.GetBlendShapeWeight(i) / 100f;
+				}
+			}
+			return 0f;
+		}
+
+		/// <summary>SyncSourceSmrNameからアバター上のSMR Transformを検索する（NailSetupProcessorと同じフォールバックロジック）</summary>
+		private static Transform? FindSyncSourceSmr(VRCAvatarDescriptor avatar, string syncSourceSmrName)
+		{
+			var allTransforms = avatar.transform.GetComponentsInChildren<Transform>(true);
+
+			// Step 1: 名前完全一致
+			Transform? t = System.Array.Find(allTransforms, tr => tr.name == syncSourceSmrName);
+			if (t != null) return t;
+
+			// Step 2: 大文字小文字無視
+			t = System.Array.Find(allTransforms, tr => string.Equals(tr.name, syncSourceSmrName, System.StringComparison.OrdinalIgnoreCase));
+			if (t != null) return t;
+
+			// Step 3: 部分一致
+			t = System.Array.Find(allTransforms, tr => tr.GetComponent<SkinnedMeshRenderer>() != null
+				&& (tr.name.Contains(syncSourceSmrName) || syncSourceSmrName.Contains(tr.name)));
+			if (t != null) return t;
+
+			// Step 4: BlendShapeを持つ非顔SMRから推測
+			SkinnedMeshRenderer? visemeSmr = avatar.VisemeSkinnedMesh;
+			return avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+				.Where(smr => smr != visemeSmr && smr.sharedMesh != null && smr.sharedMesh.blendShapeCount > 0)
+				.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
+				.FirstOrDefault()?.transform;
 		}
 
 		private (INailProcessor, string, string)[] GetNailProcessors()
