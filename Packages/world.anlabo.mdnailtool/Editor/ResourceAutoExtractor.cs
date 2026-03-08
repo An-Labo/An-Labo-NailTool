@@ -468,23 +468,40 @@ namespace world.anlabo.mdnailtool.Editor {
             return copiedFiles;
         }
 
-        [MenuItem("An-Labo/Reimport Resources")]
-        public static void ForceExtractEssentials() {
+        [MenuItem("An-Labo/Reset Resources")]
+        public static void ResetResources() {
             if (_isExtracting) {
                 Debug.LogWarning("[MDNailTool] 既に展開中です");
                 return;
             }
-            
+
             string? zipPath = GetZipRealPath();
             if (zipPath == null) {
                 Debug.LogError("[MDNailTool] ZIPファイルが見つかりません");
                 return;
             }
-            
-            if (File.Exists(VersionFilePath)) {
-                File.Delete(VersionFilePath);
+
+            if (!EditorUtility.DisplayDialog(
+                "Reset Resources",
+                "Resourceフォルダを削除し、必須リソースを再展開します。\nThis will delete the Resource folder and re-extract essential resources.\n\n続行しますか？ / Continue?",
+                "OK",
+                "Cancel"
+            )) {
+                return;
             }
-            
+
+            string fullResourcePath = Path.GetFullPath(ASSETS_RESOURCE_PATH);
+            if (Directory.Exists(fullResourcePath)) {
+                Directory.Delete(fullResourcePath, true);
+
+                string metaFile = fullResourcePath.TrimEnd('/', '\\') + ".meta";
+                if (File.Exists(metaFile)) {
+                    File.Delete(metaFile);
+                }
+            }
+
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+
             StartEssentialExtraction(MDNailToolDefines.Version);
         }
 
