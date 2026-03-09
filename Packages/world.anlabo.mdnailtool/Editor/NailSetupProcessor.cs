@@ -10,6 +10,7 @@ using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 using Object = UnityEngine.Object;
+using world.anlabo.mdnailtool.Editor.Language;
 using world.anlabo.mdnailtool.Runtime;
 using world.anlabo.mdnailtool.Runtime.Extensions;
 using UEAvatar = UnityEngine.Avatar;
@@ -213,7 +214,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					.Cast<Renderer?>();
 				NailSetupUtil.EnableMipStreamingForRenderers(allRenderers);
 			} catch (Exception e) {
-				Debug.LogWarning($"[MDNailTool] Mip Streaming有効化中にエラー: {e.Message}");
+				Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? "Mip Streamingの有効化に失敗しました" : "Failed to enable Mip Streaming")}: {e.Message}{BuildDiagnosticInfo()}");
 			}
 
 			// ---- BlendShapeのベイクとMA同期設定 ----
@@ -236,12 +237,12 @@ namespace world.anlabo.mdnailtool.Editor {
 							.FirstOrDefault(t => string.Equals(t.name, sourceName, System.StringComparison.OrdinalIgnoreCase));
 					}
 					if (sourceTransform == null) {
-						Debug.LogWarning($"[MDNailTool] BlendShapeSyncSource が見つかりません: {sourcePath}");
+						Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShape同期元のメッシュが見つかりません" : "BlendShape sync source mesh not found")}: '{sourcePath}'{BuildDiagnosticInfo()}");
 						continue;
 					}
 					SkinnedMeshRenderer? sourceSmr = sourceTransform.GetComponent<SkinnedMeshRenderer>();
 					if (sourceSmr == null || sourceSmr.sharedMesh == null) {
-						Debug.LogWarning($"[MDNailTool] BlendShapeSyncSource に SkinnedMeshRenderer がありません: {sourcePath}");
+						Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShape同期元にメッシュデータがありません" : "BlendShape sync source has no mesh data")}: '{sourcePath}'{BuildDiagnosticInfo()}");
 						continue;
 					}
 					resolvedSourceSmrs.Add((sourceSmr, sourcePath));
@@ -257,7 +258,8 @@ namespace world.anlabo.mdnailtool.Editor {
 						.FirstOrDefault();
 					if (fallbackCandidate != null) {
 						resolvedSourceSmrs.Add((fallbackCandidate, fallbackCandidate.gameObject.name));
-						Debug.Log($"[MDNailTool] BlendShapeSyncSource フォールバック: '{fallbackCandidate.gameObject.name}' を使用します");
+						Debug.Log($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShapeSyncSource フォールバック: '{fallbackCandidate.gameObject.name}' を使用します" : $"BlendShapeSyncSource fallback: using '{fallbackCandidate.gameObject.name}'")}");
+
 					}
 				}
 
@@ -274,7 +276,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							bakeBasePath,
 							this.AvatarVariationData.BlendShapeInitialWeights);
 					} catch (Exception e) {
-						Debug.LogWarning($"[MDNailTool] BlendShapeベイク中にエラーが発生しました: {e.Message}");
+						Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShapeのベイクに失敗しました" : "Failed to bake BlendShapes")}: {e.Message}{BuildDiagnosticInfo()}");
 					}
 				}
 			}
@@ -406,7 +408,10 @@ namespace world.anlabo.mdnailtool.Editor {
 							string? variantPath = ResolveVariantPath(variant);
 							if (string.IsNullOrEmpty(variantPath))
 							{
-								string msg = $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません";
+								string msg = LanguageManager.CurrentLanguageData.language == "ja"
+								? $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"
+								: $"Variant '{variant.Name}': path not found for GUID={variant.NailPrefabGUID}";
+								msg += BuildDiagnosticInfo(includeFolder: true);
 								Debug.LogWarning($"[MDNailTool] {msg}");
 								this.Warnings.Add(msg);
 								continue;
@@ -415,14 +420,17 @@ namespace world.anlabo.mdnailtool.Editor {
 							GameObject? variantPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
 							if (variantPrefabAsset == null)
 							{
-								string msg = $"Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})";
+								string msg = LanguageManager.CurrentLanguageData.language == "ja"
+								? $"Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})"
+								: $"Variant '{variant.Name}': failed to load prefab (path={variantPath})";
+								msg += BuildDiagnosticInfo(includeFolder: true);
 								Debug.LogWarning($"[MDNailTool] {msg}");
 								this.Warnings.Add(msg);
 								continue;
 							}
 
 							GameObject resolvedVariantPrefab = ResolveShapePrefab(variantPrefabAsset, this.NailShapeName);
-							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab);
+							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab, this.Avatar.transform);
 							objectsToDestroy.Add(instVariant);
 
 							// バリアントプレハブの子名からシェイプ接頭辞([Oval]等)を除去
@@ -833,10 +841,11 @@ namespace world.anlabo.mdnailtool.Editor {
 									.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
 									.FirstOrDefault()?.transform;
 								if (srcSmrTransform != null) {
-									Debug.Log($"[MDNailTool] BlendShapeSync: '{variant.SyncSourceSmrName}' が見つからないため、フォールバック '{srcSmrTransform.name}' を使用します");
+									Debug.Log($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShapeSync: '{variant.SyncSourceSmrName}' が見つからないため、フォールバック '{srcSmrTransform.name}' を使用します" : $"BlendShapeSync: '{variant.SyncSourceSmrName}' not found, using fallback '{srcSmrTransform.name}'")}");
+
 								}
 							}
-							if (srcSmrTransform == null) { Debug.LogWarning($"[MDNailTool] BlendShapeSync: ソースSMR '{variant.SyncSourceSmrName}' がアバターに見つかりません"); continue; }
+							if (srcSmrTransform == null) { Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShape同期元のメッシュ '{variant.SyncSourceSmrName}' がアバターに見つかりません" : $"BlendShape sync source mesh '{variant.SyncSourceSmrName}' not found on avatar")}{BuildDiagnosticInfo()}"); continue; }
 
 							// バリアント名（スペース無し）に対応する実際のブレンドシェイプ名（スペース有り）を検索
 							string actualShapeName = variant.Name;
@@ -1483,6 +1492,110 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// デバッグ用の診断情報を生成する。
+		/// バージョン、着用設定、アバター情報を含む。
+		/// </summary>
+		private string BuildDiagnosticInfo(bool includeFolder = false)
+		{
+			bool isJa = LanguageManager.CurrentLanguageData.language == "ja";
+			var sb = new System.Text.StringBuilder();
+			sb.AppendLine();
+			sb.AppendLine(isJa ? "--- 診断情報 ---" : "--- Diagnostic Info ---");
+
+			try { sb.AppendLine($"NailTool Version: {MDNailToolDefines.Version}"); }
+			catch { sb.AppendLine(isJa ? "NailTool Version: (取得失敗)" : "NailTool Version: (unavailable)"); }
+
+			sb.AppendLine($"ModularAvatar: {GetModularAvatarVersion()}");
+
+			sb.AppendLine($"Avatar: {this.Avatar?.gameObject?.name ?? "(null)"}");
+			sb.AppendLine($"Avatar Root Scale: {this.Avatar?.transform?.localScale.ToString() ?? "(null)"}");
+			sb.AppendLine($"AvatarName: {this.AvatarName ?? (isJa ? "(未設定)" : "(not set)")}");
+			sb.AppendLine($"Variation: {this.AvatarVariationData?.VariationName ?? "(null)"}");
+			sb.AppendLine($"NailShape: {this.NailShapeName}");
+			sb.AppendLine($"NailPrefab: {this.NailPrefab?.name ?? "(null)"}");
+			sb.AppendLine($"ForModularAvatar: {this.ForModularAvatar}");
+			sb.AppendLine($"BakeBlendShapes: {this.BakeBlendShapes}");
+			sb.AppendLine($"SyncBlendShapesWithMA: {this.SyncBlendShapesWithMA}");
+			sb.AppendLine($"ArmatureScaleCompensation: {this.ArmatureScaleCompensation}");
+			sb.AppendLine($"UseFootNail: {this.UseFootNail}");
+			sb.AppendLine($"GenerateMaterial: {this.GenerateMaterial}");
+
+			if (includeFolder)
+			{
+				string listing = ListPrefabFolderContents();
+				if (!string.IsNullOrEmpty(listing))
+				{
+					sb.AppendLine(isJa ? "--- Resourceフォルダ内容 ---" : "--- Resource Folder Contents ---");
+					sb.Append(listing);
+				}
+			}
+
+			return sb.ToString();
+		}
+
+		private static string GetModularAvatarVersion()
+		{
+			try
+			{
+				string packageJsonPath = "Packages/nadena.dev.modular-avatar/package.json";
+				TextAsset? packageJson = AssetDatabase.LoadAssetAtPath<TextAsset>(packageJsonPath);
+				if (packageJson != null)
+				{
+					var json = Newtonsoft.Json.Linq.JObject.Parse(packageJson.text);
+					return json["version"]?.ToString() ?? "unknown";
+				}
+			}
+			catch { /* ignore */ }
+
+			return "not installed";
+		}
+
+		/// <summary>
+		/// Nail/Prefab フォルダ内の .prefab ファイル一覧を返す（デバッグ用）。
+		/// </summary>
+		private static string ListPrefabFolderContents()
+		{
+			string[] searchRoots = {
+				"Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab",
+				"Packages/world.anlabo.mdnailtool/Resource/Nail/Prefab"
+			};
+
+			var sb = new System.Text.StringBuilder();
+			foreach (string root in searchRoots)
+			{
+				string fullRoot = Path.GetFullPath(root);
+				if (!Directory.Exists(fullRoot)) continue;
+
+				sb.AppendLine($"[{root}]");
+				try
+				{
+					foreach (string dir in Directory.GetDirectories(fullRoot))
+					{
+						string dirName = Path.GetFileName(dir);
+						string[] prefabs = Directory.GetFiles(dir, "*.prefab");
+						if (prefabs.Length == 0)
+						{
+							sb.AppendLine($"  {dirName}/ (empty)");
+							continue;
+						}
+						sb.AppendLine($"  {dirName}/");
+						foreach (string prefab in prefabs)
+							sb.AppendLine($"    {Path.GetFileName(prefab)}");
+					}
+
+					string[] rootPrefabs = Directory.GetFiles(fullRoot, "*.prefab");
+					foreach (string prefab in rootPrefabs)
+						sb.AppendLine($"  {Path.GetFileName(prefab)}");
+				}
+				catch (Exception e)
+				{
+					sb.AppendLine($"  (読み取りエラー: {e.Message})");
+				}
+			}
+			return sb.ToString();
 		}
 	}
 }
