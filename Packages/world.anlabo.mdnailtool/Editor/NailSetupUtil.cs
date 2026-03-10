@@ -453,13 +453,22 @@ namespace world.anlabo.mdnailtool.Editor
 			GameObject nailPrefabObject,
 			string zoneName,
 			string saveBasePath,
-			(string Name, Transform?[] VariantNails)[]? variants = null)
+			(string Name, Transform?[] VariantNails, string? LeftName, string? RightName)[]? variants = null,
+			bool[]? isLeftSide = null)
 		{
-			var validPairs = nailObjects
-				.Where(t => t != null && t.GetComponent<SkinnedMeshRenderer>() != null
-				            && t.GetComponent<SkinnedMeshRenderer>()!.sharedMesh != null)
-				.Select(t => (transform: t!, smr: t!.GetComponent<SkinnedMeshRenderer>()!))
+			var indexedNails = nailObjects
+				.Select((t, i) => (t, originalIndex: i))
+				.Where(x => x.t != null && x.t.GetComponent<SkinnedMeshRenderer>() != null
+				            && x.t.GetComponent<SkinnedMeshRenderer>()!.sharedMesh != null)
 				.ToArray();
+
+			var validPairs = indexedNails
+				.Select(x => (transform: x.t!, smr: x.t!.GetComponent<SkinnedMeshRenderer>()!))
+				.ToArray();
+
+			bool[]? validPairsIsLeft = isLeftSide != null
+				? indexedNails.Select(x => x.originalIndex < isLeftSide.Length && isLeftSide[x.originalIndex]).ToArray()
+				: null;
 			if (validPairs.Length == 0) return null;
 
 			GameObject combinedGo = new GameObject(zoneName);
@@ -672,10 +681,41 @@ namespace world.anlabo.mdnailtool.Editor
 
 					// ベイク設定オン時は常にBlendShapeを生成する（デルタなしでもゼロデルタで作成）
 					// MAのBlendShapeSyncで名前ベースの同期を行うため、BlendShapeの存在自体が必要
-					combinedMesh.AddBlendShapeFrame(shapeName, 100f, fullDv, fullDn, fullDt);
-					if (!hasAnyDelta)
+					if (variant.LeftName != null && variant.RightName != null && validPairsIsLeft != null)
 					{
-						Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName}' デルタなし → ゼロデルタで生成しました");
+						var leftDv = new Vector3[totalVertCount];
+						var leftDn = new Vector3[totalVertCount];
+						var leftDt = new Vector3[totalVertCount];
+						var rightDv = new Vector3[totalVertCount];
+						var rightDn = new Vector3[totalVertCount];
+						var rightDt = new Vector3[totalVertCount];
+
+						for (int si2 = 0; si2 < validPairs.Length; si2++)
+						{
+							int siVerts = validPairs[si2].smr.sharedMesh.vertexCount;
+							int off = vertexOffsets[si2];
+							var targetDv = validPairsIsLeft[si2] ? leftDv : rightDv;
+							var targetDn = validPairsIsLeft[si2] ? leftDn : rightDn;
+							var targetDt = validPairsIsLeft[si2] ? leftDt : rightDt;
+							System.Array.Copy(fullDv, off, targetDv, off, siVerts);
+							System.Array.Copy(fullDn, off, targetDn, off, siVerts);
+							System.Array.Copy(fullDt, off, targetDt, off, siVerts);
+						}
+
+						combinedMesh.AddBlendShapeFrame(variant.LeftName, 100f, leftDv, leftDn, leftDt);
+						combinedMesh.AddBlendShapeFrame(variant.RightName, 100f, rightDv, rightDn, rightDt);
+						if (!hasAnyDelta)
+						{
+							Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName}' L/R分割 デルタなし → ゼロデルタで生成しました");
+						}
+					}
+					else
+					{
+						combinedMesh.AddBlendShapeFrame(shapeName, 100f, fullDv, fullDn, fullDt);
+						if (!hasAnyDelta)
+						{
+							Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName}' デルタなし → ゼロデルタで生成しました");
+						}
 					}
 				}
 			}

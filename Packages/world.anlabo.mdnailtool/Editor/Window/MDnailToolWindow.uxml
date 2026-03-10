@@ -252,12 +252,14 @@
             text-id="window.advanced_setting"
             class="mdn-advanced-foldout">
             <ui:VisualElement class="mdn-advanced-body">
-                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedObjectField
-                    name="material-object"
-                    text-id="window.direct_material"
-                    tooltip-id="tooltip.direct_material"
-                    type="UnityEngine.Material, UnityEngine.CoreModule"
-                    class="mdn-object-field" />
+                <ui:VisualElement name="direct-material-row" class="mdn-option-row">
+                    <ui:Toggle name="enable-direct-material" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-enable-direct-material"
+                        text-id="window.direct_material"
+                        tooltip-id="tooltip.enable_direct_material"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
                 <ui:VisualElement class="mdn-option-row">
                     <ui:Toggle name="remove-current-nail" value="true" class="mdn-toggle" />
                     <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel

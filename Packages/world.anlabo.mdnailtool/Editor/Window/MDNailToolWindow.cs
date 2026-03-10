@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.Components;
@@ -34,7 +35,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private const string SCENE_PREVIEW_NAME = "[MDNailTool_Preview]";
 
-		private LocalizedObjectField? _materialObjectField;
+		private Toggle? _enableDirectMaterial;
+		private ObjectField? _materialObjectField;
 		private LocalizedObjectField? _avatarObjectField;
 		private AvatarDropDowns? _avatarDropDowns;
 		private NailDesignSelect? _nailDesignSelect;
@@ -150,8 +152,32 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		}
 		private void BindCoreFields()
 		{
-			this._materialObjectField = this.rootVisualElement.Q<LocalizedObjectField>("material-object");
+			this._enableDirectMaterial = this.rootVisualElement.Q<Toggle>("enable-direct-material");
+
+			// ObjectField を C# 側で生成してトグル行に追加
+			var directMaterialRow = this.rootVisualElement.Q<VisualElement>("direct-material-row");
+			this._materialObjectField = new ObjectField {
+				name = "material-object",
+				label = "",
+				objectType = typeof(Material),
+				style = {
+					flexGrow = 1,
+					flexShrink = 1,
+				}
+			};
 			this._materialObjectField.RegisterValueChangedCallback(this.OnChangeMaterial);
+			directMaterialRow?.Add(this._materialObjectField);
+
+			if (this._enableDirectMaterial != null)
+			{
+				this._enableDirectMaterial.SetValueWithoutNotify(false);
+				this._materialObjectField.style.display = DisplayStyle.None;
+				this._enableDirectMaterial.RegisterValueChangedCallback(this.OnChangeEnableDirectMaterial);
+				var lblEnableDirectMat = this.rootVisualElement.Q<LocalizedLabel>("label-enable-direct-material");
+				lblEnableDirectMat?.RegisterCallback<ClickEvent>(_ => {
+					if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = !this._enableDirectMaterial.value;
+				});
+			}
 
 			this._avatarObjectField = this.rootVisualElement.Q<LocalizedObjectField>("avatar-object");
 			this._avatarObjectField.RegisterValueChangedCallback(this.OnChangeAvatar);
@@ -1098,6 +1124,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			else
 			{
+				// インストール済みネイルデザインがない場合、マテリアル直接指定を自動ON
+				if (this._enableDirectMaterial != null)
+				{
+					this._enableDirectMaterial.value = true;
+				}
+
 				this.UpdatePreview();
 				this.RequestScenePreviewUpdate();
 			}
@@ -1437,7 +1469,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				Mesh?[]? selectedMeshes = this._nailShapeDropDown!.GetSelectedShapeMeshes();
 				Mesh?[]? overrideMesh = isHandActive ? selectedMeshes : new Mesh?[10];
 
-				Material? directMaterial = this._materialObjectField!.value as Material;
+				Material? directMaterial = this.GetDirectMaterial();
 
 				NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName)
 				{
@@ -1676,6 +1708,23 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this.OnSelectNail(evt.newValue);
 		}
 
+		private void OnChangeEnableDirectMaterial(ChangeEvent<bool> evt)
+		{
+			if (this._materialObjectField != null)
+			{
+				this._materialObjectField.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
+			}
+			this.UpdateNailShapeFilter();
+			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
+		}
+
+		private Material? GetDirectMaterial()
+		{
+			if (this._enableDirectMaterial != null && !this._enableDirectMaterial.value) return null;
+			return this._materialObjectField?.value as Material;
+		}
+
 		private void OnChangeMaterial(ChangeEvent<Object?> evt) { this.UpdateNailShapeFilter(); this.UpdatePreview(); this.RequestScenePreviewUpdate(); }
 		private void OnChangeShapeDropDown(ChangeEvent<string> evt) { GlobalSetting.LastUseShapeName = evt.newValue; this.UpdatePreview(); this.RequestScenePreviewUpdate(); }
 		private void OnChangeNailMaterialDropDown(ChangeEvent<string?> evt)
@@ -1701,7 +1750,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void UpdateNailShapeFilter(INailProcessor? processor = null)
 		{
-			if (this._materialObjectField!.value != null) { this._nailShapeDropDown!.SetFilter(_ => true); return; }
+			if (this.GetDirectMaterial() != null) { this._nailShapeDropDown!.SetFilter(_ => true); return; }
 			if (processor != null) { this._nailShapeDropDown!.SetFilter(processor.IsSupportedNailShape); return; }
 
 			HashSet<string> designNameSet = this._nailDesignDropDowns!.Select(downs => downs.GetSelectedDesignName()).ToHashSet();
@@ -1727,7 +1776,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailPreviewController?.UpdateVisibility(isHandActive, isFootActive);
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
-			Material? directMaterial = this._materialObjectField?.value as Material;
+			Material? directMaterial = this.GetDirectMaterial();
 
 			var perFingerAddMats = this.BuildPerFingerAdditionalMaterials(true);
 			var perFingerAddObjs = this.BuildPerFingerAdditionalObjects(true);
@@ -1783,7 +1832,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			bool isFootActive = this._tglFootActive?.value ?? false;
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
-			Material? directMaterial = this._materialObjectField?.value as Material;
+			Material? directMaterial = this.GetDirectMaterial();
 
 			var perFingerAddMats = this.BuildPerFingerAdditionalMaterials(true);
 			var perFingerAddObjs = this.BuildPerFingerAdditionalObjects(true);

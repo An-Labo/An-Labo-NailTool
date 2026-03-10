@@ -391,8 +391,8 @@ namespace world.anlabo.mdnailtool.Editor {
 					AssetDatabase.SaveAssets();
 
 					// バリアントの構築
-					List<(string Name, Transform?[] VariantNails)> handVariants = new();
-					List<(string Name, Transform?[] VariantNails)> footVariants = new();
+					List<(string Name, Transform?[] VariantNails, string? LeftName, string? RightName)> handVariants = new();
+					List<(string Name, Transform?[] VariantNails, string? LeftName, string? RightName)> footVariants = new();
 					List<GameObject> objectsToDestroy = new();
 
 					AvatarBlendShapeVariant[]? activeVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
@@ -508,7 +508,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								}
 								vNail.SetParent(targetBone, true);
 							}
-							handVariants.Add((variant.Name, varHands));
+							handVariants.Add((variant.Name, varHands, variant.LeftBlendShapeName, variant.RightBlendShapeName));
 
 							if (this.UseFootNail)
 							{
@@ -544,7 +544,7 @@ namespace world.anlabo.mdnailtool.Editor {
 									}
 									vNail.SetParent(targetBone, true);
 								}
-								footVariants.Add((variant.Name, varLeftFoot.Concat(varRightFoot).ToArray()));
+								footVariants.Add((variant.Name, varLeftFoot.Concat(varRightFoot).ToArray(), variant.LeftBlendShapeName, variant.RightBlendShapeName));
 							}
 						}
 						}
@@ -569,16 +569,21 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 
 					// メッシュ統合
+					bool[] handsIsLeft = handsNailObjects.Select((_, i) => i < 5).ToArray();
 					handCombinedGo = NailSetupUtil.BakeAndCombineNailMeshes(
 						handsNailObjects, nailPrefabObject, handWrapperName, bsPath,
-						handVariants.Count > 0 ? handVariants.ToArray() : null);
+						handVariants.Count > 0 ? handVariants.ToArray() : null,
+						handsIsLeft);
 
 					if (this.UseFootNail)
 					{
+						bool[] feetIsLeft = leftFootNailObjects.Select(_ => true)
+							.Concat(rightFootNailObjects.Select(_ => false)).ToArray();
 						footCombinedGo = NailSetupUtil.BakeAndCombineNailMeshes(
 							leftFootNailObjects.Concat(rightFootNailObjects).ToArray(),
 							nailPrefabObject, footWrapperName, bsPath,
-							footVariants.Count > 0 ? footVariants.ToArray() : null);
+							footVariants.Count > 0 ? footVariants.ToArray() : null,
+							feetIsLeft);
 					}
 
 					// 退避した追加オブジェクトを統合ラッパーに復元（BoneProxy付き）
@@ -847,29 +852,58 @@ namespace world.anlabo.mdnailtool.Editor {
 							}
 							if (srcSmrTransform == null) { Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShape同期元のメッシュ '{variant.SyncSourceSmrName}' がアバターに見つかりません" : $"BlendShape sync source mesh '{variant.SyncSourceSmrName}' not found on avatar")}{BuildDiagnosticInfo()}"); continue; }
 
-							// バリアント名（スペース無し）に対応する実際のブレンドシェイプ名（スペース有り）を検索
-							string actualShapeName = variant.Name;
-							string normalizedVariantName = variant.Name.Replace(" ", "").Replace("　", "");
-							for (int shi = 0; shi < bsSmr.sharedMesh.blendShapeCount; shi++)
+							if (!string.IsNullOrEmpty(variant.LeftBlendShapeName) && !string.IsNullOrEmpty(variant.RightBlendShapeName))
 							{
-								string sn = bsSmr.sharedMesh.GetBlendShapeName(shi);
-								if (sn.Replace(" ", "").Replace("　", "") == normalizedVariantName)
+								// L/R分割モード: 結合メッシュ上のL/R Blendshapeをそれぞれアバターのものとバインド
+								AvatarObjectReference aoRef = new AvatarObjectReference(srcSmrTransform.gameObject);
+								foreach (string lrName in new[] { variant.LeftBlendShapeName!, variant.RightBlendShapeName! })
 								{
-									actualShapeName = sn;
-									break;
+									string actualLRName = lrName;
+									string normalizedLRName = lrName.Replace(" ", "").Replace("　", "");
+									for (int shi = 0; shi < bsSmr.sharedMesh.blendShapeCount; shi++)
+									{
+										string sn = bsSmr.sharedMesh.GetBlendShapeName(shi);
+										if (sn.Replace(" ", "").Replace("　", "") == normalizedLRName)
+										{
+											actualLRName = sn;
+											break;
+										}
+									}
+									if (bsSmr.sharedMesh.GetBlendShapeIndex(actualLRName) < 0) continue;
+									variantBindings.Add(new BlendshapeBinding
+									{
+										ReferenceMesh = aoRef,
+										Blendshape = actualLRName,
+										LocalBlendshape = actualLRName
+									});
 								}
 							}
-
-							int bsIndex = bsSmr.sharedMesh.GetBlendShapeIndex(actualShapeName);
-							if (bsIndex < 0) continue;
-
-							AvatarObjectReference aoRef = new AvatarObjectReference(srcSmrTransform.gameObject);
-							variantBindings.Add(new BlendshapeBinding
+							else
 							{
-								ReferenceMesh = aoRef,
-								Blendshape = actualShapeName,
-								LocalBlendshape = actualShapeName
-							});
+								// 既存動作（L/R未設定時）
+								string actualShapeName = variant.Name;
+								string normalizedVariantName = variant.Name.Replace(" ", "").Replace("　", "");
+								for (int shi = 0; shi < bsSmr.sharedMesh.blendShapeCount; shi++)
+								{
+									string sn = bsSmr.sharedMesh.GetBlendShapeName(shi);
+									if (sn.Replace(" ", "").Replace("　", "") == normalizedVariantName)
+									{
+										actualShapeName = sn;
+										break;
+									}
+								}
+
+								int bsIndex = bsSmr.sharedMesh.GetBlendShapeIndex(actualShapeName);
+								if (bsIndex < 0) continue;
+
+								AvatarObjectReference aoRef = new AvatarObjectReference(srcSmrTransform.gameObject);
+								variantBindings.Add(new BlendshapeBinding
+								{
+									ReferenceMesh = aoRef,
+									Blendshape = actualShapeName,
+									LocalBlendshape = actualShapeName
+								});
+							}
 						}
 						if (variantBindings.Count > 0)
 						{
