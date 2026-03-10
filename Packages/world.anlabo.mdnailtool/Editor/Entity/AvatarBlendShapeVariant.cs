@@ -14,5 +14,11 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 
 		[JsonProperty("syncSourceSmrName")]
 		public string? SyncSourceSmrName { get; set; }
+
+		[JsonProperty("leftBlendShapeName")]
+		public string? LeftBlendShapeName { get; set; }
+
+		[JsonProperty("rightBlendShapeName")]
+		public string? RightBlendShapeName { get; set; }
 	}
 }
