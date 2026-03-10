@@ -681,7 +681,7 @@ namespace world.anlabo.mdnailtool.Editor
 
 					// ベイク設定オン時は常にBlendShapeを生成する（デルタなしでもゼロデルタで作成）
 					// MAのBlendShapeSyncで名前ベースの同期を行うため、BlendShapeの存在自体が必要
-					if (variant.LeftName != null && variant.RightName != null && validPairsIsLeft != null)
+					if (!string.IsNullOrEmpty(variant.LeftName) && !string.IsNullOrEmpty(variant.RightName) && validPairsIsLeft != null)
 					{
 						var leftDv = new Vector3[totalVertCount];
 						var leftDn = new Vector3[totalVertCount];
