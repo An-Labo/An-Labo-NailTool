@@ -44,6 +44,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		public bool SyncBlendShapesWithMA { get; set; }
 		public string? SelectedBlendShapeVariantName { get; set; }
 		public Entity.Avatar? AvatarEntity { get; set; }
+		public bool EnablePenetrationCorrection { get; set; }
 		public bool EnableAdditionalMaterials { get; set; } = true;
 		public IEnumerable<Material>?[]? PerFingerAdditionalMaterials { get; set; }
 		public IEnumerable<Transform>?[]? PerFingerAdditionalObjects { get; set; }
@@ -578,12 +579,41 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 					}
 
+					// [試験版] 破綻防止: 体めり込み補正用のボディSMRを探す
+					SkinnedMeshRenderer? bodySmrForPushOut = null;
+					if (this.EnablePenetrationCorrection && activeVariants != null && activeVariants.Length > 1)
+					{
+						string? syncSmrName = activeVariants
+							.Select(v => v.SyncSourceSmrName)
+							.FirstOrDefault(n => !string.IsNullOrEmpty(n));
+						if (!string.IsNullOrEmpty(syncSmrName))
+						{
+							Transform? bodyTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
+								.FirstOrDefault(t => t.name == syncSmrName);
+							if (bodyTransform == null)
+								bodyTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
+									.FirstOrDefault(t => string.Equals(t.name, syncSmrName, System.StringComparison.OrdinalIgnoreCase));
+							if (bodyTransform != null)
+								bodySmrForPushOut = bodyTransform.GetComponent<SkinnedMeshRenderer>();
+						}
+						if (bodySmrForPushOut == null)
+						{
+							SkinnedMeshRenderer? visemeSmr = this.Avatar.VisemeSkinnedMesh;
+							bodySmrForPushOut = this.Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+								.Where(smr => smr != visemeSmr && smr.sharedMesh != null && smr.sharedMesh.blendShapeCount > 0)
+								.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
+								.FirstOrDefault();
+						}
+
+					}
+
 					// メッシュ統合
 					bool[] handsIsLeft = handsNailObjects.Select((_, i) => i < 5).ToArray();
 					handCombinedGo = NailSetupUtil.BakeAndCombineNailMeshes(
 						handsNailObjects, nailPrefabObject, handWrapperName, bsPath,
 						handVariants.Count > 0 ? handVariants.ToArray() : null,
-						handsIsLeft);
+						handsIsLeft,
+						bodySmrForPushOut);
 
 					if (this.UseFootNail)
 					{
@@ -593,7 +623,8 @@ namespace world.anlabo.mdnailtool.Editor {
 							leftFootNailObjects.Concat(rightFootNailObjects).ToArray(),
 							nailPrefabObject, footWrapperName, bsPath,
 							footVariants.Count > 0 ? footVariants.ToArray() : null,
-							feetIsLeft);
+							feetIsLeft,
+							bodySmrForPushOut);
 					}
 
 					// 退避した追加オブジェクトを統合ラッパーに復元（BoneProxy付き）

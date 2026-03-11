@@ -199,6 +199,17 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(SYNC_BLENDSHAPES_WITH_MA_KEY, value);
 		}
 
+		private const string ENABLE_PENETRATION_CORRECTION_KEY = "world.anlabo.mdnailtool.enable_penetration_correction";
+		internal static bool EnablePenetrationCorrection
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ENABLE_PENETRATION_CORRECTION_KEY)) return false;
+				return EditorPrefs.GetBool(ENABLE_PENETRATION_CORRECTION_KEY);
+			}
+			set => EditorPrefs.SetBool(ENABLE_PENETRATION_CORRECTION_KEY, value);
+		}
+
 		private const string ENABLE_ADDITIONAL_MATERIALS_KEY = "world.anlabo.mdnailtool.enable_additional_materials";
 		internal static bool EnableAdditionalMaterials
 		{

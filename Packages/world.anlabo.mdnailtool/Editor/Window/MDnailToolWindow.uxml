@@ -295,6 +295,16 @@
                         class="mdn-option-label mdn-option-clickable" />
                 </ui:VisualElement>
 
+                <!-- 破綻防止(試験版) -->
+                <ui:VisualElement class="mdn-option-row">
+                    <ui:Toggle name="enable-penetration-correction" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-penetration-correction"
+                        text-id="window.penetration_correction"
+                        tooltip-id="tooltip.penetration_correction"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+
                 <!-- デバッグモード -->
                 <ui:VisualElement class="mdn-option-row">
                     <ui:Toggle name="enable-tool-console" class="mdn-toggle" />

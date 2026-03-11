@@ -448,13 +448,248 @@ namespace world.anlabo.mdnailtool.Editor
 			AssetDatabase.SaveAssets();
 		}
 
+
+		// 三角形上の最近傍点を計算
+		private static Vector3 ClosestPointOnTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+		{
+			Vector3 ab = b - a, ac = c - a, ap = p - a;
+			float d1 = Vector3.Dot(ab, ap);
+			float d2 = Vector3.Dot(ac, ap);
+			if (d1 <= 0f && d2 <= 0f) return a;
+
+			Vector3 bp = p - b;
+			float d3 = Vector3.Dot(ab, bp);
+			float d4 = Vector3.Dot(ac, bp);
+			if (d3 >= 0f && d4 <= d3) return b;
+
+			float vc = d1 * d4 - d3 * d2;
+			if (vc <= 0f && d1 >= 0f && d3 <= 0f)
+				return a + (d1 / (d1 - d3)) * ab;
+
+			Vector3 cp = p - c;
+			float d5 = Vector3.Dot(ab, cp);
+			float d6 = Vector3.Dot(ac, cp);
+			if (d6 >= 0f && d5 <= d6) return c;
+
+			float vb = d5 * d2 - d1 * d6;
+			if (vb <= 0f && d2 >= 0f && d6 <= 0f)
+				return a + (d2 / (d2 - d6)) * ac;
+
+			float va = d3 * d6 - d5 * d4;
+			if (va <= 0f && (d4 - d3) >= 0f && (d5 - d6) >= 0f)
+				return b + ((d4 - d3) / ((d4 - d3) + (d5 - d6))) * (c - b);
+
+			float denom = 1f / (va + vb + vc);
+			return a + ab * (vb * denom) + ac * (vc * denom);
+		}
+
+		// [試験版] 破綻防止: 全バリアント同時適用時にボディメッシュへのめり込みを爪単位で補正
+		private static void CorrectDeltasForBodyPenetration(
+			Vector3[] basePositions,
+			List<(string shapeName, Vector3[] dv, Vector3[] dn, Vector3[] dt,
+				string? leftName, string? rightName, bool hasAnyDelta)> deltas,
+			SkinnedMeshRenderer bodySmr,
+			(string Name, Transform?[] VariantNails, string? LeftName, string? RightName)[] variants,
+			Matrix4x4 combinedGoW2L,
+			int[] nailVertexOffsets,
+			int nailCount)
+		{
+			if (bodySmr.sharedMesh == null) return;
+
+			Mesh bodyMesh = bodySmr.sharedMesh;
+			int vertCount = basePositions.Length;
+
+			// ボディメッシュのBlendShape重みを保存
+			float[] savedWeights = new float[bodyMesh.blendShapeCount];
+			for (int i = 0; i < savedWeights.Length; i++)
+				savedWeights[i] = bodySmr.GetBlendShapeWeight(i);
+
+			// 全バリアントのBlendShapeを100に設定（最悪ケース）
+			foreach (var variant in variants)
+			{
+				int idx = bodyMesh.GetBlendShapeIndex(variant.Name);
+				if (idx >= 0) bodySmr.SetBlendShapeWeight(idx, 100f);
+				if (!string.IsNullOrEmpty(variant.LeftName))
+				{
+					int lidx = bodyMesh.GetBlendShapeIndex(variant.LeftName);
+					if (lidx >= 0) bodySmr.SetBlendShapeWeight(lidx, 100f);
+				}
+				if (!string.IsNullOrEmpty(variant.RightName))
+				{
+					int ridx = bodyMesh.GetBlendShapeIndex(variant.RightName);
+					if (ridx >= 0) bodySmr.SetBlendShapeWeight(ridx, 100f);
+				}
+			}
+
+			// ボディメッシュをベイク
+			Mesh bakedBody = new Mesh();
+			bodySmr.BakeMesh(bakedBody);
+
+			// BlendShape重みを復元
+			for (int i = 0; i < savedWeights.Length; i++)
+				bodySmr.SetBlendShapeWeight(i, savedWeights[i]);
+
+			// ボディ頂点を結合メッシュのローカル空間に変換
+			Matrix4x4 bodyToLocal = combinedGoW2L * bodySmr.transform.localToWorldMatrix;
+			Vector3[] bodyVerts = bakedBody.vertices;
+			for (int i = 0; i < bodyVerts.Length; i++)
+				bodyVerts[i] = bodyToLocal.MultiplyPoint3x4(bodyVerts[i]);
+
+			int[] bodyTris = bakedBody.triangles;
+
+			// 全バリアントのデルタを合算
+			Vector3[] combinedDelta = new Vector3[vertCount];
+			for (int di = 0; di < deltas.Count; di++)
+				for (int vi = 0; vi < vertCount; vi++)
+					combinedDelta[vi] += deltas[di].dv[vi];
+
+			// ネイル頂点のバウンディングボックスを計算（ボディ三角形フィルタリング用）
+			Vector3 nailMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+			Vector3 nailMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+			bool hasAnyNonZero = false;
+			for (int vi = 0; vi < vertCount; vi++)
+			{
+				if (combinedDelta[vi].sqrMagnitude < 1e-8f) continue;
+				hasAnyNonZero = true;
+				Vector3 pos = basePositions[vi] + combinedDelta[vi];
+				nailMin = Vector3.Min(nailMin, pos);
+				nailMax = Vector3.Max(nailMax, pos);
+			}
+
+			if (!hasAnyNonZero)
+			{
+				UnityEngine.Object.DestroyImmediate(bakedBody);
+				return;
+			}
+
+			// ベースポジションもバウンディングボックスに含める
+			for (int vi = 0; vi < vertCount; vi++)
+			{
+				if (combinedDelta[vi].sqrMagnitude < 1e-8f) continue;
+				nailMin = Vector3.Min(nailMin, basePositions[vi]);
+				nailMax = Vector3.Max(nailMax, basePositions[vi]);
+			}
+
+			float margin = 0.05f;
+			nailMin -= Vector3.one * margin;
+			nailMax += Vector3.one * margin;
+
+			// ネイル付近のボディ三角形をフィルタリング（AABB交差判定）
+			var nearbyTris = new List<int>();
+			for (int ti = 0; ti < bodyTris.Length; ti += 3)
+			{
+				Vector3 a = bodyVerts[bodyTris[ti]];
+				Vector3 b = bodyVerts[bodyTris[ti + 1]];
+				Vector3 c = bodyVerts[bodyTris[ti + 2]];
+
+				Vector3 triMin = Vector3.Min(a, Vector3.Min(b, c));
+				Vector3 triMax = Vector3.Max(a, Vector3.Max(b, c));
+
+				if (triMax.x >= nailMin.x && triMin.x <= nailMax.x &&
+					triMax.y >= nailMin.y && triMin.y <= nailMax.y &&
+					triMax.z >= nailMin.z && triMin.z <= nailMax.z)
+				{
+					nearbyTris.Add(bodyTris[ti]);
+					nearbyTris.Add(bodyTris[ti + 1]);
+					nearbyTris.Add(bodyTris[ti + 2]);
+				}
+			}
+
+			if (nearbyTris.Count == 0)
+			{
+					UnityEngine.Object.DestroyImmediate(bakedBody);
+				return;
+			}
+
+			int[] nearbyTriArray = nearbyTris.ToArray();
+			int totalCorrected = 0;
+
+			// 爪ごとに個別の均一補正を適用（形状保持）
+			for (int ni = 0; ni < nailCount; ni++)
+			{
+				int nailStart = nailVertexOffsets[ni];
+				int nailEnd = (ni + 1 < nailCount) ? nailVertexOffsets[ni + 1] : basePositions.Length;
+
+				Vector3 nailCorrSum = Vector3.zero;
+				int nailCorrCount = 0;
+
+				for (int vi = nailStart; vi < nailEnd; vi++)
+				{
+					// 全バリアントのデルタを合算した予測位置を計算
+					Vector3 combined = Vector3.zero;
+					for (int di = 0; di < deltas.Count; di++)
+						combined += deltas[di].dv[vi];
+					if (combined.sqrMagnitude < 1e-8f) continue;
+
+					Vector3 predictedPos = basePositions[vi] + combined;
+
+					// ボディメッシュ上の最近傍点を探す
+					float minDistSq = float.MaxValue;
+					Vector3 nearestPoint = Vector3.zero;
+					Vector3 nearestNormal = Vector3.zero;
+
+					for (int ti = 0; ti < nearbyTriArray.Length; ti += 3)
+					{
+						Vector3 a = bodyVerts[nearbyTriArray[ti]];
+						Vector3 b = bodyVerts[nearbyTriArray[ti + 1]];
+						Vector3 c = bodyVerts[nearbyTriArray[ti + 2]];
+						Vector3 closest = ClosestPointOnTriangle(predictedPos, a, b, c);
+						float distSq = (predictedPos - closest).sqrMagnitude;
+						if (distSq < minDistSq)
+						{
+							minDistSq = distSq;
+							nearestPoint = closest;
+							Vector3 cn = Vector3.Cross(b - a, c - a);
+							float cnMag = cn.magnitude;
+							nearestNormal = cnMag > 1e-10f ? cn / cnMag : Vector3.zero;
+						}
+					}
+
+					if (nearestNormal.sqrMagnitude < 0.01f) continue;
+
+					float signedDist = Vector3.Dot(predictedPos - nearestPoint, nearestNormal);
+					float pushMargin = 0.0005f;
+					if (signedDist < pushMargin)
+					{
+						float pushAmount = pushMargin - signedDist + 0.0003f;
+						nailCorrSum += nearestNormal * pushAmount;
+						nailCorrCount++;
+					}
+				}
+
+				if (nailCorrCount == 0) continue;
+
+				// この爪の平均補正を爪内の全頂点に均一適用
+				Vector3 nailCorr = nailCorrSum / nailCorrCount;
+				for (int vi = nailStart; vi < nailEnd; vi++)
+				{
+					int contributors = 0;
+					for (int di = 0; di < deltas.Count; di++)
+						if (deltas[di].dv[vi].sqrMagnitude > 1e-8f) contributors++;
+					if (contributors > 0)
+					{
+						Vector3 perVariant = nailCorr / contributors;
+						for (int di = 0; di < deltas.Count; di++)
+						{
+							if (deltas[di].dv[vi].sqrMagnitude > 1e-8f)
+								deltas[di].dv[vi] += perVariant;
+						}
+					}
+				}
+				totalCorrected += nailCorrCount;
+			}
+
+			UnityEngine.Object.DestroyImmediate(bakedBody);
+		}
+
 		public static GameObject? BakeAndCombineNailMeshes(
 			Transform?[] nailObjects,
 			GameObject nailPrefabObject,
 			string zoneName,
 			string saveBasePath,
 			(string Name, Transform?[] VariantNails, string? LeftName, string? RightName)[]? variants = null,
-			bool[]? isLeftSide = null)
+			bool[]? isLeftSide = null,
+			SkinnedMeshRenderer? bodySmr = null)
 		{
 			var indexedNails = nailObjects
 				.Select((t, i) => (t, originalIndex: i))
@@ -587,6 +822,10 @@ namespace world.anlabo.mdnailtool.Editor
 
 			if (variants != null)
 			{
+				// デルタ情報を収集（体めり込み補正のため、BlendShapeFrame追加を遅延）
+				var collectedDeltas = new List<(string shapeName, Vector3[] dv, Vector3[] dn, Vector3[] dt,
+					string? leftName, string? rightName, bool hasAnyDelta)>();
+
 				foreach (var variant in variants)
 				{
 					string shapeName = variant.Name;
@@ -679,9 +918,22 @@ namespace world.anlabo.mdnailtool.Editor
 						vOff += siVertCount;
 					}
 
-					// ベイク設定オン時は常にBlendShapeを生成する（デルタなしでもゼロデルタで作成）
-					// MAのBlendShapeSyncで名前ベースの同期を行うため、BlendShapeの存在自体が必要
-					if (!string.IsNullOrEmpty(variant.LeftName) && !string.IsNullOrEmpty(variant.RightName) && validPairsIsLeft != null)
+
+					collectedDeltas.Add((shapeName, fullDv, fullDn, fullDt,
+						variant.LeftName, variant.RightName, hasAnyDelta));
+				}
+
+				// 複数バリアント同時適用時の体めり込み補正
+				if (bodySmr != null && collectedDeltas.Count > 1)
+				{
+					Vector3[] basePositions = combinedMesh.vertices;
+					CorrectDeltasForBodyPenetration(basePositions, collectedDeltas, bodySmr, variants, combinedGoW2L, vertexOffsets, validPairs.Length);
+				}
+
+				// 収集したデルタからBlendShapeFrameを追加
+				foreach (var (shapeName2, fullDv2, fullDn2, fullDt2, leftName, rightName, hasAnyDelta2) in collectedDeltas)
+				{
+					if (!string.IsNullOrEmpty(leftName) && !string.IsNullOrEmpty(rightName) && validPairsIsLeft != null)
 					{
 						var leftDv = new Vector3[totalVertCount];
 						var leftDn = new Vector3[totalVertCount];
@@ -697,24 +949,24 @@ namespace world.anlabo.mdnailtool.Editor
 							var targetDv = validPairsIsLeft[si2] ? leftDv : rightDv;
 							var targetDn = validPairsIsLeft[si2] ? leftDn : rightDn;
 							var targetDt = validPairsIsLeft[si2] ? leftDt : rightDt;
-							System.Array.Copy(fullDv, off, targetDv, off, siVerts);
-							System.Array.Copy(fullDn, off, targetDn, off, siVerts);
-							System.Array.Copy(fullDt, off, targetDt, off, siVerts);
+							System.Array.Copy(fullDv2, off, targetDv, off, siVerts);
+							System.Array.Copy(fullDn2, off, targetDn, off, siVerts);
+							System.Array.Copy(fullDt2, off, targetDt, off, siVerts);
 						}
 
-						combinedMesh.AddBlendShapeFrame(variant.LeftName, 100f, leftDv, leftDn, leftDt);
-						combinedMesh.AddBlendShapeFrame(variant.RightName, 100f, rightDv, rightDn, rightDt);
-						if (!hasAnyDelta)
+						combinedMesh.AddBlendShapeFrame(leftName, 100f, leftDv, leftDn, leftDt);
+						combinedMesh.AddBlendShapeFrame(rightName, 100f, rightDv, rightDn, rightDt);
+						if (!hasAnyDelta2)
 						{
-							Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName}' L/R分割 デルタなし → ゼロデルタで生成しました");
+							Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName2}' L/R分割 デルタなし → ゼロデルタで生成しました");
 						}
 					}
 					else
 					{
-						combinedMesh.AddBlendShapeFrame(shapeName, 100f, fullDv, fullDn, fullDt);
-						if (!hasAnyDelta)
+						combinedMesh.AddBlendShapeFrame(shapeName2, 100f, fullDv2, fullDn2, fullDt2);
+						if (!hasAnyDelta2)
 						{
-							Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName}' デルタなし → ゼロデルタで生成しました");
+							Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName2}' デルタなし → ゼロデルタで生成しました");
 						}
 					}
 				}
