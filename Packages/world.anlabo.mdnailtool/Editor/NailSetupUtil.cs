@@ -602,9 +602,9 @@ namespace world.anlabo.mdnailtool.Editor
 					var fullDn = new Vector3[totalVertCount];
 					var fullDt = new Vector3[totalVertCount];
 
-					int vOff = 0;
 					bool hasAnyDelta = false;
 
+					int vOff = 0;
 					for (int si = 0; si < validPairs.Length; si++)
 					{
 						Transform baseNail = validPairs[si].transform;
@@ -651,19 +651,19 @@ namespace world.anlabo.mdnailtool.Editor
 							Matrix4x4 variantToLocal = combinedGoW2L * variantNail.localToWorldMatrix;
 							Matrix4x4 baseToLocal = combinedGoW2L * baseNail.localToWorldMatrix;
 
-							Vector3[] varVerts = bakedVarMesh.vertices;
-							Vector3[] baseVerts = bakedBaseMesh.vertices;
-							Vector3[] varNormals = bakedVarMesh.normals;
-							Vector3[] baseNormals = bakedBaseMesh.normals;
+							Vector3[] varVerts2 = bakedVarMesh.vertices;
+							Vector3[] baseVerts2 = bakedBaseMesh.vertices;
+							Vector3[] varNormals2 = bakedVarMesh.normals;
+							Vector3[] baseNormals2 = bakedBaseMesh.normals;
 
 							for (int vi = 0; vi < siVertCount; vi++)
 							{
-								Vector3 vv = variantToLocal.MultiplyPoint3x4(varVerts[vi]);
-								Vector3 bv = baseToLocal.MultiplyPoint3x4(baseVerts[vi]);
+								Vector3 vv = variantToLocal.MultiplyPoint3x4(varVerts2[vi]);
+								Vector3 bv = baseToLocal.MultiplyPoint3x4(baseVerts2[vi]);
 								fullDv[vOff + vi] = vv - bv;
 
-								Vector3 vn = varNormals.Length > vi ? varNormals[vi] : Vector3.up;
-								Vector3 bn = baseNormals.Length > vi ? baseNormals[vi] : Vector3.up;
+								Vector3 vn = varNormals2.Length > vi ? varNormals2[vi] : Vector3.up;
+								Vector3 bn = baseNormals2.Length > vi ? baseNormals2[vi] : Vector3.up;
 								Vector3 w_vn = variantToLocal.MultiplyVector(vn).normalized;
 								Vector3 w_bn = baseToLocal.MultiplyVector(bn).normalized;
 								fullDn[vOff + vi] = w_vn - w_bn;
@@ -742,5 +742,6 @@ namespace world.anlabo.mdnailtool.Editor
 
 			return combinedGo;
 		}
+
 	}
 }

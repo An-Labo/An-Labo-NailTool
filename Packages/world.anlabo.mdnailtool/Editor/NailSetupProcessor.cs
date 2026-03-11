@@ -71,26 +71,36 @@ namespace world.anlabo.mdnailtool.Editor {
 			Undo.IncrementCurrentGroup();
 
 			// ドロップダウンでバリアントが選択されている場合、ベースのNailPrefabを差し替える
+			ToolConsole.Log($"  SelectedBlendShapeVariantName={this.SelectedBlendShapeVariantName ?? "(null)"}");
 			if (!string.IsNullOrEmpty(this.SelectedBlendShapeVariantName))
 			{
 				AvatarBlendShapeVariant[]? activeVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
+				ToolConsole.Log($"  activeVariants null? {activeVariants == null}, count={activeVariants?.Length ?? 0}");
 				if (activeVariants != null)
 				{
+					ToolConsole.Log($"  activeVariants names: [{string.Join(", ", activeVariants.Select(v => v.Name))}]");
 					AvatarBlendShapeVariant variant = activeVariants.FirstOrDefault(v => v.Name == this.SelectedBlendShapeVariantName);
+					ToolConsole.Log($"  variant match? {variant != null}, GUID={variant?.NailPrefabGUID ?? "(null)"}");
 					if (variant != null && !string.IsNullOrEmpty(variant.NailPrefabGUID))
 					{
 						string? variantPath = ResolveVariantPath(variant);
+						ToolConsole.Log($"  variantPath={variantPath ?? "(null)"}");
 						if (!string.IsNullOrEmpty(variantPath))
 						{
-							AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceSynchronousImport);
 							GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
+							ToolConsole.Log($"  variantPrefab={variantPrefab?.name ?? "(null)"}");
 							if (variantPrefab != null)
 							{
 								this.NailPrefab = variantPrefab;
+								ToolConsole.Log($"  → NailPrefab replaced: {variantPrefab.name}");
 							}
 						}
 					}
 				}
+			}
+			else
+			{
+				ToolConsole.Log("  → no variant selected, using base prefab");
 			}
 
 			// ネイルプレハブのインスタンス化
