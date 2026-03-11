@@ -62,6 +62,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _splitHandFootExpressionMenu;
 		private Toggle? _mergeAnLaboExpressionMenu;
 		private Toggle? _armatureScaleCompensation;
+		private Toggle? _penetrationCorrection;
 		private Toggle? _bakeBlendShapes;
 		private Toggle? _syncBlendShapesWithMA;
 		private DropdownField? _additionalMaterialSourceDropdown;
@@ -349,6 +350,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				lblArmatureScale?.RegisterCallback<ClickEvent>(_ => {
 					if (this._armatureScaleCompensation != null && this._armatureScaleCompensation.enabledSelf)
 						this._armatureScaleCompensation.value = !this._armatureScaleCompensation.value;
+				});
+			}
+
+			this._penetrationCorrection = this.rootVisualElement.Q<Toggle>("enable-penetration-correction");
+			if (this._penetrationCorrection != null)
+			{
+				this._penetrationCorrection.SetValueWithoutNotify(GlobalSetting.EnablePenetrationCorrection);
+				this._penetrationCorrection.RegisterValueChangedCallback(evt => {
+					GlobalSetting.EnablePenetrationCorrection = evt.newValue;
+				});
+				var lblPenetration = this.rootVisualElement.Q<LocalizedLabel>("label-penetration-correction");
+				lblPenetration?.RegisterCallback<ClickEvent>(_ => {
+					if (this._penetrationCorrection != null && this._penetrationCorrection.enabledSelf)
+						this._penetrationCorrection.value = !this._penetrationCorrection.value;
 				});
 			}
 
@@ -1546,6 +1561,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					                     && (this._bakeBlendShapes?.value == true)
 					                     && (this._syncBlendShapesWithMA?.value == true),
 					SelectedBlendShapeVariantName = (!(this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == true) && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
+					EnablePenetrationCorrection = (this._penetrationCorrection?.value == true),
 					EnableAdditionalMaterials = true,
 					PerFingerAdditionalMaterials = this.BuildPerFingerAdditionalMaterials(false),
 					PerFingerAdditionalObjects = this.BuildPerFingerAdditionalObjects(false),
