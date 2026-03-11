@@ -448,6 +448,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					.OfType<Label>()
 					.Select(l => l.text);
 				string text = string.Join("\n", lines);
+				text += this.BuildConsoleDiagnosticInfo();
 				EditorGUIUtility.systemCopyBuffer = text;
 			});
 
@@ -886,7 +887,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (popup == null) return;
 
 			bool maEnabled = GlobalSetting.UseModularAvatar;
-			bool bakeEnabled = GlobalSetting.BakeBlendShapes;
+			bool bakeEnabled = maEnabled && GlobalSetting.BakeBlendShapes;
 
 			bool hasVariants = popup.choices.Count > 1;
 
@@ -906,7 +907,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			else
 			{
-				popup.SetEnabled(maEnabled);
+				popup.SetEnabled(true);
 			}
 		}
 
@@ -935,6 +936,48 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				this._toolConsoleScroll.scrollOffset = new Vector2(0, float.MaxValue);
 			});
+		}
+
+		private string BuildConsoleDiagnosticInfo()
+		{
+			var sb = new System.Text.StringBuilder();
+			sb.AppendLine();
+			sb.AppendLine("--- 診断情報 ---");
+
+			sb.AppendLine($"OS: {SystemInfo.operatingSystem}");
+			sb.AppendLine($"Unity: {Application.unityVersion}");
+
+			try { sb.AppendLine($"NailTool Version: {MDNailToolDefines.Version}"); }
+			catch { sb.AppendLine("NailTool Version: (取得失敗)"); }
+
+			try
+			{
+				string packageJsonPath = "Packages/nadena.dev.modular-avatar/package.json";
+				TextAsset? packageJson = AssetDatabase.LoadAssetAtPath<TextAsset>(packageJsonPath);
+				sb.AppendLine($"ModularAvatar: {packageJson?.text switch { string t => Newtonsoft.Json.Linq.JObject.Parse(t)["version"]?.ToString() ?? "unknown", _ => "not installed" }}");
+			}
+			catch { sb.AppendLine("ModularAvatar: (取得失敗)"); }
+
+			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
+			sb.AppendLine($"Avatar: {avatar?.gameObject?.name ?? "(null)"}");
+			sb.AppendLine($"Avatar Root Scale: {avatar?.transform?.localScale.ToString() ?? "(null)"}");
+			sb.AppendLine($"AvatarName: {this._avatarDropDowns?.GetAvatarName() ?? "(未設定)"}");
+			sb.AppendLine($"Variation: {this._avatarDropDowns?.GetSelectedAvatarVariation()?.VariationName ?? "(null)"}");
+			sb.AppendLine($"NailShape: {this._nailShapeDropDown?.value ?? "(null)"}");
+			sb.AppendLine($"NailPrefab: {this._avatarDropDowns?.GetSelectedPrefab()?.name ?? "(null)"}");
+			sb.AppendLine($"ForModularAvatar: {this._forModularAvatar?.value}");
+			sb.AppendLine($"BakeBlendShapes: {this._bakeBlendShapes?.value}");
+			sb.AppendLine($"SyncBlendShapesWithMA: {this._syncBlendShapesWithMA?.value}");
+			sb.AppendLine($"ArmatureScaleCompensation: {this._armatureScaleCompensation?.value}");
+			sb.AppendLine($"UseFootNail: {this._tglFootActive?.value}");
+			sb.AppendLine($"HandActive: {this._tglHandActive?.value}");
+			sb.AppendLine($"HandDetail: {this._tglHandDetail?.value}");
+			sb.AppendLine($"FootDetail: {this._tglFootDetail?.value}");
+			sb.AppendLine($"AdditionalObjectSource: {this._additionalObjectSourceDropdown?.value ?? "(null)"}");
+			sb.AppendLine($"AdditionalMaterialSource: {this._additionalMaterialSourceDropdown?.value ?? "(null)"}");
+
+
+			return sb.ToString();
 		}
 
 		private void BindLinksUI()
@@ -1471,6 +1514,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 				Material? directMaterial = this.GetDirectMaterial();
 
+				// BlendShapeVariant ドロップダウンの状態をログ
+				{
+					var bsPopup = this._avatarDropDowns?.BlendShapeVariantPopup;
+					ToolConsole.Log($"  BlendShapeVariantPopup: null?={bsPopup == null}, index={bsPopup?.index ?? -1}, value={bsPopup?.value ?? "(null)"}, enabled={bsPopup?.enabledSelf}, choices=[{string.Join(", ", bsPopup?.choices ?? new List<string>())}]");
+					ToolConsole.Log($"  MA={this._forModularAvatar?.value}, BakeBS={this._bakeBlendShapes?.value}");
+				}
+
 				NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName)
 				{
 					AvatarName = this._avatarDropDowns.GetAvatarName(),
@@ -1495,7 +1545,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					SyncBlendShapesWithMA = (this._forModularAvatar?.value == true)
 					                     && (this._bakeBlendShapes?.value == true)
 					                     && (this._syncBlendShapesWithMA?.value == true),
-					SelectedBlendShapeVariantName = (this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == false && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
+					SelectedBlendShapeVariantName = (!(this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == true) && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
 					EnableAdditionalMaterials = true,
 					PerFingerAdditionalMaterials = this.BuildPerFingerAdditionalMaterials(false),
 					PerFingerAdditionalObjects = this.BuildPerFingerAdditionalObjects(false),

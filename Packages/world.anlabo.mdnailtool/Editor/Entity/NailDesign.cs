@@ -14,9 +14,8 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("designName")]
 		public string DesignName { get; set; } = null!;
 
-		[JsonRequired]
 		[JsonProperty("thumbnailGUID")]
-		public string ThumbnailGUID { get; set; } = null!;
+		public string? ThumbnailGUID { get; set; }
 
 		[JsonProperty("tagColor")]
 		public string[]? TagColor { get; set; }
