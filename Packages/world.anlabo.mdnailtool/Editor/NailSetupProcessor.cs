@@ -1121,6 +1121,19 @@ namespace world.anlabo.mdnailtool.Editor {
 			HumanDescription humanDescription = animatorAvatar.humanDescription;
 			HumanBone[] humanBones = humanDescription.human;
 			Dictionary<string, string> boneNameDictionary = humanBones.ToDictionary(humanBone => humanBone.humanName, humanBone => humanBone.boneName);
+
+			// HumanoidリグのHipsからアーマチュアルートを特定（ヒエラルキー順や衣装Armatureに依存しない）
+			Transform? armatureRoot = null;
+			Transform? hipsTransform = avatarAnimator.GetBoneTransform(HumanBodyBones.Hips);
+			if (hipsTransform != null) {
+				armatureRoot = hipsTransform.parent;
+				while (armatureRoot != null && armatureRoot.parent != avatar.transform) {
+					armatureRoot = armatureRoot.parent;
+				}
+			}
+			// 特定できなければアバター全体をフォールバック
+			Transform searchRoot = armatureRoot != null ? armatureRoot : avatar.transform;
+
 			return MDNailToolDefines.TARGET_BONE_NAME_LIST
 				.Select(name => {
 					if (MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST.Contains(name)) {
@@ -1135,12 +1148,12 @@ namespace world.anlabo.mdnailtool.Editor {
 							Debug.LogWarning($"Not found bone : {handFingerBonePath}");
 						}
 
-						return (name, avatar.transform.FindRecursive(boneNameDictionary[name]));
+						return (name, searchRoot.FindRecursive(boneNameDictionary[name]));
 					}
 
 
 					if (boneMappingOverride != null && boneMappingOverride.TryGetValue(name, out string footFingerBonePath)) {
-						// ボーンが上書きされていればそれを反す
+						// ボーンが上書きされていればそれを返す
 						Transform? targetBone = avatar.transform.Find(footFingerBonePath);
 						if (targetBone != null) {
 							return (name, targetBone);
@@ -1162,7 +1175,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 					string? targetBoneName = boneNameDictionary.GetValueOrDefault(toeBoneName);
 					targetBoneName ??= boneNameDictionary.GetValueOrDefault(footBoneName, "");
-					return (name, avatar.transform.FindRecursive(targetBoneName));
+					return (name, searchRoot.FindRecursive(targetBoneName));
 				})
 				.ToDictionary(tuple => tuple.name, tuple => tuple.Item2);
 		}
