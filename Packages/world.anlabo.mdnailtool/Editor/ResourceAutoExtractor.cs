@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -336,9 +336,6 @@ namespace world.anlabo.mdnailtool.Editor {
             if (zipPath == null) return;
 
             string assetsPrefabPath = ASSETS_RESOURCE_PATH + "Nail/Prefab/" + prefabFolderName + "/";
-            
-            if (Directory.Exists(assetsPrefabPath)) return;
-            
             string prefabPrefix = "Nail/Prefab/" + prefabFolderName + "/";
 
             try {
