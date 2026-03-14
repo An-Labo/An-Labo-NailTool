@@ -30,15 +30,15 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		}
 
 		public override bool IsInstalledMaterialVariation(string materialName) {
-			throw new System.NotImplementedException();
+			return true;
 		}
 
 		public override bool IsInstalledColorVariation(string materialName, string colorName) {
-			throw new System.NotImplementedException();
+			return true;
 		}
 
 		public override bool IsSupportedNailShape(string shapeName) {
-			throw new System.NotImplementedException();
+			return true;
 		}
 	}
 }
