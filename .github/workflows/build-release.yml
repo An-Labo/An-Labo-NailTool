@@ -78,3 +78,27 @@ jobs:
       - name: Push changes
         run: |
           git push
+
+      - name: Discord Notification
+        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.NAILTOOL_UPDATE_WEBHOOK }}
+          VERSION: ${{ steps.version.outputs.prop }}
+          BODY: ${{ steps.commit_msg.outputs.body }}
+        run: |
+          ESCAPED_BODY=$(printf '%s' "$BODY" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+          curl -s -o /dev/null \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"username\": \"An-Labo NailTool\",
+              \"embeds\": [{
+                \"title\": \"An-Labo NailTool ${VERSION} をリリースしました\",
+                \"url\": \"https://github.com/An-Labo/An-Labo-NailTool/releases/tag/${VERSION}\",
+                \"description\": ${ESCAPED_BODY},
+                \"color\": 5814783,
+                \"footer\": {
+                  \"text\": \"VCC から更新できます\"
+                }
+              }]
+            }" \
+            "$DISCORD_WEBHOOK"
