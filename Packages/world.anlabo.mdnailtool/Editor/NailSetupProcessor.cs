@@ -22,6 +22,13 @@ using nadena.dev.modular_avatar.core;
 #nullable enable
 
 namespace world.anlabo.mdnailtool.Editor {
+	/// <summary>
+	/// ユーザー向けエラーメッセージを持つ例外
+	/// </summary>
+	public class NailSetupUserException : Exception {
+		public NailSetupUserException(string message) : base(message) { }
+	}
+
 	public class NailSetupProcessor {
 		private VRCAvatarDescriptor Avatar { get; }
 		private AvatarVariation AvatarVariationData { get; }
@@ -63,6 +70,15 @@ namespace world.anlabo.mdnailtool.Editor {
 
 
 		public void Process() {
+			// Animatorチェック
+			Animator avatarAnimator = this.Avatar.GetComponent<Animator>();
+			if (avatarAnimator == null) {
+				throw new NailSetupUserException(LanguageManager.S("error.execute.no_animator"));
+			}
+			if (avatarAnimator.avatar == null) {
+				throw new NailSetupUserException(LanguageManager.S("error.execute.no_avatar_rig"));
+			}
+
 			if (this.Backup) {
 				this.CreateBackup();
 			}
@@ -130,6 +146,9 @@ namespace world.anlabo.mdnailtool.Editor {
 					this.NailPrefab = current;
 				}
 			}
+			if (this.NailPrefab == null) {
+				throw new NailSetupUserException(LanguageManager.S("error.execute.nail_prefab_load_failed"));
+			}
 			GameObject nailPrefabObject = Object.Instantiate(this.NailPrefab, this.Avatar.transform);
 			{
 				var firstEntry = this.NailDesignAndVariationNames.FirstOrDefault(t => t.Item1 != null);
@@ -150,6 +169,13 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			// 装着対象ボーンの取得
 			Dictionary<string, Transform?> targetBoneDictionary = GetTargetBoneDictionary(this.Avatar, this.AvatarVariationData.BoneMappingOverride);
+
+			// 指ボーン存在チェック
+			bool hasAnyFingerBone = MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST
+				.Any(name => targetBoneDictionary.ContainsKey(name) && targetBoneDictionary[name] != null);
+			if (!hasAnyFingerBone) {
+				throw new NailSetupUserException(LanguageManager.S("error.execute.no_finger_bones"));
+			}
 
 			// プレハブ内のネイルオブジェクトを取得
 			Transform?[] handsNailObjects = GetHandsNailObjectList(nailPrefabObject);

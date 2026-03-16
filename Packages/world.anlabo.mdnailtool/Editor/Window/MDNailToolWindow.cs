@@ -92,6 +92,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private VisualElement? _errorDetailArea;
 		private Label? _errorDetailText;
 		private bool _errorDetailExpanded = false;
+		private int _userErrorCount = 0;
+		private VisualElement? _contactLinksArea;
 
 		// ---- Warning Banner ----
 		private VisualElement? _warningBanner;
@@ -1075,6 +1077,77 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void HideErrorBanner()
 		{
 			if (this._errorBanner != null) this._errorBanner.style.display = DisplayStyle.None;
+			if (this._contactLinksArea != null) this._contactLinksArea.style.display = DisplayStyle.None;
+		}
+
+		private void ShowContactLinks(string errorText)
+		{
+			if (this._errorBanner == null) return;
+
+			// 既存のcontactLinksAreaがあれば削除
+			if (this._contactLinksArea != null) {
+				this._contactLinksArea.RemoveFromHierarchy();
+			}
+
+			this._contactLinksArea = new VisualElement();
+			this._contactLinksArea.style.marginTop = 8;
+
+			// 問い合わせ案内テキスト
+			var contactLabel = new Label(S("error.execute.contact_prompt"));
+			contactLabel.style.marginBottom = 4;
+			contactLabel.style.whiteSpace = WhiteSpace.Normal;
+			this._contactLinksArea.Add(contactLabel);
+
+			// ボタン行
+			var buttonRow = new VisualElement();
+			buttonRow.style.flexDirection = FlexDirection.Row;
+			buttonRow.style.flexWrap = Wrap.Wrap;
+
+			// エラーコピーボタン
+			var copyButton = new Button(() => {
+				GUIUtility.systemCopyBuffer = errorText;
+			});
+			copyButton.text = S("error.execute.copy_error");
+			copyButton.style.marginRight = 4;
+			copyButton.style.marginBottom = 4;
+			copyButton.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f);
+			copyButton.style.color = Color.white;
+			buttonRow.Add(copyButton);
+
+			// Discord (紫)
+			var discordButton = new Button(() => {
+				Application.OpenURL("https://discord.gg/anlabo");
+			});
+			discordButton.text = "Discord";
+			discordButton.style.marginRight = 4;
+			discordButton.style.marginBottom = 4;
+			discordButton.style.backgroundColor = new Color(0.34f, 0.40f, 0.95f);
+			discordButton.style.color = Color.white;
+			buttonRow.Add(discordButton);
+
+			// BOOTH (オレンジ)
+			var boothButton = new Button(() => {
+				Application.OpenURL("https://accounts.booth.pm/conversations/5331544/messages");
+			});
+			boothButton.text = "BOOTH";
+			boothButton.style.marginRight = 4;
+			boothButton.style.marginBottom = 4;
+			boothButton.style.backgroundColor = new Color(0.82f, 0.17f, 0.20f);
+			boothButton.style.color = Color.white;
+			buttonRow.Add(boothButton);
+
+			// X (黒)
+			var xButton = new Button(() => {
+				Application.OpenURL("https://x.com/an_labo_virtual");
+			});
+			xButton.text = "X";
+			xButton.style.marginBottom = 4;
+			xButton.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f);
+			xButton.style.color = Color.white;
+			buttonRow.Add(xButton);
+
+			this._contactLinksArea.Add(buttonRow);
+			this._errorBanner.Add(this._contactLinksArea);
 		}
 
 		private void ToggleErrorDetail()
@@ -1616,10 +1689,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				string successMessage = BuildSuccessMessage(isHandActive, isFootActive);
 				EditorUtility.DisplayDialog(S("dialog.finished"), successMessage, "OK");
 			}
+			catch (NailSetupUserException e)
+			{
+				Debug.LogWarning($"[MDNailTool] {e.Message}\n{e.StackTrace}");
+				this.ShowErrorBanner(e.Message);
+				this._userErrorCount++;
+				if (this._userErrorCount >= 2) {
+					this.ShowContactLinks(e.ToString());
+				}
+			}
 			catch (Exception e)
 			{
 				Debug.LogError(e);
-				this.ShowErrorBanner(S("error.execute.failed"), e);
+				this.ShowErrorBanner(S("error.execute.unexpected"), e);
+				this.ShowContactLinks(e.ToString());
 			}
 			finally
 			{
