@@ -44,7 +44,7 @@ jobs:
       - name: Get commit message
         id: commit_msg
         run: |
-          BODY=$(git log -1 --pretty=%B | tail -n +2 | sed '/^Co-Authored-By:/d' | sed '/^$/d')
+          BODY=$(git log -1 --pretty=%s)
           echo "body<<EOFBODY" >> $GITHUB_OUTPUT
           echo "$BODY" >> $GITHUB_OUTPUT
           echo "EOFBODY" >> $GITHUB_OUTPUT
