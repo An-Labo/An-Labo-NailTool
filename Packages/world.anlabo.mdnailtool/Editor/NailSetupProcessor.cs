@@ -1274,10 +1274,10 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 		/// <summary>
-		/// アバターのプリファブ（またはFBX）を一時的にインスタンス化し、標準ボーンtransformを参照して
+		/// アバターのFBXを一時的にインスタンス化し、標準ボーンtransformを参照して
 		/// ネイルの補正済みワールド位置・回転・スケールを計算する。
-		/// プリファブを優先的に使用することで、アバター制作者がFBXインポート後に調整したボーン位置も
-		/// 正確に反映できる（特に足ボーンで重要）。プリファブが取得できない場合はFBXにフォールバック。
+		/// FBXのインポート時の標準状態を基準にすることで、ユーザーがスケール変更した
+		/// アバターをPrefab化していても正しく差分を検出できる。
 		/// 実際のアバターのボーンは一切変更しないため、復元処理が不要で精度劣化がない。
 		/// </summary>
 		internal static Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>
@@ -1289,28 +1289,14 @@ namespace world.anlabo.mdnailtool.Editor {
 		{
 			var result = new Dictionary<Transform, (Vector3, Quaternion, Vector3)>();
 
-			// 1. 基準となるアバターアセットを取得
-			//    優先: プリファブソース（制作者の調整が反映されている）
-			//    フォールバック: FBXモデル（インポート時の標準状態）
-			GameObject? referenceAsset = null;
+			// 基準となるFBXモデルを取得（インポート時の標準状態）
+			Animator? avatarAnimator = avatar.GetComponent<Animator>();
+			if (avatarAnimator == null || avatarAnimator.avatar == null) return result;
 
-			// プリファブソースを試行
-			GameObject? prefabSource = PrefabUtility.GetCorrespondingObjectFromOriginalSource(avatar.gameObject);
-			if (prefabSource != null)
-			{
-				referenceAsset = prefabSource;
-			}
-			else
-			{
-				// FBXにフォールバック
-				Animator? avatarAnimator = avatar.GetComponent<Animator>();
-				if (avatarAnimator == null || avatarAnimator.avatar == null) return result;
+			string modelPath = AssetDatabase.GetAssetPath(avatarAnimator.avatar);
+			if (string.IsNullOrEmpty(modelPath)) return result;
 
-				string modelPath = AssetDatabase.GetAssetPath(avatarAnimator.avatar);
-				if (!string.IsNullOrEmpty(modelPath))
-					referenceAsset = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
-			}
-
+			GameObject? referenceAsset = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
 			if (referenceAsset == null) return result;
 
 			GameObject tempInstance = Object.Instantiate(referenceAsset);
