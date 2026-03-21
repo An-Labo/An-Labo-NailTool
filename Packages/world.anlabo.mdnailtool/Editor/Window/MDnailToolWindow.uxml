@@ -305,21 +305,21 @@
                         class="mdn-option-label mdn-option-clickable" />
                 </ui:VisualElement>
 
-                <!-- デバッグモード -->
+                <!-- トラブルシューティング -->
                 <ui:VisualElement class="mdn-option-row">
                     <ui:Toggle name="enable-tool-console" class="mdn-toggle" />
                     <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
                         name="label-tool-console"
                         text-id="window.debug_mode"
+                        tooltip-id="tooltip.debug_mode"
                         class="mdn-option-label mdn-option-clickable" />
                 </ui:VisualElement>
 
-                <!-- Console表示領域 -->
+                <!-- ログ表示領域 -->
                 <ui:VisualElement name="tool-console-container" class="mdn-tool-console-container">
                     <ui:VisualElement class="mdn-tool-console-header">
-                        <ui:Label text="Console" class="mdn-tool-console-title" />
-                        <ui:Button name="tool-console-copy" text="Copy" class="mdn-tool-console-header-btn" />
-                        <ui:Button name="tool-console-clear" text="Clear" class="mdn-tool-console-header-btn" />
+                        <ui:Label name="tool-console-title" class="mdn-tool-console-title" />
+                        <ui:Button name="tool-console-copy" class="mdn-tool-console-header-btn" />
                     </ui:VisualElement>
                     <ui:ScrollView name="tool-console-scroll" class="mdn-tool-console-scroll" />
                 </ui:VisualElement>

@@ -111,16 +111,7 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(ENABLE_SCENE_WEARING_PREVIEW_KEY, value);
 		}
 
-		private const string ENABLE_TOOL_CONSOLE_KEY = "world.anlabo.mdnailtool.enable_tool_console";
-		internal static bool EnableToolConsole
-		{
-			get
-			{
-				if (!EditorPrefs.HasKey(ENABLE_TOOL_CONSOLE_KEY)) return false;
-				return EditorPrefs.GetBool(ENABLE_TOOL_CONSOLE_KEY);
-			}
-			set => EditorPrefs.SetBool(ENABLE_TOOL_CONSOLE_KEY, value);
-		}
+		internal static bool EnableToolConsole { get; set; }
 
 		private const string USE_MODULAR_AVATAR_KEY = "world.anlabo.mdnailtool.use_modular_avatar";
 		internal static bool UseModularAvatar
@@ -305,7 +296,6 @@ namespace world.anlabo.mdnailtool.Editor
 			EditorPrefs.DeleteKey(ENABLE_ADDITIONAL_MATERIALS_KEY);
 			EditorPrefs.DeleteKey(ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY);
 			EditorPrefs.DeleteKey(ADDITIONAL_OBJECT_SOURCE_DESIGN_KEY);
-			EditorPrefs.DeleteKey(ENABLE_TOOL_CONSOLE_KEY);
 			EditorPrefs.DeleteKey(ARMATURE_SCALE_COMPENSATION_KEY);
 		}
 

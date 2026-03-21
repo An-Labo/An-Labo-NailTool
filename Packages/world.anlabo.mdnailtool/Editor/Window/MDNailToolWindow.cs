@@ -436,7 +436,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				});
 			}
 
-			// ツール内Console
+			// トラブルシューティング
 			this._enableToolConsole = this.rootVisualElement.Q<Toggle>("enable-tool-console");
 			this._toolConsoleContainer = this.rootVisualElement.Q<VisualElement>("tool-console-container");
 			this._toolConsoleScroll = this.rootVisualElement.Q<ScrollView>("tool-console-scroll");
@@ -456,8 +456,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				if (this._enableToolConsole != null) this._enableToolConsole.value = !this._enableToolConsole.value;
 			});
 
-			// Copyボタン
+			// ログタイトル設定
+			var consoleTitle = this.rootVisualElement.Q<Label>("tool-console-title");
+			if (consoleTitle != null) consoleTitle.text = S("window.debug_log_title") ?? "Log";
+
+			// サポート情報コピーボタン
 			var copyBtn = this.rootVisualElement.Q<Button>("tool-console-copy");
+			if (copyBtn != null) copyBtn.text = S("window.debug_copy") ?? "Copy Support Info";
 			copyBtn?.RegisterCallback<ClickEvent>(_ =>
 			{
 				if (this._toolConsoleScroll == null) return;
@@ -467,14 +472,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				string text = string.Join("\n", lines);
 				text += this.BuildConsoleDiagnosticInfo();
 				EditorGUIUtility.systemCopyBuffer = text;
-			});
-
-			// Clearボタン
-			var clearBtn = this.rootVisualElement.Q<Button>("tool-console-clear");
-			clearBtn?.RegisterCallback<ClickEvent>(_ =>
-			{
-				this._toolConsoleScroll?.Clear();
-				ToolConsole.Clear();
 			});
 
 			// ToolConsole コールバック接続
@@ -993,6 +990,35 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			sb.AppendLine($"AdditionalObjectSource: {this._additionalObjectSourceDropdown?.value ?? "(null)"}");
 			sb.AppendLine($"AdditionalMaterialSource: {this._additionalMaterialSourceDropdown?.value ?? "(null)"}");
 
+			// Body BlendShape状態（値が0でないもののみ）
+			if (avatar != null)
+			{
+				try
+				{
+					SkinnedMeshRenderer? visemeSmr = avatar.VisemeSkinnedMesh;
+					var bodySmr = avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+						.Where(smr => smr != visemeSmr && smr.sharedMesh != null && smr.sharedMesh.blendShapeCount > 0)
+						.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
+						.FirstOrDefault();
+					if (bodySmr != null && bodySmr.sharedMesh != null)
+					{
+						sb.AppendLine($"--- Body BlendShapes ({bodySmr.gameObject.name}) ---");
+						Mesh mesh = bodySmr.sharedMesh;
+						bool hasNonZero = false;
+						for (int i = 0; i < mesh.blendShapeCount; i++)
+						{
+							float weight = bodySmr.GetBlendShapeWeight(i);
+							if (weight != 0f)
+							{
+								sb.AppendLine($"  {mesh.GetBlendShapeName(i)}: {weight:F1}");
+								hasNonZero = true;
+							}
+						}
+						if (!hasNonZero) sb.AppendLine("  (all zero)");
+					}
+				}
+				catch { /* BlendShape取得失敗時は無視 */ }
+			}
 
 			return sb.ToString();
 		}
@@ -1611,7 +1637,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 				NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName)
 				{
-					AvatarName = this._avatarDropDowns.GetAvatarName(),
+					AvatarName = this._avatarDropDowns?.GetAvatarName(),
 					OverrideMesh = overrideMesh,
 					UseFootNail = isFootActive,
 					RemoveCurrentNail = this._removeCurrentNail!.value,
