@@ -23,6 +23,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("tag")]
 		public string[]? Tag { get; set; }
 
+		[JsonProperty("subTags")]
+		public string[]? SubTags { get; set; }
+
 		[JsonProperty("url")]
 		public string? Url { get; set; }
 

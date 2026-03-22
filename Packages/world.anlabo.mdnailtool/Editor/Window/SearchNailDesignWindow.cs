@@ -65,6 +65,22 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             {"orange", new Color(1f, 0.5f, 0f)}
         };
 
+        // カラーグループ: ボタンの色を押すと、近い色もまとめてヒットする
+        // 追加・変更はここだけでOK
+        private static readonly Dictionary<string, string[]> _colorGroup = new() {
+            {"white",  new[] { "white", "transparent" }},
+            {"black",  new[] { "black" }},
+            {"gray",   new[] { "gray", "silver" }},
+            {"brown",  new[] { "brown", "beige" }},
+            {"green",  new[] { "green", "teal" }},
+            {"blue",   new[] { "blue", "navy", "cyan" }},
+            {"purple", new[] { "purple", "lavender", "magenta" }},
+            {"red",    new[] { "red", "coral" }},
+            {"yellow", new[] { "yellow" }},
+            {"pink",   new[] { "pink" }},
+            {"orange", new[] { "orange", "gold" }},
+        };
+
         public static void ShowWindow(MDNailToolWindow parentWindow) {
             SearchNailDesignWindow window = CreateInstance<SearchNailDesignWindow>();
             string title = LanguageManager.S("window.search_nail") ?? "Search Nail";
@@ -335,6 +351,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             _filteredDesigns = _allDesigns.Where(d => {
                 if (!string.IsNullOrEmpty(_searchText)) {
                     bool match = d.DisplayNames.Values.Any(n => n.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (!match && d.SubTags != null)
+                        match = d.SubTags.Any(t => t.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) >= 0);
                     if (!match) return false;
                 }
                 bool isInstalled = INailProcessor.IsInstalledDesign(d.DesignName);
@@ -345,8 +363,15 @@ namespace world.anlabo.mdnailtool.Editor.Window {
                     if (_activeTags.Any(t => !d.Tag.Contains(t))) return false;
                 }
                 if (_activeColors.Count > 0) {
-                    if (d.TagColor == null) return false;
-                    if (_activeColors.Any(c => !d.TagColor.Contains(c))) return false;
+                    foreach (var c in _activeColors) {
+                        var group = _colorGroup.TryGetValue(c, out var g) ? g : new[] { c };
+                        bool found = false;
+                        foreach (var gc in group) {
+                            if (d.TagColor != null && d.TagColor.Contains(gc)) { found = true; break; }
+                            if (d.SubTags != null && d.SubTags.Any(t => string.Equals(t, gc, StringComparison.OrdinalIgnoreCase))) { found = true; break; }
+                        }
+                        if (!found) return false;
+                    }
                 }
                 return true;
             }).ToList();
