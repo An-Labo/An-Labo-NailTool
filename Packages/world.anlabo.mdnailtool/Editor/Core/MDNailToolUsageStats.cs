@@ -15,14 +15,21 @@ namespace world.anlabo.mdnailtool.Editor
 		{
 			Dictionary<string, DateTime> lastUsedTimes = GlobalSetting.DesignLastUsedTimes;
 			Dictionary<string, int> designUsedCounts = GlobalSetting.DesignUseCount;
+			Dictionary<string, int> colorVariationUseCount = GlobalSetting.ColorVariationUseCount;
 			Dictionary<string, int> avatarUseCount = GlobalSetting.AvatarUseCount;
 
 			HashSet<string> uniqueDesignNames = new();
-			foreach ((INailProcessor nailProcessor, string _, string _) in designAndVariationNames)
+			HashSet<string> uniqueCvKeys = new();
+			foreach ((INailProcessor nailProcessor, string _, string colorName) in designAndVariationNames)
 			{
 				if (nailProcessor != null && !string.IsNullOrEmpty(nailProcessor.DesignName))
 				{
 					uniqueDesignNames.Add(nailProcessor.DesignName);
+
+					if (!string.IsNullOrEmpty(colorName))
+					{
+						uniqueCvKeys.Add($"{nailProcessor.DesignName}:{colorName}");
+					}
 				}
 			}
 
@@ -32,10 +39,16 @@ namespace world.anlabo.mdnailtool.Editor
 				designUsedCounts[dName] = designUsedCounts.GetValueOrDefault(dName, 0) + 1;
 			}
 
+			foreach (string cvKey in uniqueCvKeys)
+			{
+				colorVariationUseCount[cvKey] = colorVariationUseCount.GetValueOrDefault(cvKey, 0) + 1;
+			}
+
 			avatarUseCount[avatarKey] = avatarUseCount.GetValueOrDefault(avatarKey, 0) + 1;
 
 			GlobalSetting.DesignLastUsedTimes = lastUsedTimes;
 			GlobalSetting.DesignUseCount = designUsedCounts;
+			GlobalSetting.ColorVariationUseCount = colorVariationUseCount;
 			GlobalSetting.AvatarUseCount = avatarUseCount;
 		}
 

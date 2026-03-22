@@ -266,6 +266,18 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetString(DESIGN_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
 		}
 
+		private const string COLOR_VARIATION_USE_COUNT_KEY = "world.anlabo.mdnailtool.color_variation_count";
+		internal static Dictionary<string, int> ColorVariationUseCount
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(COLOR_VARIATION_USE_COUNT_KEY)) return new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(COLOR_VARIATION_USE_COUNT_KEY);
+				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
+			}
+			set => EditorPrefs.SetString(COLOR_VARIATION_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
+		}
+
 		private const string AVATAR_USE_COUNT_KEY = "world.anlabo.mdnailtool.avatar_count";
 		internal static Dictionary<string, int> AvatarUseCount
 		{
@@ -291,6 +303,7 @@ namespace world.anlabo.mdnailtool.Editor
 			EditorPrefs.DeleteKey(MERGE_ANLABO_EXPRESSION_MENU_KEY);
 			EditorPrefs.DeleteKey(DESIGN_LAST_USED_TIMES_KEY);
 			EditorPrefs.DeleteKey(DESIGN_USE_COUNT_KEY);
+			EditorPrefs.DeleteKey(COLOR_VARIATION_USE_COUNT_KEY);
 			EditorPrefs.DeleteKey(AVATAR_USE_COUNT_KEY);
 			EditorPrefs.DeleteKey(ENABLE_SCENE_PREVIEW_KEY);
 			EditorPrefs.DeleteKey(ENABLE_ADDITIONAL_MATERIALS_KEY);

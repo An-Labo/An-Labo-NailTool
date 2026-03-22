@@ -42,6 +42,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("colorVariation")]
 		public IReadOnlyDictionary<string, NailColorVariation> ColorVariation { get; set; } = null!;
 
+		[JsonProperty("dominantColors")]
+		public DominantColor[]? DominantColors { get; set; }
+
 		[JsonProperty("additionalMaterialGUIDs")]
 		public string[]? AdditionalMaterialGUIDs { get; set; }
 
