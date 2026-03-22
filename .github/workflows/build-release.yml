@@ -86,6 +86,21 @@ jobs:
         run: |
           git push
 
+      - name: Wait for GitHub Pages deployment
+        if: success()
+        run: |
+          echo "Waiting for GitHub Pages to deploy vpm.json..."
+          for i in $(seq 1 12); do
+            sleep 15
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://an-labo.github.io/An-Labo-NailTool/vpm.json")
+            CONTENT=$(curl -s "https://an-labo.github.io/An-Labo-NailTool/vpm.json" | grep -o '"version":"[^"]*"' | tail -1)
+            echo "  Check $i: HTTP $STATUS, latest=$CONTENT"
+            if echo "$CONTENT" | grep -q "${{ steps.version.outputs.prop }}"; then
+              echo "vpm.json updated successfully!"
+              break
+            fi
+          done
+
       - name: Discord Notification
         if: success()
         env:
