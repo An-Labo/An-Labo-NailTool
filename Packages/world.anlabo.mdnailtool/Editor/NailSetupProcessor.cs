@@ -445,12 +445,15 @@ namespace world.anlabo.mdnailtool.Editor {
 							string? variantPath = ResolveVariantPath(variant);
 							if (string.IsNullOrEmpty(variantPath))
 							{
-								string msg = LanguageManager.CurrentLanguageData.language == "ja"
-								? $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"
-								: $"Variant '{variant.Name}': path not found for GUID={variant.NailPrefabGUID}";
-								msg += BuildDiagnosticInfo(includeFolder: true);
-								Debug.LogWarning($"[MDNailTool] {msg}");
-								this.Warnings.Add(msg);
+								if (!string.IsNullOrEmpty(variant.NailPrefabGUID))
+								{
+									string msg = LanguageManager.CurrentLanguageData.language == "ja"
+									? $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"
+									: $"Variant '{variant.Name}': path not found for GUID={variant.NailPrefabGUID}";
+									msg += BuildDiagnosticInfo(includeFolder: true);
+									Debug.LogWarning($"[MDNailTool] {msg}");
+									this.Warnings.Add(msg);
+								}
 								continue;
 							}
 							AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceSynchronousImport);

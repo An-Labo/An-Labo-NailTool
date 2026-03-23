@@ -266,16 +266,16 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetString(DESIGN_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
 		}
 
-		private const string COLOR_VARIATION_USE_COUNT_KEY = "world.anlabo.mdnailtool.color_variation_count";
-		internal static Dictionary<string, int> ColorVariationUseCount
+		private const string VARIATION_USE_COUNT_KEY = "world.anlabo.mdnailtool.variation_count";
+		internal static Dictionary<string, int> VariationUseCount
 		{
 			get
 			{
-				if (!EditorPrefs.HasKey(COLOR_VARIATION_USE_COUNT_KEY)) return new Dictionary<string, int>();
-				string json = EditorPrefs.GetString(COLOR_VARIATION_USE_COUNT_KEY);
+				if (!EditorPrefs.HasKey(VARIATION_USE_COUNT_KEY)) return new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(VARIATION_USE_COUNT_KEY);
 				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
 			}
-			set => EditorPrefs.SetString(COLOR_VARIATION_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
+			set => EditorPrefs.SetString(VARIATION_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
 		}
 
 		private const string AVATAR_USE_COUNT_KEY = "world.anlabo.mdnailtool.avatar_count";
@@ -288,6 +288,54 @@ namespace world.anlabo.mdnailtool.Editor
 				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
 			}
 			set => EditorPrefs.SetString(AVATAR_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
+		}
+
+		private const string NAIL_SHAPE_USE_COUNT_KEY = "world.anlabo.mdnailtool.nail_shape_count";
+		internal static Dictionary<string, int> NailShapeUseCount
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(NAIL_SHAPE_USE_COUNT_KEY)) return new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(NAIL_SHAPE_USE_COUNT_KEY);
+				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
+			}
+			set => EditorPrefs.SetString(NAIL_SHAPE_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
+		}
+
+		private const string ADDITIONAL_MATERIAL_USE_COUNT_KEY = "world.anlabo.mdnailtool.additional_material_count";
+		internal static Dictionary<string, int> AdditionalMaterialUseCount
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ADDITIONAL_MATERIAL_USE_COUNT_KEY)) return new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(ADDITIONAL_MATERIAL_USE_COUNT_KEY);
+				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
+			}
+			set => EditorPrefs.SetString(ADDITIONAL_MATERIAL_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
+		}
+
+		private const string ADDITIONAL_OBJECT_USE_COUNT_KEY = "world.anlabo.mdnailtool.additional_object_count";
+		internal static Dictionary<string, int> AdditionalObjectUseCount
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(ADDITIONAL_OBJECT_USE_COUNT_KEY)) return new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(ADDITIONAL_OBJECT_USE_COUNT_KEY);
+				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
+			}
+			set => EditorPrefs.SetString(ADDITIONAL_OBJECT_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
+		}
+
+		private const string OPTION_USE_COUNT_KEY = "world.anlabo.mdnailtool.option_count";
+		internal static Dictionary<string, int> OptionUseCount
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(OPTION_USE_COUNT_KEY)) return new Dictionary<string, int>();
+				string json = EditorPrefs.GetString(OPTION_USE_COUNT_KEY);
+				return JsonConvert.DeserializeObject<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
+			}
+			set => EditorPrefs.SetString(OPTION_USE_COUNT_KEY, JsonConvert.SerializeObject(value));
 		}
 
 		public static void ClearGlobalSettings()
@@ -303,8 +351,12 @@ namespace world.anlabo.mdnailtool.Editor
 			EditorPrefs.DeleteKey(MERGE_ANLABO_EXPRESSION_MENU_KEY);
 			EditorPrefs.DeleteKey(DESIGN_LAST_USED_TIMES_KEY);
 			EditorPrefs.DeleteKey(DESIGN_USE_COUNT_KEY);
-			EditorPrefs.DeleteKey(COLOR_VARIATION_USE_COUNT_KEY);
+			EditorPrefs.DeleteKey(VARIATION_USE_COUNT_KEY);
 			EditorPrefs.DeleteKey(AVATAR_USE_COUNT_KEY);
+			EditorPrefs.DeleteKey(NAIL_SHAPE_USE_COUNT_KEY);
+			EditorPrefs.DeleteKey(ADDITIONAL_MATERIAL_USE_COUNT_KEY);
+			EditorPrefs.DeleteKey(ADDITIONAL_OBJECT_USE_COUNT_KEY);
+			EditorPrefs.DeleteKey(OPTION_USE_COUNT_KEY);
 			EditorPrefs.DeleteKey(ENABLE_SCENE_PREVIEW_KEY);
 			EditorPrefs.DeleteKey(ENABLE_ADDITIONAL_MATERIALS_KEY);
 			EditorPrefs.DeleteKey(ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY);

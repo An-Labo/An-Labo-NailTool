@@ -1697,7 +1697,15 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				if (!isFootActive) this.RemoveFootNailObjects(avatar);
 
 				string avatarKey = this._avatarDropDowns!.GetAvatarKey();
-				MDNailToolUsageStats.Update(designAndVariationNames, avatarKey);
+				MDNailToolUsageStats.Update(
+					designAndVariationNames,
+					avatarKey,
+					nailShapeName: nailShapeName,
+					isHandActive: isHandActive,
+					isFootActive: isFootActive,
+					useModularAvatar: this._forModularAvatar?.value == true,
+					additionalMaterialSource: GlobalSetting.AdditionalMaterialSourceDesign,
+					additionalObjectSource: GlobalSetting.AdditionalObjectSourceDesign);
 				this._nailDesignSelect!.Init();
 
 				this.HideErrorBanner();
