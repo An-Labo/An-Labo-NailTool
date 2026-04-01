@@ -73,6 +73,21 @@ namespace world.anlabo.mdnailtool.Editor {
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
 
+            // バージョン不一致時はResourceフォルダを削除して再展開
+            if (versionMismatch && installedVersion != null) {
+                string fullResourcePath = Path.GetFullPath(ASSETS_RESOURCE_PATH);
+                if (Directory.Exists(fullResourcePath)) {
+                    Debug.Log($"[MDNailTool] バージョン変更検出 ({installedVersion} → {currentVersion}): Resourceフォルダをリセットします");
+                    try {
+                        Directory.Delete(fullResourcePath, true);
+                        string metaFile = fullResourcePath.TrimEnd('/', '\\') + ".meta";
+                        if (File.Exists(metaFile)) File.Delete(metaFile);
+                    } catch (Exception e) {
+                        Debug.LogWarning($"[MDNailTool] Resourceフォルダ削除失敗: {e.Message}");
+                    }
+                }
+            }
+
             StartEssentialExtraction(currentVersion);
         }
 

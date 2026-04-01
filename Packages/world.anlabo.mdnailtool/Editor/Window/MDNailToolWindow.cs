@@ -1028,9 +1028,21 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
 			this._manualLink?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
 
+			// ヘッダーのカタログリンク
+			var catalogLink = this.rootVisualElement.Q<Label>("link-catalog");
+			catalogLink?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.catalog")));
+
 			// ヘッダーのFAQリンク
 			var headerContact = this.rootVisualElement.Q<Label>("link-contact-header");
 			headerContact?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
+
+			// 着用統計リンク
+			var usageStatsLink = this.rootVisualElement.Q<Label>("link-usage-stats");
+			if (usageStatsLink != null)
+			{
+				usageStatsLink.text = $"[{S("usage_stats.link_label") ?? "Usage Stats"}]";
+				usageStatsLink.RegisterCallback<ClickEvent>(_ => UsageStatsWindow.ShowWindow());
+			}
 
 			// フッターのコンタクトリンク
 			this._contactLink = this.rootVisualElement.Q<LocalizedLabel>("link-contact");
@@ -1046,6 +1058,74 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		var footerVersion = this.rootVisualElement.Q<Label>("version-footer");
 		if (footerVersion != null)
 			footerVersion.text = versionStr;
+
+			// おすすめ設定ボタン
+			AddRecommendButton("mdn-section-header", 3, ApplyRecommendMA);
+			AddRecommendButtonToFoldout("mdn-advanced-foldout", ApplyRecommendAdvanced);
+		}
+
+		private Button CreateRecommendButton(System.Action onClick)
+		{
+			string label = S("window.recommend") ?? "Recommended";
+			var btn = new Button(onClick) { text = label };
+			btn.style.height = 20;
+			btn.style.fontSize = 10;
+			btn.style.paddingLeft = 8;
+			btn.style.paddingRight = 8;
+			btn.style.marginLeft = new StyleLength(StyleKeyword.Auto);
+			return btn;
+		}
+
+		private void AddRecommendButton(string headerClass, int headerIndex, System.Action onClick)
+		{
+			var headers = this.rootVisualElement.Query(className: headerClass).ToList();
+			if (headerIndex < headers.Count)
+			{
+				var header = headers[headerIndex];
+				header.style.flexDirection = FlexDirection.Row;
+				header.style.justifyContent = Justify.SpaceBetween;
+				header.style.alignItems = Align.Center;
+				header.Add(CreateRecommendButton(onClick));
+			}
+		}
+
+		private void AddRecommendButtonToFoldout(string foldoutClass, System.Action onClick)
+		{
+			var foldout = this.rootVisualElement.Q(className: foldoutClass);
+			if (foldout == null) return;
+
+			var toggle = foldout.Q<Toggle>(className: "unity-foldout__toggle");
+			if (toggle == null) return;
+
+			toggle.style.flexDirection = FlexDirection.Row;
+			toggle.style.justifyContent = Justify.SpaceBetween;
+			toggle.style.alignItems = Align.Center;
+			toggle.Add(CreateRecommendButton(onClick));
+		}
+
+		private void ApplyRecommendMA()
+		{
+			if (this._forModularAvatar != null) this._forModularAvatar.value = true;
+			if (this._generateExpressionMenu != null) this._generateExpressionMenu.value = true;
+			if (this._splitHandFootExpressionMenu != null) this._splitHandFootExpressionMenu.value = true;
+			if (this._mergeAnLaboExpressionMenu != null) this._mergeAnLaboExpressionMenu.value = true;
+			if (this._bakeBlendShapes != null) this._bakeBlendShapes.value = true;
+			if (this._syncBlendShapesWithMA != null) this._syncBlendShapesWithMA.value = true;
+		}
+
+		private void ApplyRecommendAdvanced()
+		{
+			// ON
+			if (this._removeCurrentNail != null) this._removeCurrentNail.value = true;
+			if (this._backup != null) this._backup.value = true;
+			if (this._armatureScaleCompensation != null) this._armatureScaleCompensation.value = true;
+			var tglWearingPreview = this.rootVisualElement.Q<Toggle>("enable-wearing-preview");
+			if (tglWearingPreview != null) tglWearingPreview.value = true;
+
+			// OFF
+			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = false;
+			if (this._penetrationCorrection != null) this._penetrationCorrection.value = false;
+			if (this._enableToolConsole != null) this._enableToolConsole.value = false;
 		}
 
 		private void BindErrorBanner()

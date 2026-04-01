@@ -17,7 +17,10 @@
             <!-- Manual / FAQ リンク行 -->
             <ui:VisualElement class="mdn-helplink-row">
                 <ui:Label text="[Manual]" name="link-manual" class="mdn-link mdn-helplink-item" />
-                <ui:Label text="[FAQ / Contact]" name="link-contact-header" class="mdn-link mdn-helplink-item" />
+                <ui:Label text="[Catalog]" name="link-catalog" class="mdn-link mdn-helplink-item" />
+                <ui:Label text="[FAQ]" name="link-contact-header" class="mdn-link mdn-helplink-item" />
+                <ui:VisualElement class="mdn-spacer" />
+                <ui:Label text="[Usage Stats]" name="link-usage-stats" class="mdn-link mdn-helplink-item" />
             </ui:VisualElement>
         </ui:VisualElement>
 
