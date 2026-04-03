@@ -548,7 +548,8 @@ namespace world.anlabo.mdnailtool.Editor {
 								}
 								vNail.SetParent(targetBone, true);
 							}
-							handVariants.Add((variant.Name, varHands, variant.LeftBlendShapeName, variant.RightBlendShapeName));
+							if (varHands.Any(t => t != null))
+								handVariants.Add((variant.Name, varHands, variant.LeftBlendShapeName, variant.RightBlendShapeName));
 
 							if (this.UseFootNail)
 							{
@@ -584,7 +585,9 @@ namespace world.anlabo.mdnailtool.Editor {
 									}
 									vNail.SetParent(targetBone, true);
 								}
-								footVariants.Add((variant.Name, varLeftFoot.Concat(varRightFoot).ToArray(), variant.LeftBlendShapeName, variant.RightBlendShapeName));
+								var varFeetAll = varLeftFoot.Concat(varRightFoot).ToArray();
+								if (varFeetAll.Any(t => t != null))
+									footVariants.Add((variant.Name, varFeetAll, variant.LeftBlendShapeName, variant.RightBlendShapeName));
 							}
 						}
 						}

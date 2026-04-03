@@ -864,18 +864,20 @@ namespace world.anlabo.mdnailtool.Editor
 
 						if (variantNail == null)
 						{
-							Debug.LogWarning($"[MDNailTool] BakeAndCombine: '{shapeName}' バリアントに '{baseNail.name}' に一致するネイルが見つかりません（スキップ）");
+							ToolConsole.Log($"BakeAndCombine: '{shapeName}' バリアントに '{baseNail.name}' に一致するネイルが見つかりません（スキップ）");
+							vOff += siVertCount;
+							continue;
 						}
 						else
 						{
 						SkinnedMeshRenderer? varSmr = variantNail.GetComponent<SkinnedMeshRenderer>();
 						if (varSmr == null || varSmr.sharedMesh == null)
 						{
-							Debug.LogWarning($"[MDNailTool] BakeAndCombine: '{baseNail.name}' のバリアントに SkinnedMeshRenderer またはメッシュがありません");
+							ToolConsole.Log($"BakeAndCombine: '{baseNail.name}' のバリアントに SkinnedMeshRenderer またはメッシュがありません");
 						}
 						else if (varSmr.sharedMesh.vertexCount != siVertCount)
 						{
-							Debug.LogWarning($"[MDNailTool] BakeAndCombine: base='{baseNail.name}' vertCount={siVertCount}, variant vertCount={varSmr.sharedMesh.vertexCount} → MISMATCH");
+							ToolConsole.Log($"BakeAndCombine: base='{baseNail.name}' vertCount={siVertCount}, variant vertCount={varSmr.sharedMesh.vertexCount} → MISMATCH");
 						}
 						if (varSmr != null && varSmr.sharedMesh != null && varSmr.sharedMesh.vertexCount == siVertCount)
 						{
@@ -958,7 +960,7 @@ namespace world.anlabo.mdnailtool.Editor
 						combinedMesh.AddBlendShapeFrame(rightName, 100f, rightDv, rightDn, rightDt);
 						if (!hasAnyDelta2)
 						{
-							Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName2}' L/R分割 デルタなし → ゼロデルタで生成しました");
+							ToolConsole.Log($"BakeAndCombine: variant='{shapeName2}' L/R分割 デルタなし → ゼロデルタで生成");
 						}
 					}
 					else
@@ -966,7 +968,7 @@ namespace world.anlabo.mdnailtool.Editor
 						combinedMesh.AddBlendShapeFrame(shapeName2, 100f, fullDv2, fullDn2, fullDt2);
 						if (!hasAnyDelta2)
 						{
-							Debug.LogWarning($"[MDNailTool] BakeAndCombine: variant='{shapeName2}' デルタなし → ゼロデルタで生成しました");
+							ToolConsole.Log($"BakeAndCombine: variant='{shapeName2}' デルタなし → ゼロデルタで生成");
 						}
 					}
 				}
