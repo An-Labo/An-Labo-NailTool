@@ -37,7 +37,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		private string NailShapeName { get; }
 		public Mesh?[]? OverrideMesh { get; set; }
 		public Material? OverrideMaterial { get; set; }
-		public string AvatarName { get; set; } = null!;
+		public string? AvatarName { get; set; }
 		public bool UseFootNail { get; set; }
 		public bool RemoveCurrentNail { get; set; }
 		public bool GenerateMaterial { get; set; }
@@ -1420,10 +1420,8 @@ namespace world.anlabo.mdnailtool.Editor {
 		{
 			using DBNailDesign db = new();
 			NailDesign? design = db.FindNailDesignByDesignName(designName);
-			if (design != null && !string.IsNullOrEmpty(design.ThumbnailGUID)) {
-				string path = AssetDatabase.GUIDToAssetPath(design.ThumbnailGUID);
-				if (!string.IsNullOrEmpty(path))
-					thumbnail = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+			if (design != null) {
+				thumbnail = MDNailToolAssetLoader.LoadThumbnail(design.ThumbnailGUID, design.DesignName);
 			}
 		}
 

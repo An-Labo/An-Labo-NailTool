@@ -182,8 +182,21 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			}
 
 			private static GameObject CreateNailObj() {
-				string prefabPath = AssetDatabase.GUIDToAssetPath(MDNailToolDefines.PREVIEW_PREFAB_GUID);
-				GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+				GameObject? prefab = MDNailToolAssetLoader.LoadByGuid<GameObject>(MDNailToolDefines.PREVIEW_PREFAB_GUID);
+				if (prefab == null) {
+					ResourceAutoExtractor.EnsurePrefabExtractedByGuid(MDNailToolDefines.PREVIEW_PREFAB_GUID);
+					prefab = MDNailToolAssetLoader.LoadByGuid<GameObject>(MDNailToolDefines.PREVIEW_PREFAB_GUID);
+				}
+				if (prefab == null) {
+					// プレビュープレハブのパスフォールバック
+					string fallbackPath = MDNailToolDefines.RESOURCE_PATH + "Preview/Preview.prefab";
+					prefab = AssetDatabase.LoadAssetAtPath<GameObject>(fallbackPath);
+				}
+				if (prefab == null) {
+					GameObject empty = new GameObject("NailPreviewPlaceholder");
+					empty.transform.position = Vector3.zero;
+					return empty;
+				}
 				GameObject cloned = Object.Instantiate(prefab);
 				cloned.name = prefab.name;
 				cloned.transform.position = Vector3.zero;
@@ -192,8 +205,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			}
 
 			private static Material CreateMaterial() {
-				string shaderPath = AssetDatabase.GUIDToAssetPath(MDNailToolDefines.PREVIEW_SHADER_GUID);
-				Shader previewShader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
+				Shader previewShader = MDNailToolAssetLoader.LoadShader(MDNailToolDefines.PREVIEW_SHADER_GUID)!;
 				return new Material(previewShader);
 			}
 		}

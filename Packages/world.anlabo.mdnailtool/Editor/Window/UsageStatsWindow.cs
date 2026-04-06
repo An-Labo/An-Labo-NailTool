@@ -1064,10 +1064,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				using DBNailDesign db = new DBNailDesign();
 				var design = db.collection.FirstOrDefault(d => d.DesignName == designName);
-				if (design == null || string.IsNullOrEmpty(design.ThumbnailGUID)) return null;
+				if (design == null) return null;
 
-				string path = AssetDatabase.GUIDToAssetPath(design.ThumbnailGUID);
-				return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+				return MDNailToolAssetLoader.LoadThumbnail(design.ThumbnailGUID, design.DesignName);
 			}
 			catch { return null; }
 		}

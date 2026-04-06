@@ -42,10 +42,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			string lang = GetLang();
 			ChangelogEntry latest = _entries[0];
 
-			string latestText = FormatEntry(latest, lang);
-			bool isNew = IsNewVersion(latest.version);
-			_summaryLabel.text = (isNew ? "NEW " : "") + latestText;
-			if (isNew) _summaryLabel.AddToClassList("mdn-changelog-new");
+			_summaryLabel.text = FormatEntry(latest, lang);
 
 		}
 
@@ -73,8 +70,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			List<string>? lines = entry.entries?.GetValueOrDefault(lang)
 			                      ?? entry.entries?.GetValueOrDefault("jp");
 			if (lines == null || lines.Count == 0) return ver;
-			string joined = string.Join(", ", lines);
-			return $"{ver}: {joined}";
+			string first = lines[0];
+			if (lines.Count > 1) first += $" (+{lines.Count - 1})";
+			return $"{ver}: {first}";
 		}
 
 		private static bool IsNewVersion(string? version) {

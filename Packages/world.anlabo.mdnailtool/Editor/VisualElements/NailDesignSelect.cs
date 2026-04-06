@@ -241,12 +241,7 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 					thumbnailButton.style.borderLeftWidth = 0;
 				}
 				
-				if (string.IsNullOrEmpty(nailDesign.ThumbnailGUID)) continue;
-
-				string thumbnailPath = AssetDatabase.GUIDToAssetPath(nailDesign.ThumbnailGUID);
-				if (string.IsNullOrEmpty(thumbnailPath)) continue;
-
-				Texture2D? thumbnail = AssetDatabase.LoadAssetAtPath<Texture2D>(thumbnailPath);
+				Texture2D? thumbnail = MDNailToolAssetLoader.LoadThumbnail(nailDesign.ThumbnailGUID, nailDesign.DesignName);
 				if (thumbnail == null) continue;
 
 				if (isInstalled) {
@@ -364,8 +359,7 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 				if (e.type == EventType.Layout) return;
 				Rect rect = this.contentRect;
 				if (_material == null) {
-					string shaderPath = AssetDatabase.GUIDToAssetPath(MDNailToolDefines.GRAY_SHADER_GUID);
-					Shader grayShader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
+					Shader grayShader = MDNailToolAssetLoader.LoadShader(MDNailToolDefines.GRAY_SHADER_GUID)!;
 					_material = new Material(grayShader) {
 						enableInstancing = true
 					};

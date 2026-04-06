@@ -419,10 +419,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
             var thumb = new Image();
             thumb.AddToClassList("mdn-nail-thumb");
-            if (!string.IsNullOrEmpty(design.ThumbnailGUID)) {
-                string path = AssetDatabase.GUIDToAssetPath(design.ThumbnailGUID);
-                thumb.image = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            }
+            thumb.image = MDNailToolAssetLoader.LoadThumbnail(design.ThumbnailGUID, design.DesignName);
             if (isInstalled) thumb.RegisterCallback<ClickEvent>(_ => SelectDesign(design.DesignName));
             card.Add(thumb);
 
