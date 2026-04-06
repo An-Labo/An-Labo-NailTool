@@ -1025,12 +1025,25 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void BindLinksUI()
 		{
+			// Changelog バナーを動的追加
+			var bannerContainer = this.rootVisualElement.Q<VisualElement>("changelog-banner-container");
+			if (bannerContainer != null) {
+				var banner = new ChangelogBanner();
+				bannerContainer.Add(banner);
+			}
+
 			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
-			this._manualLink?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
+			if (this._manualLink != null) {
+				this._manualLink.text = $"[{S("link.manual.label") ?? "Manual"}]";
+				this._manualLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
+			}
 
 			// ヘッダーのカタログリンク
 			var catalogLink = this.rootVisualElement.Q<Label>("link-catalog");
-			catalogLink?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.catalog")));
+			if (catalogLink != null) {
+				catalogLink.text = $"[{S("link.catalog.label") ?? "Catalog"}]";
+				catalogLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.catalog")));
+			}
 
 			// ヘッダーのFAQリンク
 			var headerContact = this.rootVisualElement.Q<Label>("link-contact-header");
@@ -1883,6 +1896,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnSelectNail(string designName)
 		{
+			ResourceAutoExtractor.EnsureDesignExtracted(designName);
 			using DBNailDesign dbNailDesign = new();
 			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(designName);
 			if (design?.DesignName == null) return;
@@ -1967,7 +1981,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void OnChangeNailVariantDropDown(ChangeEvent<string> evt)
 		{
 			if (string.IsNullOrEmpty(evt.newValue)) return;
-			ResourceAutoExtractor.EnsureDesignExtracted(evt.newValue);
 			this.OnSelectNail(evt.newValue);
 		}
 
@@ -2039,6 +2052,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailPreviewController?.UpdateVisibility(isHandActive, isFootActive);
 
 			(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
+
 			Material? directMaterial = this.GetDirectMaterial();
 
 			var perFingerAddMats = this.BuildPerFingerAdditionalMaterials(true);

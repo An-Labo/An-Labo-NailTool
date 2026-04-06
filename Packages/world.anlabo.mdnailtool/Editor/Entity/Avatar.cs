@@ -20,6 +20,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("avatarVariations")]
 		public IReadOnlyDictionary<string, AvatarVariation> AvatarVariations { get; set; } = null!;
 
+		[JsonProperty("supportedVersion")]
+		public string? SupportedVersion { get; set; }
+
 		[JsonProperty("blendShapeVariants")]
 		public AvatarBlendShapeVariant[]? BlendShapeVariants { get; set; }
 

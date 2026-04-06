@@ -548,6 +548,33 @@
     background-color: rgba(60,100,200,0.28);
 }
 
+/* ---- Changelog banner ---- */
+.mdn-changelog-summary {
+    font-size: 11px;
+    color: #aac8ff;
+    cursor: link;
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 1;
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mdn-changelog-summary:hover {
+    background-color: rgba(60,100,200,0.28);
+    color: #cce0ff;
+}
+
+.mdn-changelog-new {
+    color: #ffd666;
+}
+
+.mdn-changelog-new:hover {
+    color: #ffe08a;
+}
+
 /* ---- Howto box ---- */
 .mdn-howto-box {
     background-color: #262626;

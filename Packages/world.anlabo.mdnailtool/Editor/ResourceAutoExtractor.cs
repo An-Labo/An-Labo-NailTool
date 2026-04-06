@@ -261,9 +261,6 @@ namespace world.anlabo.mdnailtool.Editor {
             
             if (Directory.Exists(assetsDesignPath)) return;
             
-            string packageDesignPath = Path.GetFullPath(PACKAGE_RESOURCE_PATH + "Nail/Design/" + designName + "/");
-            if (Directory.Exists(packageDesignPath)) return;
-            
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
 

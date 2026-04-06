@@ -14,12 +14,13 @@
                 <world.anlabo.mdnailtool.Editor.VisualElements.LanguageDropDown focusable="true" class="mdn-lang-dropdown" />
             </ui:VisualElement>
 
-            <!-- Manual / FAQ リンク行 -->
+            <!-- Changelog + Manual / FAQ リンク行 -->
             <ui:VisualElement class="mdn-helplink-row">
+                <ui:VisualElement name="changelog-banner-container" />
+                <ui:VisualElement class="mdn-spacer" />
                 <ui:Label text="[Manual]" name="link-manual" class="mdn-link mdn-helplink-item" />
                 <ui:Label text="[Catalog]" name="link-catalog" class="mdn-link mdn-helplink-item" />
                 <ui:Label text="[FAQ]" name="link-contact-header" class="mdn-link mdn-helplink-item" />
-                <ui:VisualElement class="mdn-spacer" />
                 <ui:Label text="[Usage Stats]" name="link-usage-stats" class="mdn-link mdn-helplink-item" />
             </ui:VisualElement>
         </ui:VisualElement>

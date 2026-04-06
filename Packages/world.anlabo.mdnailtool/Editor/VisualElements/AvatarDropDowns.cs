@@ -395,7 +395,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				case AvatarSortOrder.AvatarNameAsc:
 				case AvatarSortOrder.AvatarNameDesc:
 				case AvatarSortOrder.NewerAsc:
-				case AvatarSortOrder.NewerDesc: {
+				case AvatarSortOrder.NewerDesc:
+				case AvatarSortOrder.SupportedAsc:
+				case AvatarSortOrder.SupportedDesc: {
 					using DBShop dbShop = new();
 					this._shopPopupElements = dbShop.collection.Select(shop => shop.ShopName).Prepend(ALL_ITEM).ToList();
 					this._shopPopup.choices = this._shopPopupElements;
@@ -477,6 +479,28 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					});
 					break;
 				}
+				case AvatarSortOrder.SupportedAsc: {
+					using DBShop db = new();
+					this._avatarPopupElements.Sort((a, b) => {
+						string[] namesA = a.Split(SPLIT);
+						string? verA = db.FindShopByName(namesA[0])?.FindAvatarByName(namesA[1])?.SupportedVersion;
+						string[] namesB = b.Split(SPLIT);
+						string? verB = db.FindShopByName(namesB[0])?.FindAvatarByName(namesB[1])?.SupportedVersion;
+						return CompareVersion(verA, verB);
+					});
+					break;
+				}
+				case AvatarSortOrder.SupportedDesc: {
+					using DBShop db = new();
+					this._avatarPopupElements.Sort((a, b) => {
+						string[] namesA = a.Split(SPLIT);
+						string? verA = db.FindShopByName(namesA[0])?.FindAvatarByName(namesA[1])?.SupportedVersion;
+						string[] namesB = b.Split(SPLIT);
+						string? verB = db.FindShopByName(namesB[0])?.FindAvatarByName(namesB[1])?.SupportedVersion;
+						return CompareVersion(verB, verA);
+					});
+					break;
+				}
 				case AvatarSortOrder.Default:
 					break;
 				default:
@@ -499,6 +523,21 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				(false, true) => 1,
 				_ => 0
 			};
+		}
+
+		private static int CompareVersion(string? a, string? b) {
+			if (a == null && b == null) return 0;
+			if (a == null) return -1;
+			if (b == null) return 1;
+			string[] partsA = a.Split('.');
+			string[] partsB = b.Split('.');
+			int len = System.Math.Max(partsA.Length, partsB.Length);
+			for (int i = 0; i < len; i++) {
+				int numA = i < partsA.Length && int.TryParse(partsA[i], out int pA) ? pA : 0;
+				int numB = i < partsB.Length && int.TryParse(partsB[i], out int pB) ? pB : 0;
+				if (numA != numB) return numA.CompareTo(numB);
+			}
+			return 0;
 		}
 
 		private void OnSortButtonClicked() {
@@ -525,6 +564,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			AvatarSortOrder.AvatarNameDesc => "sort_order.avatar_name_desc",
 			AvatarSortOrder.NewerAsc => "sort_order.newer_asc",
 			AvatarSortOrder.NewerDesc => "sort_order.newer_desc",
+			AvatarSortOrder.SupportedAsc => "sort_order.supported_asc",
+			AvatarSortOrder.SupportedDesc => "sort_order.supported_desc",
 			_ => order.ToString()
 		};
 

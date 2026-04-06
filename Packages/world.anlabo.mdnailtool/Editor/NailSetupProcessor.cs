@@ -805,7 +805,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								if (nailSmr.sharedMesh.GetBlendShapeIndex(shapeName) < 0) continue;
 								bindings.Add(new BlendshapeBinding
 								{
-									ReferenceMesh = new AvatarObjectReference(sourceSmr.gameObject),
+									ReferenceMesh = CreateAvatarRef(sourceSmr.gameObject),
 									Blendshape = shapeName,
 									LocalBlendshape = shapeName
 								});
@@ -871,11 +871,11 @@ namespace world.anlabo.mdnailtool.Editor {
 					{
 						Transform? chest = animator.GetBoneTransform(HumanBodyBones.Chest);
 						if (chest != null)
-							meshSettings.ProbeAnchor = new AvatarObjectReference(chest.gameObject);
+							meshSettings.ProbeAnchor = CreateAvatarRef(chest.gameObject);
 
 						Transform? hips = animator.GetBoneTransform(HumanBodyBones.Hips);
 						if (hips != null)
-							meshSettings.RootBone = new AvatarObjectReference(hips.gameObject);
+							meshSettings.RootBone = CreateAvatarRef(hips.gameObject);
 					}
 
 					meshSettings.Bounds = new Bounds(Vector3.zero, Vector3.one * 2);
@@ -928,7 +928,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							if (!string.IsNullOrEmpty(variant.LeftBlendShapeName) && !string.IsNullOrEmpty(variant.RightBlendShapeName))
 							{
 								// L/R分割モード: 結合メッシュ上のL/R Blendshapeをそれぞれアバターのものとバインド
-								AvatarObjectReference aoRef = new AvatarObjectReference(srcSmrTransform.gameObject);
+								AvatarObjectReference aoRef = CreateAvatarRef(srcSmrTransform.gameObject);
 								foreach (string lrName in new[] { variant.LeftBlendShapeName!, variant.RightBlendShapeName! })
 								{
 									string actualLRName = lrName;
@@ -969,7 +969,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								int bsIndex = bsSmr.sharedMesh.GetBlendShapeIndex(actualShapeName);
 								if (bsIndex < 0) continue;
 
-								AvatarObjectReference aoRef = new AvatarObjectReference(srcSmrTransform.gameObject);
+								AvatarObjectReference aoRef = CreateAvatarRef(srcSmrTransform.gameObject);
 								variantBindings.Add(new BlendshapeBinding
 								{
 									ReferenceMesh = aoRef,
@@ -1365,6 +1365,46 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 #if MD_NAIL_FOR_MA
+	private static AvatarObjectReference CreateAvatarRef(GameObject obj) {
+#if MA_HAS_PORTABLE_API
+		return new AvatarObjectReference(obj);
+#else
+		var r = new AvatarObjectReference();
+		try { r.Set(obj); }
+		catch { r.referencePath = RuntimeUtil.AvatarRootPath(obj); }
+		return r;
+#endif
+	}
+
+	private static void SetMenuSubMenu(ModularAvatarMenuItem item) {
+#if MA_HAS_PORTABLE_API
+		item.PortableControl.Type = PortableControlType.SubMenu;
+#else
+		if (item.Control == null) item.Control = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+		item.Control.type = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu;
+#endif
+	}
+
+	private static void SetMenuToggle(ModularAvatarMenuItem item, float value = 1f) {
+#if MA_HAS_PORTABLE_API
+		item.PortableControl.Type = PortableControlType.Toggle;
+		item.PortableControl.Value = value;
+#else
+		if (item.Control == null) item.Control = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+		item.Control.type = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.Toggle;
+		item.Control.value = value;
+#endif
+	}
+
+	private static void SetMenuIcon(ModularAvatarMenuItem item, Texture2D? icon) {
+#if MA_HAS_PORTABLE_API
+		item.PortableControl.Icon = icon;
+#else
+		if (item.Control == null) item.Control = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+		item.Control.icon = icon;
+#endif
+	}
+
 	private void SetupExpressionMenu(GameObject nailRoot) {
 		var firstEntry = this.NailDesignAndVariationNames.FirstOrDefault(t => t.Item1 != null);
 		string designName = firstEntry.Item1 != null
@@ -1394,15 +1434,15 @@ namespace world.anlabo.mdnailtool.Editor {
 				// [An-Labo]新規作成時: 最初のネイルのサムネイルを設定
 				anLaboObj.AddComponent<ModularAvatarMenuInstaller>();
 				var anLaboMenuItem = anLaboObj.AddComponent<ModularAvatarMenuItem>();
-				anLaboMenuItem.PortableControl.Type = PortableControlType.SubMenu;
-				anLaboMenuItem.PortableControl.Icon = thumbnail;
+				SetMenuSubMenu(anLaboMenuItem);
+				SetMenuIcon(anLaboMenuItem, thumbnail);
 				anLaboMenuItem.label = "An-Labo";
 				anLaboMenuItem.MenuSource = SubmenuSource.Children;
 			} else {
 				// [An-Labo]が既存（2本目以降のネイル追加時）: アイコンをnullに更新
 				var existingMenuItem = anLaboObj.GetComponent<ModularAvatarMenuItem>();
 				if (existingMenuItem != null)
-					existingMenuItem.PortableControl.Icon = null;
+					SetMenuIcon(existingMenuItem, null);
 			}
 		} else {
 			// MergeAnLabo=false: nailRoot自身にMenuInstaller
@@ -1412,15 +1452,14 @@ namespace world.anlabo.mdnailtool.Editor {
 
 		// ---- nailRoot に MenuItem ----
 		ModularAvatarMenuItem rootMenuItem = nailRoot.AddComponent<ModularAvatarMenuItem>();
-		rootMenuItem.PortableControl.Icon = thumbnail;
+		SetMenuIcon(rootMenuItem, thumbnail);
 		rootMenuItem.label = menuLabel;
 		if (this.SplitHandFoot) {
-			rootMenuItem.PortableControl.Type = PortableControlType.SubMenu;
+			SetMenuSubMenu(rootMenuItem);
 			rootMenuItem.MenuSource = SubmenuSource.Children;
 		} else {
 			// SplitHandFoot=OFF: nailRoot自体にObjectToggle（HandNail/FootNailラッパーをまとめてON/OFF）
-			rootMenuItem.PortableControl.Type = PortableControlType.Toggle;
-			rootMenuItem.PortableControl.Value = 1;
+			SetMenuToggle(rootMenuItem, 1);
 			rootMenuItem.isSaved = true;
 			rootMenuItem.isSynced = true;
 			rootMenuItem.automaticValue = true;
@@ -1431,14 +1470,14 @@ namespace world.anlabo.mdnailtool.Editor {
 			Transform? hw = nailRoot.transform.Find(handWrapperName);
 			if (hw != null) {
 				foreach (Transform child in hw)
-					toggleTargets.Add(new ToggledObject { Object = new AvatarObjectReference(child.gameObject), Active = false });
+					toggleTargets.Add(new ToggledObject { Object = CreateAvatarRef(child.gameObject), Active = false });
 			}
 			// FootNailラッパー内の各ネイルオブジェクトを個別に登録
 			if (this.UseFootNail) {
 				Transform? fw = nailRoot.transform.Find(footWrapperName);
 				if (fw != null) {
 					foreach (Transform child in fw)
-						toggleTargets.Add(new ToggledObject { Object = new AvatarObjectReference(child.gameObject), Active = false });
+						toggleTargets.Add(new ToggledObject { Object = CreateAvatarRef(child.gameObject), Active = false });
 				}
 			}
 			rootToggle.Objects = toggleTargets;
@@ -1451,15 +1490,14 @@ namespace world.anlabo.mdnailtool.Editor {
 				ModularAvatarObjectToggle handToggle = handWrapperT.gameObject.AddComponent<ModularAvatarObjectToggle>();
 				handToggle.Objects = handWrapperT.Cast<Transform>()
 					.Select(t => new ToggledObject {
-						Object = new AvatarObjectReference(t.gameObject),
+						Object = CreateAvatarRef(t.gameObject),
 						Active = false
 					})
 					.ToList();
 
 				ModularAvatarMenuItem handMenuItem = handWrapperT.gameObject.AddComponent<ModularAvatarMenuItem>();
-				handMenuItem.PortableControl.Type = PortableControlType.Toggle;
-				handMenuItem.PortableControl.Value = 1;
-				handMenuItem.PortableControl.Icon = null;
+				SetMenuToggle(handMenuItem, 1);
+				SetMenuIcon(handMenuItem, null);
 				handMenuItem.isSaved = true;
 				handMenuItem.isSynced = true;
 				handMenuItem.automaticValue = true;
@@ -1472,15 +1510,14 @@ namespace world.anlabo.mdnailtool.Editor {
 					ModularAvatarObjectToggle footToggle = footWrapperT.gameObject.AddComponent<ModularAvatarObjectToggle>();
 					footToggle.Objects = footWrapperT.Cast<Transform>()
 						.Select(t => new ToggledObject {
-							Object = new AvatarObjectReference(t.gameObject),
+							Object = CreateAvatarRef(t.gameObject),
 							Active = false
 						})
 						.ToList();
 
 					ModularAvatarMenuItem footMenuItem = footWrapperT.gameObject.AddComponent<ModularAvatarMenuItem>();
-					footMenuItem.PortableControl.Type = PortableControlType.Toggle;
-					footMenuItem.PortableControl.Value = 1;
-					footMenuItem.PortableControl.Icon = null;
+					SetMenuToggle(footMenuItem, 1);
+					SetMenuIcon(footMenuItem, null);
 					footMenuItem.isSaved = true;
 					footMenuItem.isSynced = true;
 					footMenuItem.automaticValue = true;

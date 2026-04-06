@@ -59,6 +59,7 @@ namespace world.anlabo.mdnailtool.Editor
 		public static string DB_NAIL_SHAPE_FILE_PATH => DB_PATH + "nailShape.json";
 		public static string DB_NAIL_DESIGN_FILE_PATH => DB_PATH + "nailDesign.json";
 		public static string DB_ADDITIONAL_ASSETS_FILE_PATH => DB_PATH + "additionalAssets.json";
+		public static string DB_CHANGELOG_FILE_PATH => DB_PATH + "changelog.json";
 		public static string NAIL_DESIGN_PATH => RESOURCE_PATH + "Nail/Design/";
 
 		public const string LEGACY_DESIGN_PATH = "Assets/[An-Labo.Virtual]/【Nail】/";

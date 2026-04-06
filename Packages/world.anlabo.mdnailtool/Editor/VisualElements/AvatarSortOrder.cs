@@ -16,5 +16,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		NewerAsc,
 		[InspectorName("sort_order.newer_desc")]
 		NewerDesc,
+		[InspectorName("sort_order.supported_asc")]
+		SupportedAsc,
+		[InspectorName("sort_order.supported_desc")]
+		SupportedDesc,
 	}
 }
