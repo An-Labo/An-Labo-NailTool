@@ -1020,6 +1020,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				catch { /* BlendShape取得失敗時は無視 */ }
 			}
 
+			// NDMF ビルド診断（直近のPlayモード/ビルド時の結果）
+#if MD_NAIL_FOR_MA
+			if (!string.IsNullOrEmpty(MAPluginDefinition.LastBuildDiagnostic))
+			{
+				sb.AppendLine("--- NDMF Build Diagnostic ---");
+				sb.Append(MAPluginDefinition.LastBuildDiagnostic);
+			}
+			else
+			{
+				sb.AppendLine("--- NDMF Build Diagnostic ---");
+				sb.AppendLine("(no build data — run Play mode first)");
+			}
+#endif
+
 			return sb.ToString();
 		}
 
