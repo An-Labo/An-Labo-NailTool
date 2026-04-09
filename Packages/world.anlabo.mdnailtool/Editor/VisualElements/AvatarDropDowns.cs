@@ -122,7 +122,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					width = new Length(0, LengthUnit.Pixel),
 					display = DisplayStyle.None
 				},
-				tooltip = LanguageManager.S("tooltip.blendshape_variant")
+				tooltip = LanguageManager.S("tooltip.blendshape_variant") ?? ""
 			};
 
 			// 検索・ソートボタングループ（バリエーションの右）
@@ -155,12 +155,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._shopPopupElements = dbShop.collection.Select(shop => shop.ShopName).Prepend(ALL_ITEM).ToList();
 			this._shopDisplayNameDictionary = dbShop.collection
 				.ToDictionary(shop => shop.ShopName, shop => shop.DisplayNames.GetValueOrDefault(langKey, shop.ShopName));
-			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop");
+			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop") ?? "Filter by Shop";
 			this._shopPopup.choices = this._shopPopupElements;
 			this._shopPopup.value = this._shopPopupElements?[0];
 
-			this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName)).ToList();
-			this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop, avatar)))
+			this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName)).ToList();
+			this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => (shop, avatar)))
 				.ToDictionary(tuple => tuple.shop.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
 			this._avatarPopup.choices = this._avatarPopupElements;
 			this._avatarPopup.value = this._avatarPopupElements[0];
@@ -199,13 +199,13 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			if (isAllItem) {
 				using DBShop dbShop = new();
-				this._avatarPopupElements = dbShop.collection.SelectMany(s => s.Avatars.Values.Select(a => s.ShopName + SPLIT + a.AvatarName))
+				this._avatarPopupElements = dbShop.collection.SelectMany(s => s.Avatars.Values.Where(a => a.AvatarVariations.Count > 0).Select(a => s.ShopName + SPLIT + a.AvatarName))
 					.ToList();
-				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(s => s.Avatars.Values.Select(a => (s, a)))
+				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(s => s.Avatars.Values.Where(a => a.AvatarVariations.Count > 0).Select(a => (s, a)))
 					.ToDictionary(tuple => tuple.s.ShopName + SPLIT + tuple.a.AvatarName, tuple => tuple.a.DisplayNames.GetValueOrDefault(langKey, tuple.a.AvatarName));
 			} else {
-				this._avatarPopupElements = shop.Avatars.Values.Select(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName).ToList();
-				this._avatarDisplayNameDictionary = shop.Avatars.Values
+				this._avatarPopupElements = shop.Avatars.Values.Where(_avatar => _avatar.AvatarVariations.Count > 0).Select(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName).ToList();
+				this._avatarDisplayNameDictionary = shop.Avatars.Values.Where(_avatar => _avatar.AvatarVariations.Count > 0)
 					.ToDictionary(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName, _avatar => _avatar.DisplayNames.GetValueOrDefault(langKey, _avatar.AvatarName));
 			}
 
@@ -228,9 +228,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			using DBShop dbShop = new();
 
 			if (evt.newValue == ALL_ITEM) {
-				this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar.AvatarName)))
+				this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => (shop.ShopName, avatar.AvatarName)))
 					.Select(tuple => tuple.ShopName + SPLIT + tuple.AvatarName).ToList();
-				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar)))
+				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => (shop.ShopName, avatar)))
 					.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
 			} else {
 				Shop? shop = dbShop.FindShopByName(evt.newValue);
@@ -242,8 +242,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					return;
 				}
 
-				this._avatarPopupElements = shop.Avatars.Values.Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName).ToList();
-				this._avatarDisplayNameDictionary = shop.Avatars.Values
+				this._avatarPopupElements = shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName).ToList();
+				this._avatarDisplayNameDictionary = shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0)
 					.ToDictionary(avatar => shop.ShopName + SPLIT + avatar.AvatarName, avatar => avatar.DisplayNames.GetValueOrDefault(langKey, avatar.AvatarName));
 			}
 
@@ -353,7 +353,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			string langKey = LanguageManager.CurrentLanguageData.language;
 			using DBShop dbShop = new();
 			this._shopDisplayNameDictionary = dbShop.collection.ToDictionary(shop => shop.ShopName, shop => shop.DisplayNames.GetValueOrDefault(langKey, shop.ShopName));
-			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop");
+			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop") ?? "Filter by Shop";
 			this.SortShopList(this._avatarSortOrder);
 			this._shopPopup.SetValueWithoutNotify(this._shopPopup.value);
 
@@ -545,7 +545,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			foreach (AvatarSortOrder order in Enum.GetValues(typeof(AvatarSortOrder))) {
 				AvatarSortOrder captured = order;
 				menu.AddItem(
-					new GUIContent(LanguageManager.S(GetSortOrderKey(captured))),
+					new GUIContent(LanguageManager.S(GetSortOrderKey(captured)) ?? GetSortOrderKey(captured)),
 					this._avatarSortOrder == captured,
 					() => {
 						this._avatarSortOrder = captured;

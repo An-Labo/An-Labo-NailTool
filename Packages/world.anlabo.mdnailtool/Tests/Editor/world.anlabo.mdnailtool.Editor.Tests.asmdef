@@ -1,0 +1,30 @@
+{
+    "name": "world.anlabo.mdnailtool.Editor.Tests",
+    "rootNamespace": "world.anlabo.mdnailtool.Editor.Tests",
+    "references": [
+        "world.anlabo.mdnailtool.Editor",
+        "world.anlabo.mdnailtool"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [
+        {
+            "name": "nadena.dev.modular-avatar",
+            "expression": "",
+            "define": "MD_NAIL_FOR_MA"
+        }
+    ],
+    "noEngineReferences": false
+}

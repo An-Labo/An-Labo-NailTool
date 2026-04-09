@@ -24,7 +24,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		private static string FormatValueCallback(AvatarSortOrder arg) {
 			MemberInfo[] memberInfo = typeof(AvatarSortOrder).GetMember(arg.ToString());
 			InspectorNameAttribute attr = memberInfo[0].GetCustomAttribute<InspectorNameAttribute>();
-			return LanguageManager.S(attr.displayName);
+			return LanguageManager.S(attr.displayName) ?? attr.displayName;
 		}
 
 		internal new class UxmlFactory : UxmlFactory<AvatarSortDropdown, UxmlTraits> { }

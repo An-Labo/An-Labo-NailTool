@@ -103,7 +103,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             _borderColor    = isDark ? new Color(0.15f, 0.15f, 0.15f) : Color.gray;
 
             // 共有USSを読み込む
-            var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss);
+            var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss, MDNailToolGuids.WindowUssPath);
             if (uss != null) rootVisualElement.styleSheets.Add(uss);
 
             var root = rootVisualElement;

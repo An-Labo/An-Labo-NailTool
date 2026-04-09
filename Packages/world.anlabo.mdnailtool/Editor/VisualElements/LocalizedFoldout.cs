@@ -15,7 +15,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 		
 		public void UpdateLanguage() {
-			this.text = LanguageManager.S(this.TextId);
+			this.text = LanguageManager.S(this.TextId) ?? this.TextId;
 		}
 		
 		internal new class UxmlFactory : UxmlFactory<LocalizedFoldout, UxmlTraits> { }

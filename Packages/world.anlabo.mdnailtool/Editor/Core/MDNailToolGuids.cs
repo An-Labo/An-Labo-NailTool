@@ -10,5 +10,9 @@ namespace world.anlabo.mdnailtool.Editor
         internal const string PreviewShader = "5f0e4274bce4492f833972c906cd3236";
         internal const string PreviewPrefab = "371bb8ffdf995444b823f1f4a1111dcb";
         internal const string GrayShader    = "57969ef515a043528c7c5e39cb29d123";
+
+        // ---- Fallback paths (GUID解決失敗時の既知パス) ----
+        internal const string WindowUxmlPath = "Packages/world.anlabo.mdnailtool/Editor/Window/MDnailToolWindow.uxml";
+        internal const string WindowUssPath  = "Packages/world.anlabo.mdnailtool/Editor/Window/MDNailToolWindow.uss";
     }
 }

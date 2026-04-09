@@ -33,7 +33,8 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			} else {
 				TextAsset? textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(dbFilePath);
 				Dictionary<string, T>? data = JsonConvert.DeserializeObject<Dictionary<string, T>>(textAsset.text);
-				this._data = data ?? throw new FileNotFoundException($"Not found DB : {dbFilePath}");
+				_cash = data ?? throw new FileNotFoundException($"Not found DB : {dbFilePath}");
+				this._data = _cash;
 			}
 			this.dictionary = this._data;
 			this.collection = this._data.Values;

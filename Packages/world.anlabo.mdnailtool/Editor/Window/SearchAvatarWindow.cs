@@ -13,7 +13,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 	public class SearchAvatarWindow : EditorWindow {
 		internal static void ShowWindow(MDNailToolWindow parentWindow) {
 			SearchAvatarWindow? window = CreateInstance<SearchAvatarWindow>();
-			window.titleContent = new GUIContent(LanguageManager.S("window.search_avatar"));
+			window.titleContent = new GUIContent(LanguageManager.S("window.search_avatar") ?? "Search Avatar");
 			window._parentWindow = parentWindow;
 			window.ShowAuxWindow();
 		}
@@ -25,7 +25,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 		private void CreateGUI() {
 			// 共有USSを先に読み込む
-			var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss);
+			var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss, MDNailToolGuids.WindowUssPath);
 			if (uss != null) this.rootVisualElement.styleSheets.Add(uss);
 
 			string uxmlPath = AssetDatabase.GUIDToAssetPath(GUID);

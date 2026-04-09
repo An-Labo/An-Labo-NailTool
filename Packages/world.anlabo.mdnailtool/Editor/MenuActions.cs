@@ -22,19 +22,9 @@ namespace world.anlabo.mdnailtool.Editor {
 			ReportGeneratorWindow.ShowWindow();
 		}
 
-		/*
-
-
-		[MenuItem(MENU_ROOT + "Reload Languages", false, 13)]
+		[MenuItem(MENU_ROOT + "Reload Languages", false, 102)]
 		private static void ReloadLanguages() {
 			LanguageManager.ReloadLanguages();
 		}
-
-		[MenuItem(MENU_ROOT + "Clear An-Labo NailTool's Global Setting", false, 14)]
-		private static void ClearGlobalSetting() {
-			GlobalSetting.ClearGlobalSettings();
-		}
-		
-		*/
 	}
 }

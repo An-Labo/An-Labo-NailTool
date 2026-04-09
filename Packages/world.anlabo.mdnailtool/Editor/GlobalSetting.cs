@@ -91,12 +91,8 @@ namespace world.anlabo.mdnailtool.Editor
 
 		internal static bool EnableScenePreview
 		{
-			get
-			{
-				if (!EditorPrefs.HasKey(ENABLE_SCENE_PREVIEW_KEY)) return true; // ★デフォルトON
-				return EditorPrefs.GetBool(ENABLE_SCENE_PREVIEW_KEY);
-			}
-			set => EditorPrefs.SetBool(ENABLE_SCENE_PREVIEW_KEY, value);
+			get => true;
+			set { }
 		}
 
 		private const string ENABLE_SCENE_WEARING_PREVIEW_KEY = "world.anlabo.mdnailtool.enable_scene_wearing_preview";
@@ -160,12 +156,8 @@ namespace world.anlabo.mdnailtool.Editor
 		private const string ARMATURE_SCALE_COMPENSATION_KEY = "world.anlabo.mdnailtool.armature_scale_compensation";
 		internal static bool ArmatureScaleCompensation
 		{
-			get
-			{
-				if (!EditorPrefs.HasKey(ARMATURE_SCALE_COMPENSATION_KEY)) return false;
-				return EditorPrefs.GetBool(ARMATURE_SCALE_COMPENSATION_KEY);
-			}
-			set => EditorPrefs.SetBool(ARMATURE_SCALE_COMPENSATION_KEY, value);
+			get => true;
+			set { }
 		}
 
 		private const string BAKE_BLENDSHAPES_KEY = "world.anlabo.mdnailtool.bake_blendshapes";
@@ -182,12 +174,8 @@ namespace world.anlabo.mdnailtool.Editor
 		private const string SYNC_BLENDSHAPES_WITH_MA_KEY = "world.anlabo.mdnailtool.sync_blendshapes_with_ma";
 		internal static bool SyncBlendShapesWithMA
 		{
-			get
-			{
-				if (!EditorPrefs.HasKey(SYNC_BLENDSHAPES_WITH_MA_KEY)) return false;
-				return EditorPrefs.GetBool(SYNC_BLENDSHAPES_WITH_MA_KEY);
-			}
-			set => EditorPrefs.SetBool(SYNC_BLENDSHAPES_WITH_MA_KEY, value);
+			get => true;
+			set { }
 		}
 
 		private const string ENABLE_PENETRATION_CORRECTION_KEY = "world.anlabo.mdnailtool.enable_penetration_correction";

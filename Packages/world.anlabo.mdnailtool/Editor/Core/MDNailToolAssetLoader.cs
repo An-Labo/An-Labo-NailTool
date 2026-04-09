@@ -11,7 +11,7 @@ namespace world.anlabo.mdnailtool.Editor
 		/// <summary>
 		/// GUIDからアセットをロードする。GUID解決失敗時はパスフォールバックを試みる。
 		/// </summary>
-		internal static T? LoadByGuid<T>(string guid) where T : Object
+		internal static T? LoadByGuid<T>(string guid, string? fallbackPath = null) where T : Object
 		{
 			string path = AssetDatabase.GUIDToAssetPath(guid);
 			if (!string.IsNullOrEmpty(path))
@@ -20,7 +20,18 @@ namespace world.anlabo.mdnailtool.Editor
 				if (asset != null) return asset;
 			}
 
-			// フォールバック: 登録済みパスヒントから探す
+			// フォールバック1: 呼び出し元が提供した既知パス
+			if (!string.IsNullOrEmpty(fallbackPath))
+			{
+				T? asset = AssetDatabase.LoadAssetAtPath<T>(fallbackPath!);
+				if (asset != null)
+				{
+					RegisterPathHint(guid, fallbackPath!);
+					return asset;
+				}
+			}
+
+			// フォールバック2: 登録済みパスヒントから探す
 			if (_guidPathHints.TryGetValue(guid, out string? hintPath))
 			{
 				T? asset = AssetDatabase.LoadAssetAtPath<T>(hintPath);
@@ -33,14 +44,24 @@ namespace world.anlabo.mdnailtool.Editor
 		/// <summary>
 		/// GUIDからパスを解決する。GUID解決失敗時はパスフォールバック。
 		/// </summary>
-		internal static string? ResolveGuidToPath(string? guid)
+		internal static string? ResolveGuidToPath(string? guid, string? fallbackPath = null)
 		{
-			if (string.IsNullOrEmpty(guid)) return null;
+			if (string.IsNullOrEmpty(guid)) return fallbackPath;
 
 			string path = AssetDatabase.GUIDToAssetPath(guid!);
 			if (!string.IsNullOrEmpty(path)) return path;
 
-			// フォールバック: 登録済みパスヒント
+			// フォールバック1: 呼び出し元が提供した既知パス
+			if (!string.IsNullOrEmpty(fallbackPath))
+			{
+				if (AssetDatabase.LoadMainAssetAtPath(fallbackPath!) != null)
+				{
+					RegisterPathHint(guid!, fallbackPath!);
+					return fallbackPath;
+				}
+			}
+
+			// フォールバック2: 登録済みパスヒント
 			if (_guidPathHints.TryGetValue(guid!, out string? hintPath))
 			{
 				if (AssetDatabase.LoadMainAssetAtPath(hintPath) != null) return hintPath;
@@ -82,20 +103,15 @@ namespace world.anlabo.mdnailtool.Editor
 		/// </summary>
 		internal static Shader? LoadShader(string guid, string? fallbackShaderName = null)
 		{
-			Shader? shader = LoadByGuid<Shader>(guid);
-			if (shader != null) return shader;
-
-			// Resource/Preview/ 内のシェーダーをパスで探す
+			// GUID既知のシェーダーにはパスフォールバックを設定
+			string? shaderFallbackPath = null;
 			if (guid == MDNailToolDefines.PREVIEW_SHADER_GUID)
-			{
-				shader = AssetDatabase.LoadAssetAtPath<Shader>(MDNailToolDefines.RESOURCE_PATH + "Preview/preview.shader");
-				if (shader != null) return shader;
-			}
+				shaderFallbackPath = MDNailToolDefines.RESOURCE_PATH + "Preview/preview.shader";
 			else if (guid == MDNailToolDefines.GRAY_SHADER_GUID)
-			{
-				shader = AssetDatabase.LoadAssetAtPath<Shader>(MDNailToolDefines.RESOURCE_PATH + "Preview/gray.shader");
-				if (shader != null) return shader;
-			}
+				shaderFallbackPath = MDNailToolDefines.RESOURCE_PATH + "Preview/gray.shader";
+
+			Shader? shader = LoadByGuid<Shader>(guid, shaderFallbackPath);
+			if (shader != null) return shader;
 
 			if (!string.IsNullOrEmpty(fallbackShaderName))
 			{

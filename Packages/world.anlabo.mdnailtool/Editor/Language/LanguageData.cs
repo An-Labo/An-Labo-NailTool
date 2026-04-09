@@ -46,6 +46,10 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 			return json;
 		}
 
+		internal void ClearCache() {
+			this._jsonObj = null;
+		}
+
 		public string Localized(string textId) {
 			if (!this._JsonObj.ContainsKey(textId)) return null;
 			return this._JsonObj[textId]?.Value<string>();

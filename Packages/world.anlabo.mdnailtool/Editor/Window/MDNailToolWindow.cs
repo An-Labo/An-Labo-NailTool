@@ -141,13 +141,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		}
 		private void BuildRootUI()
 		{
-			var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss);
+			var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss, MDNailToolGuids.WindowUssPath);
 			if (uss != null)
 			{
 				this.rootVisualElement.styleSheets.Add(uss);
 			}
 
-			var uxml = MDNailToolAssetLoader.LoadByGuid<VisualTreeAsset>(MDNailToolGuids.WindowUxml);
+			var uxml = MDNailToolAssetLoader.LoadByGuid<VisualTreeAsset>(MDNailToolGuids.WindowUxml, MDNailToolGuids.WindowUxmlPath);
 			if (uxml != null)
 			{
 				uxml.CloneTree(this.rootVisualElement);
@@ -265,16 +265,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var lblBackup = this.rootVisualElement.Q<LocalizedLabel>("label-backup");
 			lblBackup?.RegisterCallback<ClickEvent>(_ => { if (this._backup != null) this._backup.value = !this._backup.value; });
 
-			// プレビューウィンドウ表示ON/OFFトグル（プレビューヘッダー内）
+			// プレビュー（常時ON、ヘッダー非表示）
 			this._enableScenePreview = this.rootVisualElement.Q<Toggle>("enable-scene-preview");
 			if (this._enableScenePreview != null)
 			{
-				this._enableScenePreview.SetValueWithoutNotify(GlobalSetting.EnableScenePreview);
-				this._enableScenePreview.RegisterValueChangedCallback(this.OnChangePreviewWindowVisible);
-				this.UpdatePreviewAreaVisibility(GlobalSetting.EnableScenePreview);
+				this._enableScenePreview.SetValueWithoutNotify(true);
+				this._enableScenePreview.parent.style.display = DisplayStyle.None;
+				this.UpdatePreviewAreaVisibility(true);
 			}
-			var lblPreview = this.rootVisualElement.Q<LocalizedLabel>("label-preview-toggle");
-			lblPreview?.RegisterCallback<ClickEvent>(_ => { if (this._enableScenePreview != null) this._enableScenePreview.value = !this._enableScenePreview.value; });
 
 			// 着用プレビュー（Sceneプレビュー）トグル（詳細設定内）
 			var tglWearingPreview = this.rootVisualElement.Q<Toggle>("enable-wearing-preview");
@@ -341,18 +339,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				});
 			}
 
+			// Armature補正（常時ON、トグル非表示）
 			this._armatureScaleCompensation = this.rootVisualElement.Q<Toggle>("armature-scale-compensation");
 			if (this._armatureScaleCompensation != null)
 			{
-				this._armatureScaleCompensation.SetValueWithoutNotify(GlobalSetting.ArmatureScaleCompensation);
-				this._armatureScaleCompensation.RegisterValueChangedCallback(evt => {
-					GlobalSetting.ArmatureScaleCompensation = evt.newValue;
-				});
-				var lblArmatureScale = this.rootVisualElement.Q<LocalizedLabel>("label-armature-scale-compensation");
-				lblArmatureScale?.RegisterCallback<ClickEvent>(_ => {
-					if (this._armatureScaleCompensation != null && this._armatureScaleCompensation.enabledSelf)
-						this._armatureScaleCompensation.value = !this._armatureScaleCompensation.value;
-				});
+				this._armatureScaleCompensation.SetValueWithoutNotify(true);
+				this._armatureScaleCompensation.parent.style.display = DisplayStyle.None;
 			}
 
 			this._penetrationCorrection = this.rootVisualElement.Q<Toggle>("enable-penetration-correction");
@@ -375,7 +367,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._bakeBlendShapes.SetValueWithoutNotify(GlobalSetting.BakeBlendShapes);
 				this._bakeBlendShapes.RegisterValueChangedCallback(evt => {
 					GlobalSetting.BakeBlendShapes = evt.newValue;
-					this._syncBlendShapesWithMA?.SetEnabled(evt.newValue);
 					this.UpdateBlendShapeVariantDropDown();
 				});
 				this._bakeBlendShapes.SetEnabled(GlobalSetting.UseModularAvatar);
@@ -386,19 +377,15 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				});
 			}
 
+			// MA BlendShape Sync（常時ON、トグル非表示）
 			this._syncBlendShapesWithMA = this.rootVisualElement.Q<Toggle>("sync-blendshapes-with-ma");
 			if (this._syncBlendShapesWithMA != null)
 			{
-				this._syncBlendShapesWithMA.SetValueWithoutNotify(GlobalSetting.SyncBlendShapesWithMA);
-				this._syncBlendShapesWithMA.RegisterValueChangedCallback(
-					evt => GlobalSetting.SyncBlendShapesWithMA = evt.newValue);
-				this._syncBlendShapesWithMA.SetEnabled(GlobalSetting.UseModularAvatar && GlobalSetting.BakeBlendShapes);
-				var lblSync = this.rootVisualElement.Q<LocalizedLabel>("label-sync-blendshapes");
-				lblSync?.RegisterCallback<ClickEvent>(_ => {
-					if (this._syncBlendShapesWithMA != null && this._syncBlendShapesWithMA.enabledSelf)
-						this._syncBlendShapesWithMA.value = !this._syncBlendShapesWithMA.value;
-				});
+				this._syncBlendShapesWithMA.SetValueWithoutNotify(true);
+				this._syncBlendShapesWithMA.parent.style.display = DisplayStyle.None;
 			}
+
+			this.UpdateMASubOptionsVisibility(GlobalSetting.UseModularAvatar);
 
 			// 追加マテリアルソース選択ドロップダウン
 			this._additionalMaterialSourceDropdown = this.rootVisualElement.Q<DropdownField>("additional-material-source");
@@ -2331,15 +2318,25 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void OnChangeForModularAvatar(ChangeEvent<bool> evt)
 		{
 			GlobalSetting.UseModularAvatar = evt.newValue;
+			this.UpdateMASubOptionsVisibility(evt.newValue);
+			this.UpdateBlendShapeVariantVisibility();
+		}
+
+		private void UpdateMASubOptionsVisibility(bool useMA)
+		{
+			var maSubOptions = this.rootVisualElement.Q<VisualElement>("ma-sub-options");
+			if (maSubOptions != null)
+			{
+				maSubOptions.style.display = useMA ? DisplayStyle.Flex : DisplayStyle.None;
+			}
 			if (this._generateExpressionMenu != null)
 			{
-				this._generateExpressionMenu.SetEnabled(evt.newValue);
-				this._splitHandFootExpressionMenu?.SetEnabled(evt.newValue && this._generateExpressionMenu.value);
-				this._mergeAnLaboExpressionMenu?.SetEnabled(evt.newValue && this._generateExpressionMenu.value);
+				this._generateExpressionMenu.SetEnabled(useMA);
+				this._splitHandFootExpressionMenu?.SetEnabled(useMA && this._generateExpressionMenu.value);
+				this._mergeAnLaboExpressionMenu?.SetEnabled(useMA && this._generateExpressionMenu.value);
 			}
-			this._bakeBlendShapes?.SetEnabled(evt.newValue);
-			this._syncBlendShapesWithMA?.SetEnabled(evt.newValue && (this._bakeBlendShapes?.value == true));
-			this.UpdateBlendShapeVariantVisibility();
+			this._bakeBlendShapes?.SetEnabled(useMA);
+			this._syncBlendShapesWithMA?.SetEnabled(useMA && (this._bakeBlendShapes?.value == true));
 		}
 		private void ShowAvatarSearchWindow() { SearchAvatarWindow.ShowWindow(this); }
 		private void ShowNailSearchWindow() { SearchNailDesignWindow.ShowWindow(this); }

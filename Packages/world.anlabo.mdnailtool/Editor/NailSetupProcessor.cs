@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -73,10 +73,10 @@ namespace world.anlabo.mdnailtool.Editor {
 			// Animatorチェック
 			Animator avatarAnimator = this.Avatar.GetComponent<Animator>();
 			if (avatarAnimator == null) {
-				throw new NailSetupUserException(LanguageManager.S("error.execute.no_animator"));
+				throw new NailSetupUserException(LanguageManager.S("error.execute.no_animator") ?? "error.execute.no_animator");
 			}
 			if (avatarAnimator.avatar == null) {
-				throw new NailSetupUserException(LanguageManager.S("error.execute.no_avatar_rig"));
+				throw new NailSetupUserException(LanguageManager.S("error.execute.no_avatar_rig") ?? "error.execute.no_avatar_rig");
 			}
 
 			if (this.Backup) {
@@ -147,7 +147,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 			if (this.NailPrefab == null) {
-				throw new NailSetupUserException(LanguageManager.S("error.execute.nail_prefab_load_failed"));
+				throw new NailSetupUserException(LanguageManager.S("error.execute.nail_prefab_load_failed") ?? "error.execute.nail_prefab_load_failed");
 			}
 			GameObject nailPrefabObject = Object.Instantiate(this.NailPrefab, this.Avatar.transform);
 			{
@@ -174,7 +174,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			bool hasAnyFingerBone = MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST
 				.Any(name => targetBoneDictionary.ContainsKey(name) && targetBoneDictionary[name] != null);
 			if (!hasAnyFingerBone) {
-				throw new NailSetupUserException(LanguageManager.S("error.execute.no_finger_bones"));
+				throw new NailSetupUserException(LanguageManager.S("error.execute.no_finger_bones") ?? "error.execute.no_finger_bones");
 			}
 
 			// プレハブ内のネイルオブジェクトを取得
@@ -357,6 +357,22 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			if (this.ForModularAvatar) {
+				SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
+					leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
+			} else {
+				SetupDirect(nailPrefabObject, targetBoneDictionary, handsNailObjects,
+					leftFootNailObjects, rightFootNailObjects, corrections);
+			}
+		}
+
+		private void SetupForModularAvatar(
+			GameObject nailPrefabObject,
+			Dictionary<string, Transform?> targetBoneDictionary,
+			Transform?[] handsNailObjects,
+			Transform?[] leftFootNailObjects,
+			Transform?[] rightFootNailObjects,
+			List<(SkinnedMeshRenderer sourceSmr, string sourcePath)> resolvedSourceSmrs,
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? corrections) {
 #if MD_NAIL_FOR_MA
 				string variationName = this.AvatarVariationData.VariationName;
 				string handWrapperName = $"HandNail_{variationName}";
@@ -992,7 +1008,15 @@ namespace world.anlabo.mdnailtool.Editor {
 				Undo.RevertAllInCurrentGroup();
 				throw new InvalidOperationException("The setup for ModularAvatar cannot be executed in environments where ModularAvatar is not installed.");
 #endif
-			} else {
+		}
+
+		private void SetupDirect(
+			GameObject nailPrefabObject,
+			Dictionary<string, Transform?> targetBoneDictionary,
+			Transform?[] handsNailObjects,
+			Transform?[] leftFootNailObjects,
+			Transform?[] rightFootNailObjects,
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? corrections) {
 				int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
 				foreach (Transform? nailObject in handsNailObjects) {
 					index++;
@@ -1059,7 +1083,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 
 				Object.DestroyImmediate(nailPrefabObject);
-			}
 		}
 
 		private void CreateBackup() {
