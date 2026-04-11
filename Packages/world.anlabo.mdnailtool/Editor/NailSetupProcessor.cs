@@ -356,12 +356,36 @@ namespace world.anlabo.mdnailtool.Editor {
 					allNails.ToArray(), allBoneIndices.ToArray());
 			}
 
+			// ---- ネイルSMRのlocalBoundsを広めに固定（フラスタムカリング・最適化対策）----
+			// MA MeshSettings経路が何らかの理由で無効化された場合の保険。
+			// アバター・最適化ツール(AAO等)がBoundsベースで可視性判定する場合にも効く。
+			ApplyNailBoundsGuard(handsNailObjects);
+			if (this.UseFootNail) {
+				ApplyNailBoundsGuard(leftFootNailObjects);
+				ApplyNailBoundsGuard(rightFootNailObjects);
+			}
+
 			if (this.ForModularAvatar) {
 				SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
 					leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
 			} else {
 				SetupDirect(nailPrefabObject, targetBoneDictionary, handsNailObjects,
 					leftFootNailObjects, rightFootNailObjects, corrections);
+			}
+		}
+
+		/// <summary>
+		/// ネイルSMRのlocalBoundsを広めに固定する（フラスタムカリング対策）。
+		/// ModularAvatarMeshSettingsと併用してもSMR自身のboundsが上書きされるだけなので問題ない。
+		/// </summary>
+		private static void ApplyNailBoundsGuard(Transform?[] nailObjects) {
+			// 指先のネイルを想定した広めの範囲（1m立方）。通常の指スケールでは十分余裕がある。
+			var guardBounds = new Bounds(Vector3.zero, Vector3.one);
+			foreach (Transform? nailObject in nailObjects) {
+				if (nailObject == null) continue;
+				SkinnedMeshRenderer? smr = nailObject.GetComponent<SkinnedMeshRenderer>();
+				if (smr == null) continue;
+				smr.localBounds = guardBounds;
 			}
 		}
 
@@ -1093,8 +1117,17 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			GameObject clonedObject = Object.Instantiate(this.Avatar.gameObject);
 			string prefabName = $"bk_{this.Avatar.gameObject.name}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.prefab";
-			PrefabUtility.SaveAsPrefabAsset(clonedObject, MDNailToolDefines.BACKUP_PATH + prefabName);
-			AssetDatabase.Refresh();
+
+			// MDNailToolWindow.OnExecute の StartAssetEditing バッチモード中に
+			// SaveAsPrefabAsset すると .meta の書き込みが失敗する（"Cannot open file ... for write"）ため、
+			// バッチモードを一時中断してから保存する
+			AssetDatabase.StopAssetEditing();
+			try {
+				PrefabUtility.SaveAsPrefabAsset(clonedObject, MDNailToolDefines.BACKUP_PATH + prefabName);
+				AssetDatabase.Refresh();
+			} finally {
+				AssetDatabase.StartAssetEditing();
+			}
 			Object.DestroyImmediate(clonedObject);
 		}
 

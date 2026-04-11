@@ -1007,19 +1007,17 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				catch { /* BlendShape取得失敗時は無視 */ }
 			}
 
-			// NDMF ビルド診断（直近のPlayモード/ビルド時の結果）
-#if MD_NAIL_FOR_MA
-			if (!string.IsNullOrEmpty(MAPluginDefinition.LastBuildDiagnostic))
+			// ビルド診断（直近のPlayモード/ビルド時の結果、AAOProcessorが収集）
+			if (!string.IsNullOrEmpty(AAOProcessor.LastBuildDiagnostic))
 			{
-				sb.AppendLine("--- NDMF Build Diagnostic ---");
-				sb.Append(MAPluginDefinition.LastBuildDiagnostic);
+				sb.AppendLine("--- Build Diagnostic ---");
+				sb.Append(AAOProcessor.LastBuildDiagnostic);
 			}
 			else
 			{
-				sb.AppendLine("--- NDMF Build Diagnostic ---");
+				sb.AppendLine("--- Build Diagnostic ---");
 				sb.AppendLine("(no build data — run Play mode first)");
 			}
-#endif
 
 			return sb.ToString();
 		}
