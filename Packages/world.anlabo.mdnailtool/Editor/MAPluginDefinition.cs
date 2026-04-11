@@ -23,10 +23,13 @@ namespace world.anlabo.mdnailtool.Editor {
 				.Run(DisplayName, context => {
 
 				var sb = new StringBuilder();
+				sb.AppendLine($"BuildTime: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 				var markers = context.AvatarRootObject.GetComponentsInChildren<MDNailObjectMarker>(true);
 				sb.AppendLine($"NailRootCount: {markers.Length}");
 
-				foreach (MDNailObjectMarker marker in markers.ToArray()) {
+				// ログ収集パス（破壊と分離）
+				foreach (MDNailObjectMarker marker in markers) {
+					if (marker == null) continue;
 					GameObject root = marker.gameObject;
 					sb.AppendLine($"  Root: {root.name}");
 
@@ -44,11 +47,14 @@ namespace world.anlabo.mdnailtool.Editor {
 					// ObjectToggle残存チェック
 					var remainingToggles = root.GetComponentsInChildren<ModularAvatarObjectToggle>(true);
 					sb.AppendLine($"    RemainingObjectToggle: {remainingToggles.Length}");
-
-					Object.DestroyImmediate(root);
 				}
 
 				LastBuildDiagnostic = sb.ToString();
+
+				// 破壊パス（ログ収集完了後）
+				foreach (MDNailObjectMarker marker in markers) {
+					if (marker != null) Object.DestroyImmediate(marker.gameObject);
+				}
 				});
 		}
 	}
