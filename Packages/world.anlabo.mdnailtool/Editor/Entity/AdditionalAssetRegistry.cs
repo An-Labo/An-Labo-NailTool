@@ -23,7 +23,7 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 		public Dictionary<string, List<string>>? Materials { get; set; }
 
 		/// <summary>
-		/// 名前またはGUIDを受け取り、オブジェクト用GUIDリストに解決する（指を指定しない旧互換版）。
+		/// 名前またはGUIDをオブジェクト用GUIDリストに解決する。指インデックス省略時のオーバーロード。
 		/// </summary>
 		public IReadOnlyList<string> ResolveObjectGuids(string nameOrGuid)
 		{

@@ -35,7 +35,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		// ---- バリアントモード ----
 		private bool _isVariantMode;
 		private string? _selectedVariantDesignName;
-		private Dictionary<string, string>? _variantDisplayToDesign; // display name -> design name
+		private Dictionary<string, string>? _variantDisplayToDesign;
 
 		public NailDesignDropDowns() {
 			this.style.flexDirection = FlexDirection.Row;
@@ -311,7 +311,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		/// <summary>
-		/// マテリアルDropdownの変更コールバック（バリアントモード時のみ処理）
+		/// マテリアルDropdownの変更コールバック。バリアントモード時のみバリアント切替として処理する。
 		/// </summary>
 		private void OnChangeMaterialPopup(ChangeEvent<string?> evt) {
 			if (!this._isVariantMode || this._variantDisplayToDesign == null || evt.newValue == null) return;

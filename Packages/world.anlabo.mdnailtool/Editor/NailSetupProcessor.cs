@@ -318,10 +318,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 
-			// BlendShapeバリアントのデルタ計算（メッシュ統合はボーン設定後）
-			// BakeBlendShapeDeltasメソッドは削除され、BakeAndCombineNailMeshesに統合されました。
-
-			// ---- Armature補正の計算（MA/非MA共通）----
+			// ---- Armature補正の計算(MA/非MA共通)----
 			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? corrections = null;
 			if (this.ArmatureScaleCompensation)
 			{
@@ -356,9 +353,8 @@ namespace world.anlabo.mdnailtool.Editor {
 					allNails.ToArray(), allBoneIndices.ToArray());
 			}
 
-			// ---- ネイルSMRのlocalBoundsを広めに固定（フラスタムカリング・最適化対策）----
-			// MA MeshSettings経路が何らかの理由で無効化された場合の保険。
-			// アバター・最適化ツール(AAO等)がBoundsベースで可視性判定する場合にも効く。
+			// ---- ネイルSMRのlocalBoundsを広めに固定(フラスタムカリング・最適化対策)----
+			// MA MeshSettings 未適用時のフォールバック。Bounds ベースの可視性判定にも対応する。
 			ApplyNailBoundsGuard(handsNailObjects);
 			if (this.UseFootNail) {
 				ApplyNailBoundsGuard(leftFootNailObjects);
@@ -514,7 +510,6 @@ namespace world.anlabo.mdnailtool.Editor {
 							objectsToDestroy.Add(instVariant);
 
 							// バリアントプレハブの子名からシェイプ接頭辞([Oval]等)を除去
-							// ベースプレハブと同様の処理（行125-129相当）
 							{
 								Regex varPrefixRegex = new(@"(?<prefix>\[.+\]).+");
 								Match varPrefixMatch = varPrefixRegex.Match(resolvedVariantPrefab.name);
@@ -531,7 +526,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							Transform?[] varRightFoot = GetRightFootNailObjectList(instVariant);
 
 							// バリアントネイルのメッシュが未解決(null)の場合、ベースネイルのメッシュをコピー
-							// （プレハブが参照するFBXが存在しない場合の対策）
+							// (プレハブが参照するFBXが存在しない場合の対策)
 							CopyMeshIfNull(varHands, handsNailObjects);
 							CopyMeshIfNull(varLeftFoot, leftFootNailObjects);
 							CopyMeshIfNull(varRightFoot, rightFootNailObjects);
@@ -651,7 +646,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 					}
 
-					// [試験版] 破綻防止: 体めり込み補正用のボディSMRを探す
+					// 破綻防止: 体めり込み補正用のボディSMRを探す
 					SkinnedMeshRenderer? bodySmrForPushOut = null;
 					if (this.EnablePenetrationCorrection && activeVariants != null && activeVariants.Length > 1)
 					{
@@ -1119,7 +1114,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			string prefabName = $"bk_{this.Avatar.gameObject.name}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.prefab";
 
 			// MDNailToolWindow.OnExecute の StartAssetEditing バッチモード中に
-			// SaveAsPrefabAsset すると .meta の書き込みが失敗する（"Cannot open file ... for write"）ため、
+			// SaveAsPrefabAsset すると .meta の書き込みが失敗する("Cannot open file ... for write")ため、
 			// バッチモードを一時中断してから保存する
 			AssetDatabase.StopAssetEditing();
 			try {

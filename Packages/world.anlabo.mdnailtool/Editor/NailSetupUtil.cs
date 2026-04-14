@@ -483,7 +483,7 @@ namespace world.anlabo.mdnailtool.Editor
 			return a + ab * (vb * denom) + ac * (vc * denom);
 		}
 
-		// [試験版] 破綻防止: 全バリアント同時適用時にボディメッシュへのめり込みを爪単位で補正
+		// 破綻防止: 全バリアント同時適用時にボディメッシュへのめり込みを爪単位で補正
 		private static void CorrectDeltasForBodyPenetration(
 			Vector3[] basePositions,
 			List<(string shapeName, Vector3[] dv, Vector3[] dn, Vector3[] dt,

@@ -96,7 +96,7 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 			string? result = CurrentLanguageData.Localized(textId);
 			if (result != null) return result;
 
-			// 初回のみリトライ（リソース展開前にUIが描画されたケースを救済）
+			// 初回のみリトライ(リソース展開前にUIが描画された場合のフォールバック)
 			if (!_hasRetried) {
 				_hasRetried = true;
 				_languageDataList?.ForEach(lang => lang.ClearCache());

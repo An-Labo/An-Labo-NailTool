@@ -10,7 +10,7 @@ namespace world.anlabo.mdnailtool.Editor.Model
 {
 	/// <summary>
 	/// additionalAssets.json を読み込むユーティリティ。
-	/// DBBase を使わず単純にロードする（キャッシュ不要）。
+	/// DBBase を経由せず直接ロードし、ファイル単位でキャッシュする。
 	/// </summary>
 	internal static class DBAdditionalAssets
 	{
@@ -34,7 +34,7 @@ namespace world.anlabo.mdnailtool.Editor.Model
 			return _cached;
 		}
 
-		/// <summary>キャッシュをクリアする（JSON変更後に呼ぶ）</summary>
+		/// <summary>キャッシュをクリアする(JSON変更後に呼ぶ)</summary>
 		internal static void ClearCache()
 		{
 			_cached = null;

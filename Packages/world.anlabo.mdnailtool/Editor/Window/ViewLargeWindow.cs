@@ -1,6 +1,4 @@
-﻿// #define MD_NAIL_DEVELOP
-
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 

@@ -30,7 +30,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			// マテリアル生成がON || プレビューの場合新規マテリアルを生成する。
 			string materialKey = this.GetMaterialKey(materialName, colorName, nailShapeName, isPreview);
 
-			// キャッシュされたマテリアルがあればそれを反す
+			// キャッシュされたマテリアルがあればそれを返す
 			Material? cashedMaterial = isPreview ? INailProcessor.GetPreviewMaterialCash(materialKey) : INailProcessor.GetCreatedMaterialCash(materialKey);
 			if (cashedMaterial != null) return cashedMaterial;
 
@@ -43,7 +43,6 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				// プレビュー用の場合ファイルとしては保存しない
 				INailProcessor.RegisterPreviewMaterialCash(materialKey, clonedMaterial);
 			} else {
-				// 
 				if (!Directory.Exists(MDNailToolDefines.GENERATED_ASSET_PATH)) {
 					Directory.CreateDirectory(MDNailToolDefines.GENERATED_ASSET_PATH);
 				}

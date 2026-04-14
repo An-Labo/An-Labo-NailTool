@@ -9,12 +9,12 @@ using world.anlabo.mdnailtool.Runtime;
 
 namespace world.anlabo.mdnailtool.Editor {
 	/// <summary>
-	/// ビルド時 preprocess 処理（MA/AAO の有無に関係なく動作する VRC SDK 共通エントリ）。
+	/// ビルド時 preprocess 処理(MA/AAO の有無に関係なく動作する VRC SDK 共通エントリ)。
 	///
-	/// VRC SDK callbackOrder の位置づけ：
-	///   -11000     = BuildFrameworkPreprocessHook（NDMF Resolving〜Transforming = MA BoneProxy 等）
-	///   -1026      = ★本Processor（NDMF Transforming 完了後 / AAO 実行前）
-	///   -1025      = BuildFrameworkOptimizeHook（NDMF Optimizing = AAO 等が走る）
+	/// VRC SDK callbackOrder の位置づけ:
+	///   -11000     = BuildFrameworkPreprocessHook(NDMF Resolving〜Transforming = MA BoneProxy 等)
+	///   -1026      = ★本Processor(NDMF Transforming 完了後 / AAO 実行前)
+	///   -1025      = BuildFrameworkOptimizeHook(NDMF Optimizing = AAO 等が走る)
 	///   -1024      = ModularAvatar ReplacementRemoveAvatarEditorOnly
 	///   Int32.MaxValue = ModularAvatar ReplacementRemoveIEditorOnly
 	///
@@ -24,10 +24,10 @@ namespace world.anlabo.mdnailtool.Editor {
 	/// - AAO はまだ走っていない
 	/// という状態で処理できる。
 	///
-	/// ここで行うこと：
-	/// 1. ビルド診断ログ収集（Copy Support Info 用、直近1回分を <see cref="LastBuildDiagnostic"/> に保持）
-	/// 2. AAO 系コンポーネントの SerializedObject ダンプ（型依存なし＝AAO 未導入でも安全）
-	/// 3. MDNailObjectMarker 削除（AAO の TraceAndOptimize unknown-type 警告抑制）
+	/// ここで行うこと:
+	/// 1. ビルド診断ログ収集(Copy Support Info 用、直近1回分を <see cref="LastBuildDiagnostic"/> に保持)
+	/// 2. AAO 系コンポーネントの SerializedObject ダンプ(型依存なし=AAO 未導入でも安全)
+	/// 3. MDNailObjectMarker 削除(AAO の TraceAndOptimize unknown-type 警告抑制)
 	/// 4. 空ラッパー GO (HandNail_* / FootNail_*) 削除
 	///
 	/// MD_NAIL_FOR_MA 等の条件コンパイルに依存せず、MA/AAO/NDMF の有無によらず動作する。
@@ -35,7 +35,7 @@ namespace world.anlabo.mdnailtool.Editor {
 	public class AAOProcessor : IVRCSDKPreprocessAvatarCallback {
 		public int callbackOrder => -1026;
 
-		/// <summary>直近のビルド時診断ログ（Copy Support Info 用）</summary>
+		/// <summary>直近のビルド時診断ログ(Copy Support Info 用)</summary>
 		internal static string? LastBuildDiagnostic { get; private set; }
 
 		public bool OnPreprocessAvatar(GameObject avatarRoot) {

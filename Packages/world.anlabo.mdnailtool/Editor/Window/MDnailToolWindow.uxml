@@ -323,6 +323,11 @@
                 <ui:VisualElement name="tool-console-container" class="mdn-tool-console-container">
                     <ui:VisualElement class="mdn-tool-console-header">
                         <ui:Label name="tool-console-title" class="mdn-tool-console-title" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedButton
+                            name="reset-resources"
+                            text-id="window.reset_resources"
+                            tooltip-id="tooltip.reset_resources"
+                            class="mdn-tool-console-header-btn" />
                         <ui:Button name="tool-console-copy" class="mdn-tool-console-header-btn" />
                     </ui:VisualElement>
                     <ui:ScrollView name="tool-console-scroll" class="mdn-tool-console-scroll" />

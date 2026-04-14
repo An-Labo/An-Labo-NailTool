@@ -18,15 +18,21 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		protected override Material GetBaseMaterial(string materialName, string nailShapeName) {
 			string baseMaterialPath = this.GetMaterialPath(materialName, nailShapeName);
-			Material? baseMaterial = AssetDatabase.LoadAssetAtPath<Material>(baseMaterialPath);
-			if (baseMaterial == null) throw new InvalidOperationException($"Not found base material. {this.DesignName} : {nailShapeName} : {baseMaterialPath}");
+			Material? baseMaterial = MDNailToolAssetLoader.LoadByPathCaseInsensitive<Material>(baseMaterialPath);
+			if (baseMaterial == null) {
+				string diag = MDNailToolAssetLoader.BuildMissingFileDiagnostics(baseMaterialPath);
+				throw new InvalidOperationException($"Not found base material. {this.DesignName} : {nailShapeName} : {baseMaterialPath}\n{diag}");
+			}
 			return baseMaterial;
 		}
 
 		protected override void ProcessMaterial(Material targetMaterial, string materialName, string colorName, string nailShapeName) {
 			string mainTexPath = this.GetTexturePath(materialName, colorName, nailShapeName);
-			Texture2D? mainTex = AssetDatabase.LoadAssetAtPath<Texture2D>(mainTexPath);
-			if (mainTex == null) throw new InvalidOperationException($"Not found Main texture. {this.DesignName} : {colorName} : {nailShapeName} : {mainTexPath}");
+			Texture2D? mainTex = MDNailToolAssetLoader.LoadByPathCaseInsensitive<Texture2D>(mainTexPath);
+			if (mainTex == null) {
+				string diag = MDNailToolAssetLoader.BuildMissingFileDiagnostics(mainTexPath);
+				throw new InvalidOperationException($"Not found Main texture. {this.DesignName} : {colorName} : {nailShapeName} : {mainTexPath}\n{diag}");
+			}
 			targetMaterial.SetTexture(MainTex, mainTex);
 		}
 
@@ -75,17 +81,17 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		public override bool IsInstalledMaterialVariation(string materialName) {
 			string subDirectoryPath = this.GetTextureSubDirectoryPath(materialName, "Natural");
-			return Directory.Exists(subDirectoryPath);
+			return MDNailToolAssetLoader.DirectoryExistsCaseInsensitive(subDirectoryPath);
 		}
 
 		public override bool IsInstalledColorVariation(string materialName, string colorName) {
 			string mainTexturePath = this.GetTexturePath(materialName, colorName, "Natural");
-			return File.Exists(mainTexturePath);
+			return MDNailToolAssetLoader.FileExistsCaseInsensitive(mainTexturePath);
 		}
 
 		public override bool IsSupportedNailShape(string nailShapeName) {
 			string nailShapeDirectoryPath = this.GetNailShapeDirectoryPath(nailShapeName);
-			return Directory.Exists(nailShapeDirectoryPath);
+			return MDNailToolAssetLoader.DirectoryExistsCaseInsensitive(nailShapeDirectoryPath);
 		}
 
 		private string GetDesignDirectoryPath() {

@@ -461,6 +461,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				EditorGUIUtility.systemCopyBuffer = text;
 			});
 
+			// リソース初期化ボタン
+			var resetBtn = this.rootVisualElement.Q<Button>("reset-resources");
+			resetBtn?.RegisterCallback<ClickEvent>(_ =>
+			{
+				if (EditorUtility.DisplayDialog(
+					S("window.reset_resources") ?? "Reset Resources",
+					S("window.reset_resources_confirm_body") ?? "This will delete the Resource folder and re-extract essential resources.\n\nContinue?",
+					"OK",
+					"Cancel"))
+				{
+					ResourceAutoExtractor.ResetResources(skipConfirmDialog: true);
+				}
+			});
+
 			// ToolConsole コールバック接続
 			ToolConsole.OnLog = this.AppendConsoleLog;
 			ToolConsole.Flush();
@@ -1074,6 +1088,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			// おすすめ設定ボタン
 			AddRecommendButton("mdn-section-header", 3, ApplyRecommendMA);
 			AddRecommendButtonToFoldout("mdn-advanced-foldout", ApplyRecommendAdvanced);
+
+			// 詳細設定Foldoutの開閉状態を記憶する
+			const string advancedFoldoutPrefKey = "MDNailTool.AdvancedFoldoutOpen";
+			var advancedFoldout = this.rootVisualElement.Q<Foldout>(className: "mdn-advanced-foldout");
+			if (advancedFoldout != null)
+			{
+				advancedFoldout.SetValueWithoutNotify(EditorPrefs.GetBool(advancedFoldoutPrefKey, false));
+				advancedFoldout.RegisterValueChangedCallback(evt =>
+				{
+					EditorPrefs.SetBool(advancedFoldoutPrefKey, evt.newValue);
+				});
+			}
 		}
 
 		private Button CreateRecommendButton(System.Action onClick)

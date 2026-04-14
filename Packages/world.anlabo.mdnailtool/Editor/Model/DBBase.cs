@@ -1,6 +1,4 @@
-﻿// #define DEBUG_MD_NAIL_DB
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;

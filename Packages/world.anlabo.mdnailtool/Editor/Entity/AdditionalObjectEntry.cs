@@ -8,14 +8,14 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 {
 	/// <summary>
 	/// 追加オブジェクトセットの定義。
-	/// 旧形式（GUIDリスト）と新形式（指制限・指別GUID）の両方を表現する。
+	/// GUIDリスト形式と指制限・指別GUID形式の両方を表現する。
 	/// </summary>
 	[JsonObject]
 	public class AdditionalObjectEntry
 	{
 		/// <summary>
 		/// このオブジェクトセットを使用可能な指インデックス (0-19)。
-		/// null = 全指で使用可能（旧互換・省略時デフォルト）。
+		/// null = 全指で使用可能(省略時デフォルト)。
 		/// 0-4=左手, 5-9=右手, 10-14=左足, 15-19=右足
 		/// </summary>
 		[JsonProperty("allowedFingers")]
@@ -23,7 +23,7 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 
 		/// <summary>
 		/// 指別GUIDマッピング。キーは指インデックス文字列 ("0", "5" 等) または "default"。
-		/// null の場合は Guids フィールドを使用（旧形式互換）。
+		/// null の場合は Guids フィールドを使用する。
 		/// </summary>
 		[JsonProperty("fingers")]
 		public Dictionary<string, List<string>>? Fingers { get; set; }
@@ -31,7 +31,6 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 		/// <summary>
 		/// 全指共通GUIDリスト。
 		/// Fingers が null の場合にこちらが使用される。
-		/// 旧形式からの変換時もここに格納される。
 		/// </summary>
 		[JsonProperty("guids")]
 		public List<string>? Guids { get; set; }
@@ -63,7 +62,7 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 		}
 
 		/// <summary>
-		/// 旧形式 (string[]) から変換するファクトリメソッド。
+		/// string[] からAdditionalObjectEntryを生成するファクトリメソッド。
 		/// </summary>
 		public static AdditionalObjectEntry FromLegacyGuids(List<string> guids)
 		{

@@ -338,7 +338,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
         private void LoadData() {
             using DBNailDesign db = new DBNailDesign();
-            // 子バリ（parentVariant が設定されているもの）はメインリストに表示しない
+            // 子バリアント(parentVariantが設定されているもの)はメインリストに表示しない
             _allDesigns = db.collection
                 .Where(d => string.IsNullOrEmpty(d.ParentVariant))
                 .OrderByDescending(d => d.Id)

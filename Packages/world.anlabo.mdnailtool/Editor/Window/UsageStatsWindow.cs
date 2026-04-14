@@ -1185,8 +1185,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			string encodedText = Uri.EscapeDataString(tweetText);
 			Application.OpenURL($"https://x.com/intent/tweet?text={encodedText}");
-
-			// ステータス表示なし（説明文で十分）
 		}
 
 		[DllImport("user32.dll")] private static extern bool OpenClipboard(IntPtr hWndNewOwner);

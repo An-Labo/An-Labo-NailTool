@@ -177,7 +177,7 @@ IReadOnlyDictionary<string, int> useCounts = GlobalSetting.DesignUseCount;
 string langKey = LanguageManager.CurrentLanguageData.language;
 
 foreach (NailDesign nailDesign in dbNailDesign.collection
-         // 子バリ（parentVariant が設定されているもの）はメインリストに表示しない
+         // 子バリアント(parentVariantが設定されているもの)はメインリストに表示しない
          .Where(design => string.IsNullOrEmpty(design.ParentVariant))
          .OrderByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName))
          .ThenByDescending(design => useCounts.GetValueOrDefault(design.DesignName, 0))

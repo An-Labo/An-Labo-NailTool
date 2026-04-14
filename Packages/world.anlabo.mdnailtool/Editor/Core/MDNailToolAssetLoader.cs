@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 #nullable enable
 
@@ -120,6 +123,146 @@ namespace world.anlabo.mdnailtool.Editor
 			}
 
 			return Shader.Find("Hidden/Internal-Colored");
+		}
+
+		private static readonly Dictionary<string, string?> _caseResolveCache = new();
+		private static readonly HashSet<string> _warnedPaths = new();
+
+		private static bool? _isCaseSensitiveFS;
+
+		/// <summary>
+		/// 実行環境のファイルシステムが大小文字を区別するかを判定する。初回アクセス時にキャッシュする。
+		/// </summary>
+		private static bool IsCaseSensitiveFS
+		{
+			get
+			{
+				if (_isCaseSensitiveFS.HasValue) return _isCaseSensitiveFS.Value;
+				_isCaseSensitiveFS = !Directory.Exists("ASSETS");
+				return _isCaseSensitiveFS.Value;
+			}
+		}
+
+		/// <summary>
+		/// パスからアセットをロードする。ロード失敗時はファイル名の大小無視でフォールバック。
+		/// </summary>
+		internal static T? LoadByPathCaseInsensitive<T>(string assetPath) where T : Object
+		{
+			T? asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+			if (asset != null) return asset;
+			if (!IsCaseSensitiveFS) return null;
+
+			string? resolved = ResolveCaseInsensitivePath(assetPath);
+			if (resolved == null) return null;
+			return AssetDatabase.LoadAssetAtPath<T>(resolved);
+		}
+
+		/// <summary>
+		/// ファイルの存在を確認する。確認失敗時はファイル名の大小無視でフォールバック。
+		/// </summary>
+		internal static bool FileExistsCaseInsensitive(string path)
+		{
+			if (File.Exists(path)) return true;
+			if (!IsCaseSensitiveFS) return false;
+			return ResolveCaseInsensitivePath(path) != null;
+		}
+
+		/// <summary>
+		/// ディレクトリの存在を確認する。確認失敗時はフォルダ名の大小無視でフォールバック。
+		/// </summary>
+		internal static bool DirectoryExistsCaseInsensitive(string path)
+		{
+			if (Directory.Exists(path)) return true;
+			if (!IsCaseSensitiveFS) return false;
+			if (string.IsNullOrEmpty(path)) return false;
+			string normalized = path.TrimEnd('/', '\\').Replace('\\', '/');
+			int slash = normalized.LastIndexOf('/');
+			if (slash < 0) return false;
+
+			string parentDir = normalized.Substring(0, slash);
+			string dirName = normalized.Substring(slash + 1);
+			if (!Directory.Exists(parentDir)) return false;
+
+			foreach (string sub in Directory.EnumerateDirectories(parentDir))
+			{
+				if (string.Equals(Path.GetFileName(sub), dirName, StringComparison.OrdinalIgnoreCase))
+					return true;
+			}
+			return false;
+		}
+
+		private static string? ResolveCaseInsensitivePath(string path)
+		{
+			if (string.IsNullOrEmpty(path)) return null;
+			if (_caseResolveCache.TryGetValue(path, out string? cached)) return cached;
+
+			string normalized = path.Replace('\\', '/');
+			int slash = normalized.LastIndexOf('/');
+			if (slash < 0) { _caseResolveCache[path] = null; return null; }
+
+			string dir = normalized.Substring(0, slash);
+			string fileName = normalized.Substring(slash + 1);
+			if (!Directory.Exists(dir)) { _caseResolveCache[path] = null; return null; }
+
+			foreach (string file in Directory.EnumerateFiles(dir))
+			{
+				string candidate = Path.GetFileName(file);
+				if (string.Equals(candidate, fileName, StringComparison.OrdinalIgnoreCase))
+				{
+					string result = $"{dir}/{candidate}";
+					_caseResolveCache[path] = result;
+					if (_warnedPaths.Add(dir))
+					{
+						Debug.LogWarning($"[MDNailTool] Case mismatch resolved in '{dir}' (e.g. '{fileName}' -> '{candidate}').");
+					}
+					return result;
+				}
+			}
+			_caseResolveCache[path] = null;
+			return null;
+		}
+
+		/// <summary>
+		/// 大小無視パス解決の結果キャッシュをクリアする。
+		/// </summary>
+		internal static void ClearCaseResolveCache()
+		{
+			_caseResolveCache.Clear();
+			_warnedPaths.Clear();
+		}
+
+		/// <summary>
+		/// ファイル未検出時の診断情報を生成する。親ディレクトリの有無・ファイル総数・サンプル(最大5件)を含む。
+		/// </summary>
+		internal static string BuildMissingFileDiagnostics(string expectedPath)
+		{
+			if (string.IsNullOrEmpty(expectedPath)) return "[diag] empty path";
+			string normalized = expectedPath.Replace('\\', '/');
+			int slash = normalized.LastIndexOf('/');
+			if (slash < 0) return "[diag] malformed path";
+
+			string dir = normalized.Substring(0, slash);
+			string fileName = normalized.Substring(slash + 1);
+
+			if (!Directory.Exists(dir))
+			{
+				return $"[diag] parent dir NOT FOUND: {dir}";
+			}
+
+			string[] allFiles;
+			try { allFiles = Directory.GetFiles(dir); }
+			catch (Exception e) { return $"[diag] dir exists but enumerate failed: {e.Message}"; }
+
+			int total = allFiles.Length;
+			var sample = new List<string>();
+			for (int i = 0; i < allFiles.Length && sample.Count < 5; i++)
+			{
+				string name = Path.GetFileName(allFiles[i]);
+				if (!name.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+					sample.Add(name);
+			}
+
+			return $"[diag] dir exists ({total} files), no case-insensitive match for '{fileName}'. Sample: {string.Join(" | ", sample)}";
 		}
 
 		// GUID → パスのフォールバックヒント登録用

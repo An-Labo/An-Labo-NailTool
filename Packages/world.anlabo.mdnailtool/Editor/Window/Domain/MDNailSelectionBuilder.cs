@@ -120,7 +120,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Domain
 				}
 			}
 
-			// 追加オブジェクトは手のみ（TargetFingerは0-9）だが、将来のため足も同じロジック
+			// 追加オブジェクトは手のみ対応(TargetFingerは0-9)。足にも同ロジックを通して対称性を保つ
 			if (isFootActive)
 			{
 				for (int i = 10; i < 20; i++)

@@ -391,7 +391,6 @@ namespace world.anlabo.mdnailtool.Editor {
             }
         }
 
-        [MenuItem("An-Labo/Import All Resources")]
         public static void ForceExtractAll() {
             if (_isExtracting) {
                 Debug.LogWarning("[MDNailTool] 既に展開中です");
@@ -477,8 +476,7 @@ namespace world.anlabo.mdnailtool.Editor {
             return copiedFiles;
         }
 
-        [MenuItem("An-Labo/Reset Resources")]
-        public static void ResetResources() {
+        public static void ResetResources(bool skipConfirmDialog = false) {
             if (_isExtracting) {
                 Debug.LogWarning("[MDNailTool] 既に展開中です");
                 return;
@@ -490,7 +488,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 return;
             }
 
-            if (!EditorUtility.DisplayDialog(
+            if (!skipConfirmDialog && !EditorUtility.DisplayDialog(
                 "Reset Resources",
                 "Resourceフォルダを削除し、必須リソースを再展開します。\nThis will delete the Resource folder and re-extract essential resources.\n\n続行しますか？ / Continue?",
                 "OK",
