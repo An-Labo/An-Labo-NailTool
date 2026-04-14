@@ -62,33 +62,13 @@ namespace world.anlabo.mdnailtool.Editor {
         private static void CheckAndExtractEssentials() {
             if (_isExtracting) return;
 
-            string currentVersion = MDNailToolDefines.Version;
-            string? installedVersion = GetInstalledVersion();
-
-            bool versionMismatch = installedVersion != currentVersion;
-            bool missingFiles = !HasEssentialFiles();
-
-            if (!versionMismatch && !missingFiles) return;
+            // 初回インストール時のみ自動展開。バージョン変更では触らない（GUID保護）
+            if (HasEssentialFiles()) return;
 
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
 
-            // バージョン不一致時はResourceフォルダを削除して再展開
-            if (versionMismatch && installedVersion != null) {
-                string fullResourcePath = Path.GetFullPath(ASSETS_RESOURCE_PATH);
-                if (Directory.Exists(fullResourcePath)) {
-                    Debug.Log($"[MDNailTool] バージョン変更検出 ({installedVersion} → {currentVersion}): Resourceフォルダをリセットします");
-                    try {
-                        Directory.Delete(fullResourcePath, true);
-                        string metaFile = fullResourcePath.TrimEnd('/', '\\') + ".meta";
-                        if (File.Exists(metaFile)) File.Delete(metaFile);
-                    } catch (Exception e) {
-                        Debug.LogWarning($"[MDNailTool] Resourceフォルダ削除失敗: {e.Message}");
-                    }
-                }
-            }
-
-            StartEssentialExtraction(currentVersion);
+            StartEssentialExtraction(MDNailToolDefines.Version);
         }
 
         public static void EnsureEssentialsExtractedSync() {
