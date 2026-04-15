@@ -65,10 +65,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _penetrationCorrection;
 		private Toggle? _bakeBlendShapes;
 		private Toggle? _syncBlendShapesWithMA;
+		private Toggle? _closeWindowOnExecute;
 		private DropdownField? _additionalMaterialSourceDropdown;
 		private DropdownField? _additionalObjectSourceDropdown;
 		private LocalizedButton? _execute;
 		private LocalizedButton? _remove;
+		private Button? _tryoutToggle;
+		private VisualElement? _tryoutBanner;
+		private bool _tryoutActive;
 
 		private IVisualElementScheduledItem? _scenePreviewSchedule;
 		private const int SCENE_PREVIEW_DEBOUNCE_MS = 150;
@@ -265,6 +269,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var lblBackup = this.rootVisualElement.Q<LocalizedLabel>("label-backup");
 			lblBackup?.RegisterCallback<ClickEvent>(_ => { if (this._backup != null) this._backup.value = !this._backup.value; });
 
+			// 着用時にウィンドウを閉じる
+			this._closeWindowOnExecute = this.rootVisualElement.Q<Toggle>("close-window-on-execute");
+			if (this._closeWindowOnExecute != null)
+			{
+				this._closeWindowOnExecute.SetValueWithoutNotify(GlobalSetting.CloseWindowOnExecute);
+				this._closeWindowOnExecute.RegisterValueChangedCallback(evt => GlobalSetting.CloseWindowOnExecute = evt.newValue);
+			}
+			var lblCloseWindow = this.rootVisualElement.Q<LocalizedLabel>("label-close-window-on-execute");
+			lblCloseWindow?.RegisterCallback<ClickEvent>(_ => { if (this._closeWindowOnExecute != null) this._closeWindowOnExecute.value = !this._closeWindowOnExecute.value; });
+
 			// プレビュー（常時ON、ヘッダー非表示）
 			this._enableScenePreview = this.rootVisualElement.Q<Toggle>("enable-scene-preview");
 			if (this._enableScenePreview != null)
@@ -274,15 +288,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this.UpdatePreviewAreaVisibility(true);
 			}
 
-			// 着用プレビュー（Sceneプレビュー）トグル（詳細設定内）
-			var tglWearingPreview = this.rootVisualElement.Q<Toggle>("enable-wearing-preview");
-			if (tglWearingPreview != null)
+			// 着用プレビュー (シーン試着トグル): 毎回OFFで起動、アクションバーのボタンで切替
+			this._tryoutToggle = this.rootVisualElement.Q<Button>("tryout-toggle");
+			this._tryoutBanner = this.rootVisualElement.Q<VisualElement>("tryout-banner");
+			this._tryoutActive = false;
+			GlobalSetting.EnableSceneWearingPreview = false;
+			if (this._tryoutToggle != null)
 			{
-				tglWearingPreview.SetValueWithoutNotify(GlobalSetting.EnableSceneWearingPreview);
-				tglWearingPreview.RegisterValueChangedCallback(this.OnChangeEnableScenePreview);
+				string? tip = S("tooltip.tryout_toggle");
+				if (tip != null) this._tryoutToggle.tooltip = tip;
 			}
-			var lblWearingPreview = this.rootVisualElement.Q<LocalizedLabel>("label-wearing-preview");
-			lblWearingPreview?.RegisterCallback<ClickEvent>(_ => { if (tglWearingPreview != null) tglWearingPreview.value = !tglWearingPreview.value; });
+			this.UpdateTryoutVisual();
+			if (this._tryoutToggle != null) this._tryoutToggle.clicked += this.OnToggleTryout;
 
 			this._forModularAvatar = this.rootVisualElement.Q<Toggle>("for-modular-avatar");
 			if (this._forModularAvatar != null)
@@ -1157,13 +1174,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (this._removeCurrentNail != null) this._removeCurrentNail.value = true;
 			if (this._backup != null) this._backup.value = true;
 			if (this._armatureScaleCompensation != null) this._armatureScaleCompensation.value = true;
-			var tglWearingPreview = this.rootVisualElement.Q<Toggle>("enable-wearing-preview");
-			if (tglWearingPreview != null) tglWearingPreview.value = true;
 
 			// OFF
 			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = false;
 			if (this._penetrationCorrection != null) this._penetrationCorrection.value = false;
 			if (this._enableToolConsole != null) this._enableToolConsole.value = false;
+
+			// 試着トグルはOFF固定 (毎回OFF運用)
+			this._tryoutActive = false;
+			GlobalSetting.EnableSceneWearingPreview = false;
+			this.UpdateTryoutVisual();
 		}
 
 		private void BindErrorBanner()
@@ -1691,6 +1711,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			ToolConsole.Log("=== OnExecute 開始 ===");
 			this.CleanupScenePreview();
 			this._nailPreviewController?.CleanupAdditionalObjects();
+
+			// 試着プレビューを解除 (確定適用するのでバナーとボタン見た目を戻す)
+			if (this._tryoutActive)
+			{
+				this._tryoutActive = false;
+				GlobalSetting.EnableSceneWearingPreview = false;
+				this.UpdateTryoutVisual();
+			}
 			this.HideErrorBanner();
 
 			// ---- Validation ----
@@ -1840,6 +1868,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				}
 				string successMessage = BuildSuccessMessage(isHandActive, isFootActive);
 				EditorUtility.DisplayDialog(S("dialog.finished"), successMessage, "OK");
+
+				// 着用時にウィンドウを閉じる (チェックOFFなら何もしない)
+				if (GlobalSetting.CloseWindowOnExecute)
+				{
+					this.Close();
+					return;
+				}
 			}
 			catch (NailSetupUserException e)
 			{
@@ -2374,18 +2409,41 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		}
 
 		// 着用プレビュー（Sceneへの仮着用）のON/OFF
-		private void OnChangeEnableScenePreview(ChangeEvent<bool> evt)
+		private void OnToggleTryout()
 		{
-			GlobalSetting.EnableSceneWearingPreview = evt.newValue;
+			this._tryoutActive = !this._tryoutActive;
+			GlobalSetting.EnableSceneWearingPreview = this._tryoutActive;
+			this.UpdateTryoutVisual();
 
 			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			if (avatar != null)
 			{
 				this._scenePreviewController ??= new MDNailScenePreviewController(SCENE_PREVIEW_NAME);
-				this._scenePreviewController.SetScenePreviewActive(avatar, evt.newValue);
+				this._scenePreviewController.SetScenePreviewActive(avatar, this._tryoutActive);
+			}
+			else if (!this._tryoutActive)
+			{
+				// アバター未選択で試着OFFに切り替えた場合、残存プレビューを念のため掃除
+				this.CleanupScenePreview();
 			}
 
-			if (evt.newValue) this.UpdateScenePreview(immediate: true);
+			if (this._tryoutActive) this.UpdateScenePreview(immediate: true);
+		}
+
+		private void UpdateTryoutVisual()
+		{
+			if (this._tryoutToggle != null)
+			{
+				string key = this._tryoutActive ? "window.tryout_toggle_on" : "window.tryout_toggle_off";
+				string fallback = this._tryoutActive ? "シーンで試着: ON" : "シーンで試着: OFF";
+				this._tryoutToggle.text = S(key) ?? fallback;
+				if (this._tryoutActive) this._tryoutToggle.AddToClassList("active");
+				else this._tryoutToggle.RemoveFromClassList("active");
+			}
+			if (this._tryoutBanner != null)
+			{
+				this._tryoutBanner.style.display = this._tryoutActive ? DisplayStyle.Flex : DisplayStyle.None;
+			}
 		}
 
 	}

@@ -109,6 +109,17 @@ namespace world.anlabo.mdnailtool.Editor
 
 		internal static bool EnableToolConsole { get; set; }
 
+		private const string CLOSE_WINDOW_ON_EXECUTE_KEY = "world.anlabo.mdnailtool.close_window_on_execute";
+		internal static bool CloseWindowOnExecute
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(CLOSE_WINDOW_ON_EXECUTE_KEY)) return false;
+				return EditorPrefs.GetBool(CLOSE_WINDOW_ON_EXECUTE_KEY);
+			}
+			set => EditorPrefs.SetBool(CLOSE_WINDOW_ON_EXECUTE_KEY, value);
+		}
+
 		private const string USE_MODULAR_AVATAR_KEY = "world.anlabo.mdnailtool.use_modular_avatar";
 		internal static bool UseModularAvatar
 		{

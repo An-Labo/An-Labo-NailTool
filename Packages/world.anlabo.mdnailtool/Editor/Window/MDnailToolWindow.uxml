@@ -22,6 +22,13 @@
                 <ui:Label text="[Catalog]" name="link-catalog" class="mdn-link mdn-helplink-item" />
                 <ui:Label text="[FAQ]" name="link-contact-header" class="mdn-link mdn-helplink-item" />
                 <ui:Label text="[Usage Stats]" name="link-usage-stats" class="mdn-link mdn-helplink-item" />
+                <!-- 試着プレビューバナー (helplink-rowに被せる absolute) -->
+                <ui:VisualElement name="tryout-banner" class="mdn-tryout-banner">
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="tryout-banner-label"
+                        text-id="window.tryout_banner"
+                        class="mdn-tryout-banner-text" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -280,14 +287,6 @@
                         tooltip-id="tooltip.backup"
                         class="mdn-option-label mdn-option-clickable" />
                 </ui:VisualElement>
-                <ui:VisualElement class="mdn-option-row">
-                    <ui:Toggle name="enable-wearing-preview" class="mdn-toggle" />
-                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
-                        name="label-wearing-preview"
-                        text-id="window.scene_preview"
-                        tooltip-id="tooltip.scene_preview"
-                        class="mdn-option-label mdn-option-clickable" />
-                </ui:VisualElement>
                 <!-- 追加マテリアルはスタイル行で常時有効 -->
 
                 <ui:VisualElement class="mdn-option-row">
@@ -306,6 +305,16 @@
                         name="label-penetration-correction"
                         text-id="window.penetration_correction"
                         tooltip-id="tooltip.penetration_correction"
+                        class="mdn-option-label mdn-option-clickable" />
+                </ui:VisualElement>
+
+                <!-- 着用時にウィンドウを閉じる -->
+                <ui:VisualElement class="mdn-option-row">
+                    <ui:Toggle name="close-window-on-execute" class="mdn-toggle" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="label-close-window-on-execute"
+                        text-id="window.close_window_on_execute"
+                        tooltip-id="tooltip.close_window_on_execute"
                         class="mdn-option-label mdn-option-clickable" />
                 </ui:VisualElement>
 
@@ -371,7 +380,13 @@
         </ui:VisualElement>
 
         <!-- ===== ACTION BUTTONS ===== -->
+        <!-- ===== ACTION BUTTONS ===== -->
         <ui:VisualElement class="mdn-action-bar">
+            <ui:Button
+                name="tryout-toggle"
+                text="シーンで試着: OFF"
+                tooltip="選択中のデザインをシーンのアバターに仮配置して試着表示します。もう一度押すと解除、「ネイルをつける」で確定できます。"
+                class="mdn-btn-tryout" />
             <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedButton
                 name="execute"
                 text-id="window.attach_nail"
