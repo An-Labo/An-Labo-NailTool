@@ -126,6 +126,21 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			header.Add(bottomRow);
 
+			// 統計リセット行 (誤操作防止のため控えめな見た目+確認ダイアログ)
+			var resetRow = new VisualElement();
+			resetRow.style.flexDirection = FlexDirection.Row;
+			resetRow.style.justifyContent = Justify.FlexEnd;
+			resetRow.style.marginTop = 4;
+
+			var resetBtn = CreateStyledButton(S("usage_stats.reset") ?? "統計をリセット", ResetStatsWithConfirm, new Color(0.45f, 0.2f, 0.2f));
+			resetBtn.style.flexShrink = 0;
+			resetBtn.style.marginRight = 0;
+			resetBtn.style.height = 24;
+			resetBtn.style.fontSize = 10;
+			resetRow.Add(resetBtn);
+
+			header.Add(resetRow);
+
 			_statusLabel = new Label("");
 			_statusLabel.style.marginTop = 4;
 			_statusLabel.style.color = new Color(0.5f, 0.85f, 0.5f);
@@ -193,21 +208,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			topRow.Add(avatarSection);
 
 			_scrollView.Add(topRow);
-
-			// シェイプ
-			_scrollView.Add(BuildStyledSection(S("usage_stats.shape_ranking") ?? "Nail Shape Ranking", GlobalSetting.NailShapeUseCount));
-
-			// オプション
-			if (GlobalSetting.OptionUseCount.Count > 0)
-				_scrollView.Add(BuildStyledSection(S("usage_stats.option_ranking") ?? "Option Usage", GlobalSetting.OptionUseCount));
-
-			// 追加マテリアル
-			var am = GlobalSetting.AdditionalMaterialUseCount;
-			if (am.Count > 0) _scrollView.Add(BuildStyledSection(S("usage_stats.additional_material_ranking") ?? "Additional Material", am));
-
-			// 追加オブジェクト
-			var ao = GlobalSetting.AdditionalObjectUseCount;
-			if (ao.Count > 0) _scrollView.Add(BuildStyledSection(S("usage_stats.additional_object_ranking") ?? "Additional Object", ao));
 		}
 
 		#region UI Sections
@@ -1305,30 +1305,29 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					return parts.Length == 2 ? GetAvatarDisplayName(parts[0], parts[1]) : k;
 				});
 
-			// シェイプ
-			AppendRanking(S("usage_stats.shape_ranking") ?? "Nail Shape Ranking",
-				GlobalSetting.NailShapeUseCount);
-
 			// バリエーション
 			AppendRanking(S("usage_stats.variation_ranking") ?? "Variation Ranking",
 				GlobalSetting.VariationUseCount, k => FormatVariationName(k));
-
-			// オプション
-			AppendRanking(S("usage_stats.option_ranking") ?? "Option Usage",
-				GlobalSetting.OptionUseCount);
-
-			// 追加マテリアル
-			AppendRanking(S("usage_stats.additional_material_ranking") ?? "Additional Material",
-				GlobalSetting.AdditionalMaterialUseCount);
-
-			// 追加オブジェクト
-			AppendRanking(S("usage_stats.additional_object_ranking") ?? "Additional Object",
-				GlobalSetting.AdditionalObjectUseCount);
 
 			sb.AppendLine($"Total: {GlobalSetting.DesignUseCount.Values.Sum()} {T("times", "times")}");
 
 			GUIUtility.systemCopyBuffer = sb.ToString();
 			SetStatus("Copied to clipboard!");
+		}
+
+		private void ResetStatsWithConfirm()
+		{
+			string title = S("usage_stats.reset_title") ?? "統計情報をリセット";
+			string body = S("usage_stats.reset_body")
+				?? "これまでに記録した着用統計(デザイン・アバター等の使用回数、最終使用日時、ビルド診断ログ)を全て削除します。\n\nこの操作は取り消せません。続行しますか？";
+			string ok = S("usage_stats.reset_ok") ?? "リセットする";
+			string cancel = S("usage_stats.reset_cancel") ?? "キャンセル";
+
+			if (!EditorUtility.DisplayDialog(title, body, ok, cancel)) return;
+
+			MDNailToolUsageStats.ResetAll();
+			BuildStats();
+			SetStatus(S("usage_stats.reset_done") ?? "統計情報をリセットしました");
 		}
 
 		private void OnDestroy()

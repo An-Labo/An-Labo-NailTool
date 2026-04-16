@@ -95,6 +95,11 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
             }
         }
 
+        // プロジェクト全域を走査する理由はないので An-Labo NailTool 配下に検索スコープを限定
+        private static readonly string[] _nailPrefabSearchScope = {
+            "Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab"
+        };
+
         private static GameObject? FindAvatarSpecificPrefab(Avatar avatar, AvatarVariation variation, string shape) {
 
             string[] searchQueries = new string[] {
@@ -105,15 +110,13 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
             foreach (string query in searchQueries) {
                 if(string.IsNullOrEmpty(query)) continue;
 
-                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}");
+                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}", _nailPrefabSearchScope);
 
                 foreach (string guid in guids) {
                     string path = AssetDatabase.GUIDToAssetPath(guid);
-                    
-                    if (!path.Contains("/Resource/Nail/Prefab/")) continue;
 
                     string fileName = Path.GetFileName(path);
-                    
+
                     if (fileName.Contains($"[{shape}]") && fileName.Contains(query, StringComparison.OrdinalIgnoreCase)) {
                         return AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     }
@@ -122,11 +125,10 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
 
             foreach (string query in searchQueries) {
                 if(string.IsNullOrEmpty(query)) continue;
-                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}");
+                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}", _nailPrefabSearchScope);
                 foreach (string guid in guids) {
                     string path = AssetDatabase.GUIDToAssetPath(guid);
-                    if (!path.Contains("/Resource/Nail/Prefab/")) continue;
-                    
+
                     if (path.Contains(query, StringComparison.OrdinalIgnoreCase)) {
                         return AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     }

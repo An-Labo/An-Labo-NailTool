@@ -15,6 +15,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
         private readonly string _scenePreviewName;
         private GameObject? _scenePreviewObject;
         private Transform? _scenePreviewRoot;
+        private GameObject? _lastPrefabSource;
 
         private readonly Dictionary<Renderer, bool> _originalRendererEnabled = new();
         private bool _isOriginalHidden = false;
@@ -38,6 +39,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                 _scenePreviewRoot = null;
                 _originalNailLocalTransforms.Clear();
             }
+            _lastPrefabSource = null;
 
             if (avatar == null) return;
 
@@ -65,11 +67,22 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
         {
             if (avatar == null) return;
 
+            // シェイプ切替などで渡された Prefab が変わったら作り直す (NaturalのScale固定防止)
+            if (_scenePreviewObject != null && prefab != null && _lastPrefabSource != prefab)
+            {
+                Object.DestroyImmediate(_scenePreviewObject);
+                _scenePreviewObject = null;
+                _scenePreviewRoot = null;
+                _originalNailLocalTransforms.Clear();
+            }
+
             if (_scenePreviewObject == null)
             {
                 var existing = avatar.transform.Find(_scenePreviewName);
                 if (existing != null)
                 {
+                    // 既存オブジェクトの生成元 Prefab 不明なので _lastPrefabSource は更新しない
+                    // 次回 Update で必ず prefab 不一致扱い→作り直しが走る
                     _scenePreviewObject = existing.gameObject;
                 }
                 else
@@ -80,6 +93,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                     _scenePreviewObject.name = _scenePreviewName;
                     _scenePreviewObject.transform.SetParent(avatar.transform, false);
                     _scenePreviewObject.hideFlags = HideFlags.DontSave;
+                    _lastPrefabSource = prefab;
                 }
 
                 _scenePreviewRoot = _scenePreviewObject.transform;

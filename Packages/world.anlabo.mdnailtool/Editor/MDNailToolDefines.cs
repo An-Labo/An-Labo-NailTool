@@ -13,6 +13,12 @@ namespace world.anlabo.mdnailtool.Editor
 	public static class MDNailToolDefines
 	{
 		public const string ROOT_ASSET_PATH = "Assets/[An-Labo.Virtual]/An-Labo Nail Tool/";
+
+		// ---- Nail Chip v2 update badge ----
+		// MDollnailのBOOTH商品ページURL (v2更新誘導用、空文字ならスキップ)
+		public const string MDOLL_NAIL_BOOTH_URL = "https://minuetdoll.booth.pm/items/3114352";
+		// ⑨未購入案内用: ネイルラボ (コレクションサイト)
+		public const string ANLABO_NAILLAB_URL = "https://anlabo.world/nail-lab/";
 		public const string GENERATED_ASSET_PATH = ROOT_ASSET_PATH + "Generated/";
 		public const string BACKUP_PATH = ROOT_ASSET_PATH + "Backup/";
 		public const string REPORT_PATH = ROOT_ASSET_PATH + "Report/";

@@ -125,6 +125,21 @@
     padding: 8px 10px;
 }
 
+.mdn-chip-update-warning {
+    color: #ff8c00;
+    -unity-font-style: bold;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-width: 1px;
+    border-color: #ff8c00;
+    border-radius: 3px;
+    background-color: rgba(255, 140, 0, 0.12);
+}
+
+.mdn-chip-update-warning:hover {
+    background-color: rgba(255, 140, 0, 0.24);
+}
+
 /* ---- Object field ---- */
 .mdn-object-field {
     margin-bottom: 4px;

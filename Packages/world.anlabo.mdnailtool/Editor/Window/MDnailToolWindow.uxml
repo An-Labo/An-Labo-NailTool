@@ -40,6 +40,13 @@
                     name="avatar-section-title"
                     text-id="window.avatar_select"
                     class="mdn-section-title" />
+                <ui:VisualElement class="mdn-spacer" />
+                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                    name="nail-chip-update-warning"
+                    text-id="window.nail_chip_update_required"
+                    tooltip-id="tooltip.nail_chip_update_required"
+                    class="mdn-chip-update-warning"
+                    style="display: none;" />
             </ui:VisualElement>
             <ui:VisualElement class="mdn-section-body">
                 <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedObjectField
