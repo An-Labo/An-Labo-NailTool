@@ -35,8 +35,11 @@ namespace world.anlabo.mdnailtool.Editor {
 					// 名前ベースで HandNail_* / FootNail_* ラッパー GO を破壊。
 					// BoneProxy によって子オブジェクトは指ボーン配下に移動済みなので、
 					// ラッパー自身は空 (または MA メニュー用コンポーネントのみ) の状態。
+					// ただし「手足まとめる」(BakeBlendShapes=true) 時は統合 SMR が
+					// HandNail_<ゾーン名> と同一 GO に存在するため、SMR 持ちは破壊対象から除外する。
 					var wrappers = avatarRoot.GetComponentsInChildren<Transform>(true)
 						.Where(t => t != null && (t.name.StartsWith("HandNail_") || t.name.StartsWith("FootNail_")))
+						.Where(t => t.GetComponent<SkinnedMeshRenderer>() == null)
 						.ToArray();
 					foreach (Transform t in wrappers) {
 						if (t != null && t.gameObject != null) Object.DestroyImmediate(t.gameObject);

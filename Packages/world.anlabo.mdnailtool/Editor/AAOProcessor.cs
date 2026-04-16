@@ -125,14 +125,19 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (marker != null) Object.DestroyImmediate(marker);
 			}
 #else
-			// 非 MA 環境: MAPluginDefinition は存在しないので、ここでラッパー GO ごと破壊する。
-			// 1. マーカー付きラッパー GO を丸ごと破壊
+			// 非 MA 環境: 「手足まとめる」(BakeBlendShapes=true) 時は統合 SMR が
+			// markerGO 配下 / HandNail_<ゾーン名> GO そのものに存在するため、
+			// GameObject ごと破壊すると統合 SMR が消えてネイルが表示されなくなる。
+			// MA 環境と同じくマーカーコンポーネントのみ剥がし、空ラッパーのみ掃除する方針に統一。
+			// 1. マーカーコンポーネントのみ剥がす (AAO の unknown-type 警告抑制)
 			foreach (MDNailObjectMarker marker in markers) {
-				if (marker != null) Object.DestroyImmediate(marker.gameObject);
+				if (marker != null) Object.DestroyImmediate(marker);
 			}
-			// 2. マーカーが既に外れた残存ラッパーも名前で掃除
+			// 2. SMR 非保持の空ラッパーのみ掃除 (BakeBlendShapes=false で BoneProxy 処理済みの空 GO)
 			foreach (var t in nameBasedWrappers) {
-				if (t != null && t.gameObject != null) Object.DestroyImmediate(t.gameObject);
+				if (t == null || t.gameObject == null) continue;
+				if (t.GetComponent<SkinnedMeshRenderer>() != null) continue;
+				Object.DestroyImmediate(t.gameObject);
 			}
 #endif
 
