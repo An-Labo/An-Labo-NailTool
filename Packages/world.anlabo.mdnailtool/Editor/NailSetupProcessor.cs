@@ -1417,14 +1417,11 @@ namespace world.anlabo.mdnailtool.Editor {
 
 #if MD_NAIL_FOR_MA
 	private static AvatarObjectReference CreateAvatarRef(GameObject obj) {
-#if MA_HAS_PORTABLE_API
-		return new AvatarObjectReference(obj);
-#else
+		// MA 1.15.0で追加された1引数コンストラクタに依存せず、全バージョンで動く実装
 		var r = new AvatarObjectReference();
 		try { r.Set(obj); }
 		catch { r.referencePath = RuntimeUtil.AvatarRootPath(obj); }
 		return r;
-#endif
 	}
 
 	private static void SetMenuSubMenu(ModularAvatarMenuItem item) {
