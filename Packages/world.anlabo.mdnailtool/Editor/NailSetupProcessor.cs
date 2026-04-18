@@ -1417,10 +1417,9 @@ namespace world.anlabo.mdnailtool.Editor {
 
 #if MD_NAIL_FOR_MA
 	private static AvatarObjectReference CreateAvatarRef(GameObject obj) {
-		// MA 1.15.0で追加された1引数コンストラクタに依存せず、全バージョンで動く実装
+		// MAバージョン非依存。Set(GameObject)は全バージョンで存在し、例外を投げない
 		var r = new AvatarObjectReference();
-		try { r.Set(obj); }
-		catch { r.referencePath = RuntimeUtil.AvatarRootPath(obj); }
+		r.Set(obj);
 		return r;
 	}
 
