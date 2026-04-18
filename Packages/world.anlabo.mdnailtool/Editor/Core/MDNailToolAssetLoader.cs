@@ -213,7 +213,7 @@ namespace world.anlabo.mdnailtool.Editor
 					_caseResolveCache[path] = result;
 					if (_warnedPaths.Add(dir))
 					{
-						Debug.LogWarning($"[MDNailTool] Case mismatch resolved in '{dir}' (e.g. '{fileName}' -> '{candidate}').");
+						ToolConsole.Log($"[Warning] Case mismatch resolved in '{dir}' (e.g. '{fileName}' -> '{candidate}').");
 					}
 					return result;
 				}

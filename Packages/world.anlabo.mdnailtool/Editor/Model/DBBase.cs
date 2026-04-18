@@ -45,7 +45,17 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 
 		~DBBase() {
 			this.Dispose();
-		} 
+		}
+
+		/// <summary>
+		/// 型パラメータ T ごとの静的キャッシュと参照カウントをリセットする。
+		/// DB json ファイルを差し替えた直後に呼ぶ (次の new で再読込される)。
+		/// 使用中のインスタンスが残っていても、Dispose 時の既存ゼロ化ロジックで整合。
+		/// </summary>
+		public static void ClearCache() {
+			_cash = null;
+			_accessCount = 0;
+		}
 
 		public void Dispose() {
 			_accessCount--;

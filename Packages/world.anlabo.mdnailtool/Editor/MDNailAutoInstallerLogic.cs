@@ -51,7 +51,7 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
                 var matchResult = matching.Match();
 
                 if (matchResult == null) {
-                    Debug.LogWarning($"[MDNail Installer] アバターに対応する設定が見つかりません: {descriptor.gameObject.name}");
+                    ToolConsole.Log($"[Warning] [Installer] アバターに対応する設定が見つかりません: {descriptor.gameObject.name}");
                     return;
                 }
 
@@ -60,7 +60,7 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
                 GameObject? avatarNailPrefab = FindAvatarSpecificPrefab(avatar, variation, installer.nailShape);
 
                 if (avatarNailPrefab == null) {
-                    Debug.LogError($"[MDNail Installer] アバター '{avatar.AvatarName}' ({variation.VariationName}) 用のネイルPrefabが見つかりませんでした。");
+                    ToolConsole.Log($"[Error] [Installer] アバター '{avatar.AvatarName}' ({variation.VariationName}) 用のネイルPrefabが見つかりませんでした。");
                     return;
                 }
 
@@ -86,12 +86,12 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
                 };
 
                 processor.Process();
-                Debug.Log($"[MDNail Installer] Auto Setup: {installer.designName} on {descriptor.gameObject.name}");
+                ToolConsole.Log($"[Installer] Auto Setup: {installer.designName} on {descriptor.gameObject.name}");
 
                 UnityEngine.Object.DestroyImmediate(installer.gameObject);
 
             } catch (Exception e) {
-                Debug.LogError($"[MDNail Installer] Setup Failed: {e.Message}\n{e.StackTrace}");
+                ToolConsole.Log($"[Error] [Installer] Setup Failed: {e.Message}\n{e.StackTrace}");
             }
         }
 

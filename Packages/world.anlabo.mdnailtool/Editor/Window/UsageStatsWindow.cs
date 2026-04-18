@@ -1154,14 +1154,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				File.WriteAllBytes(_lastSavedPath, png);
 
 				SetStatus($"Saved: {_lastSavedPath}");
-				Debug.Log($"[MDNailTool] Ranking image saved: {_lastSavedPath}");
+				ToolConsole.Log($"Ranking image saved: {_lastSavedPath}");
 
 				EditorUtility.RevealInFinder(_lastSavedPath);
 			}
 			catch (Exception e)
 			{
 				SetStatus($"Error: {e.Message}");
-				Debug.LogError($"[MDNailTool] Ranking image generation failed: {e}");
+				ToolConsole.Log($"[Error] Ranking image generation failed: {e}");
 			}
 		}
 
@@ -1269,7 +1269,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			catch (Exception e)
 			{
-				Debug.LogWarning($"[MDNailTool] Clipboard image copy failed: {e.Message}");
+				ToolConsole.Log($"[Warning] Clipboard image copy failed: {e.Message}");
 				GUIUtility.systemCopyBuffer = imagePath;
 			}
 		}

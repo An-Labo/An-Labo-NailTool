@@ -201,7 +201,7 @@ namespace world.anlabo.mdnailtool.Editor
 			Renderer? renderer = transform.GetComponent<Renderer>();
 			if (renderer == null)
 			{
-				Debug.LogError($"Not found Renderer : {transform.name}");
+				ToolConsole.Log($"[Error] Not found Renderer : {transform.name}");
 				return;
 			}
 
@@ -859,7 +859,7 @@ namespace world.anlabo.mdnailtool.Editor
 						if (variantNail == null && si < variant.VariantNails.Length && variant.VariantNails[si] != null)
 						{
 							variantNail = variant.VariantNails[si];
-							Debug.Log($"[MDNailTool] BakeAndCombine: '{shapeName}' '{baseNail.name}' 名前不一致 → インデックス {si} のバリアント '{variantNail!.name}' を使用");
+							ToolConsole.Log($"BakeAndCombine: '{shapeName}' '{baseNail.name}' 名前不一致 → インデックス {si} のバリアント '{variantNail!.name}' を使用");
 						}
 
 						if (variantNail == null)

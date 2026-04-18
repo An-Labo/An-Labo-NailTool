@@ -88,7 +88,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				if (asset == null) return null;
 				return JsonConvert.DeserializeObject<List<ChangelogEntry>>(asset.text);
 			} catch (Exception e) {
-				Debug.LogWarning($"[MDNailTool] Failed to load changelog: {e}");
+				ToolConsole.Log($"[Warning] Failed to load changelog: {e}");
 				return null;
 			}
 		}

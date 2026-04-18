@@ -251,7 +251,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					.Cast<Renderer?>();
 				NailSetupUtil.EnableMipStreamingForRenderers(allRenderers);
 			} catch (Exception e) {
-				Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? "Mip Streamingの有効化に失敗しました" : "Failed to enable Mip Streaming")}: {e.Message}{BuildDiagnosticInfo()}");
+				ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? "Mip Streamingの有効化に失敗しました" : "Failed to enable Mip Streaming")}: {e.Message}{BuildDiagnosticInfo()}");
 			}
 
 			// ---- BlendShapeのベイクとMA同期設定 ----
@@ -274,12 +274,12 @@ namespace world.anlabo.mdnailtool.Editor {
 							.FirstOrDefault(t => string.Equals(t.name, sourceName, System.StringComparison.OrdinalIgnoreCase));
 					}
 					if (sourceTransform == null) {
-						Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShape同期元のメッシュが見つかりません" : "BlendShape sync source mesh not found")}: '{sourcePath}'{BuildDiagnosticInfo()}");
+						ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShape同期元のメッシュが見つかりません" : "BlendShape sync source mesh not found")}: '{sourcePath}'{BuildDiagnosticInfo()}");
 						continue;
 					}
 					SkinnedMeshRenderer? sourceSmr = sourceTransform.GetComponent<SkinnedMeshRenderer>();
 					if (sourceSmr == null || sourceSmr.sharedMesh == null) {
-						Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShape同期元にメッシュデータがありません" : "BlendShape sync source has no mesh data")}: '{sourcePath}'{BuildDiagnosticInfo()}");
+						ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShape同期元にメッシュデータがありません" : "BlendShape sync source has no mesh data")}: '{sourcePath}'{BuildDiagnosticInfo()}");
 						continue;
 					}
 					resolvedSourceSmrs.Add((sourceSmr, sourcePath));
@@ -295,7 +295,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						.FirstOrDefault();
 					if (fallbackCandidate != null) {
 						resolvedSourceSmrs.Add((fallbackCandidate, fallbackCandidate.gameObject.name));
-						Debug.Log($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShapeSyncSource フォールバック: '{fallbackCandidate.gameObject.name}' を使用します" : $"BlendShapeSyncSource fallback: using '{fallbackCandidate.gameObject.name}'")}");
+						ToolConsole.Log($"{(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShapeSyncSource フォールバック: '{fallbackCandidate.gameObject.name}' を使用します" : $"BlendShapeSyncSource fallback: using '{fallbackCandidate.gameObject.name}'")}");
 
 					}
 				}
@@ -313,7 +313,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							bakeBasePath,
 							this.AvatarVariationData.BlendShapeInitialWeights);
 					} catch (Exception e) {
-						Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShapeのベイクに失敗しました" : "Failed to bake BlendShapes")}: {e.Message}{BuildDiagnosticInfo()}");
+						ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShapeのベイクに失敗しました" : "Failed to bake BlendShapes")}: {e.Message}{BuildDiagnosticInfo()}");
 					}
 				}
 			}
@@ -487,7 +487,7 @@ namespace world.anlabo.mdnailtool.Editor {
 									? $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"
 									: $"Variant '{variant.Name}': path not found for GUID={variant.NailPrefabGUID}";
 									msg += BuildDiagnosticInfo(includeFolder: true);
-									Debug.LogWarning($"[MDNailTool] {msg}");
+									ToolConsole.Log($"[Warning] {msg}");
 									this.Warnings.Add(msg);
 								}
 								continue;
@@ -500,7 +500,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								? $"Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})"
 								: $"Variant '{variant.Name}': failed to load prefab (path={variantPath})";
 								msg += BuildDiagnosticInfo(includeFolder: true);
-								Debug.LogWarning($"[MDNailTool] {msg}");
+								ToolConsole.Log($"[Warning] {msg}");
 								this.Warnings.Add(msg);
 								continue;
 							}
@@ -954,11 +954,11 @@ namespace world.anlabo.mdnailtool.Editor {
 									.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
 									.FirstOrDefault()?.transform;
 								if (srcSmrTransform != null) {
-									Debug.Log($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShapeSync: '{variant.SyncSourceSmrName}' が見つからないため、フォールバック '{srcSmrTransform.name}' を使用します" : $"BlendShapeSync: '{variant.SyncSourceSmrName}' not found, using fallback '{srcSmrTransform.name}'")}");
+									ToolConsole.Log($"{(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShapeSync: '{variant.SyncSourceSmrName}' が見つからないため、フォールバック '{srcSmrTransform.name}' を使用します" : $"BlendShapeSync: '{variant.SyncSourceSmrName}' not found, using fallback '{srcSmrTransform.name}'")}");
 
 								}
 							}
-							if (srcSmrTransform == null) { Debug.LogWarning($"[MDNailTool] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShape同期元のメッシュ '{variant.SyncSourceSmrName}' がアバターに見つかりません" : $"BlendShape sync source mesh '{variant.SyncSourceSmrName}' not found on avatar")}{BuildDiagnosticInfo()}"); continue; }
+							if (srcSmrTransform == null) { ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShape同期元のメッシュ '{variant.SyncSourceSmrName}' がアバターに見つかりません" : $"BlendShape sync source mesh '{variant.SyncSourceSmrName}' not found on avatar")}{BuildDiagnosticInfo()}"); continue; }
 
 							if (!string.IsNullOrEmpty(variant.LeftBlendShapeName) && !string.IsNullOrEmpty(variant.RightBlendShapeName))
 							{
@@ -1042,7 +1042,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					if (nailObject == null) continue;
 					Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 					if (target == null) {
-						Debug.LogError($"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
+						ToolConsole.Log($"[Error] Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
 						continue;
 					}
 
@@ -1061,7 +1061,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject == null) continue;
 						Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 						if (target == null) {
-							Debug.LogError($"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
+							ToolConsole.Log($"[Error] Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
 							continue;
 						}
 
@@ -1078,7 +1078,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject == null) continue;
 						Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 						if (target == null) {
-							Debug.LogError($"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
+							ToolConsole.Log($"[Error] Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
 							continue;
 						}
 
@@ -1132,7 +1132,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			Match match = regex.Match(this.NailPrefab.name);
 			if (match.Success) return match.Groups["prefix"].Value;
 
-			Debug.LogError("Failed to obtain nail prefix.", this.NailPrefab);
+			ToolConsole.Log($"[Error] Failed to obtain nail prefix. ({this.NailPrefab?.name ?? "(null)"})");
 			return "";
 		}
 
@@ -1228,7 +1228,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								return (name, targetBone);
 							}
 
-							Debug.LogWarning($"Not found bone : {handFingerBonePath}");
+							ToolConsole.Log($"[Warning] Not found bone : {handFingerBonePath}");
 						}
 
 						return (name, searchRoot.FindRecursive(boneNameDictionary[name]));
@@ -1242,7 +1242,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							return (name, targetBone);
 						}
 
-						Debug.LogWarning($"Not found bone : {footFingerBonePath}");
+						ToolConsole.Log($"[Warning] Not found bone : {footFingerBonePath}");
 					}
 
 					// 足の指のボーン名から、どちらのつま先かを求める
@@ -1631,7 +1631,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (!string.IsNullOrEmpty(found))
 				{
 #if MD_NAIL_DEVELOP
-					Debug.Log($"[MDNailTool] Variant '{variant.Name}': ファイル名から検出 → {found}");
+					ToolConsole.Log($"Variant '{variant.Name}': ファイル名から検出 → {found}");
 #endif
 					variantPath = found!;
 				}

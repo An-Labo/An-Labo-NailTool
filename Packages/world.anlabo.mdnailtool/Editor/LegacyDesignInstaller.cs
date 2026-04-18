@@ -22,7 +22,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (processor.DesignData.Type != DesignData.JsonType.Legacy) continue;
 				File.Delete($"{MDNailToolDefines.NAIL_DESIGN_PATH}{nailDesign.DesignName}/_design.json");
 				File.Delete($"{MDNailToolDefines.NAIL_DESIGN_PATH}{nailDesign.DesignName}/_design.json.meta");
-				Debug.Log($"Uninstall {nailDesign.DesignName}");
+				ToolConsole.Log($"[Legacy] Uninstall {nailDesign.DesignName}");
 			}
 
 			InstallLegacyNail();
@@ -45,7 +45,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				string designName = match.Groups["designName"].Value;
 				NailDesign nailDesign = dbNailDesign.FindNailDesignByDesignName(designName);
 				if (nailDesign == null) {
-					Debug.Log($"{designName} is not design");
+					ToolConsole.Log($"[Legacy] {designName} is not design");
 					continue;
 				}
 
@@ -53,12 +53,12 @@ namespace world.anlabo.mdnailtool.Editor {
 					continue;
 				}
 
-				Debug.Log($"Find Legacy NailDesign: {designName}");
+				ToolConsole.Log($"[Legacy] Find Legacy NailDesign: {designName}");
 
 
 				string targetPath = $"{MDNailToolDefines.NAIL_DESIGN_PATH}{designName}/";
 				if (!Directory.Exists(targetPath)) {
-					Debug.Log($"Not found Legacy design install Directory : {targetPath}");
+					ToolConsole.Log($"[Legacy] Not found Legacy design install Directory : {targetPath}");
 					continue;
 				}
 
@@ -82,7 +82,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 				File.WriteAllText($"{targetPath}_design.json", designData.ToJson());
 				AssetDatabase.Refresh();
-				Debug.Log($"Installed Legacy NailDesign: {designName}");
+				ToolConsole.Log($"[Legacy] Installed Legacy NailDesign: {designName}");
 			}
 		}
 

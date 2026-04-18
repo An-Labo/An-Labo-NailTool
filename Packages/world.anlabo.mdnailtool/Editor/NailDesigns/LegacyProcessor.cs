@@ -43,7 +43,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				string materialPath = AssetDatabase.GUIDToAssetPath(guid);
 				Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
 				if (material == null) {
-					Debug.LogError($"Not found additional material : {this.DesignName} : {colorName} : {guid} : {materialPath}");
+					ToolConsole.Log($"[Error] Not found additional material : {this.DesignName} : {colorName} : {guid} : {materialPath}");
 					continue;
 				}
 
@@ -59,7 +59,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				string objectPath = AssetDatabase.GUIDToAssetPath(guid);
 				GameObject obj = AssetDatabase.LoadAssetAtPath<GameObject>(objectPath);
 				if (obj == null) {
-					Debug.LogError($"Not found additional object : {this.DesignName} : {colorName} : {targetFinger} : {guid} : {objectPath}");
+					ToolConsole.Log($"[Error] Not found additional object : {this.DesignName} : {colorName} : {targetFinger} : {guid} : {objectPath}");
 					continue;
 				}
 

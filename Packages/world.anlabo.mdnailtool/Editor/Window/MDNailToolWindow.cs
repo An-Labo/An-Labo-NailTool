@@ -1072,15 +1072,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					string objectPath = AssetDatabase.GUIDToAssetPath(resolvedGuid);
 					if (string.IsNullOrEmpty(objectPath))
 					{
-						ToolConsole.Log($"  finger[{i}]: GUID not found: {resolvedGuid} (registryName={registryName})");
-						Debug.LogWarning($"[MDNailTool] AdditionalObject GUID not found: {resolvedGuid} (registryName={registryName})");
+						ToolConsole.Log($"[Warning]  finger[{i}]: AdditionalObject GUID not found: {resolvedGuid} (registryName={registryName})");
 						continue;
 					}
 					GameObject? obj = AssetDatabase.LoadAssetAtPath<GameObject>(objectPath);
 					if (obj == null)
 					{
-						ToolConsole.Log($"  finger[{i}]: could not load: {objectPath}");
-						Debug.LogWarning($"[MDNailTool] AdditionalObject could not load: {objectPath} (registryName={registryName})");
+						ToolConsole.Log($"[Warning]  finger[{i}]: AdditionalObject could not load: {objectPath} (registryName={registryName})");
 						continue;
 					}
 					ToolConsole.Log($"  finger[{i}]: instantiated {obj.name} from {objectPath}");
@@ -2104,7 +2102,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			catch (NailSetupUserException e)
 			{
-				Debug.LogWarning($"[MDNailTool] {e.Message}\n{e.StackTrace}");
+				ToolConsole.Log($"[Warning] {e.Message}\n{e.StackTrace}");
 				this.ShowErrorBanner(e.Message);
 				this._userErrorCount++;
 				if (this._userErrorCount >= 2) {
@@ -2113,7 +2111,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			catch (Exception e)
 			{
-				Debug.LogError(e);
+				ToolConsole.Log($"[Error] {e}");
 				this.ShowErrorBanner(S("error.execute.unexpected"), e);
 				this.ShowContactLinks(e.ToString());
 			}

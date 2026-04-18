@@ -65,7 +65,7 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 				}
 			}
 
-			Debug.Log("[MDNailTool] 言語データをリロードしました");
+			ToolConsole.Log("言語データをリロードしました");
 		}
 
 		internal static void ChangeLanguage(string language) {

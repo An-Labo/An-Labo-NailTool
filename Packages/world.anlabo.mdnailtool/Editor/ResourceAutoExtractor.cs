@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using world.anlabo.mdnailtool.Editor.Model;
 
 #nullable enable
 
@@ -28,7 +29,14 @@ namespace world.anlabo.mdnailtool.Editor {
         private static readonly string[] ADD_ONLY_FOLDERS = {
             "Nail/Thumbnails/"
         };
-        
+
+        // バージョンアップ時に強制上書きするフォルダ。
+        // GUID を持たない純データ (json/テキスト) のみ。Design/Prefab は GUID 保護のため対象外。
+        private static readonly string[] FORCE_UPDATE_FOLDERS = {
+            "DB/",
+            "Lang/"
+        };
+
         private static readonly string[] ESSENTIAL_FILES = {
             "Lang/langs.json",
             "DB/nailDesign.json",
@@ -62,8 +70,11 @@ namespace world.anlabo.mdnailtool.Editor {
         private static void CheckAndExtractEssentials() {
             if (_isExtracting) return;
 
-            // 初回インストール時のみ自動展開。バージョン変更では触らない（GUID保護）
-            if (HasEssentialFiles()) return;
+            // 既存展開済みでも、バージョン変更時は DB/Lang だけ強制上書き (GUID非保持データのみ)
+            if (HasEssentialFiles()) {
+                UpdateForceFoldersIfVersionChanged();
+                return;
+            }
 
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
@@ -73,22 +84,66 @@ namespace world.anlabo.mdnailtool.Editor {
 
         public static void EnsureEssentialsExtractedSync() {
             if (_isExtracting) return;
-            if (HasEssentialFiles()) return;
-            
+            if (HasEssentialFiles()) {
+                UpdateForceFoldersIfVersionChanged();
+                return;
+            }
+
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
-            
+
             try {
                 _isExtracting = true;
                 ExtractFoldersFromZip(ESSENTIAL_FOLDERS);
                 SaveInstalledVersion(MDNailToolDefines.Version);
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
+                ClearDbCaches();
             } catch (Exception e) {
-                Debug.LogError($"[MDNailTool] 同期展開失敗: {e.Message}");
+                ToolConsole.Log($"[Error] 同期展開失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
             }
+        }
+
+        /// <summary>
+        /// バージョンが変わっていたら DB/Lang を zip から強制上書き再展開する。
+        /// 既存ユーザーに新版のデザイン一覧・ショップ定義・言語ファイルが届かない問題への対策。
+        /// Design/Prefab は GUID 保護のため触らない (リソース初期化メニューでのみ全更新)。
+        /// </summary>
+        private static void UpdateForceFoldersIfVersionChanged() {
+            string currentVersion = MDNailToolDefines.Version;
+            string? installedVersion = GetInstalledVersion();
+            if (installedVersion == currentVersion) return;
+
+            string? zipPath = GetZipRealPath();
+            if (zipPath == null) return;
+
+            try {
+                _isExtracting = true;
+                int copied = ExtractFoldersFromZip(FORCE_UPDATE_FOLDERS);
+                SaveInstalledVersion(currentVersion);
+                if (copied > 0) {
+                    AssetDatabase.Refresh(ImportAssetOptions.Default);
+                    MDNailToolDefines.ClearResourcePathCache();
+                    ClearDbCaches();
+                }
+            } catch (Exception e) {
+                ToolConsole.Log($"[Error] DB/Lang更新失敗: {e.Message}");
+            } finally {
+                _isExtracting = false;
+            }
+        }
+
+        /// <summary>
+        /// DB 系クラスの静的キャッシュをまとめてクリアする。
+        /// DB json ファイルをディスク上で差し替えた後に呼ぶと、次回アクセスで再読込される。
+        /// </summary>
+        private static void ClearDbCaches() {
+            DBShop.ClearCache();
+            DBNailDesign.ClearCache();
+            DBNailShape.ClearCache();
+            DBAdditionalAssets.ClearCache();
         }
 
         internal static string? GetZipRealPath() {
@@ -152,15 +207,16 @@ namespace world.anlabo.mdnailtool.Editor {
                 SaveInstalledVersion(targetVersion);
                 AssetDatabase.Refresh(ImportAssetOptions.Default);
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
-                
+
                 Progress.Finish(progressId);
-                Debug.Log($"[MDNailTool] リソース展開完了 ({copiedFiles} files)");
-                
+                ToolConsole.Log($"リソース展開完了 ({copiedFiles} files)");
+
                 MDNailToolDefines.ClearResourcePathCache();
-                
+                ClearDbCaches();
+
             } catch (Exception e) {
                 Progress.Finish(progressId, Progress.Status.Failed);
-                Debug.LogError($"[MDNailTool] リソース展開失敗: {e.Message}");
+                ToolConsole.Log($"[Error] リソース展開失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
             }
@@ -283,7 +339,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
                 
             } catch (Exception e) {
-                Debug.LogError($"[MDNailTool] デザイン展開失敗 ({designName}): {e.Message}");
+                ToolConsole.Log($"[Error] デザイン展開失敗 ({designName}): {e.Message}");
             }
         }
 
@@ -319,7 +375,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
                 
             } catch (Exception e) {
-                Debug.LogError($"[MDNailTool] GUID検索失敗 ({guid}): {e.Message}");
+                ToolConsole.Log($"[Error] GUID検索失敗 ({guid}): {e.Message}");
             }
         }
 
@@ -367,19 +423,19 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
                 
             } catch (Exception e) {
-                Debug.LogError($"[MDNailTool] Prefabフォルダ展開失敗 ({prefabFolderName}): {e.Message}");
+                ToolConsole.Log($"[Error] Prefabフォルダ展開失敗 ({prefabFolderName}): {e.Message}");
             }
         }
 
         public static void ForceExtractAll() {
             if (_isExtracting) {
-                Debug.LogWarning("[MDNailTool] 既に展開中です");
+                ToolConsole.Log("[Warning] 既に展開中です");
                 return;
             }
-            
+
             string? zipPath = GetZipRealPath();
             if (zipPath == null) {
-                Debug.LogError("[MDNailTool] ZIPファイルが見つかりません");
+                ToolConsole.Log("[Error] ZIPファイルが見つかりません");
                 return;
             }
             
@@ -413,13 +469,14 @@ namespace world.anlabo.mdnailtool.Editor {
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
                 
                 Progress.Finish(progressId);
-                Debug.Log($"[MDNailTool] 全リソース展開完了 ({copiedFiles} files)");
-                
+                ToolConsole.Log($"全リソース展開完了 ({copiedFiles} files)");
+
                 MDNailToolDefines.ClearResourcePathCache();
-                
+                ClearDbCaches();
+
             } catch (Exception e) {
                 Progress.Finish(progressId, Progress.Status.Failed);
-                Debug.LogError($"[MDNailTool] リソース展開失敗: {e.Message}");
+                ToolConsole.Log($"[Error] リソース展開失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
             }
@@ -458,13 +515,13 @@ namespace world.anlabo.mdnailtool.Editor {
 
         public static void ResetResources(bool skipConfirmDialog = false) {
             if (_isExtracting) {
-                Debug.LogWarning("[MDNailTool] 既に展開中です");
+                ToolConsole.Log("[Warning] 既に展開中です");
                 return;
             }
 
             string? zipPath = GetZipRealPath();
             if (zipPath == null) {
-                Debug.LogError("[MDNailTool] ZIPファイルが見つかりません");
+                ToolConsole.Log("[Error] ZIPファイルが見つかりません");
                 return;
             }
 
@@ -554,7 +611,7 @@ namespace world.anlabo.mdnailtool.Editor {
                         return assetPath;
                     }
                 } catch (Exception e) {
-                    Debug.LogWarning($"[MDNailTool] .meta検索エラー ({root}): {e.Message}");
+                    ToolConsole.Log($"[Warning] .meta検索エラー ({root}): {e.Message}");
                 }
             }
 
@@ -651,7 +708,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
                 File.WriteAllText(VersionFilePath, version);
             } catch (Exception e) {
-                Debug.LogWarning($"[MDNailTool] バージョン保存失敗: {e.Message}");
+                ToolConsole.Log($"[Warning] バージョン保存失敗: {e.Message}");
             }
         }
     }
