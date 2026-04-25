@@ -1104,6 +1104,15 @@ namespace world.anlabo.mdnailtool.Editor {
 				Object.DestroyImmediate(nailPrefabObject);
 		}
 
+		// Unity AssetDatabase は ø / é / 絵文字 など一部の非ASCII文字を含む .meta 書き込みに失敗する
+		// [例: "Phenøa" -> Cannot open file ... for write]
+		// a-zA-Z0-9_- とひらがな・カタカナ・漢字のみ通し、それ以外は _ に置換する。
+		private static string SanitizeForFileName(string name) {
+			if (string.IsNullOrEmpty(name)) return "avatar";
+			string sanitized = Regex.Replace(name, @"[^a-zA-Z0-9_\-぀-ゟ゠-ヿ一-鿿]", "_");
+			return string.IsNullOrEmpty(sanitized) ? "avatar" : sanitized;
+		}
+
 		private void CreateBackup() {
 			if (!Directory.Exists(MDNailToolDefines.BACKUP_PATH)) {
 				Directory.CreateDirectory(MDNailToolDefines.BACKUP_PATH);
@@ -1111,7 +1120,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			GameObject clonedObject = Object.Instantiate(this.Avatar.gameObject);
-			string prefabName = $"bk_{this.Avatar.gameObject.name}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.prefab";
+			string safeAvatarName = SanitizeForFileName(this.Avatar.gameObject.name);
+			string prefabName = $"bk_{safeAvatarName}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.prefab";
 
 			// MDNailToolWindow.OnExecute の StartAssetEditing バッチモード中に
 			// SaveAsPrefabAsset すると .meta の書き込みが失敗する("Cannot open file ... for write")ため、
