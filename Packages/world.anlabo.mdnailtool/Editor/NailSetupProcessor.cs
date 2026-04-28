@@ -163,8 +163,10 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			string prefix = this.getPrefabPrefix();
 
-			foreach (Transform child in nailPrefabObject.transform) {
-				child.name = child.name.Replace($"{prefix}", "");
+			if (!string.IsNullOrEmpty(prefix)) {
+				foreach (Transform child in nailPrefabObject.transform) {
+					child.name = child.name.Replace(prefix, "");
+				}
 			}
 
 			// 装着対象ボーンの取得
@@ -507,7 +509,8 @@ namespace world.anlabo.mdnailtool.Editor {
 
 							GameObject resolvedVariantPrefab = ResolveShapePrefab(variantPrefabAsset, this.NailShapeName);
 							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab, this.Avatar.transform);
-							objectsToDestroy.Add(instVariant);
+							// C-1 fix: instVariant の objectsToDestroy 追加は全 vNail.SetParent 完了後に移動.
+							// (L510 -> ループ末尾) 詳細は variants ループ末尾参照.
 
 							// バリアントプレハブの子名からシェイプ接頭辞([Oval]等)を除去
 							{
@@ -623,6 +626,10 @@ namespace world.anlabo.mdnailtool.Editor {
 								var varFeetAll = varLeftFoot.Concat(varRightFoot).ToArray();
 								if (varFeetAll.Any(t => t != null))
 									footVariants.Add((variant.Name, varFeetAll, variant.LeftBlendShapeName, variant.RightBlendShapeName));
+
+								// C-1 fix: 全 vNail が SetParent 完了したのでルート GO を Destroy 対象に追加.
+								// 子 vNail は別途 objectsToDestroy 追加済み. null check により二重 Destroy は安全.
+								objectsToDestroy.Add(instVariant);
 							}
 						}
 						}
@@ -868,6 +875,14 @@ namespace world.anlabo.mdnailtool.Editor {
 					Transform? existingNailRoot = anLaboParent.Find(nailPrefabObject.name);
 					if (existingNailRoot != null && existingNailRoot.GetComponent<MDNailObjectMarker>() != null)
 					{
+						// A-1 fix: 既存ルート内の旧 HandNail/FootNail ラッパーを先に破棄してから新wrapperを統合する.
+						// 色違い再Apply時に旧wrapperが残ってネイル多重積みになるバグの修正.
+						// handWrapperName/footWrapperName は SetupForModularAvatar 冒頭 (L398-399) で既に宣言済み.
+						Transform? oldHand = existingNailRoot.Find(handWrapperName);
+						Transform? oldFoot = existingNailRoot.Find(footWrapperName);
+						if (oldHand != null) Undo.DestroyObjectImmediate(oldHand.gameObject);
+						if (oldFoot != null) Undo.DestroyObjectImmediate(oldFoot.gameObject);
+
 						handWrapper.transform.SetParent(existingNailRoot, false);
 						if (footWrapper != null) footWrapper.transform.SetParent(existingNailRoot, false);
 						Object.DestroyImmediate(nailPrefabObject);
@@ -883,6 +898,13 @@ namespace world.anlabo.mdnailtool.Editor {
 					Transform? existingRoot = this.Avatar.transform.Find(nailPrefabObject.name);
 					if (existingRoot != null && existingRoot.GetComponent<MDNailObjectMarker>() != null)
 					{
+						// A-1 fix: MergeAnLabo=false ルートでも同様に旧wrapperを破棄してから統合する.
+						// handWrapperName/footWrapperName は SetupForModularAvatar 冒頭 (L398-399) で既に宣言済み.
+						Transform? oldHand = existingRoot.Find(handWrapperName);
+						Transform? oldFoot = existingRoot.Find(footWrapperName);
+						if (oldHand != null) Undo.DestroyObjectImmediate(oldHand.gameObject);
+						if (oldFoot != null) Undo.DestroyObjectImmediate(oldFoot.gameObject);
+
 						handWrapper.transform.SetParent(existingRoot, false);
 						if (footWrapper != null) footWrapper.transform.SetParent(existingRoot, false);
 						Object.DestroyImmediate(nailPrefabObject);
@@ -890,9 +912,13 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 				}
 
-				// ---- マーカーコンポーネント追加（重複付与防止）----
+				// ---- マーカーコンポーネント追加 (重複付与防止) ----
+				// B-1 fix: AddComponent の結果を Undo に登録. Undo時にMarkerだけ消えてGOが残るデグレを防ぐ.
 				if (nailPrefabObject.GetComponent<MDNailObjectMarker>() == null)
-					nailPrefabObject.AddComponent<MDNailObjectMarker>();
+				{
+					MDNailObjectMarker marker = nailPrefabObject.AddComponent<MDNailObjectMarker>();
+					Undo.RegisterCreatedObjectUndo(marker, "Nail Setup Marker");
+				}
 
 				// ---- MA Mesh Settings（バウンディングボックスによるカリング防止）----
 				if (nailPrefabObject.GetComponent<ModularAvatarMeshSettings>() == null)

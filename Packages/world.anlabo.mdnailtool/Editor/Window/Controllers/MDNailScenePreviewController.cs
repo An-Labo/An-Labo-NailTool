@@ -345,6 +345,22 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
             _isOriginalHidden = false;
         }
 
+        /// <summary>
+        /// A-2 fix: Apply 直前に呼び出して, Hide 中の元 Renderer を強制的に enabled=true に戻す.
+        /// プレビュー Hide 状態のまま Apply -> Cleanup の流れに入ると元 Renderer が
+        /// false のままシーンに保存される事例があるため, Cleanup より先に強制復元する保険.
+        /// </summary>
+        public void ForceRestoreAllRenderers()
+        {
+            foreach (var kvp in _originalRendererEnabled)
+            {
+                if (kvp.Key != null)
+                    kvp.Key.enabled = true;
+            }
+            _originalRendererEnabled.Clear();
+            _isOriginalHidden = false;
+        }
+
         public void SetScenePreviewActive(VRCAvatarDescriptor avatar, bool active)
         {
             if (_scenePreviewObject != null)

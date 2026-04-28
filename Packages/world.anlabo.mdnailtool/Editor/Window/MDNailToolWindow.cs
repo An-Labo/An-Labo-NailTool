@@ -2429,7 +2429,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void CleanupScenePreview()
 		{
-			this._scenePreviewController?.Cleanup(this._avatarObjectField?.value as VRCAvatarDescriptor);
+			VRCAvatarDescriptor? avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
+			// A-2 fix: Apply 直前の Cleanup で, Hide 状態の元 Renderer を強制的に enabled=true に戻す.
+			// プレビュー Hide 状態のまま Apply に入ると元 Renderer が false のまま保存される事故を防ぐ保険.
+			this._scenePreviewController?.ForceRestoreAllRenderers();
+			this._scenePreviewController?.Cleanup(avatar);
 			this._scenePreviewController = null;
 		}
 
