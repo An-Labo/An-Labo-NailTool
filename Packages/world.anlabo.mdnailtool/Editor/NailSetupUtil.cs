@@ -233,15 +233,24 @@ namespace world.anlabo.mdnailtool.Editor
 			for (int index = 0; index < handsNailObjects.Length; index++)
 			{
 				Transform? transform = handsNailObjects[index];
-				if (transform == null)
-				{
-					ToolConsole.Log($"  index={index}: transform=null → skip");
-					continue;
-				}
 
 				// per-finger オーバーライドがあればそちらを使用
 				IEnumerable<Transform>? fingerObjects = perFingerAdditionalObjects != null && index < perFingerAdditionalObjects.Length
 					? perFingerAdditionalObjects[index] : null;
+
+				if (transform == null)
+				{
+					ToolConsole.Log($"  index={index}: transform=null → skip");
+					// 親付け先がない場合は Instantiate 済み孤児 GO を Destroy する (Scene 残留防止).
+					if (fingerObjects != null)
+					{
+						foreach (Transform additionalObject in fingerObjects)
+						{
+							if (additionalObject != null) UnityEngine.Object.DestroyImmediate(additionalObject.gameObject);
+						}
+					}
+					continue;
+				}
 
 				ToolConsole.Log($"  index={index}: transform={transform.name}, fingerObjects null? {fingerObjects == null}");
 

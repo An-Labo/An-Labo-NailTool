@@ -222,7 +222,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				throw;
 			}
 
-			// 足の追加オブジェクト（per-finger indices 10-19）
+			// 足の追加オブジェクト (per-finger indices 10-19)
 			if (this.UseFootNail && this.PerFingerAdditionalObjects != null)
 			{
 				try {
@@ -230,9 +230,16 @@ namespace world.anlabo.mdnailtool.Editor {
 					for (int fi = 0; fi < footNailObjects.Length; fi++)
 					{
 						int perFingerIdx = fi + 10;
-						if (footNailObjects[fi] == null || perFingerIdx >= this.PerFingerAdditionalObjects.Length) continue;
+						if (perFingerIdx >= this.PerFingerAdditionalObjects.Length) continue;
 						var fingerObjects = this.PerFingerAdditionalObjects[perFingerIdx];
 						if (fingerObjects == null) continue;
+						// 親付け先がない場合は Instantiate 済み孤児 GO を Destroy する (Scene 残留防止).
+						if (footNailObjects[fi] == null) {
+							foreach (Transform additionalObject in fingerObjects) {
+								if (additionalObject != null) Object.DestroyImmediate(additionalObject.gameObject);
+							}
+							continue;
+						}
 						foreach (Transform additionalObject in fingerObjects)
 							additionalObject.SetParent(footNailObjects[fi], false);
 					}

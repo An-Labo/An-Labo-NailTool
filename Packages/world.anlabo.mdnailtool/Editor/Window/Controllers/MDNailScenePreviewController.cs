@@ -167,12 +167,21 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
 
                 if (isFootActive && perFingerAdditionalObjects != null)
                 {
-                    // 足の追加オブジェクト（10-19）を feet に親付け
+                    // 足の追加オブジェクト 10-19 を feet に親付け
                     for (int fi = 0; fi < feet.Length && fi + 10 < perFingerAdditionalObjects.Length; fi++)
                     {
                         var footTransform = feet[fi];
                         var footObjects = perFingerAdditionalObjects[fi + 10];
-                        if (footTransform == null || footObjects == null) continue;
+                        if (footObjects == null) continue;
+                        // 親付け先がない場合は Instantiate 済み孤児 GO を Destroy する (Scene 残留防止).
+                        if (footTransform == null)
+                        {
+                            foreach (Transform obj in footObjects)
+                            {
+                                if (obj != null) Object.DestroyImmediate(obj.gameObject);
+                            }
+                            continue;
+                        }
                         foreach (Transform obj in footObjects)
                             obj.SetParent(footTransform, false);
                     }
