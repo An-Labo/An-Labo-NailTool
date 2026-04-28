@@ -198,14 +198,15 @@ namespace world.anlabo.mdnailtool.Editor {
 
             try {
                 int copiedFiles = 0;
-                
+
                 await Task.Run(() => {
                     copiedFiles = ExtractFoldersFromZip(ESSENTIAL_FOLDERS);
                 });
-                
+
                 Progress.Report(progressId, 0.95f, "インポート中...");
                 SaveInstalledVersion(targetVersion);
                 AssetDatabase.Refresh(ImportAssetOptions.Default);
+                ReimportThumbnailFolder();
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
 
                 Progress.Finish(progressId);
@@ -213,12 +214,39 @@ namespace world.anlabo.mdnailtool.Editor {
 
                 MDNailToolDefines.ClearResourcePathCache();
                 ClearDbCaches();
+                RebuildOpenNailWindows();
 
             } catch (Exception e) {
                 Progress.Finish(progressId, Progress.Status.Failed);
                 ToolConsole.Log($"[Error] リソース展開失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
+            }
+        }
+
+        // サムネのTextureが古い参照のままマゼンタ表示されないよう、フォルダごと強制再インポート
+        private static void ReimportThumbnailFolder() {
+            string thumbnailDir = ASSETS_RESOURCE_PATH + "Nail/Thumbnails";
+            if (!AssetDatabase.IsValidFolder(thumbnailDir)) return;
+            AssetDatabase.ImportAsset(thumbnailDir, ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceUpdate);
+        }
+
+        // 開いているMDNailTool系ウィンドウのrootVisualElementを作り直し、
+        // 古いTexture参照 (マゼンタ表示) を破棄する。LanguageManager.ReloadLanguagesと同パターン。
+        // namespace部の小文字 "mdnailtool" でマッチさせ、SearchNailDesignWindow等も対象に含める。
+        private static void RebuildOpenNailWindows() {
+            EditorWindow[] windows = UnityEngine.Resources.FindObjectsOfTypeAll<EditorWindow>();
+            foreach (EditorWindow w in windows) {
+                if (w == null) continue;
+                if (w.GetType().FullName?.Contains("mdnailtool") != true) continue;
+                w.rootVisualElement?.Clear();
+                System.Reflection.MethodInfo? createGui = w.GetType().GetMethod(
+                    "CreateGUI",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.NonPublic);
+                createGui?.Invoke(w, null);
+                w.Repaint();
             }
         }
 
@@ -466,13 +494,15 @@ namespace world.anlabo.mdnailtool.Editor {
                 Progress.Report(progressId, 0.95f, "インポート中...");
                 SaveInstalledVersion(MDNailToolDefines.Version);
                 AssetDatabase.Refresh(ImportAssetOptions.Default);
+                ReimportThumbnailFolder();
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
-                
+
                 Progress.Finish(progressId);
                 ToolConsole.Log($"全リソース展開完了 ({copiedFiles} files)");
 
                 MDNailToolDefines.ClearResourcePathCache();
                 ClearDbCaches();
+                RebuildOpenNailWindows();
 
             } catch (Exception e) {
                 Progress.Finish(progressId, Progress.Status.Failed);
