@@ -847,6 +847,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							nailObject.rotation = c.rotation;
 						}
 						if (targetBone == null) continue;
+						nailObject.SetParent(targetBone, true);
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 						boneProxy.target = targetBone;
@@ -866,6 +867,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								nailObject.rotation = c.rotation;
 								}
 							if (targetBone == null) continue;
+							nailObject.SetParent(targetBone, true);
 							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 							boneProxy.target = targetBone;
@@ -882,6 +884,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								nailObject.rotation = c.rotation;
 								}
 							if (targetBone == null) continue;
+							nailObject.SetParent(targetBone, true);
 							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 							boneProxy.target = targetBone;
