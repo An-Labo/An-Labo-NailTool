@@ -281,7 +281,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
                 Transform nail = kv.Key;
                 nail.position = kv.Value.position;
                 nail.rotation = kv.Value.rotation;
-                nail.localScale = Vector3.Scale(nail.localScale, kv.Value.scaleRatio);
+                NailSetupProcessor.EnforceLossyScale(nail, kv.Value.desiredLossyScale);
             }
         }
 

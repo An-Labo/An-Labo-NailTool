@@ -327,10 +327,21 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 
-			// ---- Armature補正の計算(MA/非MA共通)----
-			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? corrections = null;
+			// ---- ネイルSMRのlocalBoundsを広めに固定(フラスタムカリング・最適化対策)----
+			// MA MeshSettings 未適用時のフォールバック。Bounds ベースの可視性判定にも対応する。
+			ApplyNailBoundsGuard(handsNailObjects);
+			if (this.UseFootNail) {
+				ApplyNailBoundsGuard(leftFootNailObjects);
+				ApplyNailBoundsGuard(rightFootNailObjects);
+			}
+
+			// scale退避→配置→復元。歪み防止
+			Dictionary<Transform, Vector3> savedBoneScales = new();
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections = null;
 			if (this.ArmatureScaleCompensation)
 			{
+				savedBoneScales = SaveAndNeutralizeBoneScales(this.Avatar);
+
 				var allNails = new List<Transform?>();
 				var allBoneIndices = new List<int>();
 				int ci = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
@@ -361,30 +372,65 @@ namespace world.anlabo.mdnailtool.Editor {
 					this.Avatar, targetBoneDictionary,
 					allNails.ToArray(), allBoneIndices.ToArray());
 			}
-
-			// ---- ネイルSMRのlocalBoundsを広めに固定(フラスタムカリング・最適化対策)----
-			// MA MeshSettings 未適用時のフォールバック。Bounds ベースの可視性判定にも対応する。
-			ApplyNailBoundsGuard(handsNailObjects);
-			if (this.UseFootNail) {
-				ApplyNailBoundsGuard(leftFootNailObjects);
-				ApplyNailBoundsGuard(rightFootNailObjects);
+			try
+			{
+				if (this.ForModularAvatar) {
+					SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
+						leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
+				} else {
+					SetupDirect(nailPrefabObject, targetBoneDictionary, handsNailObjects,
+						leftFootNailObjects, rightFootNailObjects, corrections);
+				}
 			}
-
-			if (this.ForModularAvatar) {
-				SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
-					leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
-			} else {
-				SetupDirect(nailPrefabObject, targetBoneDictionary, handsNailObjects,
-					leftFootNailObjects, rightFootNailObjects, corrections);
+			finally
+			{
+				RestoreBoneScales(savedBoneScales);
 			}
 		}
 
-		/// <summary>
-		/// ネイルSMRのlocalBoundsを広めに固定する（フラスタムカリング対策）。
-		/// ModularAvatarMeshSettingsと併用してもSMR自身のboundsが上書きされるだけなので問題ない。
-		/// </summary>
+		// rootとHumanoidボーンのscaleを退避して1に揃える
+		private static Dictionary<Transform, Vector3> SaveAndNeutralizeBoneScales(VRCAvatarDescriptor avatar)
+		{
+			var saved = new Dictionary<Transform, Vector3>();
+			if (avatar == null) return saved;
+
+			if (avatar.transform.localScale != Vector3.one)
+			{
+				Undo.RecordObject(avatar.transform, "Nail Setup Scale Neutralize");
+				saved[avatar.transform] = avatar.transform.localScale;
+				avatar.transform.localScale = Vector3.one;
+			}
+
+			Animator anim = avatar.GetComponent<Animator>();
+			if (anim == null || anim.avatar == null || !anim.avatar.isHuman) return saved;
+
+			foreach (HumanBodyBones hbb in System.Enum.GetValues(typeof(HumanBodyBones)))
+			{
+				if (hbb == HumanBodyBones.LastBone) continue;
+				Transform? t = anim.GetBoneTransform(hbb);
+				if (t == null) continue;
+				if (t.localScale != Vector3.one)
+				{
+					Undo.RecordObject(t, "Nail Setup Scale Neutralize");
+					saved[t] = t.localScale;
+					t.localScale = Vector3.one;
+				}
+			}
+			return saved;
+		}
+
+		// scale復元
+		private static void RestoreBoneScales(Dictionary<Transform, Vector3> saved)
+		{
+			if (saved == null) return;
+			foreach (var kv in saved)
+			{
+				if (kv.Key != null) kv.Key.localScale = kv.Value;
+			}
+		}
+
+		// 表示範囲を広めに固定。カリング対策
 		private static void ApplyNailBoundsGuard(Transform?[] nailObjects) {
-			// 指先のネイルを想定した広めの範囲（1m立方）。通常の指スケールでは十分余裕がある。
 			var guardBounds = new Bounds(Vector3.zero, Vector3.one);
 			foreach (Transform? nailObject in nailObjects) {
 				if (nailObject == null) continue;
@@ -401,7 +447,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			Transform?[] leftFootNailObjects,
 			Transform?[] rightFootNailObjects,
 			List<(SkinnedMeshRenderer sourceSmr, string sourcePath)> resolvedSourceSmrs,
-			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? corrections) {
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections) {
 #if MD_NAIL_FOR_MA
 				string variationName = this.AvatarVariationData.VariationName;
 				string handWrapperName = $"HandNail_{variationName}";
@@ -422,11 +468,12 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject == null) continue;
 						Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
 						if (targetBone == null) continue;
+						Vector3? desired = null;
 						if (corrections != null && corrections.TryGetValue(nailObject, out var c))
 						{
 							nailObject.position = c.position;
 							nailObject.rotation = c.rotation;
-							nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+							desired = c.desiredLossyScale;
 						}
 						nailObject.SetParent(targetBone, true);
 					}
@@ -439,14 +486,15 @@ namespace world.anlabo.mdnailtool.Editor {
 							if (nailObject == null) continue;
 							Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
 							if (targetBone == null) continue;
+							Vector3? desired = null;
 							if (corrections != null && corrections.TryGetValue(nailObject, out var c))
 							{
 								nailObject.position = c.position;
 								nailObject.rotation = c.rotation;
-								nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+								desired = c.desiredLossyScale;
 							}
 							nailObject.SetParent(targetBone, true);
-						}
+							}
 						bpIndex = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
 						foreach (Transform? nailObject in rightFootNailObjects)
 						{
@@ -454,14 +502,15 @@ namespace world.anlabo.mdnailtool.Editor {
 							if (nailObject == null) continue;
 							Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
 							if (targetBone == null) continue;
+							Vector3? desired = null;
 							if (corrections != null && corrections.TryGetValue(nailObject, out var c))
 							{
 								nailObject.position = c.position;
 								nailObject.rotation = c.rotation;
-								nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+								desired = c.desiredLossyScale;
 							}
 							nailObject.SetParent(targetBone, true);
-						}
+							}
 					}
 					else
 					{
@@ -542,7 +591,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							CopyMeshIfNull(varRightFoot, rightFootNailObjects);
 
 							// Armatureスケール補正をバリアントネイルにも適用
-							Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? variantCorrections = null;
+							Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? variantCorrections = null;
 							if (corrections != null)
 							{
 								var varAllNails = new List<Transform?>();
@@ -585,14 +634,15 @@ namespace world.anlabo.mdnailtool.Editor {
 								objectsToDestroy.Add(vNail.gameObject);
 								Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
 								if (targetBone == null) continue;
+								Vector3? desired = null;
 								if (variantCorrections != null && variantCorrections.TryGetValue(vNail, out var vc))
 								{
 									vNail.position = vc.position;
 									vNail.rotation = vc.rotation;
-									vNail.localScale = Vector3.Scale(vNail.localScale, vc.scaleRatio);
+									desired = vc.desiredLossyScale;
 								}
 								vNail.SetParent(targetBone, true);
-							}
+									}
 							if (varHands.Any(t => t != null))
 								handVariants.Add((variant.Name, varHands, variant.LeftBlendShapeName, variant.RightBlendShapeName));
 
@@ -606,14 +656,15 @@ namespace world.anlabo.mdnailtool.Editor {
 									objectsToDestroy.Add(vNail.gameObject);
 									Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
 									if (targetBone == null) continue;
+									Vector3? desired = null;
 									if (variantCorrections != null && variantCorrections.TryGetValue(vNail, out var vc))
 									{
 										vNail.position = vc.position;
 										vNail.rotation = vc.rotation;
-										vNail.localScale = Vector3.Scale(vNail.localScale, vc.scaleRatio);
+										desired = vc.desiredLossyScale;
 									}
 									vNail.SetParent(targetBone, true);
-								}
+											}
 								bpIndex = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
 								foreach (Transform? vNail in varRightFoot)
 								{
@@ -622,14 +673,15 @@ namespace world.anlabo.mdnailtool.Editor {
 									objectsToDestroy.Add(vNail.gameObject);
 									Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[bpIndex]];
 									if (targetBone == null) continue;
+									Vector3? desired = null;
 									if (variantCorrections != null && variantCorrections.TryGetValue(vNail, out var vc))
 									{
 										vNail.position = vc.position;
 										vNail.rotation = vc.rotation;
-										vNail.localScale = Vector3.Scale(vNail.localScale, vc.scaleRatio);
+										desired = vc.desiredLossyScale;
 									}
 									vNail.SetParent(targetBone, true);
-								}
+											}
 								var varFeetAll = varLeftFoot.Concat(varRightFoot).ToArray();
 								if (varFeetAll.Any(t => t != null))
 									footVariants.Add((variant.Name, varFeetAll, variant.LeftBlendShapeName, variant.RightBlendShapeName));
@@ -780,7 +832,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject != null) Object.DestroyImmediate(nailObject.gameObject);
 				}
 
-				// ---- BoneProxy設定（BakeBlendShapes=falseの場合のみ）----
+				// ---- BoneProxy設定 (BakeBlendShapes=falseの場合のみ) ----
 				if (!this.BakeBlendShapes)
 				{
 					int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
@@ -788,15 +840,16 @@ namespace world.anlabo.mdnailtool.Editor {
 					{
 						index++;
 						if (nailObject == null) continue;
+						Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 						if (corrections != null && corrections.TryGetValue(nailObject, out var c))
 						{
 							nailObject.position = c.position;
 							nailObject.rotation = c.rotation;
-							nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
 						}
+						if (targetBone == null) continue;
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-						boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
+						boneProxy.target = targetBone;
 					}
 
 					if (this.UseFootNail)
@@ -806,30 +859,32 @@ namespace world.anlabo.mdnailtool.Editor {
 						{
 							index++;
 							if (nailObject == null) continue;
+							Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 							if (corrections != null && corrections.TryGetValue(nailObject, out var c))
 							{
 								nailObject.position = c.position;
 								nailObject.rotation = c.rotation;
-								nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
-							}
+								}
+							if (targetBone == null) continue;
 							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-							boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
+							boneProxy.target = targetBone;
 						}
 						index = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
 						foreach (Transform? nailObject in rightFootNailObjects)
 						{
 							index++;
 							if (nailObject == null) continue;
+							Transform? targetBone = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 							if (corrections != null && corrections.TryGetValue(nailObject, out var c))
 							{
 								nailObject.position = c.position;
 								nailObject.rotation = c.rotation;
-								nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
-							}
+								}
+							if (targetBone == null) continue;
 							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-							boneProxy.target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
+							boneProxy.target = targetBone;
 						}
 					}
 				}
@@ -1070,7 +1125,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			Transform?[] handsNailObjects,
 			Transform?[] leftFootNailObjects,
 			Transform?[] rightFootNailObjects,
-			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>? corrections) {
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections) {
 				int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
 				foreach (Transform? nailObject in handsNailObjects) {
 					index++;
@@ -1081,10 +1136,11 @@ namespace world.anlabo.mdnailtool.Editor {
 						continue;
 					}
 
+					Vector3? desired = null;
 					if (corrections != null && corrections.TryGetValue(nailObject, out var c)) {
 						nailObject.position = c.position;
 						nailObject.rotation = c.rotation;
-						nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+						desired = c.desiredLossyScale;
 					}
 					nailObject.SetParent(target, true);
 				}
@@ -1100,10 +1156,11 @@ namespace world.anlabo.mdnailtool.Editor {
 							continue;
 						}
 
+						Vector3? desired = null;
 						if (corrections != null && corrections.TryGetValue(nailObject, out var c)) {
 							nailObject.position = c.position;
 							nailObject.rotation = c.rotation;
-							nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+							desired = c.desiredLossyScale;
 						}
 						nailObject.SetParent(target, true);
 					}
@@ -1117,10 +1174,11 @@ namespace world.anlabo.mdnailtool.Editor {
 							continue;
 						}
 
+						Vector3? desired = null;
 						if (corrections != null && corrections.TryGetValue(nailObject, out var c)) {
 							nailObject.position = c.position;
 							nailObject.rotation = c.rotation;
-							nailObject.localScale = Vector3.Scale(nailObject.localScale, c.scaleRatio);
+							desired = c.desiredLossyScale;
 						}
 						nailObject.SetParent(target, true);
 					}
@@ -1326,11 +1384,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				.ToArray();
 		}
 
-		/// <summary>
-		/// バリアントネイルのsharedMeshがnullの場合、対応するベースネイルからメッシュをコピーする。
-		/// プレハブが参照するFBXが存在しない場合でも、ベースネイルのメッシュ(ReplaceFootNailMesh等で
-		/// 置き換え済み)を使ってBlendShape差分を計算可能にする。
-		/// </summary>
+		// メッシュ無ければベースからコピー
 		private static void CopyMeshIfNull(Transform?[] variantNails, Transform?[] baseNails) {
 			int count = Math.Min(variantNails.Length, baseNails.Length);
 			for (int i = 0; i < count; i++) {
@@ -1375,14 +1429,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			return string.Join("/", parts);
 		}
 
-		/// <summary>
-		/// アバターのFBXを一時的にインスタンス化し、標準ボーンtransformを参照して
-		/// ネイルの補正済みワールド位置・回転・スケールを計算する。
-		/// FBXのインポート時の標準状態を基準にすることで、ユーザーがスケール変更した
-		/// アバターをPrefab化していても正しく差分を検出できる。
-		/// 実際のアバターのボーンは一切変更しないため、復元処理が不要で精度劣化がない。
-		/// </summary>
-		internal static Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 scaleRatio)>
+		// FBX素体基準でネイルの位置と回転を計算
+		internal static Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>
 			ComputeScaleCompensatedTransforms(
 				VRCAvatarDescriptor avatar,
 				Dictionary<string, Transform?> targetBoneDictionary,
@@ -1391,7 +1439,6 @@ namespace world.anlabo.mdnailtool.Editor {
 		{
 			var result = new Dictionary<Transform, (Vector3, Quaternion, Vector3)>();
 
-			// 基準となるFBXモデルを取得（インポート時の標準状態）
 			Animator? avatarAnimator = avatar.GetComponent<Animator>();
 			if (avatarAnimator == null || avatarAnimator.avatar == null) return result;
 
@@ -1404,20 +1451,16 @@ namespace world.anlabo.mdnailtool.Editor {
 			GameObject tempInstance = Object.Instantiate(referenceAsset);
 			try
 			{
-				// アバターと同じ位置・回転に配置
 				tempInstance.transform.SetPositionAndRotation(avatar.transform.position, avatar.transform.rotation);
 				tempInstance.transform.localScale = avatar.transform.lossyScale;
 
-				// 2. 一時インスタンスのボーン名→Transform辞書を構築
 				Dictionary<string, Transform> tempBonesByName = new();
 				foreach (Transform t in tempInstance.GetComponentsInChildren<Transform>())
 				{
-					// 同名ボーンがある場合は最初のものを使用
 					if (!tempBonesByName.ContainsKey(t.name))
 						tempBonesByName[t.name] = t;
 				}
 
-				// 3. 各ネイルの補正位置を計算
 				for (int i = 0; i < nailObjects.Length; i++)
 				{
 					Transform? nail = nailObjects[i];
@@ -1428,43 +1471,42 @@ namespace world.anlabo.mdnailtool.Editor {
 					Transform? actualBone = targetBoneDictionary.GetValueOrDefault(boneName);
 					if (actualBone == null) continue;
 
-					// 一時インスタンスから対応するボーンを検索
 					if (!tempBonesByName.TryGetValue(actualBone.name, out Transform? tempBone)) continue;
 
-					// 基準ボーン空間でのネイルのローカルオフセットを算出
 					Vector3 localPos = tempBone.InverseTransformPoint(nail.position);
 					Quaternion localRot = Quaternion.Inverse(tempBone.rotation) * nail.rotation;
 
-					// 実アバターのボーンにオフセットを適用 → 補正済みワールド位置
 					Vector3 correctedWorldPos = actualBone.TransformPoint(localPos);
 					Quaternion correctedWorldRot = actualBone.rotation * localRot;
 
-					// スケール比率を計算(基準ボーン->実ボーンの変化率)
-					// 絶対値ではなく比率にすることで、ネイルの元のスケールを基にした相対補正になる
-					Vector3 tempScale = tempBone.lossyScale;
-					Vector3 actualScale = actualBone.lossyScale;
-					Vector3 scaleRatio = new Vector3(
-						tempScale.x != 0 ? actualScale.x / tempScale.x : 1f,
-						tempScale.y != 0 ? actualScale.y / tempScale.y : 1f,
-						tempScale.z != 0 ? actualScale.z / tempScale.z : 1f
-					);
-					// shear誤差吸収: 親階層の非一様スケール x 回転でlossyScaleに5%以内のshearが発生する場合
-					// (例: Spine.y=1.5 / Chest.y=0.66 の打ち消し型アバター)、それを補正値として乗算すると
-					// 親指等の回転ボーンで爪が歪む。意図的な大きなscale変更だけ残し、shearは1にclampする。
-					const float SHEAR_TOLERANCE = 0.05f;
-					if (Mathf.Abs(scaleRatio.x - 1f) < SHEAR_TOLERANCE) scaleRatio.x = 1f;
-					if (Mathf.Abs(scaleRatio.y - 1f) < SHEAR_TOLERANCE) scaleRatio.y = 1f;
-					if (Mathf.Abs(scaleRatio.z - 1f) < SHEAR_TOLERANCE) scaleRatio.z = 1f;
-					result[nail] = (correctedWorldPos, correctedWorldRot, scaleRatio);
+					result[nail] = (correctedWorldPos, correctedWorldRot, nail.lossyScale);
 				}
 			}
 			finally
 			{
-				// 一時インスタンスを確実に破棄
 				Object.DestroyImmediate(tempInstance);
 			}
 
 			return result;
+		}
+
+		// サイズを目標値に揃える
+		internal static void EnforceLossyScale(Transform nail, Vector3 desiredLossyScale)
+		{
+			if (nail == null) return;
+			const int MAX_ITER = 6;
+			const float TOLERANCE = 0.001f;
+			for (int i = 0; i < MAX_ITER; i++)
+			{
+				Vector3 cur = nail.lossyScale;
+				float rx = Mathf.Abs(cur.x) > 1e-6f ? desiredLossyScale.x / cur.x : 1f;
+				float ry = Mathf.Abs(cur.y) > 1e-6f ? desiredLossyScale.y / cur.y : 1f;
+				float rz = Mathf.Abs(cur.z) > 1e-6f ? desiredLossyScale.z / cur.z : 1f;
+				if (Mathf.Abs(rx - 1f) < TOLERANCE && Mathf.Abs(ry - 1f) < TOLERANCE && Mathf.Abs(rz - 1f) < TOLERANCE)
+					break;
+				Vector3 ls = nail.localScale;
+				nail.localScale = new Vector3(ls.x * rx, ls.y * ry, ls.z * rz);
+			}
 		}
 
 #if MD_NAIL_FOR_MA
