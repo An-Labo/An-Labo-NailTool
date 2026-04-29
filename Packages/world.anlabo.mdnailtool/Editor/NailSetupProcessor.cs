@@ -1452,18 +1452,9 @@ namespace world.anlabo.mdnailtool.Editor {
 					// (例: Spine.y=1.5 / Chest.y=0.66 の打ち消し型アバター)、それを補正値として乗算すると
 					// 親指等の回転ボーンで爪が歪む。意図的な大きなscale変更だけ残し、shearは1にclampする。
 					const float SHEAR_TOLERANCE = 0.05f;
-					bool clampX = Mathf.Abs(scaleRatio.x - 1f) < SHEAR_TOLERANCE;
-					bool clampY = Mathf.Abs(scaleRatio.y - 1f) < SHEAR_TOLERANCE;
-					bool clampZ = Mathf.Abs(scaleRatio.z - 1f) < SHEAR_TOLERANCE;
-					if (clampX) scaleRatio.x = 1f;
-					if (clampY) scaleRatio.y = 1f;
-					if (clampZ) scaleRatio.z = 1f;
-					// 全成分clamp = shear範囲内 = 補正不要と判断した場合は位置・回転も補正しない
-					// (InverseTransformPoint -> TransformPoint 経路でshearが位置にもオフセットを生むため)
-					if (clampX && clampY && clampZ) {
-						correctedWorldPos = nail.position;
-						correctedWorldRot = nail.rotation;
-					}
+					if (Mathf.Abs(scaleRatio.x - 1f) < SHEAR_TOLERANCE) scaleRatio.x = 1f;
+					if (Mathf.Abs(scaleRatio.y - 1f) < SHEAR_TOLERANCE) scaleRatio.y = 1f;
+					if (Mathf.Abs(scaleRatio.z - 1f) < SHEAR_TOLERANCE) scaleRatio.z = 1f;
 					result[nail] = (correctedWorldPos, correctedWorldRot, scaleRatio);
 				}
 			}
