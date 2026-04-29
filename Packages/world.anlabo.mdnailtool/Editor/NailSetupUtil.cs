@@ -716,6 +716,7 @@ namespace world.anlabo.mdnailtool.Editor
 			if (validPairs.Length == 0) return null;
 
 			GameObject combinedGo = new GameObject(zoneName);
+			Undo.RegisterCreatedObjectUndo(combinedGo, "Nail Setup");
 			combinedGo.transform.SetParent(nailPrefabObject.transform, false);
 			combinedGo.transform.localPosition = Vector3.zero;
 			combinedGo.transform.localRotation = Quaternion.identity;

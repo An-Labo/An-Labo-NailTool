@@ -739,6 +739,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				{
 					// ---- HandNailラッパー作成 ----
 					handWrapper = new GameObject(handWrapperName);
+					Undo.RegisterCreatedObjectUndo(handWrapper, "Nail Setup");
 					handWrapper.transform.SetParent(nailPrefabObject.transform, false);
 					foreach (Transform? nailObject in handsNailObjects)
 					{
@@ -757,6 +758,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					{
 						// ---- FootNailラッパー作成 ----
 						footWrapper = new GameObject(footWrapperName);
+						Undo.RegisterCreatedObjectUndo(footWrapper, "Nail Setup");
 						footWrapper.transform.SetParent(nailPrefabObject.transform, false);
 						foreach (Transform? nailObject in leftFootNailObjects)
 						{
@@ -1437,7 +1439,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					Vector3 correctedWorldPos = actualBone.TransformPoint(localPos);
 					Quaternion correctedWorldRot = actualBone.rotation * localRot;
 
-					// スケール比率を計算（基準ボーン→実ボーンの変化率）
+					// スケール比率を計算(基準ボーン->実ボーンの変化率)
 					// 絶対値ではなく比率にすることで、ネイルの元のスケールを基にした相対補正になる
 					Vector3 tempScale = tempBone.lossyScale;
 					Vector3 actualScale = actualBone.lossyScale;
@@ -1446,6 +1448,13 @@ namespace world.anlabo.mdnailtool.Editor {
 						tempScale.y != 0 ? actualScale.y / tempScale.y : 1f,
 						tempScale.z != 0 ? actualScale.z / tempScale.z : 1f
 					);
+					// shear誤差吸収: 親階層の非一様スケール x 回転でlossyScaleに5%以内のshearが発生する場合
+					// (例: Spine.y=1.5 / Chest.y=0.66 の打ち消し型アバター)、それを補正値として乗算すると
+					// 親指等の回転ボーンで爪が歪む。意図的な大きなscale変更だけ残し、shearは1にclampする。
+					const float SHEAR_TOLERANCE = 0.05f;
+					if (Mathf.Abs(scaleRatio.x - 1f) < SHEAR_TOLERANCE) scaleRatio.x = 1f;
+					if (Mathf.Abs(scaleRatio.y - 1f) < SHEAR_TOLERANCE) scaleRatio.y = 1f;
+					if (Mathf.Abs(scaleRatio.z - 1f) < SHEAR_TOLERANCE) scaleRatio.z = 1f;
 					result[nail] = (correctedWorldPos, correctedWorldRot, scaleRatio);
 				}
 			}
