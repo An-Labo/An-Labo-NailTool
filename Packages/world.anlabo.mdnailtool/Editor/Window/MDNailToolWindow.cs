@@ -1995,6 +1995,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				return;
 			}
 
+			// StartAssetEditing 外で呼ぶ (バッチ中はシーン保存が書込失敗するため)
+			if (this._backup!.value)
+			{
+				NailSetupProcessor.CreateBackup(avatar.gameObject);
+			}
+
 			// ---- Process ----
 			AssetDatabase.StartAssetEditing();
 			try

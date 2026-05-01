@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using VRC.SDK3.Avatars.Components;
 using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.Model;
@@ -77,10 +79,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 			if (avatarAnimator.avatar == null) {
 				throw new NailSetupUserException(LanguageManager.S("error.execute.no_avatar_rig") ?? "error.execute.no_avatar_rig");
-			}
-
-			if (this.Backup) {
-				this.CreateBackup();
 			}
 
 			INailProcessor.ClearCreatedMaterialCash();
@@ -1209,27 +1207,29 @@ namespace world.anlabo.mdnailtool.Editor {
 			return string.IsNullOrEmpty(sanitized) ? "avatar" : sanitized;
 		}
 
-		private void CreateBackup() {
+		// SaveAsPrefabAsset は Native 内部で .meta 二重書込エラーを出すため避ける
+		public static void CreateBackup(GameObject avatarGameObject) {
 			if (!Directory.Exists(MDNailToolDefines.BACKUP_PATH)) {
 				Directory.CreateDirectory(MDNailToolDefines.BACKUP_PATH);
 				AssetDatabase.Refresh();
 			}
 
-			GameObject clonedObject = Object.Instantiate(this.Avatar.gameObject);
-			string safeAvatarName = SanitizeForFileName(this.Avatar.gameObject.name);
-			string prefabName = $"bk_{safeAvatarName}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.prefab";
+			string safeAvatarName = SanitizeForFileName(avatarGameObject.name);
+			string sceneName = $"bk_{safeAvatarName}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.unity";
+			string destPath = MDNailToolDefines.BACKUP_PATH + sceneName;
 
-			// MDNailToolWindow.OnExecute の StartAssetEditing バッチモード中に
-			// SaveAsPrefabAsset すると .meta の書き込みが失敗する("Cannot open file ... for write")ため、
-			// バッチモードを一時中断してから保存する
-			AssetDatabase.StopAssetEditing();
+			Scene previousActive = SceneManager.GetActiveScene();
+			Scene backupScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
 			try {
-				PrefabUtility.SaveAsPrefabAsset(clonedObject, MDNailToolDefines.BACKUP_PATH + prefabName);
-				AssetDatabase.Refresh();
+				GameObject clonedObject = Object.Instantiate(avatarGameObject);
+				SceneManager.MoveGameObjectToScene(clonedObject, backupScene);
+				EditorSceneManager.SaveScene(backupScene, destPath);
 			} finally {
-				AssetDatabase.StartAssetEditing();
+				EditorSceneManager.CloseScene(backupScene, removeScene: true);
+				if (previousActive.IsValid()) {
+					EditorSceneManager.SetActiveScene(previousActive);
+				}
 			}
-			Object.DestroyImmediate(clonedObject);
 		}
 
 
