@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -323,21 +324,49 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
 			if (variation == null) return null;
 
-			string guid = variation.NailPrefabGUID;
-			if (string.IsNullOrEmpty(guid)) return null;
-
-			string? path = AssetDatabase.GUIDToAssetPath(guid);
-			
-			if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) {
-				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(guid);
-				AssetDatabase.Refresh();
-				path = AssetDatabase.GUIDToAssetPath(guid);
-			}
-			
+			// resolve by filename: explicit NailPrefabName > convention {Avatar}_{Variation} > {Avatar}
+			bool isMultiVariation = avatar != null && avatar.AvatarVariations.Count >= 2;
+			string? path = FindMainPrefabByName(avatarName, variantName, isMultiVariation, variation.NailPrefabName);
 			if (string.IsNullOrEmpty(path)) return null;
 
 			GameObject? nailPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
 			return nailPrefab;
+		}
+
+		private static string? FindMainPrefabByName(string avatarName, string variationName, bool isMultiVariation, string? explicitName = null) {
+			List<string> coreList = new List<string>();
+			if (!string.IsNullOrEmpty(explicitName)) coreList.Add(explicitName!);
+			if (isMultiVariation) {
+				coreList.Add($"{avatarName}_{variationName}");
+				coreList.Add(avatarName);
+			} else {
+				coreList.Add(avatarName);
+			}
+			string[] cores = coreList.Distinct().ToArray();
+
+			string[] searchRoots = {
+				"Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab",
+				"Packages/world.anlabo.mdnailtool/Nail/Prefab"
+			};
+
+			foreach (string root in searchRoots) {
+				string fullRoot = Path.GetFullPath(root);
+				if (!Directory.Exists(fullRoot)) continue;
+				try {
+					foreach (string core in cores) {
+						foreach (string file in Directory.EnumerateFiles(fullRoot, $"[*]{core}.prefab", SearchOption.AllDirectories)) {
+							string assetPath = file.Replace("\\", "/");
+							int idx = assetPath.IndexOf("Assets/", StringComparison.Ordinal);
+							if (idx >= 0) assetPath = assetPath.Substring(idx);
+							AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport);
+							if (AssetDatabase.LoadAssetAtPath<GameObject>(assetPath) != null) {
+								return assetPath;
+							}
+						}
+					}
+				} catch { /* skip */ }
+			}
+			return null;
 		}
 
 		public string GetAvatarKey() {

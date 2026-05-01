@@ -95,8 +95,8 @@ namespace world.anlabo.mdnailtool.Editor {
 				{
 					ToolConsole.Log($"  activeVariants names: [{string.Join(", ", activeVariants.Select(v => v.Name))}]");
 					AvatarBlendShapeVariant variant = activeVariants.FirstOrDefault(v => v.Name == this.SelectedBlendShapeVariantName);
-					ToolConsole.Log($"  variant match? {variant != null}, GUID={variant?.NailPrefabGUID ?? "(null)"}");
-					if (variant != null && !string.IsNullOrEmpty(variant.NailPrefabGUID))
+					ToolConsole.Log($"  variant match? {variant != null}, name={variant?.NailPrefabName ?? variant?.Name ?? "(null)"}");
+					if (variant != null)
 					{
 						string? variantPath = ResolveVariantPath(variant);
 						ToolConsole.Log($"  variantPath={variantPath ?? "(null)"}");
@@ -537,11 +537,12 @@ namespace world.anlabo.mdnailtool.Editor {
 							string? variantPath = ResolveVariantPath(variant);
 							if (string.IsNullOrEmpty(variantPath))
 							{
-								if (!string.IsNullOrEmpty(variant.NailPrefabGUID))
+								if (!string.IsNullOrEmpty(variant.NailPrefabName))
 								{
+									string lookupName = variant.NailPrefabName!;
 									string msg = LanguageManager.CurrentLanguageData.language == "ja"
-									? $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"
-									: $"Variant '{variant.Name}': path not found for GUID={variant.NailPrefabGUID}";
+									? $"Variant '{variant.Name}': name='{lookupName}' のpathが見つかりません"
+									: $"Variant '{variant.Name}': path not found for name='{lookupName}'";
 									msg += BuildDiagnosticInfo(includeFolder: true);
 									ToolConsole.Log($"[Warning] {msg}");
 									this.Warnings.Add(msg);
@@ -1697,30 +1698,13 @@ namespace world.anlabo.mdnailtool.Editor {
 			return null;
 		}
 
-		/// <summary>バリアントのパスを解決する共通メソッド（GUID検索 → ファイル名検索）</summary>
+		/// <summary>resolve variant prefab path by filename (prefer NailPrefabName)</summary>
 		private string? ResolveVariantPath(AvatarBlendShapeVariant variant)
 		{
-			// Step 1: GUID検索
-			string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+			string variantPath = "";
 			{
-				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
-				AssetDatabase.Refresh();
-				variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-			}
-			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
-			{
-				string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
-				if (!string.IsNullOrEmpty(diskPath))
-				{
-					AssetDatabase.ImportAsset(diskPath!);
-					variantPath = diskPath!;
-				}
-			}
-			// Step 2: [ShapeName]VariantName.prefab をファイル名で検索
-			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
-			{
-				string? found = FindVariantPrefabByName(variant.Name);
+				string searchName = !string.IsNullOrEmpty(variant.NailPrefabName) ? variant.NailPrefabName! : variant.Name;
+				string? found = FindVariantPrefabByName(searchName);
 				if (!string.IsNullOrEmpty(found))
 				{
 #if MD_NAIL_DEVELOP
@@ -1753,10 +1737,13 @@ namespace world.anlabo.mdnailtool.Editor {
 				"Packages/world.anlabo.mdnailtool/Nail/Prefab"
 			};
 
-			// アバターフォルダも検索対象に追加
+			// avatar-specific folder + main prefab folder first (collision avoidance)
+			List<string> allRoots = new();
 			string? avatarFolder = GetAvatarAssetFolder();
-			List<string> allRoots = new(searchRoots);
 			if (!string.IsNullOrEmpty(avatarFolder)) allRoots.Add(avatarFolder!);
+			string? mainPrefabDir = !string.IsNullOrEmpty(mainPrefabPath) ? Path.GetDirectoryName(mainPrefabPath) : null;
+			if (!string.IsNullOrEmpty(mainPrefabDir) && !allRoots.Contains(mainPrefabDir!)) allRoots.Add(mainPrefabDir!);
+			allRoots.AddRange(searchRoots);
 
 			foreach (string root in allRoots)
 			{
