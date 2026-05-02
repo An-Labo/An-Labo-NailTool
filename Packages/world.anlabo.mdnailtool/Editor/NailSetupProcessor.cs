@@ -1729,15 +1729,14 @@ namespace world.anlabo.mdnailtool.Editor {
 			var shapeMatch = Regex.Match(mainFileName, @"\[(?<shape>.+)\].+");
 			string shapeName = shapeMatch.Success ? shapeMatch.Groups["shape"].Value : "Natural";
 
-			// 期待されるファイル名: [ShapeName]VariantName.prefab
-			string expectedFileName = $"[{shapeName}]{variantName}.prefab";
+			var expectedFileNames = new List<string> { $"[{shapeName}]{variantName}.prefab" };
+			if (shapeName != "Natural") expectedFileNames.Add($"[Natural]{variantName}.prefab");
 
 			string[] searchRoots = {
 				"Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab",
 				"Packages/world.anlabo.mdnailtool/Nail/Prefab"
 			};
 
-			// avatar-specific folder + main prefab folder first (collision avoidance)
 			List<string> allRoots = new();
 			string? avatarFolder = GetAvatarAssetFolder();
 			if (!string.IsNullOrEmpty(avatarFolder)) allRoots.Add(avatarFolder!);
@@ -1745,22 +1744,25 @@ namespace world.anlabo.mdnailtool.Editor {
 			if (!string.IsNullOrEmpty(mainPrefabDir) && !allRoots.Contains(mainPrefabDir!)) allRoots.Add(mainPrefabDir!);
 			allRoots.AddRange(searchRoots);
 
-			foreach (string root in allRoots)
+			foreach (string expectedFileName in expectedFileNames)
 			{
-				string fullRoot = Path.GetFullPath(root);
-				if (!Directory.Exists(fullRoot)) continue;
-
-				try
+				foreach (string root in allRoots)
 				{
-					foreach (string file in Directory.EnumerateFiles(fullRoot, expectedFileName, SearchOption.AllDirectories))
+					string fullRoot = Path.GetFullPath(root);
+					if (!Directory.Exists(fullRoot)) continue;
+
+					try
 					{
-						string assetPath = file.Replace("\\", "/");
-						int idx = assetPath.IndexOf("Assets/", StringComparison.Ordinal);
-						if (idx >= 0) assetPath = assetPath.Substring(idx);
-						return assetPath;
+						foreach (string file in Directory.EnumerateFiles(fullRoot, expectedFileName, SearchOption.AllDirectories))
+						{
+							string assetPath = file.Replace("\\", "/");
+							int idx = assetPath.IndexOf("Assets/", StringComparison.Ordinal);
+							if (idx >= 0) assetPath = assetPath.Substring(idx);
+							return assetPath;
+						}
 					}
+					catch { }
 				}
-				catch { /* skip */ }
 			}
 
 			return null;
