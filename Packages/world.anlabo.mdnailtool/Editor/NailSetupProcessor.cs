@@ -387,17 +387,20 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			// 装着完了後の Editor 表示リフレッシュ (bake 直後の SMR 描画キャッシュ問題対策).
-			// 生成された SMR を一度 disable→enable して GPU 側に dirty 通知.
-			foreach (SkinnedMeshRenderer smr in this.Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-			{
-				if (smr == null) continue;
-				bool prev = smr.enabled;
-				smr.enabled = false;
-				smr.enabled = prev;
-				EditorUtility.SetDirty(smr);
-			}
-			EditorUtility.SetDirty(this.Avatar.gameObject);
-			SceneView.RepaintAll();
+			// 生成された ネイル SMR のみを対象 + 1 frame 遅延で MA pipeline 完了後に走らせる.
+			GameObject capturedNailRoot = nailPrefabObject;
+			EditorApplication.delayCall += () => {
+				if (capturedNailRoot == null) return;
+				foreach (SkinnedMeshRenderer smr in capturedNailRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+				{
+					if (smr == null) continue;
+					bool prev = smr.enabled;
+					smr.enabled = false;
+					smr.enabled = prev;
+					EditorUtility.SetDirty(smr);
+				}
+				SceneView.RepaintAll();
+			};
 		}
 
 		// rootとHumanoidボーンのscaleを退避して1に揃える
@@ -541,11 +544,6 @@ namespace world.anlabo.mdnailtool.Editor {
 					AvatarBlendShapeVariant[]? activeVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
 					if (activeVariants != null)
 					{
-						// バリアント解決にはアセットのインポートが必要な場合があるため、
-						// StartAssetEditingのバッチモードを一時中断する
-						AssetDatabase.StopAssetEditing();
-						try
-						{
 						foreach (AvatarBlendShapeVariant variant in activeVariants)
 						{
 							string? variantPath = ResolveVariantPath(variant);
@@ -562,10 +560,23 @@ namespace world.anlabo.mdnailtool.Editor {
 								}
 								continue;
 							}
-							AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceSynchronousImport);
-							GameObject? variantPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
+							// ResolveVariantPath 内で既に load 確認済みのため初回 ImportAsset は省略.
+							GameObject? variantPrefabAsset = NailSetupUtil.LoadPrefabAtPath(variantPath);
 							if (variantPrefabAsset == null)
 							{
+								AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+								variantPrefabAsset = NailSetupUtil.LoadPrefabAtPath(variantPath);
+							}
+							if (variantPrefabAsset == null)
+							{
+								// 認識失敗時の詳細診断 (File.Exists / meta / GUID 整合)
+								bool fileExists = File.Exists(Path.GetFullPath(variantPath));
+								bool metaExists = File.Exists(Path.GetFullPath(variantPath + ".meta"));
+								string guidFromAdb = AssetDatabase.AssetPathToGUID(variantPath);
+								string pathFromAdb = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+								string diag = $"[NailDiag] variant='{variant.Name}' GUID={variant.NailPrefabGUID} path={variantPath} fileExists={fileExists} metaExists={metaExists} AssetPathToGUID(path)={guidFromAdb} GUIDToAssetPath(guid)={pathFromAdb} guidMatch={string.Equals(guidFromAdb, variant.NailPrefabGUID, StringComparison.OrdinalIgnoreCase)}";
+								ToolConsole.Log(diag);
+
 								string msg = LanguageManager.CurrentLanguageData.language == "ja"
 								? $"Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})"
 								: $"Variant '{variant.Name}': failed to load prefab (path={variantPath})";
@@ -697,16 +708,10 @@ namespace world.anlabo.mdnailtool.Editor {
 								var varFeetAll = varLeftFoot.Concat(varRightFoot).ToArray();
 								if (varFeetAll.Any(t => t != null))
 									footVariants.Add((variant.Name, varFeetAll, variant.LeftBlendShapeName, variant.RightBlendShapeName));
-
-								// C-1 fix: 全 vNail が SetParent 完了したのでルート GO を Destroy 対象に追加.
-								// 子 vNail は別途 objectsToDestroy 追加済み. null check により二重 Destroy は安全.
-								objectsToDestroy.Add(instVariant);
 							}
-						}
-						}
-						finally
-						{
-							AssetDatabase.StartAssetEditing();
+
+							// 全 vNail が SetParent 完了したのでルート GO を Destroy 対象に追加 (UseFootNail=false でも実行).
+							objectsToDestroy.Add(instVariant);
 						}
 					}
 
@@ -1316,9 +1321,14 @@ namespace world.anlabo.mdnailtool.Editor {
 					Undo.DestroyObjectImmediate(nailObject.gameObject);
 				}
 			}
-			// [An-Labo] 親が空になったら削除 (ネイル全 GO 除去後に残るのを防ぐ)
+			// [An-Labo] 親が空になったら削除 (NailTool 管理 GO のみ対象, 同名の他ツール GO 誤爆防止).
 			Transform? anLaboParent = avatar.transform.Find("[An-Labo]");
-			if (anLaboParent != null && anLaboParent.childCount == 0) {
+			if (anLaboParent != null
+				&& anLaboParent.childCount == 0
+#if MD_NAIL_FOR_MA
+				&& anLaboParent.GetComponent<ModularAvatarMenuInstaller>() != null
+#endif
+				) {
 				Undo.DestroyObjectImmediate(anLaboParent.gameObject);
 			}
 		}
@@ -1716,39 +1726,43 @@ namespace world.anlabo.mdnailtool.Editor {
 			return null;
 		}
 
-		/// <summary>バリアントのパスを解決する共通メソッド（GUID検索 → ファイル名検索）</summary>
+		/// <summary>バリアントのパスを解決する共通メソッド (GUID検索 -> ファイル名検索)</summary>
 		private string? ResolveVariantPath(AvatarBlendShapeVariant variant)
 		{
 			// Step 1: GUID検索
 			string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+			if (string.IsNullOrEmpty(variantPath) || NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 			{
 				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
 				AssetDatabase.Refresh();
 				variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
 			}
-			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+			if (!string.IsNullOrEmpty(variantPath) && NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
+			{
+				AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+			}
+			if (string.IsNullOrEmpty(variantPath) || NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 			{
 				string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
 				if (!string.IsNullOrEmpty(diskPath))
 				{
-					AssetDatabase.ImportAsset(diskPath!);
+					AssetDatabase.ImportAsset(diskPath!, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 					variantPath = diskPath!;
 				}
 			}
 			// Step 2: [ShapeName]VariantName.prefab をファイル名で検索
-			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+			if (string.IsNullOrEmpty(variantPath) || NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 			{
 				string? found = FindVariantPrefabByName(variant.Name);
 				if (!string.IsNullOrEmpty(found))
 				{
 #if MD_NAIL_DEVELOP
-					ToolConsole.Log($"Variant '{variant.Name}': ファイル名から検出 → {found}");
+					ToolConsole.Log($"Variant '{variant.Name}': ファイル名から検出 -> {found}");
 #endif
 					variantPath = found!;
 				}
 			}
-			if (string.IsNullOrEmpty(variantPath) || AssetDatabase.LoadAssetAtPath<GameObject>(variantPath) == null)
+			if (string.IsNullOrEmpty(variantPath) || NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 				return null;
 			return variantPath;
 		}
@@ -1876,23 +1890,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				sb.AppendLine($"[{root}]");
 				try
 				{
-					foreach (string dir in Directory.GetDirectories(fullRoot))
-					{
-						string dirName = Path.GetFileName(dir);
-						string[] prefabs = Directory.GetFiles(dir, "*.prefab");
-						if (prefabs.Length == 0)
-						{
-							sb.AppendLine($"  {dirName}/ (empty)");
-							continue;
-						}
-						sb.AppendLine($"  {dirName}/");
-						foreach (string prefab in prefabs)
-							sb.AppendLine($"    {Path.GetFileName(prefab)}");
-					}
-
-					string[] rootPrefabs = Directory.GetFiles(fullRoot, "*.prefab");
-					foreach (string prefab in rootPrefabs)
-						sb.AppendLine($"  {Path.GetFileName(prefab)}");
+					ListPrefabFolderRecursive(fullRoot, fullRoot, sb, 1);
 				}
 				catch (Exception e)
 				{
@@ -1900,6 +1898,21 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 			return sb.ToString();
+		}
+
+		private static void ListPrefabFolderRecursive(string current, string root, System.Text.StringBuilder sb, int depth)
+		{
+			string indent = new string(' ', depth * 2);
+			foreach (string dir in Directory.GetDirectories(current))
+			{
+				string dirName = Path.GetFileName(dir);
+				sb.AppendLine($"{indent}{dirName}/");
+				ListPrefabFolderRecursive(dir, root, sb, depth + 1);
+			}
+			foreach (string prefab in Directory.GetFiles(current, "*.prefab"))
+			{
+				sb.AppendLine($"{indent}{Path.GetFileName(prefab)}");
+			}
 		}
 	}
 }

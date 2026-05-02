@@ -18,10 +18,11 @@ namespace world.anlabo.mdnailtool.Editor
 		{
 			string line = $"[{DateTime.Now:HH:mm:ss}] {message}";
 
-			// Unity Console には Error/Warning のみ出力 (通常 Log は UI Console のみ)
-			if (message.Contains("[Error]"))
+			// Unity Console には Error/Warning のみ出力 (通常 Log は UI Console のみ).
+			// 行頭 prefix で判定する (e.Message に [Error] が含まれる等の誤判定を回避).
+			if (message.StartsWith("[Error]") || message.StartsWith("[NailDiag][Error]"))
 				UnityEngine.Debug.LogError(line);
-			else if (message.Contains("[Warning]"))
+			else if (message.StartsWith("[Warning]") || message.StartsWith("[NailDiag][Warning]"))
 				UnityEngine.Debug.LogWarning(line);
 
 			if (OnLog != null)

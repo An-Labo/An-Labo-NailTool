@@ -14,6 +14,10 @@ namespace world.anlabo.mdnailtool.Editor
 {
 	public static class NailSetupUtil
 	{
+		// パスに半角ブラケット `[]` が含まれると AssetDatabase.LoadAssetAtPath が
+		// ワイルドカードと解釈する Unity Won't Fix バグ回避のため LoadAllAssetsAtPath を使う.
+		public static GameObject? LoadPrefabAtPath(string assetPath)
+			=> AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<GameObject>().FirstOrDefault();
 
 		public static void ReplaceHandsNailMesh(Transform?[] handsNailObjects, Mesh?[] overrideMesh)
 		{
@@ -993,13 +997,13 @@ namespace world.anlabo.mdnailtool.Editor
 
 			string assetPath = $"{saveBasePath}/{zoneName}.asset";
 			AssetDatabase.CreateAsset(combinedMesh, assetPath);
+			AssetDatabase.SaveAssets();
 
 			SkinnedMeshRenderer combinedSmr = combinedGo.AddComponent<SkinnedMeshRenderer>();
-			combinedSmr.sharedMesh = combinedMesh;
-			combinedSmr.bones      = boneTransforms;
-			combinedSmr.rootBone   = boneTransforms[0];
-
+			combinedSmr.bones           = boneTransforms;
+			combinedSmr.rootBone        = boneTransforms[0];
 			combinedSmr.sharedMaterials = materialList.ToArray();
+			combinedSmr.sharedMesh      = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
 
 			for (int bsIdx = 0; bsIdx < combinedMesh.blendShapeCount; bsIdx++)
 			{
