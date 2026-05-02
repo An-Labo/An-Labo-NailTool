@@ -371,18 +371,6 @@ namespace world.anlabo.mdnailtool.Editor {
             }
         }
 
-        public static void EnsurePrefabFolderExtracted(string folderName) {
-            if (string.IsNullOrEmpty(folderName)) return;
-
-            string assetsPrefabPath = ASSETS_RESOURCE_PATH + "Nail/Prefab/" + folderName + "/";
-            if (Directory.Exists(assetsPrefabPath)) return;
-
-            string? zipPath = GetZipRealPath();
-            if (zipPath == null) return;
-
-            ExtractPrefabFolder(folderName);
-        }
-
         public static void EnsurePrefabExtractedByGuid(string guid) {
             if (string.IsNullOrEmpty(guid)) return;
             

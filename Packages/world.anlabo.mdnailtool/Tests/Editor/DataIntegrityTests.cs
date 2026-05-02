@@ -82,8 +82,8 @@ namespace world.anlabo.mdnailtool.Editor.Tests
 				{
 					foreach (var variation in avatar.AvatarVariations.Values)
 					{
-						Assert.That(variation.VariationName, Is.Not.Null.And.Not.Empty,
-							$"Avatar '{avatar.AvatarName}' に VariationName 空の variation がある");
+						Assert.That(variation.NailPrefabGUID, Is.Not.Null.And.Not.Empty,
+							$"Avatar '{avatar.AvatarName}' Variation '{variation.VariationName}' の NailPrefabGUID が空");
 					}
 				}
 			}

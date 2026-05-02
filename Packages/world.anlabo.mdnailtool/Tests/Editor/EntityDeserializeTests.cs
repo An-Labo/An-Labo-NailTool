@@ -84,13 +84,13 @@ namespace world.anlabo.mdnailtool.Editor.Tests
 			string json = @"{
 				""Default"": {
 					""variationName"": ""Default"",
-					""nailPrefabName"": ""DefaultPrefab"",
+					""nailPrefabGUID"": ""prefab-guid"",
 					""avatarPrefabs"": [{ ""prefabGUID"": ""p1"" }],
 					""avatarFbxs"": [{ ""fbxGUID"": ""f1"" }],
 					""blendShapeVariants"": [
 						{
 							""name"": ""Variant1"",
-							""nailPrefabName"": ""VariantPrefab""
+							""nailPrefabGUID"": ""var-guid""
 						}
 					]
 				}
@@ -100,7 +100,7 @@ namespace world.anlabo.mdnailtool.Editor.Tests
 			Assert.That(result, Is.Not.Null);
 			var variation = result!["Default"];
 			Assert.That(variation.VariationName, Is.EqualTo("Default"));
-			Assert.That(variation.NailPrefabName, Is.EqualTo("DefaultPrefab"));
+			Assert.That(variation.NailPrefabGUID, Is.EqualTo("prefab-guid"));
 			Assert.That(variation.BlendShapeVariants, Is.Not.Null);
 			Assert.That(variation.BlendShapeVariants!.Length, Is.EqualTo(1));
 			Assert.That(variation.BlendShapeVariants[0].Name, Is.EqualTo("Variant1"));

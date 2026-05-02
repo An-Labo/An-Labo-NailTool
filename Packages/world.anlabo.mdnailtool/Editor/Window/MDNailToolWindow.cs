@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -2454,54 +2453,22 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (variants == null) return null;
 
 			AvatarBlendShapeVariant? variant = variants.FirstOrDefault(v => v.Name == variantName);
-			if (variant == null) return null;
+			if (variant == null || string.IsNullOrEmpty(variant.NailPrefabGUID)) return null;
 
-			string searchName = !string.IsNullOrEmpty(variant.NailPrefabName) ? variant.NailPrefabName! : variant.Name;
-			string? mainFolder = GetSelectedMainPrefabFolder();
-			string? path = FindVariantPrefabByNameStatic(searchName, mainFolder);
+			string path = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+			if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
+			{
+				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
+				AssetDatabase.Refresh();
+				path = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+			}
 			if (string.IsNullOrEmpty(path)) return null;
 
 			GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
 			if (variantPrefab == null) return null;
 
+			// シェイプ解決は呼び出し側 (UpdateScenePreview) で一元化。ここではベース variant Prefab のみ返す
 			return variantPrefab;
-		}
-
-		private string? GetSelectedMainPrefabFolder()
-		{
-			GameObject? main = this._avatarDropDowns?.GetSelectedPrefab();
-			if (main == null) return null;
-			string mainPath = AssetDatabase.GetAssetPath(main);
-			return !string.IsNullOrEmpty(mainPath) ? Path.GetDirectoryName(mainPath) : null;
-		}
-
-		private static string? FindVariantPrefabByNameStatic(string variantName, string? priorityFolder = null)
-		{
-			List<string> roots = new List<string>();
-			if (!string.IsNullOrEmpty(priorityFolder)) roots.Add(priorityFolder!);
-			roots.Add("Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab");
-			roots.Add("Packages/world.anlabo.mdnailtool/Nail/Prefab");
-			foreach (string root in roots)
-			{
-				string fullRoot = Path.GetFullPath(root);
-				if (!Directory.Exists(fullRoot)) continue;
-				try
-				{
-					foreach (string file in Directory.EnumerateFiles(fullRoot, $"[*]{variantName}.prefab", SearchOption.AllDirectories))
-					{
-						string assetPath = file.Replace("\\", "/");
-						int idx = assetPath.IndexOf("Assets/", StringComparison.Ordinal);
-						if (idx >= 0) assetPath = assetPath.Substring(idx);
-						AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport);
-						if (AssetDatabase.LoadAssetAtPath<GameObject>(assetPath) != null)
-						{
-							return assetPath;
-						}
-					}
-				}
-				catch { /* skip */ }
-			}
-			return null;
 		}
 
 		/// <summary>
@@ -2527,10 +2494,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				float weight = GetBodyBlendShapeWeight(avatar, variant);
 				if (weight <= 0f) continue;
 
-				// load variant prefab by filename
-				string searchName = !string.IsNullOrEmpty(variant.NailPrefabName) ? variant.NailPrefabName! : variant.Name;
-				string? mainFolder = GetSelectedMainPrefabFolder();
-				string? varPath = FindVariantPrefabByNameStatic(searchName, mainFolder);
+				// バリアントプレハブをロード
+				if (string.IsNullOrEmpty(variant.NailPrefabGUID)) continue;
+				string varPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
 				if (string.IsNullOrEmpty(varPath)) continue;
 				GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(varPath);
 				if (variantPrefab == null) continue;

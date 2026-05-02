@@ -8,8 +8,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("name")]
 		public string Name { get; set; } = null!;
 
-		[JsonProperty("nailPrefabName")]
-		public string? NailPrefabName { get; set; }
+		[JsonRequired]
+		[JsonProperty("nailPrefabGUID")]
+		public string NailPrefabGUID { get; set; } = null!;
 
 		[JsonProperty("syncSourceSmrName")]
 		public string? SyncSourceSmrName { get; set; }

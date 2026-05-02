@@ -10,8 +10,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("variationName")]
 		public string VariationName { get; set; } = null!;
 
-		[JsonProperty("nailPrefabName")]
-		public string? NailPrefabName { get; set; }
+		[JsonRequired]
+		[JsonProperty("nailPrefabGUID")]
+		public string NailPrefabGUID { get; set; } = null!;
 
 		[JsonProperty("displayNames")]
 		public IReadOnlyDictionary<string, string>? DisplayNames { get; set; }
