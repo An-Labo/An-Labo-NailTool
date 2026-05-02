@@ -324,9 +324,18 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
 			if (variation == null) return null;
 
-			// resolve by filename: explicit NailPrefabName > convention {Avatar}_{Variation} > {Avatar}
 			bool isMultiVariation = avatar != null && avatar.AvatarVariations.Count >= 2;
 			string? path = FindMainPrefabByName(avatarName, variantName, isMultiVariation, variation.NailPrefabName);
+
+			if (string.IsNullOrEmpty(path)) {
+				ResourceAutoExtractor.EnsurePrefabFolderExtracted(avatarName);
+				if (!string.IsNullOrEmpty(variation.NailPrefabName) && variation.NailPrefabName != avatarName) {
+					ResourceAutoExtractor.EnsurePrefabFolderExtracted(variation.NailPrefabName!);
+				}
+				AssetDatabase.Refresh();
+				path = FindMainPrefabByName(avatarName, variantName, isMultiVariation, variation.NailPrefabName);
+			}
+
 			if (string.IsNullOrEmpty(path)) return null;
 
 			GameObject? nailPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
