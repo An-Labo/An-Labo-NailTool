@@ -986,6 +986,11 @@ namespace world.anlabo.mdnailtool.Editor
 
 			if (!Directory.Exists(saveBasePath))
 				Directory.CreateDirectory(saveBasePath);
+
+			// blendshape 追加後の bind pose vertices から localBounds を再計算
+			// variants なしで作られた Combined SMR が frustum culling で消える問題の対策
+			combinedMesh.RecalculateBounds();
+
 			string assetPath = $"{saveBasePath}/{zoneName}.asset";
 			AssetDatabase.CreateAsset(combinedMesh, assetPath);
 
