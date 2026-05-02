@@ -327,16 +327,32 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			if (string.IsNullOrEmpty(guid)) return null;
 
 			string? path = AssetDatabase.GUIDToAssetPath(guid);
-			
+
 			if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) {
 				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(guid);
 				AssetDatabase.Refresh();
 				path = AssetDatabase.GUIDToAssetPath(guid);
 			}
-			
-			if (string.IsNullOrEmpty(path)) return null;
+
+			// fallback: AssetDatabase.Refresh の非同期反映漏れ救済 (disk 上 meta から直接 import).
+			// ResolveVariantPath と同じ手順. ミルティナ等で初回装着時の path 解決失敗を救う.
+			if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) {
+				string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(guid);
+				if (!string.IsNullOrEmpty(diskPath)) {
+					AssetDatabase.ImportAsset(diskPath!, ImportAssetOptions.ForceSynchronousImport);
+					path = diskPath!;
+				}
+			}
+
+			if (string.IsNullOrEmpty(path)) {
+				ToolConsole.Log($"[NailDiag][Warning] GetSelectedPrefab: GUID={guid} (avatar={avatarName}, variation={variantName}) を解決できませんでした");
+				return null;
+			}
 
 			GameObject? nailPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+			if (nailPrefab == null) {
+				ToolConsole.Log($"[NailDiag][Warning] GetSelectedPrefab: path={path} の LoadAssetAtPath 失敗 (GUID={guid})");
+			}
 			return nailPrefab;
 		}
 

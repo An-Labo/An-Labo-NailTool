@@ -17,6 +17,13 @@ namespace world.anlabo.mdnailtool.Editor
 		internal static void Log(string message)
 		{
 			string line = $"[{DateTime.Now:HH:mm:ss}] {message}";
+
+			// Unity Console には Error/Warning のみ出力 (通常 Log は UI Console のみ)
+			if (message.Contains("[Error]"))
+				UnityEngine.Debug.LogError(line);
+			else if (message.Contains("[Warning]"))
+				UnityEngine.Debug.LogWarning(line);
+
 			if (OnLog != null)
 				OnLog.Invoke(line);
 			else

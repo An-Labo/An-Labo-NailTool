@@ -145,6 +145,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 			if (this.NailPrefab == null) {
+				ToolConsole.Log($"[NailDiag] NailPrefab=null. Avatar='{this.Avatar?.gameObject.name}' AvatarVariation='{this.AvatarVariationData?.VariationName ?? "(null)"}' SelectedBSV='{this.SelectedBlendShapeVariantName ?? "(null)"}' BaseGUID='{this.AvatarVariationData?.NailPrefabGUID ?? "(null)"}' Shape='{this.NailShapeName}'");
 				throw new NailSetupUserException(LanguageManager.S("error.execute.nail_prefab_load_failed") ?? "error.execute.nail_prefab_load_failed");
 			}
 			GameObject nailPrefabObject = Object.Instantiate(this.NailPrefab, this.Avatar.transform);
@@ -384,6 +385,19 @@ namespace world.anlabo.mdnailtool.Editor {
 			{
 				RestoreBoneScales(savedBoneScales);
 			}
+
+			// 装着完了後の Editor 表示リフレッシュ (bake 直後の SMR 描画キャッシュ問題対策).
+			// 生成された SMR を一度 disable→enable して GPU 側に dirty 通知.
+			foreach (SkinnedMeshRenderer smr in this.Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+			{
+				if (smr == null) continue;
+				bool prev = smr.enabled;
+				smr.enabled = false;
+				smr.enabled = prev;
+				EditorUtility.SetDirty(smr);
+			}
+			EditorUtility.SetDirty(this.Avatar.gameObject);
+			SceneView.RepaintAll();
 		}
 
 		// rootとHumanoidボーンのscaleを退避して1に揃える
@@ -1301,6 +1315,11 @@ namespace world.anlabo.mdnailtool.Editor {
 					if (nailObject == null) continue;
 					Undo.DestroyObjectImmediate(nailObject.gameObject);
 				}
+			}
+			// [An-Labo] 親が空になったら削除 (ネイル全 GO 除去後に残るのを防ぐ)
+			Transform? anLaboParent = avatar.transform.Find("[An-Labo]");
+			if (anLaboParent != null && anLaboParent.childCount == 0) {
+				Undo.DestroyObjectImmediate(anLaboParent.gameObject);
 			}
 		}
 

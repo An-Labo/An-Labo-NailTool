@@ -372,38 +372,49 @@ namespace world.anlabo.mdnailtool.Editor {
         }
 
         public static void EnsurePrefabExtractedByGuid(string guid) {
-            if (string.IsNullOrEmpty(guid)) return;
-            
+            if (string.IsNullOrEmpty(guid)) {
+                ToolConsole.Log("[NailDiag] EnsurePrefabExtractedByGuid: 空 GUID 渡された (skip)");
+                return;
+            }
+
             string? zipPath = GetZipRealPath();
-            if (zipPath == null) return;
+            if (zipPath == null) {
+                ToolConsole.Log($"[NailDiag] EnsurePrefabExtractedByGuid: zip path 解決不可 (guid={guid})");
+                return;
+            }
 
             try {
                 string? targetFolder = null;
-                
+                string? matchedMeta = null;
+
                 using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
                     foreach (ZipArchiveEntry entry in archive.Entries) {
                         if (!entry.FullName.StartsWith("Nail/Prefab/", StringComparison.OrdinalIgnoreCase)) continue;
                         if (!entry.Name.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)) continue;
-                        
+
                         using (StreamReader reader = new StreamReader(entry.Open())) {
                             string content = reader.ReadToEnd();
                             if (content.Contains(guid)) {
                                 string[] parts = entry.FullName.Split('/');
                                 if (parts.Length >= 3) {
                                     targetFolder = parts[2];
+                                    matchedMeta = entry.FullName;
                                 }
                                 break;
                             }
                         }
                     }
                 }
-                
+
                 if (targetFolder != null) {
+                    ToolConsole.Log($"[NailDiag] GUID={guid} → folder='{targetFolder}' (meta={matchedMeta}) → extract開始");
                     ExtractPrefabFolder(targetFolder);
+                } else {
+                    ToolConsole.Log($"[NailDiag][Warning] GUID={guid} が zip 内に見つかりません (zip={zipPath})");
                 }
-                
+
             } catch (Exception e) {
-                ToolConsole.Log($"[Error] GUID検索失敗 ({guid}): {e.Message}");
+                ToolConsole.Log($"[NailDiag][Error] GUID検索失敗 ({guid}): {e.Message}");
             }
         }
 
