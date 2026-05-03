@@ -21,39 +21,53 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		}
 
 		public Material GetMaterial(string materialName, string colorName, string nailShapeName, bool isGenerate, bool isPreview) {
-			if (!isGenerate && !isPreview) {
-				Material targetMaterial = this.GetBaseMaterial(materialName, nailShapeName);
-				this.ProcessMaterial(targetMaterial, materialName, colorName, nailShapeName);
-				return targetMaterial;
+			if (!this.IsInstalledColorVariation(materialName, colorName)) {
+				Debug.LogWarning($"[MDNailTool] Skipped: '{this.DesignName}' (material='{materialName}', color='{colorName}', shape='{nailShapeName}') is not installed. Returning fallback material.");
+				return this.GetFallbackMaterial();
 			}
 
-			// マテリアル生成がON || プレビューの場合新規マテリアルを生成する。
-			string materialKey = this.GetMaterialKey(materialName, colorName, nailShapeName, isPreview);
-
-			// キャッシュされたマテリアルがあればそれを返す
-			Material? cashedMaterial = isPreview ? INailProcessor.GetPreviewMaterialCash(materialKey) : INailProcessor.GetCreatedMaterialCash(materialKey);
-			if (cashedMaterial != null) return cashedMaterial;
-
-			Material baseMaterial = this.GetBaseMaterial(materialName, nailShapeName);
-			Material clonedMaterial = Object.Instantiate(baseMaterial);
-			
-			this.ProcessMaterial(clonedMaterial, materialName, colorName, nailShapeName);
-
-			if (isPreview) {
-				// プレビュー用の場合ファイルとしては保存しない
-				INailProcessor.RegisterPreviewMaterialCash(materialKey, clonedMaterial);
-			} else {
-				if (!Directory.Exists(MDNailToolDefines.GENERATED_ASSET_PATH)) {
-					Directory.CreateDirectory(MDNailToolDefines.GENERATED_ASSET_PATH);
+			try {
+				if (!isGenerate && !isPreview) {
+					Material targetMaterial = this.GetBaseMaterial(materialName, nailShapeName);
+					this.ProcessMaterial(targetMaterial, materialName, colorName, nailShapeName);
+					return targetMaterial;
 				}
 
-				AssetDatabase.CreateAsset(clonedMaterial, $"{MDNailToolDefines.GENERATED_ASSET_PATH}generated_{DateTime.Now : yyyy-MM-dd-HH-mm-ss}_{materialKey}.mat");
-				AssetDatabase.Refresh();
-				INailProcessor.RegisterCreatedMaterialCash(materialKey, clonedMaterial);
+				// マテリアル生成がON || プレビューの場合新規マテリアルを生成する。
+				string materialKey = this.GetMaterialKey(materialName, colorName, nailShapeName, isPreview);
+
+				// キャッシュされたマテリアルがあればそれを返す
+				Material? cashedMaterial = isPreview ? INailProcessor.GetPreviewMaterialCash(materialKey) : INailProcessor.GetCreatedMaterialCash(materialKey);
+				if (cashedMaterial != null) return cashedMaterial;
+
+				Material baseMaterial = this.GetBaseMaterial(materialName, nailShapeName);
+				Material clonedMaterial = Object.Instantiate(baseMaterial);
+
+				this.ProcessMaterial(clonedMaterial, materialName, colorName, nailShapeName);
+
+				if (isPreview) {
+					// プレビュー用の場合ファイルとしては保存しない
+					INailProcessor.RegisterPreviewMaterialCash(materialKey, clonedMaterial);
+				} else {
+					if (!Directory.Exists(MDNailToolDefines.GENERATED_ASSET_PATH)) {
+						Directory.CreateDirectory(MDNailToolDefines.GENERATED_ASSET_PATH);
+					}
+
+					AssetDatabase.CreateAsset(clonedMaterial, $"{MDNailToolDefines.GENERATED_ASSET_PATH}generated_{DateTime.Now : yyyy-MM-dd-HH-mm-ss}_{materialKey}.mat");
+					AssetDatabase.Refresh();
+					INailProcessor.RegisterCreatedMaterialCash(materialKey, clonedMaterial);
+				}
+
+				return clonedMaterial;
+			} catch (Exception ex) {
+				Debug.LogWarning($"[MDNailTool] Failed to build material for '{this.DesignName}' (material='{materialName}', color='{colorName}', shape='{nailShapeName}'): {ex.Message}. Returning fallback material.");
+				return this.GetFallbackMaterial();
 			}
+		}
 
-
-			return clonedMaterial;
+		private Material GetFallbackMaterial() {
+			Shader? shader = Shader.Find("Standard") ?? Shader.Find("Hidden/InternalErrorShader");
+			return new Material(shader);
 		}
 
 
