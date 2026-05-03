@@ -102,7 +102,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						ToolConsole.Log($"  variantPath={variantPath ?? "(null)"}");
 						if (!string.IsNullOrEmpty(variantPath))
 						{
-							GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(variantPath);
+							GameObject? variantPrefab = NailSetupUtil.LoadPrefabAtPath(variantPath);
 							ToolConsole.Log($"  variantPrefab={variantPrefab?.name ?? "(null)"}");
 							if (variantPrefab != null)
 							{
@@ -132,7 +132,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					foreach (NailShape nailShape in dbNailShape.collection) {
 						string newPrefabPath = $"{prefabDirPath}/[{nailShape.ShapeName}]{prefabName}.prefab";
 						if (File.Exists(newPrefabPath)) {
-							GameObject newPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(newPrefabPath);
+							GameObject? newPrefab = NailSetupUtil.LoadPrefabAtPath(newPrefabPath);
 							if (newPrefab != null) {
 								current = newPrefab;
 							}
@@ -335,44 +335,46 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			// scale退避→配置→復元。歪み防止
+			// Save/Compute も try 内に置き、途中例外でも finally で必ず Restore する
 			Dictionary<Transform, Vector3> savedBoneScales = new();
 			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections = null;
-			if (this.ArmatureScaleCompensation)
-			{
-				savedBoneScales = SaveAndNeutralizeBoneScales(this.Avatar);
-
-				var allNails = new List<Transform?>();
-				var allBoneIndices = new List<int>();
-				int ci = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
-				foreach (Transform? nail in handsNailObjects)
-				{
-					ci++;
-					allNails.Add(nail);
-					allBoneIndices.Add(ci);
-				}
-				if (this.UseFootNail)
-				{
-					ci = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
-					foreach (Transform? nail in leftFootNailObjects)
-					{
-						ci++;
-						allNails.Add(nail);
-						allBoneIndices.Add(ci);
-					}
-					ci = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
-					foreach (Transform? nail in rightFootNailObjects)
-					{
-						ci++;
-						allNails.Add(nail);
-						allBoneIndices.Add(ci);
-					}
-				}
-				corrections = ComputeScaleCompensatedTransforms(
-					this.Avatar, targetBoneDictionary,
-					allNails.ToArray(), allBoneIndices.ToArray());
-			}
 			try
 			{
+				if (this.ArmatureScaleCompensation)
+				{
+					savedBoneScales = SaveAndNeutralizeBoneScales(this.Avatar);
+
+					var allNails = new List<Transform?>();
+					var allBoneIndices = new List<int>();
+					int ci = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
+					foreach (Transform? nail in handsNailObjects)
+					{
+						ci++;
+						allNails.Add(nail);
+						allBoneIndices.Add(ci);
+					}
+					if (this.UseFootNail)
+					{
+						ci = (int)MDNailToolDefines.TargetFingerAndToe.LeftFootThumb - 1;
+						foreach (Transform? nail in leftFootNailObjects)
+						{
+							ci++;
+							allNails.Add(nail);
+							allBoneIndices.Add(ci);
+						}
+						ci = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
+						foreach (Transform? nail in rightFootNailObjects)
+						{
+							ci++;
+							allNails.Add(nail);
+							allBoneIndices.Add(ci);
+						}
+					}
+					corrections = ComputeScaleCompensatedTransforms(
+						this.Avatar, targetBoneDictionary,
+						allNails.ToArray(), allBoneIndices.ToArray());
+				}
+
 				if (this.ForModularAvatar) {
 					SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
 						leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
@@ -411,7 +413,6 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			if (avatar.transform.localScale != Vector3.one)
 			{
-				Undo.RecordObject(avatar.transform, "Nail Setup Scale Neutralize");
 				saved[avatar.transform] = avatar.transform.localScale;
 				avatar.transform.localScale = Vector3.one;
 			}
@@ -426,7 +427,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (t == null) continue;
 				if (t.localScale != Vector3.one)
 				{
-					Undo.RecordObject(t, "Nail Setup Scale Neutralize");
 					saved[t] = t.localScale;
 					t.localScale = Vector3.one;
 				}
@@ -542,11 +542,13 @@ namespace world.anlabo.mdnailtool.Editor {
 					List<GameObject> objectsToDestroy = new();
 
 					AvatarBlendShapeVariant[]? activeVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
+					ToolConsole.Log($"  BakeBS variants: count={activeVariants?.Length ?? 0}, names=[{(activeVariants != null ? string.Join(", ", activeVariants.Select(v => v.Name)) : "")}]");
 					if (activeVariants != null)
 					{
 						foreach (AvatarBlendShapeVariant variant in activeVariants)
 						{
 							string? variantPath = ResolveVariantPath(variant);
+							ToolConsole.Log($"    variant='{variant.Name}' GUID={variant.NailPrefabGUID} path={variantPath ?? "(null)"}");
 							if (string.IsNullOrEmpty(variantPath))
 							{
 								if (!string.IsNullOrEmpty(variant.NailPrefabGUID))
@@ -606,6 +608,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							Transform?[] varHands = GetHandsNailObjectList(instVariant);
 							Transform?[] varLeftFoot = GetLeftFootNailObjectList(instVariant);
 							Transform?[] varRightFoot = GetRightFootNailObjectList(instVariant);
+							ToolConsole.Log($"    variant='{variant.Name}' instVariant='{instVariant.name}' hands={varHands.Count(t => t != null)}/10 leftFoot={varLeftFoot.Count(t => t != null)}/5 rightFoot={varRightFoot.Count(t => t != null)}/5");
 
 							// バリアントネイルのメッシュが未解決(null)の場合、ベースネイルのメッシュをコピー
 							// (プレハブが参照するFBXが存在しない場合の対策)
@@ -758,12 +761,14 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 
 					// メッシュ統合
+					ToolConsole.Log($"  BakeBS: handVariants.Count={handVariants.Count} footVariants.Count={footVariants.Count}");
 					bool[] handsIsLeft = handsNailObjects.Select((_, i) => i < 5).ToArray();
 					handCombinedGo = NailSetupUtil.BakeAndCombineNailMeshes(
 						handsNailObjects, nailPrefabObject, handWrapperName, bsPath,
 						handVariants.Count > 0 ? handVariants.ToArray() : null,
 						handsIsLeft,
 						bodySmrForPushOut);
+					ToolConsole.Log($"  BakeBS hand result: {(handCombinedGo == null ? "(null)" : handCombinedGo.name)} BS frames={(handCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 
 					if (this.UseFootNail)
 					{
@@ -775,6 +780,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							footVariants.Count > 0 ? footVariants.ToArray() : null,
 							feetIsLeft,
 							bodySmrForPushOut);
+						ToolConsole.Log($"  BakeBS foot result: {(footCombinedGo == null ? "(null)" : footCombinedGo.name)} BS frames={(footCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 					}
 
 					// 退避した追加オブジェクトを統合ラッパーに復元（BoneProxy付き）
@@ -1443,7 +1449,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			foreach (NailShape nailShape in dbNailShape.collection) {
 				string newPrefabPath = $"{prefabDirPath}/[{nailShape.ShapeName}]{prefabName}.prefab";
 				if (File.Exists(newPrefabPath)) {
-					GameObject? newPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(newPrefabPath);
+					GameObject? newPrefab = NailSetupUtil.LoadPrefabAtPath(newPrefabPath);
 					if (newPrefab != null) current = newPrefab;
 				}
 				if (nailShape.ShapeName == targetShape) break;

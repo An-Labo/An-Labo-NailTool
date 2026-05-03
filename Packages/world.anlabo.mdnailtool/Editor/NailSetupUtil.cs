@@ -16,8 +16,14 @@ namespace world.anlabo.mdnailtool.Editor
 	{
 		// パスに半角ブラケット `[]` が含まれると AssetDatabase.LoadAssetAtPath が
 		// ワイルドカードと解釈する Unity Won't Fix バグ回避のため LoadAllAssetsAtPath を使う.
-		public static GameObject? LoadPrefabAtPath(string assetPath)
-			=> AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<GameObject>().FirstOrDefault();
+		// LoadAllAssetsAtPath はprefab内の全GameObject(root+子)を順序不定で返すので、
+		// transform.parent == null で root を確実に取る (子オブジェクトを誤って拾う事故防止).
+		public static GameObject? LoadPrefabAtPath(string? assetPath)
+		{
+			if (string.IsNullOrEmpty(assetPath)) return null;
+			return AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<GameObject>()
+				.FirstOrDefault(go => go.transform.parent == null);
+		}
 
 		public static void ReplaceHandsNailMesh(Transform?[] handsNailObjects, Mesh?[] overrideMesh)
 		{
