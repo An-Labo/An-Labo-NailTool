@@ -41,7 +41,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			if (guids == null) yield break;
 			foreach (string guid in guids) {
 				string materialPath = AssetDatabase.GUIDToAssetPath(guid);
-				Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+				Material? material = MDNailToolAssetLoader.LoadAssetSafe<Material>(materialPath);
 				if (material == null) {
 					ToolConsole.Log($"[Error] Not found additional material : {this.DesignName} : {colorName} : {guid} : {materialPath}");
 					continue;
@@ -57,7 +57,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 			foreach (string guid in guids.Concat(allTargetGuids)) {
 				string objectPath = AssetDatabase.GUIDToAssetPath(guid);
-				GameObject obj = AssetDatabase.LoadAssetAtPath<GameObject>(objectPath);
+				GameObject? obj = MDNailToolAssetLoader.LoadPrefabSafe(objectPath);
 				if (obj == null) {
 					ToolConsole.Log($"[Error] Not found additional object : {this.DesignName} : {colorName} : {targetFinger} : {guid} : {objectPath}");
 					continue;

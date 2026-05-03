@@ -92,6 +92,65 @@ namespace world.anlabo.mdnailtool.Editor.Tests
 		}
 
 		[Test]
+		public void LoadAssetSafe_NullPath_ReturnsNull()
+		{
+			StyleSheet? asset = MDNailToolAssetLoader.LoadAssetSafe<StyleSheet>(null);
+			Assert.That(asset, Is.Null, "null パスで null を返すべき");
+		}
+
+		[Test]
+		public void LoadAssetSafe_EmptyPath_ReturnsNull()
+		{
+			StyleSheet? asset = MDNailToolAssetLoader.LoadAssetSafe<StyleSheet>("");
+			Assert.That(asset, Is.Null, "空パスで null を返すべき");
+		}
+
+		[Test]
+		public void LoadAssetSafe_ValidPath_ReturnsAsset()
+		{
+			StyleSheet? asset = MDNailToolAssetLoader.LoadAssetSafe<StyleSheet>(MDNailToolGuids.WindowUssPath);
+			Assert.That(asset, Is.Not.Null, "有効パスでアセットが取得できるべき");
+		}
+
+		[Test]
+		public void LoadAssetSafe_NonexistentPath_ReturnsNull()
+		{
+			StyleSheet? asset = MDNailToolAssetLoader.LoadAssetSafe<StyleSheet>("Assets/__not_exist__.uss");
+			Assert.That(asset, Is.Null, "存在しないパスで null を返すべき");
+		}
+
+		[Test]
+		public void LoadAssetSafe_PathWithBrackets_DoesNotThrow()
+		{
+			// `[]` 含むパスで例外を起こさず graceful に null/asset を返すこと (0.9.383 事故防止)
+			Assert.DoesNotThrow(() => {
+				MDNailToolAssetLoader.LoadAssetSafe<StyleSheet>("Assets/[Test]Foo.uss");
+			});
+		}
+
+		[Test]
+		public void LoadPrefabSafe_NullPath_ReturnsNull()
+		{
+			GameObject? prefab = MDNailToolAssetLoader.LoadPrefabSafe(null);
+			Assert.That(prefab, Is.Null, "null パスで null を返すべき");
+		}
+
+		[Test]
+		public void LoadPrefabSafe_EmptyPath_ReturnsNull()
+		{
+			GameObject? prefab = MDNailToolAssetLoader.LoadPrefabSafe("");
+			Assert.That(prefab, Is.Null, "空パスで null を返すべき");
+		}
+
+		[Test]
+		public void LoadPrefabSafe_PathWithBrackets_DoesNotThrow()
+		{
+			Assert.DoesNotThrow(() => {
+				MDNailToolAssetLoader.LoadPrefabSafe("Assets/[Test]Foo.prefab");
+			});
+		}
+
+		[Test]
 		public void LoadThumbnail_ExistingDesign_ReturnsThumbnail()
 		{
 			// 最初のデザイン名を取得してサムネイルテスト

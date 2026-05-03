@@ -858,7 +858,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				{
 					string matPath = AssetDatabase.GUIDToAssetPath(resolvedGuid);
 					if (string.IsNullOrEmpty(matPath)) continue;
-					Material? mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+					Material? mat = MDNailToolAssetLoader.LoadAssetSafe<Material>(matPath);
 					if (mat != null) mats.Add(mat);
 				}
 
@@ -1075,7 +1075,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 						ToolConsole.Log($"[Warning]  finger[{i}]: AdditionalObject GUID not found: {resolvedGuid} (registryName={registryName})");
 						continue;
 					}
-					GameObject? obj = AssetDatabase.LoadAssetAtPath<GameObject>(objectPath);
+					GameObject? obj = MDNailToolAssetLoader.LoadPrefabSafe(objectPath);
 					if (obj == null)
 					{
 						ToolConsole.Log($"[Warning]  finger[{i}]: AdditionalObject could not load: {objectPath} (registryName={registryName})");
@@ -1217,7 +1217,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			try
 			{
 				string packageJsonPath = "Packages/nadena.dev.modular-avatar/package.json";
-				TextAsset? packageJson = AssetDatabase.LoadAssetAtPath<TextAsset>(packageJsonPath);
+				TextAsset? packageJson = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(packageJsonPath);
 				sb.AppendLine($"ModularAvatar: {packageJson?.text switch { string t => Newtonsoft.Json.Linq.JObject.Parse(t)["version"]?.ToString() ?? "unknown", _ => "not installed" }}");
 			}
 			catch { sb.AppendLine("ModularAvatar: (取得失敗)"); }
@@ -2115,6 +2115,15 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					this.ShowContactLinks(e.ToString());
 				}
 			}
+			catch (NailToolUserException e)
+			{
+				ToolConsole.Log($"[Warning] {e.Message}\n{e.StackTrace}");
+				this.ShowErrorBanner(e.Message);
+				this._userErrorCount++;
+				if (this._userErrorCount >= 2) {
+					this.ShowContactLinks(e.ToString());
+				}
+			}
 			catch (Exception e)
 			{
 				ToolConsole.Log($"[Error] {e}");
@@ -2456,7 +2465,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (variant == null || string.IsNullOrEmpty(variant.NailPrefabGUID)) return null;
 
 			string path = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-			if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
+			if (string.IsNullOrEmpty(path) || MDNailToolAssetLoader.LoadPrefabSafe(path) == null)
 			{
 				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
 				AssetDatabase.Refresh();
@@ -2464,7 +2473,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			if (string.IsNullOrEmpty(path)) return null;
 
-			GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+			GameObject? variantPrefab = MDNailToolAssetLoader.LoadPrefabSafe(path);
 			if (variantPrefab == null) return null;
 
 			// シェイプ解決は呼び出し側 (UpdateScenePreview) で一元化。ここではベース variant Prefab のみ返す
@@ -2498,7 +2507,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				if (string.IsNullOrEmpty(variant.NailPrefabGUID)) continue;
 				string varPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
 				if (string.IsNullOrEmpty(varPath)) continue;
-				GameObject? variantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(varPath);
+				GameObject? variantPrefab = MDNailToolAssetLoader.LoadPrefabSafe(varPath);
 				if (variantPrefab == null) continue;
 
 				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName);

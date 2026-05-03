@@ -55,13 +55,13 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			if (File.Exists($"{path}/{nailShape.FbxNamePrefix}{MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST[0]}.fbx")) {
 				return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
 					.Select(objectName => $"{path}/{nailShape.FbxNamePrefix}{objectName}.fbx")
-					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.Select(p => MDNailToolAssetLoader.LoadAssetSafe<Mesh>(p)!)
 					.ToArray();
 			}
 
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
 				.Select(objectName => $"{path}/{nailShape.FbxNamePrefix}{objectName.Replace('.', '_')}.fbx")
-				.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+				.Select(p => MDNailToolAssetLoader.LoadAssetSafe<Mesh>(p)!)
 				.ToArray();
 		}
 

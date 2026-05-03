@@ -20,9 +20,7 @@ namespace world.anlabo.mdnailtool.Editor
 		// transform.parent == null で root を確実に取る (子オブジェクトを誤って拾う事故防止).
 		public static GameObject? LoadPrefabAtPath(string? assetPath)
 		{
-			if (string.IsNullOrEmpty(assetPath)) return null;
-			return AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<GameObject>()
-				.FirstOrDefault(go => go.transform.parent == null);
+			return MDNailToolAssetLoader.LoadPrefabSafe(assetPath);
 		}
 
 		public static void ReplaceHandsNailMesh(Transform?[] handsNailObjects, Mesh?[] overrideMesh)
@@ -80,24 +78,24 @@ namespace world.anlabo.mdnailtool.Editor
 			{
 				leftFootOverrideMesh = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST
 					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName}.fbx")
-					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.Select(p => MDNailToolAssetLoader.LoadAssetSafe<Mesh>(p)!)
 					.ToArray();
 
 				rightFootOverrideMesh = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST
 					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName}.fbx")
-					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.Select(p => MDNailToolAssetLoader.LoadAssetSafe<Mesh>(p)!)
 					.ToArray();
 			}
 			else
 			{
 				leftFootOverrideMesh = MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST
 					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName.Replace('.', '_')}.fbx")
-					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.Select(p => MDNailToolAssetLoader.LoadAssetSafe<Mesh>(p)!)
 					.ToArray();
 
 				rightFootOverrideMesh = MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST
 					.Select(objectName => $"{path}/{shape.FootFbxNamePrefix}{objectName.Replace('.', '_')}.fbx")
-					.Select(AssetDatabase.LoadAssetAtPath<Mesh>)
+					.Select(p => MDNailToolAssetLoader.LoadAssetSafe<Mesh>(p)!)
 					.ToArray();
 
 			}
@@ -1009,7 +1007,7 @@ namespace world.anlabo.mdnailtool.Editor
 			combinedSmr.bones           = boneTransforms;
 			combinedSmr.rootBone        = boneTransforms[0];
 			combinedSmr.sharedMaterials = materialList.ToArray();
-			combinedSmr.sharedMesh      = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
+			combinedSmr.sharedMesh      = MDNailToolAssetLoader.LoadAssetSafe<Mesh>(assetPath);
 
 			for (int bsIdx = 0; bsIdx < combinedMesh.blendShapeCount; bsIdx++)
 			{

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -11,6 +12,26 @@ namespace world.anlabo.mdnailtool.Editor
 {
 	internal static class MDNailToolAssetLoader
 	{
+		// AssetDatabase.LoadAssetAtPath が `[]` 含むパスで空を返す Won't Fix バグの回避用. 同型複数アセット非対応 (順序不定).
+		internal static T? LoadAssetSafe<T>(string? path) where T : Object
+		{
+			if (string.IsNullOrEmpty(path)) return null;
+			return AssetDatabase.LoadAllAssetsAtPath(path!).OfType<T>().FirstOrDefault();
+		}
+
+		internal static GameObject? LoadPrefabSafe(string? path)
+		{
+			if (string.IsNullOrEmpty(path)) return null;
+			return AssetDatabase.LoadAllAssetsAtPath(path!).OfType<GameObject>()
+				.FirstOrDefault(go => go.transform.parent == null);
+		}
+
+		internal static GameObject? LoadPrefabByGuid(string? guid, string? fallbackPath = null)
+		{
+			string? path = ResolveGuidToPath(guid, fallbackPath);
+			return LoadPrefabSafe(path);
+		}
+
 		/// <summary>
 		/// GUIDからアセットをロードする。GUID解決失敗時はパスフォールバックを試みる。
 		/// </summary>
@@ -19,14 +40,14 @@ namespace world.anlabo.mdnailtool.Editor
 			string path = AssetDatabase.GUIDToAssetPath(guid);
 			if (!string.IsNullOrEmpty(path))
 			{
-				T? asset = AssetDatabase.LoadAssetAtPath<T>(path);
+				T? asset = LoadAssetSafe<T>(path);
 				if (asset != null) return asset;
 			}
 
 			// フォールバック1: 呼び出し元が提供した既知パス
 			if (!string.IsNullOrEmpty(fallbackPath))
 			{
-				T? asset = AssetDatabase.LoadAssetAtPath<T>(fallbackPath!);
+				T? asset = LoadAssetSafe<T>(fallbackPath!);
 				if (asset != null)
 				{
 					RegisterPathHint(guid, fallbackPath!);
@@ -37,7 +58,7 @@ namespace world.anlabo.mdnailtool.Editor
 			// フォールバック2: 登録済みパスヒントから探す
 			if (_guidPathHints.TryGetValue(guid, out string? hintPath))
 			{
-				T? asset = AssetDatabase.LoadAssetAtPath<T>(hintPath);
+				T? asset = LoadAssetSafe<T>(hintPath);
 				if (asset != null) return asset;
 			}
 
@@ -83,7 +104,7 @@ namespace world.anlabo.mdnailtool.Editor
 				string path = AssetDatabase.GUIDToAssetPath(thumbnailGuid);
 				if (!string.IsNullOrEmpty(path))
 				{
-					Texture2D? tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+					Texture2D? tex = LoadAssetSafe<Texture2D>(path);
 					if (tex != null) return tex;
 				}
 			}
@@ -94,7 +115,7 @@ namespace world.anlabo.mdnailtool.Editor
 			foreach (string ext in extensions)
 			{
 				string fallbackPath = thumbnailDir + designName + ext;
-				Texture2D? tex = AssetDatabase.LoadAssetAtPath<Texture2D>(fallbackPath);
+				Texture2D? tex = LoadAssetSafe<Texture2D>(fallbackPath);
 				if (tex != null) return tex;
 			}
 
@@ -148,13 +169,13 @@ namespace world.anlabo.mdnailtool.Editor
 		/// </summary>
 		internal static T? LoadByPathCaseInsensitive<T>(string assetPath) where T : Object
 		{
-			T? asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+			T? asset = LoadAssetSafe<T>(assetPath);
 			if (asset != null) return asset;
 			if (!IsCaseSensitiveFS) return null;
 
 			string? resolved = ResolveCaseInsensitivePath(assetPath);
 			if (resolved == null) return null;
-			return AssetDatabase.LoadAssetAtPath<T>(resolved);
+			return LoadAssetSafe<T>(resolved);
 		}
 
 		/// <summary>
