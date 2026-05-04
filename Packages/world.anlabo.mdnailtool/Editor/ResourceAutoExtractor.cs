@@ -18,23 +18,13 @@ namespace world.anlabo.mdnailtool.Editor {
         private const string PACKAGE_RESOURCE_PATH = "Packages/world.anlabo.mdnailtool/Resource/";
         private const string ASSETS_RESOURCE_PATH = "Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/";
         
+        // 起動時に最低限展開しておくフォルダ. Design/Prefab は on-demand (EnsureDesignExtracted / EnsurePrefabExtractedByGuid) で展開する.
         private static readonly string[] ESSENTIAL_FOLDERS = {
             "DB/",
             "Lang/",
             "Nail/Thumbnails/",
             "Preview/",
             "uss/"
-        };
-
-        private static readonly string[] ADD_ONLY_FOLDERS = {
-            "Nail/Thumbnails/"
-        };
-
-        // バージョンアップ時に強制上書きするフォルダ。
-        // GUID を持たない純データ (json/テキスト) のみ。Design/Prefab は GUID 保護のため対象外。
-        private static readonly string[] FORCE_UPDATE_FOLDERS = {
-            "DB/",
-            "Lang/"
         };
 
         private static readonly string[] ESSENTIAL_FILES = {
@@ -121,15 +111,31 @@ namespace world.anlabo.mdnailtool.Editor {
 
             try {
                 _isExtracting = true;
-                int copied = ExtractFoldersFromZip(FORCE_UPDATE_FOLDERS);
+                int updated = 0;
+
+                using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
+                    foreach (ZipArchiveEntry entry in archive.Entries) {
+                        if (string.IsNullOrEmpty(entry.Name)) continue;
+
+                        string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
+                        string bodyPath = destPath.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)
+                            ? destPath.Substring(0, destPath.Length - ".meta".Length)
+                            : destPath;
+                        if (!File.Exists(bodyPath) && !Directory.Exists(bodyPath)) continue;
+
+                        if (WriteEntryIfChanged(entry, destPath)) updated++;
+                    }
+                }
+
                 SaveInstalledVersion(currentVersion);
-                if (copied > 0) {
+                if (updated > 0) {
                     AssetDatabase.Refresh(ImportAssetOptions.Default);
                     MDNailToolDefines.ClearResourcePathCache();
                     ClearDbCaches();
+                    ToolConsole.Log($"[ResourceAutoExtractor] バージョン変更検知 → {updated} 件のリソースを差分更新しました");
                 }
             } catch (Exception e) {
-                ToolConsole.Log($"[Error] DB/Lang更新失敗: {e.Message}");
+                ToolConsole.Log($"[Error] リソース差分更新失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
             }
@@ -278,42 +284,22 @@ namespace world.anlabo.mdnailtool.Editor {
             using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
                 foreach (ZipArchiveEntry entry in archive.Entries) {
                     bool shouldExtract = false;
-                    
+
                     foreach (string folder in folders) {
                         if (entry.FullName.StartsWith(folder, StringComparison.OrdinalIgnoreCase)) {
                             shouldExtract = true;
                             break;
                         }
                     }
-                    
+
                     if (!shouldExtract && folderMetaFiles.Contains(entry.FullName)) {
                         shouldExtract = true;
                     }
-                    
+
                     if (!shouldExtract) continue;
-                    if (string.IsNullOrEmpty(entry.Name)) continue;
 
                     string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
-                    string? destDir = Path.GetDirectoryName(destPath);
-
-                    if (destDir != null && !Directory.Exists(destDir)) {
-                        Directory.CreateDirectory(destDir);
-                    }
-
-                    bool addOnly = false;
-                    foreach (string addOnlyFolder in ADD_ONLY_FOLDERS) {
-                        if (entry.FullName.StartsWith(addOnlyFolder, StringComparison.OrdinalIgnoreCase)) {
-                            addOnly = true;
-                            break;
-                        }
-                    }
-
-                    if (addOnly && File.Exists(destPath)) {
-                        continue;
-                    }
-
-                    entry.ExtractToFile(destPath, overwrite: true);
-                    copiedFiles++;
+                    if (WriteEntryIfChanged(entry, destPath)) copiedFiles++;
                 }
             }
 
@@ -341,23 +327,15 @@ namespace world.anlabo.mdnailtool.Editor {
                 using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
                     foreach (ZipArchiveEntry entry in archive.Entries) {
                         bool shouldExtract = entry.FullName.StartsWith(designPrefix, StringComparison.OrdinalIgnoreCase);
-                        
+
                         if (!shouldExtract && folderMetaFiles.Contains(entry.FullName)) {
                             shouldExtract = true;
                         }
-                        
+
                         if (!shouldExtract) continue;
-                        if (string.IsNullOrEmpty(entry.Name)) continue;
 
                         string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
-                        string? destDir = Path.GetDirectoryName(destPath);
-                        
-                        if (destDir != null && !Directory.Exists(destDir)) {
-                            Directory.CreateDirectory(destDir);
-                        }
-
-                        entry.ExtractToFile(destPath, overwrite: true);
-                        copiedFiles++;
+                        if (WriteEntryIfChanged(entry, destPath)) copiedFiles++;
                     }
                 }
 
@@ -365,7 +343,7 @@ namespace world.anlabo.mdnailtool.Editor {
                     AssetDatabase.Refresh(ImportAssetOptions.Default);
                     FixTextureImportSettings(assetsDesignPath);
                 }
-                
+
             } catch (Exception e) {
                 ToolConsole.Log($"[Error] デザイン展開失敗 ({designName}): {e.Message}");
             }
@@ -436,23 +414,15 @@ namespace world.anlabo.mdnailtool.Editor {
                 using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
                     foreach (ZipArchiveEntry entry in archive.Entries) {
                         bool shouldExtract = entry.FullName.StartsWith(prefabPrefix, StringComparison.OrdinalIgnoreCase);
-                        
+
                         if (!shouldExtract && folderMetaFiles.Contains(entry.FullName)) {
                             shouldExtract = true;
                         }
-                        
+
                         if (!shouldExtract) continue;
-                        if (string.IsNullOrEmpty(entry.Name)) continue;
 
                         string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
-                        string? destDir = Path.GetDirectoryName(destPath);
-                        
-                        if (destDir != null && !Directory.Exists(destDir)) {
-                            Directory.CreateDirectory(destDir);
-                        }
-
-                        entry.ExtractToFile(destPath, overwrite: true);
-                        copiedFiles++;
+                        if (WriteEntryIfChanged(entry, destPath)) copiedFiles++;
                     }
                 }
 
@@ -460,7 +430,7 @@ namespace world.anlabo.mdnailtool.Editor {
                     AssetDatabase.Refresh(ImportAssetOptions.Default);
                     FixTextureImportSettings(assetsPrefabPath);
                 }
-                
+
             } catch (Exception e) {
                 ToolConsole.Log($"[Error] Prefabフォルダ展開失敗 ({prefabFolderName}): {e.Message}");
             }
@@ -537,17 +507,8 @@ namespace world.anlabo.mdnailtool.Editor {
 
             using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
                 foreach (ZipArchiveEntry entry in archive.Entries) {
-                    if (string.IsNullOrEmpty(entry.Name)) continue;
-
                     string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
-                    string? destDir = Path.GetDirectoryName(destPath);
-                    
-                    if (destDir != null && !Directory.Exists(destDir)) {
-                        Directory.CreateDirectory(destDir);
-                    }
-
-                    entry.ExtractToFile(destPath, overwrite: true);
-                    copiedFiles++;
+                    if (WriteEntryIfChanged(entry, destPath)) copiedFiles++;
                 }
             }
 
@@ -739,6 +700,59 @@ namespace world.anlabo.mdnailtool.Editor {
             }
 
             return null;
+        }
+
+        // 全 zip 展開系の唯一の窓口. 中身が変化していなければ skip して書き込みコストを避ける.
+        // .meta は GUID 保護のため既存があれば必ず温存する.
+        private static bool WriteEntryIfChanged(ZipArchiveEntry entry, string destPath) {
+            if (string.IsNullOrEmpty(entry.Name)) return false;
+
+            bool isMeta = destPath.EndsWith(".meta", StringComparison.OrdinalIgnoreCase);
+
+            if (isMeta && File.Exists(destPath)) return false;
+
+            if (!isMeta && File.Exists(destPath)) {
+                try {
+                    if (ComputeFileCrc32(destPath) == entry.Crc32) return false;
+                } catch {
+                    // 比較失敗時は安全側で上書き
+                }
+            }
+
+            string? destDir = Path.GetDirectoryName(destPath);
+            if (destDir != null && !Directory.Exists(destDir)) {
+                Directory.CreateDirectory(destDir);
+            }
+            entry.ExtractToFile(destPath, overwrite: true);
+            return true;
+        }
+
+        private static readonly uint[] _crc32Table = BuildCrc32Table();
+
+        private static uint[] BuildCrc32Table() {
+            uint[] table = new uint[256];
+            for (uint i = 0; i < 256; i++) {
+                uint c = i;
+                for (int j = 0; j < 8; j++) {
+                    c = ((c & 1) != 0) ? (0xEDB88320u ^ (c >> 1)) : (c >> 1);
+                }
+                table[i] = c;
+            }
+            return table;
+        }
+
+        private static uint ComputeFileCrc32(string path) {
+            uint crc = 0xFFFFFFFFu;
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = fs.Read(buffer, 0, buffer.Length)) > 0) {
+                    for (int i = 0; i < read; i++) {
+                        crc = _crc32Table[(crc ^ buffer[i]) & 0xFF] ^ (crc >> 8);
+                    }
+                }
+            }
+            return ~crc;
         }
 
         private static void SaveInstalledVersion(string version) {
