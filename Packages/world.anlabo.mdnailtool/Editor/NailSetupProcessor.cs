@@ -1540,7 +1540,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			string modelPath = AssetDatabase.GetAssetPath(avatarAnimator.avatar);
 			if (string.IsNullOrEmpty(modelPath)) return result;
 
-			GameObject? referenceAsset = MDNailToolAssetLoader.LoadAssetSafe<GameObject>(modelPath);
+			GameObject? referenceAsset = MDNailToolAssetLoader.LoadPrefabSafe(modelPath);
 			if (referenceAsset == null) return result;
 
 			GameObject tempInstance = Object.Instantiate(referenceAsset);

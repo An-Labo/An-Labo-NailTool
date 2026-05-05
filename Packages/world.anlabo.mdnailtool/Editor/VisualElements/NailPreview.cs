@@ -183,10 +183,10 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			private static GameObject CreateNailObj() {
 				string fallbackPath = MDNailToolDefines.RESOURCE_PATH + "Preview/Preview.prefab";
-				GameObject? prefab = MDNailToolAssetLoader.LoadByGuid<GameObject>(MDNailToolDefines.PREVIEW_PREFAB_GUID, fallbackPath);
+				GameObject? prefab = MDNailToolAssetLoader.LoadPrefabByGuid(MDNailToolDefines.PREVIEW_PREFAB_GUID, fallbackPath);
 				if (prefab == null) {
 					ResourceAutoExtractor.EnsurePrefabExtractedByGuid(MDNailToolDefines.PREVIEW_PREFAB_GUID);
-					prefab = MDNailToolAssetLoader.LoadByGuid<GameObject>(MDNailToolDefines.PREVIEW_PREFAB_GUID, fallbackPath);
+					prefab = MDNailToolAssetLoader.LoadPrefabByGuid(MDNailToolDefines.PREVIEW_PREFAB_GUID, fallbackPath);
 				}
 				if (prefab == null) {
 					GameObject empty = new GameObject("NailPreviewPlaceholder");
