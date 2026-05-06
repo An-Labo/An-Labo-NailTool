@@ -308,23 +308,36 @@ namespace world.anlabo.mdnailtool.Editor {
 
         public static void EnsureDesignExtracted(string designName) {
             string assetsDesignPath = ASSETS_RESOURCE_PATH + "Nail/Design/" + designName + "/";
-            
+
             if (Directory.Exists(assetsDesignPath)) return;
-            
+
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
 
             string designPrefix = "Nail/Design/" + designName + "/";
+            HashSet<string>? installedMaterials = TryGetInstalledMaterialNames(designName);
 
             try {
                 int copiedFiles = 0;
-                
+
                 HashSet<string> folderMetaFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 folderMetaFiles.Add("Nail.meta");
                 folderMetaFiles.Add("Nail/Design.meta");
                 folderMetaFiles.Add("Nail/Design/" + designName + ".meta");
-                
+
                 using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
+                    HashSet<string> topLevelSubfolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    if (installedMaterials != null) {
+                        foreach (ZipArchiveEntry entry in archive.Entries) {
+                            if (!entry.FullName.StartsWith(designPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+                            string rel = entry.FullName.Substring(designPrefix.Length);
+                            int slashIdx = rel.IndexOf('/');
+                            if (slashIdx > 0) {
+                                topLevelSubfolders.Add(rel.Substring(0, slashIdx));
+                            }
+                        }
+                    }
+
                     foreach (ZipArchiveEntry entry in archive.Entries) {
                         bool shouldExtract = entry.FullName.StartsWith(designPrefix, StringComparison.OrdinalIgnoreCase);
 
@@ -333,6 +346,12 @@ namespace world.anlabo.mdnailtool.Editor {
                         }
 
                         if (!shouldExtract) continue;
+
+                        if (installedMaterials != null
+                            && entry.FullName.StartsWith(designPrefix, StringComparison.OrdinalIgnoreCase)
+                            && IsExcludedByMaterialFilter(entry.FullName, designPrefix, topLevelSubfolders, installedMaterials)) {
+                            continue;
+                        }
 
                         string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
                         if (WriteEntryIfChanged(entry, destPath)) copiedFiles++;
@@ -347,6 +366,54 @@ namespace world.anlabo.mdnailtool.Editor {
             } catch (Exception e) {
                 ToolConsole.Log($"[Error] デザイン展開失敗 ({designName}): {e.Message}");
             }
+        }
+
+        private static HashSet<string>? TryGetInstalledMaterialNames(string designName) {
+            try {
+                string legacyDesignDir = MDNailToolDefines.LEGACY_DESIGN_PATH + "【" + designName + "】";
+                string textureBase = Path.Combine(legacyDesignDir, "[Data]", "[Texture]");
+                if (!Directory.Exists(textureBase)) {
+                    return null;
+                }
+
+                HashSet<string> set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string shapeDir in Directory.GetDirectories(textureBase)) {
+                    foreach (string materialDir in Directory.GetDirectories(shapeDir)) {
+                        string materialName = Path.GetFileName(materialDir);
+                        if (!string.IsNullOrEmpty(materialName)) {
+                            set.Add(materialName);
+                        }
+                    }
+                }
+                return set.Count > 0 ? set : null;
+            } catch (Exception e) {
+                ToolConsole.Log($"[Warning] legacy install lookup failed ({designName}): {e.Message}");
+                return null;
+            }
+        }
+
+        private static bool IsExcludedByMaterialFilter(
+            string fullName,
+            string designPrefix,
+            HashSet<string> topLevelSubfolders,
+            HashSet<string> installedMaterials)
+        {
+            string rel = fullName.Substring(designPrefix.Length);
+            if (rel.Length == 0) return false;
+
+            int slashIdx = rel.IndexOf('/');
+
+            if (slashIdx > 0) {
+                string firstSegment = rel.Substring(0, slashIdx);
+                return topLevelSubfolders.Contains(firstSegment) && !installedMaterials.Contains(firstSegment);
+            }
+
+            if (rel.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)) {
+                string stripped = rel.Substring(0, rel.Length - ".meta".Length);
+                return topLevelSubfolders.Contains(stripped) && !installedMaterials.Contains(stripped);
+            }
+
+            return false;
         }
 
         public static void EnsurePrefabExtractedByGuid(string guid) {
