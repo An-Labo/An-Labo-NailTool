@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using world.anlabo.mdnailtool.Editor.Core;
 using world.anlabo.mdnailtool.Editor.JsonData;
 using Object = UnityEngine.Object;
 
@@ -27,26 +28,33 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			}
 
 			try {
-				if (!isGenerate && !isPreview) {
+				string? presetName = GlobalSetting.SelectedShaderPreset;
+				Material? preset = string.IsNullOrEmpty(presetName) ? null : ShaderPresetScanner.FindPresetByName(presetName!);
+				bool hasPreset = preset != null;
+
+				if (!isGenerate && !isPreview && !hasPreset) {
 					Material targetMaterial = this.GetBaseMaterial(materialName, nailShapeName);
 					this.ProcessMaterial(targetMaterial, materialName, colorName, nailShapeName);
 					return targetMaterial;
 				}
 
-				// マテリアル生成がON || プレビューの場合新規マテリアルを生成する。
 				string materialKey = this.GetMaterialKey(materialName, colorName, nailShapeName, isPreview);
 
-				// キャッシュされたマテリアルがあればそれを返す
 				Material? cashedMaterial = isPreview ? INailProcessor.GetPreviewMaterialCash(materialKey) : INailProcessor.GetCreatedMaterialCash(materialKey);
 				if (cashedMaterial != null) return cashedMaterial;
 
 				Material baseMaterial = this.GetBaseMaterial(materialName, nailShapeName);
-				Material clonedMaterial = Object.Instantiate(baseMaterial);
+				Material clonedMaterial;
+				if (hasPreset) {
+					clonedMaterial = new Material(preset!);
+					ShaderPresetApplier.OverrideFromNail(clonedMaterial, baseMaterial);
+				} else {
+					clonedMaterial = new Material(baseMaterial);
+				}
 
 				this.ProcessMaterial(clonedMaterial, materialName, colorName, nailShapeName);
 
 				if (isPreview) {
-					// プレビュー用の場合ファイルとしては保存しない
 					INailProcessor.RegisterPreviewMaterialCash(materialKey, clonedMaterial);
 				} else {
 					if (!Directory.Exists(MDNailToolDefines.GENERATED_ASSET_PATH)) {
@@ -86,6 +94,10 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		protected virtual string GetMaterialKey(string materialName, string variationName, string nailShapeName, bool isPreview) {
 			string materialKey = $"{this.DesignName}.{materialName}.{variationName}.{nailShapeName}";
+			string? presetName = GlobalSetting.SelectedShaderPreset;
+			if (!string.IsNullOrEmpty(presetName)) {
+				materialKey += $".preset_{presetName}";
+			}
 			if (isPreview) {
 				materialKey += ".preview";
 			}

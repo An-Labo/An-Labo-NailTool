@@ -1319,6 +1319,9 @@
 
 .mdn-tool-console-container {
     margin-top: 6px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 6px;
     background-color: #1e1e1e;
     border-radius: 4px;
     border-width: 1px;
@@ -1390,3 +1393,126 @@
 :root[data-unity-skin="light"] .mdn-tool-console-entry {
     color: #333;
 }
+
+/* ============================================================
+   SHADER PRESET PANEL (Issue #196)
+   ============================================================ */
+
+.mdn-shader-preset-panel {
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: #4a4a4a;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    overflow: hidden;
+}
+
+.mdn-shader-preset-head {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: #444;
+}
+
+.mdn-shader-preset-title {
+    font-size: 12px;
+    color: #e8e8e8;
+    -unity-font-style: bold;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.mdn-shader-preset-select {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 80px;
+    margin-right: 4px;
+}
+
+.mdn-shader-preset-btn {
+    height: 22px;
+    cursor: link;
+    font-size: 11px;
+    flex-shrink: 0;
+    margin-left: 2px;
+}
+
+.mdn-shader-preset-add-area {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 10px;
+}
+.mdn-shader-preset-add-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    margin-right: 4px;
+}
+
+.mdn-shader-preset-btn-folder {
+    background-image: resource("d_Folder Icon");
+    width: 22px;
+}
+:root[data-unity-skin="light"] .mdn-shader-preset-btn-folder {
+    background-image: resource("Folder Icon");
+}
+
+.mdn-shader-preset-btn.active {
+    background-color: #4a4a4a;
+    color: #e0e0e0;
+}
+.mdn-shader-preset-btn.active:hover {
+    background-color: #555555;
+}
+.mdn-shader-preset-settings-area {
+    flex-direction: column;
+    padding: 6px 10px;
+    border-top-width: 1px;
+    border-top-color: #444;
+}
+.mdn-shader-preset-add-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.mdn-shader-preset-settings-title {
+    font-size: 10px;
+    color: #aaa;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+.mdn-shader-preset-settings-list {
+    flex-direction: column;
+    padding-left: 4px;
+}
+.mdn-shader-preset-settings-list > Toggle {
+    margin: 1px 0;
+}
+.mdn-shader-preset-hint {
+    padding: 6px 10px;
+    border-top-width: 1px;
+    border-top-color: #444;
+}
+.mdn-shader-preset-hint > Label {
+    font-size: 10px;
+    color: #aaa;
+    white-space: normal;
+}
+:root[data-unity-skin="light"] .mdn-shader-preset-settings-area {
+    border-top-color: #bbb;
+}
+:root[data-unity-skin="light"] .mdn-shader-preset-settings-title { color: #555; }
+
+:root[data-unity-skin="light"] .mdn-shader-preset-panel {
+    border-color: #bbb;
+}
+:root[data-unity-skin="light"] .mdn-shader-preset-head {
+    border-bottom-color: #bbb;
+}
+:root[data-unity-skin="light"] .mdn-shader-preset-title { color: #1a1a1a; }
+:root[data-unity-skin="light"] .mdn-shader-preset-hint {
+    border-top-color: #bbb;
+}
+:root[data-unity-skin="light"] .mdn-shader-preset-hint > Label { color: #555; }

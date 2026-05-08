@@ -6,6 +6,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.Components;
+using world.anlabo.mdnailtool.Editor.Core;
 using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
@@ -113,9 +114,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private bool _warningDetailExpanded = false;
 
 		// ---- Tool Console ----
-		private Toggle? _enableToolConsole;
 		private VisualElement? _toolConsoleContainer;
 		private ScrollView? _toolConsoleScroll;
+
+		// ---- Shader Preset ----
+		private DropdownField? _shaderPresetSelect;
+		private Button? _shaderPresetReloadBtn;
+		private Button? _shaderPresetPingBtn;
+		private ObjectField? _shaderPresetAddField;
+		private Button? _shaderPresetSaveBtn;
+		private Button? _shaderPresetSettingsToggleBtn;
+		private VisualElement? _shaderPresetSettingsArea;
+		private VisualElement? _shaderPresetSettingsList;
+		private bool _shaderPresetSettingsOpen;
+		private const string SHADER_PRESET_NONE_LABEL = "Nail Default";
 
 		#endregion
 
@@ -679,25 +691,33 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				});
 			}
 
-			// トラブルシューティング
-			this._enableToolConsole = this.rootVisualElement.Q<Toggle>("enable-tool-console");
+			// シェーダープリセット
+			EnsureShaderPresetUserFolder();
+			this._shaderPresetSelect = this.rootVisualElement.Q<DropdownField>("shader-preset-select");
+			this._shaderPresetReloadBtn = this.rootVisualElement.Q<Button>("shader-preset-reload");
+			this._shaderPresetPingBtn = this.rootVisualElement.Q<Button>("shader-preset-ping");
+			this._shaderPresetAddField = this.rootVisualElement.Q<ObjectField>("shader-preset-add-field");
+			this._shaderPresetSaveBtn = this.rootVisualElement.Q<Button>("shader-preset-save");
+			this._shaderPresetSettingsToggleBtn = this.rootVisualElement.Q<Button>("shader-preset-settings-toggle");
+			this._shaderPresetSettingsArea = this.rootVisualElement.Q<VisualElement>("shader-preset-settings-area");
+			this._shaderPresetSettingsList = this.rootVisualElement.Q<VisualElement>("shader-preset-settings-list");
+			if (this._shaderPresetSelect != null)
+			{
+				this.RebuildShaderPresetSelect();
+				this._shaderPresetSelect.RegisterValueChangedCallback(this.OnChangeShaderPresetSelect);
+			}
+			if (this._shaderPresetReloadBtn != null) this._shaderPresetReloadBtn.clicked += this.OnClickShaderPresetReload;
+			if (this._shaderPresetPingBtn != null) this._shaderPresetPingBtn.clicked += this.OnClickShaderPresetPing;
+			if (this._shaderPresetAddField != null) {
+				this._shaderPresetAddField.objectType = typeof(Material);
+				this._shaderPresetAddField.label = S("window.shader_preset_add_label") ?? "Add Preset";
+			}
+			if (this._shaderPresetSaveBtn != null) this._shaderPresetSaveBtn.clicked += this.OnClickShaderPresetSave;
+			if (this._shaderPresetSettingsToggleBtn != null) this._shaderPresetSettingsToggleBtn.clicked += this.OnClickShaderPresetSettingsToggle;
+
+			// トラブルシューティング (ログ単独. 初期非表示, お問い合わせクリックで表示)
 			this._toolConsoleContainer = this.rootVisualElement.Q<VisualElement>("tool-console-container");
 			this._toolConsoleScroll = this.rootVisualElement.Q<ScrollView>("tool-console-scroll");
-			if (this._enableToolConsole != null)
-			{
-				this._enableToolConsole.SetValueWithoutNotify(GlobalSetting.EnableToolConsole);
-				this._enableToolConsole.RegisterValueChangedCallback(evt =>
-				{
-					GlobalSetting.EnableToolConsole = evt.newValue;
-					this.UpdateToolConsoleVisibility(evt.newValue);
-				});
-				this.UpdateToolConsoleVisibility(GlobalSetting.EnableToolConsole);
-			}
-			var lblConsole = this.rootVisualElement.Q<Label>("label-tool-console");
-			lblConsole?.RegisterCallback<ClickEvent>(_ =>
-			{
-				if (this._enableToolConsole != null) this._enableToolConsole.value = !this._enableToolConsole.value;
-			});
 
 			// ログタイトル設定
 			var consoleTitle = this.rootVisualElement.Q<Label>("tool-console-title");
@@ -1193,6 +1213,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._toolConsoleContainer.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
 		}
 
+
 		private void AppendConsoleLog(string message)
 		{
 			if (this._toolConsoleScroll == null) return;
@@ -1415,7 +1436,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			// OFF
 			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = false;
 			if (this._penetrationCorrection != null) this._penetrationCorrection.value = false;
-			if (this._enableToolConsole != null) this._enableToolConsole.value = false;
 
 			// 試着トグルはOFF固定 (毎回OFF運用)
 			this._tryoutActive = false;
@@ -2760,6 +2780,164 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				this._tryoutBanner.style.display = this._tryoutActive ? DisplayStyle.Flex : DisplayStyle.None;
 			}
+		}
+
+		private void RebuildShaderPresetSelect()
+		{
+			if (this._shaderPresetSelect == null) return;
+
+			var choices = new List<string> { SHADER_PRESET_NONE_LABEL };
+			choices.AddRange(ShaderPresetScanner.ScanAllPresetNames());
+			this._shaderPresetSelect.choices = choices;
+
+			string? saved = GlobalSetting.SelectedShaderPreset;
+			string toSelect = (string.IsNullOrEmpty(saved) || !choices.Contains(saved!)) ? SHADER_PRESET_NONE_LABEL : saved!;
+			this._shaderPresetSelect.SetValueWithoutNotify(toSelect);
+		}
+
+		private void OnChangeShaderPresetSelect(ChangeEvent<string> evt)
+		{
+			string newValue = evt.newValue;
+			string? saveValue = (string.IsNullOrEmpty(newValue) || newValue == SHADER_PRESET_NONE_LABEL) ? null : newValue;
+			GlobalSetting.SelectedShaderPreset = saveValue;
+			INailProcessor.ClearPreviewMaterialCash();
+			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
+		}
+
+		private void OnClickShaderPresetReload()
+		{
+			AssetDatabase.Refresh();
+			ShaderPresetScanner.InvalidateCache();
+			this.RebuildShaderPresetSelect();
+		}
+
+		private void OnClickShaderPresetPing()
+		{
+			EnsureShaderPresetUserFolder();
+			string folderPath = MDNailToolDefines.SHADER_PRESET_USER_PATH.TrimEnd('/');
+			UnityEngine.Object? folder = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(folderPath);
+			if (folder != null)
+			{
+				Selection.activeObject = folder;
+				EditorGUIUtility.PingObject(folder);
+			}
+		}
+
+		private void OnClickShaderPresetSettingsToggle()
+		{
+			if (this._shaderPresetSettingsArea == null) return;
+			this._shaderPresetSettingsOpen = !this._shaderPresetSettingsOpen;
+			if (this._shaderPresetSettingsOpen)
+			{
+				this.RebuildShaderPresetSettingsList();
+				this._shaderPresetSettingsArea.style.display = DisplayStyle.Flex;
+				this._shaderPresetSettingsToggleBtn?.AddToClassList("active");
+			}
+			else
+			{
+				this._shaderPresetSettingsArea.style.display = DisplayStyle.None;
+				this._shaderPresetSettingsToggleBtn?.RemoveFromClassList("active");
+			}
+		}
+
+		private void RebuildShaderPresetSettingsList()
+		{
+			if (this._shaderPresetSettingsList == null) return;
+			this._shaderPresetSettingsList.Clear();
+
+			List<string> allNames = ShaderPresetScanner.ScanAllPresetNamesIncludingHidden();
+			if (allNames.Count == 0)
+			{
+				Label empty = new() { text = S("window.shader_preset_no_presets") ?? "(no presets)" };
+				empty.style.fontSize = 10;
+				empty.style.color = new StyleColor(new Color(0.6f, 0.6f, 0.6f));
+				this._shaderPresetSettingsList.Add(empty);
+				return;
+			}
+
+			foreach (string name in allNames)
+			{
+				bool hidden = ShaderPresetScanner.IsHidden(name);
+				VisualElement row = new();
+				row.style.flexDirection = FlexDirection.Row;
+				row.style.alignItems = Align.Center;
+				row.AddToClassList("mdn-shader-preset-settings-row");
+
+				Toggle tg = new() { value = !hidden };
+				Label label = new(name);
+				label.style.marginLeft = 4;
+
+				string capturedName = name;
+				tg.RegisterValueChangedCallback(evt =>
+				{
+					ShaderPresetScanner.SetHidden(capturedName, !evt.newValue);
+					this.RebuildShaderPresetSelect();
+				});
+
+				row.Add(tg);
+				row.Add(label);
+				this._shaderPresetSettingsList.Add(row);
+			}
+		}
+
+		private void OnClickShaderPresetSave()
+		{
+			if (this._shaderPresetAddField?.value is Material mat)
+			{
+				this.HandleShaderPresetDrop(new List<Material> { mat });
+				this._shaderPresetAddField.SetValueWithoutNotify(null);
+			}
+		}
+
+		private void HandleShaderPresetDrop(List<Material> droppedMaterials)
+		{
+			if (droppedMaterials.Count == 0) return;
+
+			EnsureShaderPresetUserFolder();
+
+			var addedNames = new List<string>();
+			foreach (Material mat in droppedMaterials)
+			{
+				string srcPath = AssetDatabase.GetAssetPath(mat);
+				if (string.IsNullOrEmpty(srcPath)) continue;
+
+				string fileName = System.IO.Path.GetFileName(srcPath);
+				string dstPath = MDNailToolDefines.SHADER_PRESET_USER_PATH + fileName;
+				if (System.IO.File.Exists(dstPath))
+				{
+					Debug.LogWarning($"[MDNailTool] Shader preset already exists: {fileName}");
+					continue;
+				}
+				AssetDatabase.CopyAsset(srcPath, dstPath);
+				AssetDatabase.ImportAsset(dstPath, ImportAssetOptions.ForceSynchronousImport);
+				addedNames.Add(System.IO.Path.GetFileNameWithoutExtension(fileName));
+			}
+
+			if (addedNames.Count > 0)
+			{
+				AssetDatabase.Refresh();
+				ShaderPresetScanner.InvalidateCache();
+				this.RebuildShaderPresetSelect();
+				this.RebuildShaderPresetSettingsList();
+				string firstAdded = ShaderPresetScanner.USER_PREFIX + addedNames[0];
+				this._shaderPresetSelect!.value = firstAdded;
+			}
+		}
+
+		private static void EnsureShaderPresetUserFolder()
+		{
+			string folder = MDNailToolDefines.SHADER_PRESET_USER_PATH.TrimEnd('/');
+			if (AssetDatabase.IsValidFolder(folder)) return;
+
+			string parent = System.IO.Path.GetDirectoryName(folder)!.Replace('\\', '/');
+			string folderName = System.IO.Path.GetFileName(folder);
+			if (!AssetDatabase.IsValidFolder(parent))
+			{
+				System.IO.Directory.CreateDirectory(parent);
+				AssetDatabase.Refresh();
+			}
+			AssetDatabase.CreateFolder(parent, folderName);
 		}
 
 	}

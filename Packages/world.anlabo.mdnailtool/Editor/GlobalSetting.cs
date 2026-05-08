@@ -87,8 +87,6 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(BACKUP_KEY, value);
 		}
 
-		private const string ENABLE_SCENE_PREVIEW_KEY = "world.anlabo.mdnailtool.enable_scene_preview";
-
 		internal static bool EnableScenePreview
 		{
 			get => true;
@@ -164,7 +162,6 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(MERGE_ANLABO_EXPRESSION_MENU_KEY, value);
 		}
 
-		private const string ARMATURE_SCALE_COMPENSATION_KEY = "world.anlabo.mdnailtool.armature_scale_compensation";
 		internal static bool ArmatureScaleCompensation
 		{
 			get => true;
@@ -176,7 +173,7 @@ namespace world.anlabo.mdnailtool.Editor
 		{
 			get
 			{
-				if (!EditorPrefs.HasKey(BAKE_BLENDSHAPES_KEY)) return false;
+				if (!EditorPrefs.HasKey(BAKE_BLENDSHAPES_KEY)) return UseModularAvatar;
 				return EditorPrefs.GetBool(BAKE_BLENDSHAPES_KEY);
 			}
 			set => EditorPrefs.SetBool(BAKE_BLENDSHAPES_KEY, value);
@@ -221,6 +218,18 @@ namespace world.anlabo.mdnailtool.Editor
 				return string.IsNullOrEmpty(val) ? null : val;
 			}
 			set => EditorPrefs.SetString(ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY, value ?? "");
+		}
+
+		private const string SELECTED_SHADER_PRESET_KEY = "world.anlabo.mdnailtool.selected_shader_preset";
+		internal static string? SelectedShaderPreset
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(SELECTED_SHADER_PRESET_KEY)) return null;
+				string val = EditorPrefs.GetString(SELECTED_SHADER_PRESET_KEY);
+				return string.IsNullOrEmpty(val) ? null : val;
+			}
+			set => EditorPrefs.SetString(SELECTED_SHADER_PRESET_KEY, value ?? "");
 		}
 
 		private const string ADDITIONAL_OBJECT_SOURCE_DESIGN_KEY = "world.anlabo.mdnailtool.additional_object_source_design";
@@ -308,11 +317,12 @@ namespace world.anlabo.mdnailtool.Editor
 			EditorPrefs.DeleteKey("world.anlabo.mdnailtool.additional_material_count");
 			EditorPrefs.DeleteKey("world.anlabo.mdnailtool.additional_object_count");
 			EditorPrefs.DeleteKey("world.anlabo.mdnailtool.option_count");
-			EditorPrefs.DeleteKey(ENABLE_SCENE_PREVIEW_KEY);
 			EditorPrefs.DeleteKey(ENABLE_ADDITIONAL_MATERIALS_KEY);
 			EditorPrefs.DeleteKey(ADDITIONAL_MATERIAL_SOURCE_DESIGN_KEY);
 			EditorPrefs.DeleteKey(ADDITIONAL_OBJECT_SOURCE_DESIGN_KEY);
-			EditorPrefs.DeleteKey(ARMATURE_SCALE_COMPENSATION_KEY);
+			EditorPrefs.DeleteKey(SELECTED_SHADER_PRESET_KEY);
+			EditorPrefs.DeleteKey(BAKE_BLENDSHAPES_KEY);
+			EditorPrefs.DeleteKey("world.anlabo.mdnailtool.hidden_shader_presets");
 		}
 
 	}
