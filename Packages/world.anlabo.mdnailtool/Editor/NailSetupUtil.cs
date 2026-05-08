@@ -213,7 +213,14 @@ namespace world.anlabo.mdnailtool.Editor
 				return;
 			}
 
-			if (processor == null) return;
+			// 装着しない指 (チェックOFF) はプレビュー側で Renderer 無効化してチップ非表示。
+			// Apply 時は NailSetupProcessor で先に Destroy 済みなので、この経路は通らない。
+			if (processor == null)
+			{
+				renderer.enabled = false;
+				return;
+			}
+			renderer.enabled = true;
 
 			Material mainMaterial = processor.GetMaterial(materialName, colorName, nailShapeName, isGenerate, isPreview);
 

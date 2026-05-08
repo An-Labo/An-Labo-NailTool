@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
+using world.anlabo.mdnailtool.Editor;
 using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.Language;
 using world.anlabo.mdnailtool.Editor.Model;
@@ -12,6 +13,8 @@ using world.anlabo.mdnailtool.Editor.NailDesigns;
 
 namespace world.anlabo.mdnailtool.Editor.VisualElements {
 	public class NailDesignDropDowns : VisualElement, ILocalizedElement {
+		private readonly Toggle _enableToggle;
+
 		private readonly Label _fingerNameLabel;
 		private readonly LocalizedDropDown _designPopup;
 		private readonly DropdownField _materialPopup;
@@ -29,8 +32,38 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 		// ---- 指インデックス (0-19) ----
 		private int _fingerIndex = -1;
-		internal void SetFingerIndex(int fingerIndex) => this._fingerIndex = fingerIndex;
+		internal void SetFingerIndex(int fingerIndex) {
+			this._fingerIndex = fingerIndex;
+			bool enabled = MDNailToolPrefs.IsFingerEnabled(fingerIndex);
+			this._enableToggle.SetValueWithoutNotify(enabled);
+			this.UpdateEnabledVisualState(enabled);
+		}
 		internal int GetFingerIndex() => this._fingerIndex;
+
+		internal bool IsFingerEnabled => this._enableToggle?.value ?? true;
+		internal event Action? OnFingerEnabledChanged;
+
+		private void OnEnableToggleChanged(ChangeEvent<bool> evt) {
+			if (this._fingerIndex >= 0) MDNailToolPrefs.SetFingerEnabled(this._fingerIndex, evt.newValue);
+			this.UpdateEnabledVisualState(evt.newValue);
+			this.OnFingerEnabledChanged?.Invoke();
+		}
+
+		private void UpdateEnabledVisualState(bool enabled) {
+			// _fingerNameLabel はラベルクリックでON/OFF切替するため SetEnabled しない
+			this._designPopup.SetEnabled(enabled);
+			this._materialPopup.SetEnabled(enabled);
+			this._colorPopup.SetEnabled(enabled);
+			this._additionalMaterialPopup.SetEnabled(enabled);
+			this._additionalObjectPopup.SetEnabled(enabled);
+		}
+
+		// 一括Toggle連動時の循環防止のため OnEnableToggleChanged を発火させない
+		internal void SetFingerEnabledExternal(bool enabled) {
+			this._enableToggle.SetValueWithoutNotify(enabled);
+			if (this._fingerIndex >= 0) MDNailToolPrefs.SetFingerEnabled(this._fingerIndex, enabled);
+			this.UpdateEnabledVisualState(enabled);
+		}
 
 		// ---- バリアントモード ----
 		private bool _isVariantMode;
@@ -40,6 +73,11 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		public NailDesignDropDowns() {
 			this.style.flexDirection = FlexDirection.Row;
 			this.style.alignItems = Align.Center;
+
+			this._enableToggle = new Toggle();
+			this._enableToggle.AddToClassList("mdn-finger-enable-toggle");
+			this._enableToggle.SetValueWithoutNotify(true);
+			this._enableToggle.RegisterValueChangedCallback(this.OnEnableToggleChanged);
 
 			// 指名ラベル（デザインドロップダウンから分離）
 			this._fingerNameLabel = new Label {
@@ -96,12 +134,17 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			};
 			this._additionalObjectPopup.AddToClassList("mdn-finger-addobj-dropdown");
 
+			this.Add(this._enableToggle);
 			this.Add(this._fingerNameLabel);
 			this.Add(this._designPopup);
 			this.Add(this._materialPopup);
 			this.Add(this._colorPopup);
 			this.Add(this._additionalMaterialPopup);
 			this.Add(this._additionalObjectPopup);
+
+			this._fingerNameLabel.RegisterCallback<ClickEvent>(_ => {
+				this._enableToggle.value = !this._enableToggle.value;
+			});
 
 			AddArrowKeyNavigation(this._designPopup);
 			AddArrowKeyNavigation(this._materialPopup);
@@ -332,6 +375,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public (string, string, string) GetSelectedDesignAndVariationName() {
+			if (!this.IsFingerEnabled) return ("", "", "");
 			if (this._isVariantMode && !string.IsNullOrEmpty(this._selectedVariantDesignName)) {
 				// バリアントモード: バリアントデザイン名 + そのデザインの最初のマテリアル
 				string designName = this._selectedVariantDesignName!;
@@ -348,6 +392,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public string GetSelectedDesignName() {
+			if (!this.IsFingerEnabled) return "";
 			if (this._isVariantMode && !string.IsNullOrEmpty(this._selectedVariantDesignName))
 				return this._selectedVariantDesignName!;
 			return this._designPopup.value;

@@ -110,6 +110,27 @@ namespace world.anlabo.mdnailtool.Editor {
 			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(nailPrefabObject);
 			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(nailPrefabObject);
 
+			for (int i = 0; i < 10 && i < handsNailObjects.Length; i++) {
+				if (i < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[i].Item1 == null && handsNailObjects[i] != null) {
+					UnityEngine.Object.DestroyImmediate(handsNailObjects[i]!.gameObject);
+					handsNailObjects[i] = null;
+				}
+			}
+			for (int i = 0; i < 5 && i < leftFootNailObjects.Length; i++) {
+				int designIdx = 10 + i;
+				if (designIdx < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[designIdx].Item1 == null && leftFootNailObjects[i] != null) {
+					UnityEngine.Object.DestroyImmediate(leftFootNailObjects[i]!.gameObject);
+					leftFootNailObjects[i] = null;
+				}
+			}
+			for (int i = 0; i < 5 && i < rightFootNailObjects.Length; i++) {
+				int designIdx = 15 + i;
+				if (designIdx < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[designIdx].Item1 == null && rightFootNailObjects[i] != null) {
+					UnityEngine.Object.DestroyImmediate(rightFootNailObjects[i]!.gameObject);
+					rightFootNailObjects[i] = null;
+				}
+			}
+
 			if (this.RemoveCurrentNail) {
 				RemoveNail(this.Avatar, targetBoneDictionary);
 			}

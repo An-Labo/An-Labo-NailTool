@@ -54,6 +54,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _tglFootActive;
 		private Toggle? _tglFootDetail;
 
+		private Toggle? _bulkLeftHand;
+		private Toggle? _bulkRightHand;
+		private Toggle? _bulkLeftFoot;
+		private Toggle? _bulkRightFoot;
+
 		private Toggle? _removeCurrentNail;
 		private Toggle? _backup;
 		private Toggle? _enableScenePreview;
@@ -1715,6 +1720,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var leftHeader = new VisualElement();
 			leftHeader.AddToClassList("mdn-finger-header");
 
+			var bulkLeftFoot = new Toggle { name = "bulk-left-foot" };
+			bulkLeftFoot.AddToClassList("mdn-bulk-toggle");
+			leftHeader.Add(bulkLeftFoot);
+
 			var leftFootColLabel = new LocalizedLabel { TextId = "window.left_foot" };
 			leftFootColLabel.AddToClassList("mdn-finger-name-col");
 			leftFootColLabel.AddToClassList("mdn-col-header");
@@ -1759,6 +1768,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			// ---- 右足区切り行 ----
 			var divider = new VisualElement();
 			divider.AddToClassList("mdn-hand-divider");
+
+			var bulkRightFoot = new Toggle { name = "bulk-right-foot" };
+			bulkRightFoot.AddToClassList("mdn-bulk-toggle");
+			divider.Add(bulkRightFoot);
 
 			var rightFootDivLabel = new LocalizedLabel { TextId = "window.right_foot" };
 			rightFootDivLabel.AddToClassList("mdn-finger-name-col");
@@ -1811,7 +1824,65 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			foreach (NailDesignDropDowns nailDesignDropDown in this._nailDesignDropDowns)
 			{
 				nailDesignDropDown.RegisterCallback<ChangeEvent<string?>>(this.OnChangeNailDesign);
+				nailDesignDropDown.OnFingerEnabledChanged += () => {
+					this.UpdateNailShapeFilter();
+					this.UpdatePreview();
+					this.RequestScenePreviewUpdate();
+					this.UpdateAllBulkToggleStates();
+				};
 			}
+
+			this._bulkLeftHand = this.rootVisualElement.Q<Toggle>("bulk-left-hand");
+			this._bulkRightHand = this.rootVisualElement.Q<Toggle>("bulk-right-hand");
+			this._bulkLeftFoot = this.rootVisualElement.Q<Toggle>("bulk-left-foot");
+			this._bulkRightFoot = this.rootVisualElement.Q<Toggle>("bulk-right-foot");
+
+			this._bulkLeftHand?.RegisterValueChangedCallback(evt => this.SetBulkFingers(0, 5, evt.newValue));
+			this._bulkRightHand?.RegisterValueChangedCallback(evt => this.SetBulkFingers(5, 5, evt.newValue));
+			this._bulkLeftFoot?.RegisterValueChangedCallback(evt => this.SetBulkFingers(10, 5, evt.newValue));
+			this._bulkRightFoot?.RegisterValueChangedCallback(evt => this.SetBulkFingers(15, 5, evt.newValue));
+
+			var lblBulkLeftHand = this._bulkLeftHand?.parent?.Q<LocalizedLabel>(className: "mdn-finger-name-col");
+			var lblBulkRightHand = this._bulkRightHand?.parent?.Q<LocalizedLabel>(className: "mdn-finger-name-col");
+			var lblBulkLeftFoot = this._bulkLeftFoot?.parent?.Q<LocalizedLabel>(className: "mdn-finger-name-col");
+			var lblBulkRightFoot = this._bulkRightFoot?.parent?.Q<LocalizedLabel>(className: "mdn-finger-name-col");
+			lblBulkLeftHand?.RegisterCallback<ClickEvent>(_ => { if (this._bulkLeftHand != null) this._bulkLeftHand.value = !this._bulkLeftHand.value; });
+			lblBulkRightHand?.RegisterCallback<ClickEvent>(_ => { if (this._bulkRightHand != null) this._bulkRightHand.value = !this._bulkRightHand.value; });
+			lblBulkLeftFoot?.RegisterCallback<ClickEvent>(_ => { if (this._bulkLeftFoot != null) this._bulkLeftFoot.value = !this._bulkLeftFoot.value; });
+			lblBulkRightFoot?.RegisterCallback<ClickEvent>(_ => { if (this._bulkRightFoot != null) this._bulkRightFoot.value = !this._bulkRightFoot.value; });
+
+			this.UpdateAllBulkToggleStates();
+		}
+
+		private void SetBulkFingers(int startIdx, int count, bool enabled)
+		{
+			if (this._nailDesignDropDowns == null) return;
+			foreach (var dd in this._nailDesignDropDowns)
+			{
+				int fi = dd.GetFingerIndex();
+				if (fi >= startIdx && fi < startIdx + count) dd.SetFingerEnabledExternal(enabled);
+			}
+			this.UpdateNailShapeFilter();
+			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
+			this.UpdateAllBulkToggleStates();
+		}
+
+		private void UpdateAllBulkToggleStates()
+		{
+			this.UpdateBulkToggleState(0, 5, this._bulkLeftHand);
+			this.UpdateBulkToggleState(5, 5, this._bulkRightHand);
+			this.UpdateBulkToggleState(10, 5, this._bulkLeftFoot);
+			this.UpdateBulkToggleState(15, 5, this._bulkRightFoot);
+		}
+
+		private void UpdateBulkToggleState(int startIdx, int count, Toggle? bulk)
+		{
+			if (bulk == null || this._nailDesignDropDowns == null) return;
+			bool allEnabled = this._nailDesignDropDowns
+				.Where(dd => { int fi = dd.GetFingerIndex(); return fi >= startIdx && fi < startIdx + count; })
+				.All(dd => dd.IsFingerEnabled);
+			bulk.SetValueWithoutNotify(allEnabled);
 		}
 
 		private void InitializeHandFootControl()
@@ -2328,9 +2399,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (this.GetDirectMaterial() != null) { this._nailShapeDropDown!.SetFilter(_ => true); return; }
 			if (processor != null) { this._nailShapeDropDown!.SetFilter(processor.IsSupportedNailShape); return; }
 
-			HashSet<string> designNameSet = this._nailDesignDropDowns!.Select(downs => downs.GetSelectedDesignName()).ToHashSet();
+			HashSet<string> designNameSet = this._nailDesignDropDowns!
+				.Select(downs => downs.GetSelectedDesignName())
+				.Where(n => !string.IsNullOrEmpty(n))
+				.ToHashSet();
 			using DBNailDesign dbNailDesign = new();
 			List<INailProcessor> processors = designNameSet.Select(INailProcessor.CreateNailDesign).ToList();
+			if (processors.Count == 0) { this._nailShapeDropDown!.SetFilter(_ => true); return; }
 			this._nailShapeDropDown!.SetFilter(shapeName => processors.All(p => p.IsSupportedNailShape(shapeName)));
 		}
 

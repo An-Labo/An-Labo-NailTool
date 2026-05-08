@@ -24,14 +24,16 @@ namespace world.anlabo.mdnailtool.Editor.Window.Domain
 
 			List<(string d, string m, string c)> finalSelectionList = new();
 			var emptyDummy = ("", "", "");
-			var globalMasterSource = allSelections.Length > 0 ? allSelections[0] : emptyDummy;
+			// HandDetail/FootDetail=false 時の全指共通デザインは ON状態の最初の指から取る。
+			// 単純に [0] を使うと指0番OFFで全指消滅する。
+			var globalMasterSource = allSelections.FirstOrDefault(s => !string.IsNullOrEmpty(s.d));
+			if (string.IsNullOrEmpty(globalMasterSource.d)) globalMasterSource = emptyDummy;
 
 			if (isHandActive)
 			{
-				var handSource = allSelections.Length > 0 ? allSelections[0] : emptyDummy;
 				for (int i = 0; i < 10; i++)
 				{
-					finalSelectionList.Add(isHandDetail ? allSelections[i] : handSource);
+					finalSelectionList.Add(isHandDetail ? allSelections[i] : globalMasterSource);
 				}
 			}
 			else
@@ -79,7 +81,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Domain
 
 			if (isHandActive)
 			{
-				string? handSource = isHandDetail ? null : (perFingerSources.Length > 0 ? perFingerSources[0] : globalSource);
+				string? handSource = isHandDetail ? null : perFingerSources.Take(10).FirstOrDefault(s => !string.IsNullOrEmpty(s));
 				for (int i = 0; i < 10; i++)
 				{
 					result[i] = isHandDetail ? perFingerSources[i] : (handSource ?? globalSource);
@@ -113,7 +115,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Domain
 
 			if (isHandActive)
 			{
-				string? handSource = isHandDetail ? null : (perFingerSources.Length > 0 ? perFingerSources[0] : globalSource);
+				string? handSource = isHandDetail ? null : perFingerSources.Take(10).FirstOrDefault(s => !string.IsNullOrEmpty(s));
 				for (int i = 0; i < 10; i++)
 				{
 					result[i] = isHandDetail ? perFingerSources[i] : (handSource ?? globalSource);

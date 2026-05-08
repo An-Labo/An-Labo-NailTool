@@ -159,6 +159,7 @@
                 </ui:VisualElement>
                 <ui:Box name="hand-selects" class="mdn-finger-box">
                     <ui:VisualElement class="mdn-finger-header">
+                        <ui:Toggle name="bulk-left-hand" class="mdn-bulk-toggle" />
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.left_hand" class="mdn-finger-name-col mdn-col-header" />
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_design" class="mdn-finger-design-col mdn-col-header" />
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.nail_material" class="mdn-finger-mat-col mdn-col-header" />
@@ -172,6 +173,7 @@
                     <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-ring"   text-id="window.ring_finger"   class="mdn-finger-row" />
                     <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="left-little" text-id="window.little_finger" class="mdn-finger-row" />
                     <ui:VisualElement class="mdn-hand-divider">
+                        <ui:Toggle name="bulk-right-hand" class="mdn-bulk-toggle" />
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.right_hand" class="mdn-finger-name-col mdn-col-header" />
                     </ui:VisualElement>
                     <world.anlabo.mdnailtool.Editor.VisualElements.NailDesignDropDowns name="right-thumb"  text-id="window.thumb"         class="mdn-finger-row" />
