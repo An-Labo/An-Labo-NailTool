@@ -96,13 +96,23 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			string materialKey = $"{this.DesignName}.{materialName}.{variationName}.{nailShapeName}";
 			string? presetName = GlobalSetting.SelectedShaderPreset;
 			if (!string.IsNullOrEmpty(presetName)) {
-				materialKey += $".preset_{presetName}";
+				materialKey += $".preset_{SanitizeForFileName(presetName!)}";
 			}
 			if (isPreview) {
 				materialKey += ".preview";
 			}
 
 			return materialKey;
+		}
+
+		// "User: 00_Face" のような ':' 等 Windows 不正文字を含む presetName を AssetDatabase.CreateAsset 用に正規化.
+		private static string SanitizeForFileName(string s) {
+			char[] invalid = Path.GetInvalidFileNameChars();
+			var sb = new StringBuilder(s.Length);
+			foreach (char c in s) {
+				sb.Append(System.Array.IndexOf(invalid, c) >= 0 ? '_' : c);
+			}
+			return sb.ToString();
 		}
 
 		protected abstract Material GetBaseMaterial(string materialName, string nailShapeName);

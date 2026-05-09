@@ -2809,7 +2809,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			AssetDatabase.Refresh();
 			ShaderPresetScanner.InvalidateCache();
+			INailProcessor.ClearCreatedMaterialCash();
+			INailProcessor.ClearPreviewMaterialCash();
 			this.RebuildShaderPresetSelect();
+			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
 		}
 
 		private void OnClickShaderPresetPing()

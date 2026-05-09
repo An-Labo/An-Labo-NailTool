@@ -23,6 +23,7 @@ namespace world.anlabo.mdnailtool.Editor {
             "DB/",
             "Lang/",
             "Nail/Thumbnails/",
+            "Nail/ShaderPresets/",
             "Preview/",
             "uss/"
         };
@@ -118,10 +119,15 @@ namespace world.anlabo.mdnailtool.Editor {
                         if (string.IsNullOrEmpty(entry.Name)) continue;
 
                         string destPath = ASSETS_RESOURCE_PATH + entry.FullName;
-                        string bodyPath = destPath.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)
-                            ? destPath.Substring(0, destPath.Length - ".meta".Length)
-                            : destPath;
-                        if (!File.Exists(bodyPath) && !Directory.Exists(bodyPath)) continue;
+
+                        // ESSENTIAL_FOLDERS 配下は新規追加フォルダもユーザーへ届けるため存在チェックスキップ.
+                        // 非ESSENTIAL (Design/Prefab) は GUID 保護のため既存ファイル差分更新のみ.
+                        if (!IsEssentialEntry(entry.FullName)) {
+                            string bodyPath = destPath.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)
+                                ? destPath.Substring(0, destPath.Length - ".meta".Length)
+                                : destPath;
+                            if (!File.Exists(bodyPath) && !Directory.Exists(bodyPath)) continue;
+                        }
 
                         if (WriteEntryIfChanged(entry, destPath)) updated++;
                     }
@@ -141,10 +147,16 @@ namespace world.anlabo.mdnailtool.Editor {
             }
         }
 
-        /// <summary>
-        /// DB 系クラスの静的キャッシュをまとめてクリアする。
-        /// DB json ファイルをディスク上で差し替えた後に呼ぶと、次回アクセスで再読込される。
-        /// </summary>
+        private static bool IsEssentialEntry(string entryFullName) {
+            foreach (string folder in ESSENTIAL_FOLDERS) {
+                if (entryFullName.StartsWith(folder, StringComparison.OrdinalIgnoreCase)) return true;
+                string folderMeta = folder.TrimEnd('/') + ".meta";
+                if (entryFullName.Equals(folderMeta, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
+        }
+
+        // DB json ディスク差替え後に呼ぶ. 次回アクセスで再読込される.
         private static void ClearDbCaches() {
             DBShop.ClearCache();
             DBNailDesign.ClearCache();
