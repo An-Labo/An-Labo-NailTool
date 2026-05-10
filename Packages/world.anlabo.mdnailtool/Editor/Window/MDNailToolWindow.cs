@@ -2133,7 +2133,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					               && (this._bakeBlendShapes?.value == true),
 					SyncBlendShapesWithMA = (this._forModularAvatar?.value == true)
 					                     && (this._bakeBlendShapes?.value == true)
-					                     && (this._syncBlendShapesWithMA?.value == true),
+					                     && (this._syncBlendShapesWithMA?.value ?? true),
 					SelectedBlendShapeVariantName = (!(this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == true) && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
 					EnablePenetrationCorrection = (this._penetrationCorrection?.value == true),
 					EnableAdditionalMaterials = true,
