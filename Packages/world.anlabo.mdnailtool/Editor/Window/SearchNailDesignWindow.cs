@@ -47,10 +47,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
         private Color _borderColor;
 
         private readonly Dictionary<string, string> _tagMap = new() {
-            {"tag.cute", "cute"}, {"tag.cool", "cool"},
-            {"tag.nuance", "nuance"}, {"tag.pop", "pop"},
-            {"tag.simple", "simple"}, {"tag.flashy", "flashy"},
-            {"tag.elegance", "elegance"}
+            {"tag.sweet", "Sweet"}, {"tag.cool", "Cool"},
+            {"tag.pop", "Pop"}, {"tag.nuance", "Nuance"},
+            {"tag.bare", "Bare"}, {"tag.rich", "Rich"},
+            {"tag.light", "Light"}, {"tag.dark", "Dark"}
         };
 
         private readonly string[] _monoColors = { "white", "black", "gray" };
@@ -155,42 +155,59 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             root.Add(filterPanel);
 
             var textArea = new VisualElement();
-            textArea.style.flexDirection = FlexDirection.Row;
+            textArea.style.flexDirection = FlexDirection.Column;
             textArea.style.flexGrow = 1;
             textArea.style.marginRight = 10;
             filterPanel.Add(textArea);
 
-            var col1 = CreateFilterCol();
+            var specialRow = new VisualElement();
+            specialRow.style.flexDirection = FlexDirection.Row;
+            textArea.Add(specialRow);
+
+            var specialCol1 = CreateFilterCol();
             string favText = LanguageManager.S("window.favorite_priority") ?? "Fav Priority";
-            _favToggle = AddFilterCheck(col1, favText, v => {
+            _favToggle = AddFilterCheck(specialCol1, favText, v => {
                 _favPriority = v;
                 EditorPrefs.SetBool(PrefFavPriority, v);
             });
             _favToggle.value = _favPriority;
-            AddTagToColumn(col1, "tag.cute");
+            specialRow.Add(specialCol1);
+
+            var specialCol2 = CreateFilterCol();
+            string importedText = LanguageManager.S("window.show_imported") ?? "Imported";
+            _importedToggle = AddFilterCheck(specialCol2, importedText, v => _showImported = v);
+            _importedToggle.value = _showImported;
+            specialRow.Add(specialCol2);
+
+            var specialCol3 = CreateFilterCol();
+            string notImportedText = LanguageManager.S("window.show_not_imported") ?? "Not Imported";
+            _notImportedToggle = AddFilterCheck(specialCol3, notImportedText, v => _showNotImported = v);
+            _notImportedToggle.value = _showNotImported;
+            specialRow.Add(specialCol3);
+
+            var tagGrid = new VisualElement();
+            tagGrid.style.flexDirection = FlexDirection.Row;
+            textArea.Add(tagGrid);
+
+            var col1 = CreateFilterCol();
+            AddTagToColumn(col1, "tag.sweet");
             AddTagToColumn(col1, "tag.cool");
-            textArea.Add(col1);
+            tagGrid.Add(col1);
 
             var col2 = CreateFilterCol();
-            string importedText = LanguageManager.S("window.show_imported") ?? "Imported";
-            _importedToggle = AddFilterCheck(col2, importedText, v => _showImported = v);
-            _importedToggle.value = _showImported;
-            AddTagToColumn(col2, "tag.nuance");
             AddTagToColumn(col2, "tag.pop");
-            textArea.Add(col2);
+            AddTagToColumn(col2, "tag.nuance");
+            tagGrid.Add(col2);
 
             var col3 = CreateFilterCol();
-            string notImportedText = LanguageManager.S("window.show_not_imported") ?? "Not Imported";
-            _notImportedToggle = AddFilterCheck(col3, notImportedText, v => _showNotImported = v);
-            _notImportedToggle.value = _showNotImported;
-            AddTagToColumn(col3, "tag.simple");
-            AddTagToColumn(col3, "tag.flashy");
-            textArea.Add(col3);
+            AddTagToColumn(col3, "tag.bare");
+            AddTagToColumn(col3, "tag.rich");
+            tagGrid.Add(col3);
 
             var col4 = CreateFilterCol();
-            col4.Add(new VisualElement { style = { height = 20, marginBottom = 2 } });
-            AddTagToColumn(col4, "tag.elegance");
-            textArea.Add(col4);
+            AddTagToColumn(col4, "tag.light");
+            AddTagToColumn(col4, "tag.dark");
+            tagGrid.Add(col4);
 
             var divider = new VisualElement();
             divider.AddToClassList("mdn-filter-divider");
