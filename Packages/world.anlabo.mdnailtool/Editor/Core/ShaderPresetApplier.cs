@@ -8,45 +8,85 @@ namespace world.anlabo.mdnailtool.Editor.Core
 {
 	public static class ShaderPresetApplier
 	{
-		// 非テクスチャ系プロパティのうち, ネイル側の値で preset を上書きするホワイトリスト.
-		// テクスチャ型 (TexEnv) は型ベースで動的判定するため列挙不要 (ネイル側に値が入っていれば常に上書き).
+		// 値転送許可リスト. テクスチャは型動的判定なので列挙不要. LilToPoiMap キーは IsValueTransferAllowed で自動通過.
 		private static readonly HashSet<string> NonTextureWhitelist = new() {
 			"_Color",
 			"_MainTexHSVG",
 
 			"_BumpScale",
 			"_UseBumpMap",
-			"_UseBump2ndMap",
-			"_Bump2ndScale",
 
 			"_Cutoff",
 			"_Cull",
 			"_ZWrite",
 
-			"_UseMatCap",
-			"_MatCapColor",
-			"_MatCapBlend",
-			"_MatCapNormalStrength",
 			"_MatCapBumpScale",
 			"_MatCapLod",
+			"_MatCap2ndBumpScale",
+			"_MatCap2ndLod",
 
-			"_UseEmission",
+			"_Metallic",
+
 			"_EmissionColor",
-			"_EmissionMainStrength",
 			"_EmissionBlend",
-
-			"_UseEmission2nd",
-			"_Emission2ndColor",
-			"_Emission2ndMainStrength",
 			"_Emission2ndBlend",
 
-			"_UseGlitter",
 			"_GlitterColor",
 			"_GlitterParams1",
 			"_GlitterParams2",
 			"_GlitterMainStrength",
 			"_GlitterVRParallaxStrength",
 			"_GlitterSensitivity",
+
+			"_RimColor",
+
+			"_ShadowStrength",
+			"_ShadowColor",
+			"_ShadowBorder",
+			"_ShadowBlur",
+		};
+
+		// lilToon → Poiyomi 別名解決. 同名 (_BumpMap/_Color/_Metallic/_EmissionColor/_RimColor/_ShadowColor 等) は同名経路で処理.
+		private static readonly Dictionary<string, string> LilToPoiMap = new() {
+			{ "_UseMatCap", "_MatcapEnable" },
+			{ "_MatCapColor", "_MatcapColor" },
+			{ "_MatCapTex", "_Matcap" },
+			{ "_MatCapBlend", "_MatcapIntensity" },
+			{ "_MatCapBlendMask", "_MatcapMask" },
+			{ "_MatCapNormalStrength", "_MatcapNormal" },
+			{ "_MatCapBumpMap", "_Matcap0NormalMap" },
+			{ "_MatCapBumpScale", "_Matcap0NormalMapScale" },
+
+			{ "_UseMatCap2nd", "_Matcap2Enable" },
+			{ "_MatCap2ndColor", "_Matcap2Color" },
+			{ "_MatCap2ndTex", "_Matcap2" },
+			{ "_MatCap2ndBlend", "_Matcap2Intensity" },
+			{ "_MatCap2ndBlendMask", "_Matcap2Mask" },
+			{ "_MatCap2ndNormalStrength", "_Matcap2Normal" },
+			{ "_MatCap2ndBumpMap", "_Matcap1NormalMap" },
+			{ "_MatCap2ndBumpScale", "_Matcap1NormalMapScale" },
+
+			{ "_UseBump2ndMap", "_DetailEnabled" },
+			{ "_Bump2ndMap", "_DetailNormalMap" },
+			{ "_Bump2ndScale", "_DetailNormalMapScale" },
+
+			{ "_UseReflection", "_MochieBRDF" },
+			{ "_Smoothness", "_Glossiness" },
+
+			{ "_UseEmission", "_EnableEmission" },
+			{ "_EmissionMainStrength", "_EmissionStrength" },
+
+			{ "_UseEmission2nd", "_EnableEmission1" },
+			{ "_Emission2ndColor", "_EmissionColor1" },
+			{ "_Emission2ndMap", "_EmissionMap1" },
+			{ "_Emission2ndMainStrength", "_EmissionStrength1" },
+			{ "_Emission2ndBlendMask", "_EmissionMask1" },
+
+			{ "_UseGlitter", "_GlitterEnable" },
+			{ "_GlitterColorTex", "_GlitterColorMap" },
+
+			{ "_UseRim", "_EnableRimLighting" },
+			{ "_UseShadow", "_ShadingEnabled" },
 		};
 
 		public static void OverrideFromNail(Material presetBase, Material nailSource)
@@ -54,43 +94,73 @@ namespace world.anlabo.mdnailtool.Editor.Core
 			if (presetBase == null || nailSource == null) return;
 
 			Shader nailShader = nailSource.shader;
+			Shader presetShader = presetBase.shader;
 			int count = nailShader.GetPropertyCount();
 
 			for (int i = 0; i < count; i++) {
-				string propName = nailShader.GetPropertyName(i);
-				if (!presetBase.HasProperty(propName)) continue;
+				string nailProp = nailShader.GetPropertyName(i);
+				ShaderPropertyType nailType = nailShader.GetPropertyType(i);
 
-				int presetIdx = presetBase.shader.FindPropertyIndex(propName);
+				string? presetProp = ResolvePresetProperty(presetShader, nailProp);
+				if (presetProp == null) continue;
+
+				int presetIdx = presetShader.FindPropertyIndex(presetProp);
 				if (presetIdx < 0) continue;
 
-				ShaderPropertyType nailType = nailShader.GetPropertyType(i);
-				ShaderPropertyType presetType = presetBase.shader.GetPropertyType(presetIdx);
+				ShaderPropertyType presetType = presetShader.GetPropertyType(presetIdx);
 				if (nailType != presetType) continue;
 
 				switch (nailType) {
 					case ShaderPropertyType.Texture: {
-						Texture? tex = nailSource.GetTexture(propName);
-						if (tex != null) presetBase.SetTexture(propName, tex);
+						Texture? tex = nailSource.GetTexture(nailProp);
+						if (tex != null) presetBase.SetTexture(presetProp, tex);
 						break;
 					}
 					case ShaderPropertyType.Float:
 					case ShaderPropertyType.Range:
-						if (NonTextureWhitelist.Contains(propName)) {
-							presetBase.SetFloat(propName, nailSource.GetFloat(propName));
+						if (IsValueTransferAllowed(nailProp)) {
+							presetBase.SetFloat(presetProp, nailSource.GetFloat(nailProp));
 						}
 						break;
 					case ShaderPropertyType.Color:
-						if (NonTextureWhitelist.Contains(propName)) {
-							presetBase.SetColor(propName, nailSource.GetColor(propName));
+						if (IsValueTransferAllowed(nailProp)) {
+							presetBase.SetColor(presetProp, nailSource.GetColor(nailProp));
 						}
 						break;
 					case ShaderPropertyType.Vector:
-						if (NonTextureWhitelist.Contains(propName)) {
-							presetBase.SetVector(propName, nailSource.GetVector(propName));
+						if (IsValueTransferAllowed(nailProp)) {
+							presetBase.SetVector(presetProp, nailSource.GetVector(nailProp));
 						}
 						break;
 				}
 			}
+
+			NormalizePoiyomiMatcapBlend(presetBase, presetShader);
+		}
+
+		// lilToon の matcap 見た目を Poiyomi で再現するため, Add+Screen+UnlitAdd 合算に固定 (Replace は OFF).
+		private static void NormalizePoiyomiMatcapBlend(Material presetBase, Shader presetShader)
+		{
+			if (presetShader.FindPropertyIndex("_MatcapAdd") < 0) return;
+			presetBase.SetFloat("_MatcapReplace", 0f);
+			presetBase.SetFloat("_MatcapAdd", 1f);
+			presetBase.SetFloat("_MatcapScreen", 1f);
+			presetBase.SetFloat("_MatcapAddToLight", 1f);
+		}
+
+		private static string? ResolvePresetProperty(Shader presetShader, string nailProp)
+		{
+			if (presetShader.FindPropertyIndex(nailProp) >= 0) return nailProp;
+			if (LilToPoiMap.TryGetValue(nailProp, out string? poiName)
+				&& presetShader.FindPropertyIndex(poiName) >= 0) {
+				return poiName;
+			}
+			return null;
+		}
+
+		private static bool IsValueTransferAllowed(string nailProp)
+		{
+			return NonTextureWhitelist.Contains(nailProp) || LilToPoiMap.ContainsKey(nailProp);
 		}
 	}
 }
