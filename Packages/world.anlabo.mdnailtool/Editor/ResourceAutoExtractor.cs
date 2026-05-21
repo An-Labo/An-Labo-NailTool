@@ -135,7 +135,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
                 SaveInstalledVersion(currentVersion);
                 if (updated > 0) {
-                    AssetDatabase.Refresh(ImportAssetOptions.Default);
+                    AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                     MDNailToolDefines.ClearResourcePathCache();
                     ClearDbCaches();
                     ToolConsole.Log($"[ResourceAutoExtractor] バージョン変更検知 → {updated} 件のリソースを差分更新しました");
@@ -223,7 +223,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
                 Progress.Report(progressId, 0.95f, "インポート中...");
                 SaveInstalledVersion(targetVersion);
-                AssetDatabase.Refresh(ImportAssetOptions.Default);
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 ReimportThumbnailFolder();
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
 
@@ -553,7 +553,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 
                 Progress.Report(progressId, 0.95f, "インポート中...");
                 SaveInstalledVersion(MDNailToolDefines.Version);
-                AssetDatabase.Refresh(ImportAssetOptions.Default);
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 ReimportThumbnailFolder();
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
 

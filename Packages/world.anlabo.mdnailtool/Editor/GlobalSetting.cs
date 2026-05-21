@@ -186,6 +186,17 @@ namespace world.anlabo.mdnailtool.Editor
 			set { }
 		}
 
+		private const string AUTO_LINK_SHRINK_BS_KEY = "world.anlabo.mdnailtool.auto_link_shrink_bs";
+		internal static bool AutoLinkShrinkBS
+		{
+			get
+			{
+				if (!EditorPrefs.HasKey(AUTO_LINK_SHRINK_BS_KEY)) return true;
+				return EditorPrefs.GetBool(AUTO_LINK_SHRINK_BS_KEY);
+			}
+			set => EditorPrefs.SetBool(AUTO_LINK_SHRINK_BS_KEY, value);
+		}
+
 		private const string ENABLE_PENETRATION_CORRECTION_KEY = "world.anlabo.mdnailtool.enable_penetration_correction";
 		internal static bool EnablePenetrationCorrection
 		{

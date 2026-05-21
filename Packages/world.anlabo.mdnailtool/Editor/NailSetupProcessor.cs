@@ -828,11 +828,37 @@ namespace world.anlabo.mdnailtool.Editor {
 					// メッシュ統合
 					ToolConsole.Log($"  BakeBS: handVariants.Count={handVariants.Count} footVariants.Count={footVariants.Count}");
 					bool[] handsIsLeft = handsNailObjects.Select((_, i) => i < 5).ToArray();
+					// Shrink_*BS抽出: アバター本体Shrink_* (nailPrefabGUID 空) を Hand/Foot に振り分け
+					var handShrinkBS = new List<(string BSName, NailSetupUtil.ShrinkBSScope Scope)>();
+					var footShrinkBS = new List<(string BSName, NailSetupUtil.ShrinkBSScope Scope)>();
+					if (GlobalSetting.AutoLinkShrinkBS && activeVariants != null)
+					{
+						foreach (var v in activeVariants)
+						{
+							if (!string.IsNullOrEmpty(v.NailPrefabGUID)) continue;
+							if (string.IsNullOrEmpty(v.Name) || !v.Name.StartsWith("Shrink_", StringComparison.OrdinalIgnoreCase)) continue;
+
+							string lower = v.Name.ToLowerInvariant();
+							bool isHand = lower.Contains("hand") || lower.Contains("finger") || lower.Contains("glove");
+							bool isFoot = lower.Contains("foot") || lower.Contains("toe") || lower.Contains("lower_leg") || lower.Contains("socks") || lower.Contains("stocking");
+							if (!isHand && !isFoot) continue;
+
+							NailSetupUtil.ShrinkBSScope scope = NailSetupUtil.ShrinkBSScope.All;
+							if (v.Name.EndsWith("_L") || v.Name.EndsWith(".L")) scope = NailSetupUtil.ShrinkBSScope.LeftOnly;
+							else if (v.Name.EndsWith("_R") || v.Name.EndsWith(".R")) scope = NailSetupUtil.ShrinkBSScope.RightOnly;
+
+							if (isHand) handShrinkBS.Add((v.Name, scope));
+							if (isFoot) footShrinkBS.Add((v.Name, scope));
+						}
+					}
+					ToolConsole.Log($"  Shrink BS: hand={handShrinkBS.Count} foot={footShrinkBS.Count}");
+
 					handCombinedGo = NailSetupUtil.BakeAndCombineNailMeshes(
 						handsNailObjects, nailPrefabObject, handWrapperName, bsPath,
 						handVariants.Count > 0 ? handVariants.ToArray() : null,
 						handsIsLeft,
-						bodySmrForPushOut);
+						bodySmrForPushOut,
+						handShrinkBS.Count > 0 ? handShrinkBS.ToArray() : null);
 					ToolConsole.Log($"  BakeBS hand result: {(handCombinedGo == null ? "(null)" : handCombinedGo.name)} BS frames={(handCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 
 					if (this.UseFootNail)
@@ -844,7 +870,8 @@ namespace world.anlabo.mdnailtool.Editor {
 							nailPrefabObject, footWrapperName, bsPath,
 							footVariants.Count > 0 ? footVariants.ToArray() : null,
 							feetIsLeft,
-							bodySmrForPushOut);
+							bodySmrForPushOut,
+							footShrinkBS.Count > 0 ? footShrinkBS.ToArray() : null);
 						ToolConsole.Log($"  BakeBS foot result: {(footCombinedGo == null ? "(null)" : footCombinedGo.name)} BS frames={(footCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 					}
 

@@ -14,6 +14,13 @@ namespace world.anlabo.mdnailtool.Editor
 {
 	public static class NailSetupUtil
 	{
+		public enum ShrinkBSScope
+		{
+			All,
+			LeftOnly,
+			RightOnly,
+		}
+
 		// パスに半角ブラケット `[]` が含まれると AssetDatabase.LoadAssetAtPath が
 		// ワイルドカードと解釈する Unity Won't Fix バグ回避のため LoadAllAssetsAtPath を使う.
 		// LoadAllAssetsAtPath はprefab内の全GameObject(root+子)を順序不定で返すので、
@@ -713,7 +720,8 @@ namespace world.anlabo.mdnailtool.Editor
 			string saveBasePath,
 			(string Name, Transform?[] VariantNails, string? LeftName, string? RightName)[]? variants = null,
 			bool[]? isLeftSide = null,
-			SkinnedMeshRenderer? bodySmr = null)
+			SkinnedMeshRenderer? bodySmr = null,
+			(string BSName, ShrinkBSScope Scope)[]? shrinkBSDefinitions = null)
 		{
 			var indexedNails = nailObjects
 				.Select((t, i) => (t, originalIndex: i))
@@ -996,6 +1004,50 @@ namespace world.anlabo.mdnailtool.Editor
 							ToolConsole.Log($"BakeAndCombine: variant='{shapeName2}' デルタなし → ゼロデルタで生成");
 						}
 					}
+				}
+			}
+
+			// Shrink連動: アバター本体Shrink_*BSに同名sync用、該当箇所の頂点を原点に集めるBSを動的注入
+			if (shrinkBSDefinitions != null && shrinkBSDefinitions.Length > 0)
+			{
+				Vector3[] basePositions = combinedMesh.vertices;
+				Vector3[] zeroNormals = new Vector3[totalVertCount];
+				Vector3[] zeroTangents = new Vector3[totalVertCount];
+
+				foreach (var (bsName, scope) in shrinkBSDefinitions)
+				{
+					if (combinedMesh.GetBlendShapeIndex(bsName) >= 0)
+					{
+						ToolConsole.Log($"[Warning] BakeAndCombine: Shrink BS '{bsName}' は既存BSと衝突するためスキップ");
+						continue;
+					}
+
+					Vector3[] dv = new Vector3[totalVertCount];
+					for (int si = 0; si < validPairs.Length; si++)
+					{
+						int siVerts = validPairs[si].smr.sharedMesh.vertexCount;
+						int off = vertexOffsets[si];
+
+						bool isLeft = validPairsIsLeft != null && si < validPairsIsLeft.Length && validPairsIsLeft[si];
+
+						bool shouldShrink = scope switch
+						{
+							ShrinkBSScope.All => true,
+							ShrinkBSScope.LeftOnly => isLeft,
+							ShrinkBSScope.RightOnly => !isLeft,
+							_ => false
+						};
+
+						if (!shouldShrink) continue;
+
+						for (int vi = 0; vi < siVerts; vi++)
+						{
+							dv[off + vi] = -basePositions[off + vi];
+						}
+					}
+
+					combinedMesh.AddBlendShapeFrame(bsName, 100f, dv, zeroNormals, zeroTangents);
+					ToolConsole.Log($"BakeAndCombine: Shrink BS '{bsName}' (scope={scope}) を注入");
 				}
 			}
 

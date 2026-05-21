@@ -253,6 +253,13 @@
                             text-id="window.bake_blendshapes"
                             class="mdn-option-label mdn-option-clickable" />
                     </ui:VisualElement>
+                    <ui:VisualElement class="mdn-option-row mdn-option-indent">
+                        <ui:Toggle name="auto-link-shrink-bs" class="mdn-toggle" />
+                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                            name="label-auto-link-shrink-bs"
+                            text-id="window.auto_link_shrink_bs"
+                            class="mdn-option-label mdn-option-clickable" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

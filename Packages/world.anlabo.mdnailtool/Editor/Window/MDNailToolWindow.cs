@@ -71,6 +71,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _penetrationCorrection;
 		private Toggle? _bakeBlendShapes;
 		private Toggle? _syncBlendShapesWithMA;
+		private Toggle? _autoLinkShrinkBS;
 		private Toggle? _closeWindowOnExecute;
 		private DropdownField? _additionalMaterialSourceDropdown;
 		private DropdownField? _additionalObjectSourceDropdown;
@@ -134,6 +135,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		public void SetAvatar(Shop shop, Avatar? avatar, AvatarVariation? variation)
 		{
 			this._avatarDropDowns?.SetValues(shop, avatar, variation);
+			this.UpdateBlendShapeVariantDropDown();
 		}
 
 		public void CreateGUI()
@@ -642,6 +644,21 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				lblBake?.RegisterCallback<ClickEvent>(_ => {
 					if (this._bakeBlendShapes != null && this._bakeBlendShapes.enabledSelf)
 						this._bakeBlendShapes.value = !this._bakeBlendShapes.value;
+				});
+			}
+
+			this._autoLinkShrinkBS = this.rootVisualElement.Q<Toggle>("auto-link-shrink-bs");
+			if (this._autoLinkShrinkBS != null)
+			{
+				this._autoLinkShrinkBS.SetValueWithoutNotify(GlobalSetting.AutoLinkShrinkBS);
+				this._autoLinkShrinkBS.RegisterValueChangedCallback(evt => {
+					GlobalSetting.AutoLinkShrinkBS = evt.newValue;
+				});
+				this._autoLinkShrinkBS.SetEnabled(GlobalSetting.UseModularAvatar);
+				var lblShrink = this.rootVisualElement.Q<LocalizedLabel>("label-auto-link-shrink-bs");
+				lblShrink?.RegisterCallback<ClickEvent>(_ => {
+					if (this._autoLinkShrinkBS != null && this._autoLinkShrinkBS.enabledSelf)
+						this._autoLinkShrinkBS.value = !this._autoLinkShrinkBS.value;
 				});
 			}
 
@@ -1162,7 +1179,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			if (variants != null && variants.Length > 0)
 			{
-				choices.AddRange(variants.Select(v => v.Name));
+				bool maEnabled = GlobalSetting.UseModularAvatar;
+				IEnumerable<AvatarBlendShapeVariant> filtered = maEnabled
+					? variants
+					: variants.Where(v => !v.Name.StartsWith("Shrink_", StringComparison.OrdinalIgnoreCase));
+				choices.AddRange(filtered.Select(v => v.Name));
 				popup.choices = choices;
 			}
 
@@ -2011,7 +2032,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 				AvatarMatching matching = new(avatar);
 				(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? result = matching.Match();
-				if (result != null) this._avatarDropDowns!.SetValues(result.Value.shop, result.Value.avatar, result.Value.variation);
+				if (result != null)
+				{
+					this._avatarDropDowns!.SetValues(result.Value.shop, result.Value.avatar, result.Value.variation);
+					this.UpdateBlendShapeVariantDropDown();
+				}
 
 				this.CleanupScenePreview();
 				this.UpdatePreview();
@@ -2714,6 +2739,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			GlobalSetting.UseModularAvatar = evt.newValue;
 			this.UpdateMASubOptionsVisibility(evt.newValue);
+			this.UpdateBlendShapeVariantDropDown();
 			this.UpdateBlendShapeVariantVisibility();
 		}
 
