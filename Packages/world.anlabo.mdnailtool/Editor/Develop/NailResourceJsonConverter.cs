@@ -62,14 +62,7 @@ namespace world.anlabo.mdnailtool.Editor.Develop {
 
 					materialData[matFileName] = BuildDelta(mat, matFileName);
 
-					string mainTexGuid = GetTextureGuid(mat, MAIN_TEX_KEY);
-					if (!string.IsNullOrEmpty(mainTexGuid)) {
-						if (!colorTextures.ContainsKey(shape))
-							colorTextures[shape] = new Dictionary<string, Dictionary<string, string>>();
-						if (!colorTextures[shape].ContainsKey(matFileName))
-							colorTextures[shape][matFileName] = new Dictionary<string, string>();
-						colorTextures[shape][matFileName][shape] = mainTexGuid;
-					}
+					ScanLegacyColorTextures(designName, shape, matFileName, colorTextures);
 				}
 
 				entry["materialData"] = JToken.FromObject(materialData, JsonSerializer.CreateDefault());
@@ -217,12 +210,93 @@ namespace world.anlabo.mdnailtool.Editor.Develop {
 			return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(tex));
 		}
 
-		// "[mat][AbyssSmokeNail][lil-toon]oval" -> "oval"
+		// "[mat][WiredNail][lil-toon]oval" -> "oval"
+		// "[mat][SimpleNailSet][lil-toon][GradationNail]_oval" -> "oval"
 		private static string ExtractShape(string matFileName) {
 			int lastBracket = matFileName.LastIndexOf(']');
 			if (lastBracket >= 0 && lastBracket < matFileName.Length - 1)
-				return matFileName.Substring(lastBracket + 1).Trim();
+				return matFileName.Substring(lastBracket + 1).TrimStart('_').Trim();
 			return "default";
+		}
+
+		private static void ScanLegacyColorTextures(
+			string designName, string shape, string matFileName,
+			Dictionary<string, Dictionary<string, Dictionary<string, string>>> colorTextures) {
+
+			string texRootAsset = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{designName}】/[Data]/[Texture]";
+			string? texRootFull = AssetFolderToFullPath(texRootAsset);
+			if (texRootFull == null) return;
+
+			// Find shape subdir case-insensitively (e.g., "[Oval]")
+			string shapeDirFull = "";
+			foreach (string sub in Directory.GetDirectories(texRootFull)) {
+				string leaf = Path.GetFileName(sub).Trim('[', ']');
+				if (string.Equals(leaf, shape, StringComparison.OrdinalIgnoreCase)) {
+					shapeDirFull = sub;
+					break;
+				}
+			}
+			if (string.IsNullOrEmpty(shapeDirFull)) return;
+
+			string prefix = $"[tex][{designName}][{shape}]";
+
+			// Textures directly in shape dir (no material variant)
+			CollectColorTextures(shapeDirFull, prefix, "", matFileName, shape, colorTextures);
+
+			// Textures in material-named subdirs
+			foreach (string matSubFull in Directory.GetDirectories(shapeDirFull)) {
+				string matVariant = Path.GetFileName(matSubFull);
+				if (!matFileName.Contains(matVariant, StringComparison.OrdinalIgnoreCase) &&
+					!matFileName.Contains(matVariant.Trim('[', ']'), StringComparison.OrdinalIgnoreCase)) continue;
+				CollectColorTextures(matSubFull, prefix, matVariant, matFileName, shape, colorTextures);
+			}
+		}
+
+		private static void CollectColorTextures(
+			string dirFull, string prefix, string matVariantName,
+			string matFileName, string shape,
+			Dictionary<string, Dictionary<string, Dictionary<string, string>>> colorTextures) {
+
+			foreach (string texFull in Directory.GetFiles(dirFull, "*.png", SearchOption.TopDirectoryOnly)) {
+				string texName = Path.GetFileNameWithoutExtension(texFull);
+				if (!texName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
+				string remainder = texName.Substring(prefix.Length);
+
+				if (!string.IsNullOrEmpty(matVariantName) &&
+					remainder.EndsWith(matVariantName, StringComparison.OrdinalIgnoreCase))
+					remainder = remainder.Substring(0, remainder.Length - matVariantName.Length);
+
+				if (string.IsNullOrEmpty(remainder)) continue;
+
+				string texAssetPath = FullPathToAssetPath(texFull);
+				if (string.IsNullOrEmpty(texAssetPath)) continue;
+				string texGuid = AssetDatabase.AssetPathToGUID(texAssetPath);
+				if (string.IsNullOrEmpty(texGuid)) continue;
+
+				if (!colorTextures.ContainsKey(shape))
+					colorTextures[shape] = new Dictionary<string, Dictionary<string, string>>();
+				if (!colorTextures[shape].ContainsKey(matFileName))
+					colorTextures[shape][matFileName] = new Dictionary<string, string>();
+				if (!colorTextures[shape][matFileName].ContainsKey(remainder))
+					colorTextures[shape][matFileName][remainder] = texGuid;
+			}
+		}
+
+		private static string? AssetFolderToFullPath(string assetPath) {
+			string full = Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetPath));
+			return Directory.Exists(full) ? full : null;
+		}
+
+		private static string FullPathToAssetPath(string fullPath) {
+			string dataPath = Application.dataPath.Replace('\\', '/');
+			string normalized = fullPath.Replace('\\', '/');
+			int idx = normalized.IndexOf("/Assets/", StringComparison.OrdinalIgnoreCase);
+			if (idx >= 0) return normalized.Substring(idx + 1);
+			// fallback: relative to project root
+			string projectRoot = dataPath.Substring(0, dataPath.Length - "/Assets".Length);
+			if (normalized.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
+				return normalized.Substring(projectRoot.Length).TrimStart('/');
+			return "";
 		}
 
 		private static string? AssetPathToFullPath(string assetPath) {

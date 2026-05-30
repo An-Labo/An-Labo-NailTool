@@ -61,16 +61,19 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		public override bool IsSupportedNailShape(string shapeName) {
 			if (this._nailDesign.MaterialData == null) return false;
-			return this._nailDesign.MaterialData.Keys.Any(k => ExtractShape(k) == shapeName);
+			return this._nailDesign.MaterialData.Keys.Any(k => ShapeEquals(ExtractShape(k), shapeName));
 		}
 
-		// materialName -> shape key ("oval", "square" etc.) の末尾一致
+		// "[mat][X][lil-toon]oval" or "[mat][X][lil-toon][Var]_oval" -> "oval"
 		private static string ExtractShape(string matKey) {
 			int lastBracket = matKey.LastIndexOf(']');
 			if (lastBracket >= 0 && lastBracket < matKey.Length - 1)
-				return matKey.Substring(lastBracket + 1).Trim();
+				return matKey.Substring(lastBracket + 1).TrimStart('_').Trim();
 			return matKey;
 		}
+
+		private static bool ShapeEquals(string a, string b) =>
+			string.Equals(a, b, System.StringComparison.OrdinalIgnoreCase);
 
 		private static bool MatchesMaterialName(string matKey, string materialName) {
 			return matKey.IndexOf(materialName, System.StringComparison.OrdinalIgnoreCase) >= 0;
@@ -79,20 +82,22 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		private NailMaterialDelta? FindDelta(string materialName, string nailShapeName) {
 			if (this._nailDesign.MaterialData == null) return null;
 			foreach (var kv in this._nailDesign.MaterialData) {
-				if (MatchesMaterialName(kv.Key, materialName) && ExtractShape(kv.Key) == nailShapeName)
+				if (MatchesMaterialName(kv.Key, materialName) && ShapeEquals(ExtractShape(kv.Key), nailShapeName))
 					return kv.Value;
 			}
 			// shape 一致のみでフォールバック
 			foreach (var kv in this._nailDesign.MaterialData) {
-				if (ExtractShape(kv.Key) == nailShapeName) return kv.Value;
+				if (ShapeEquals(ExtractShape(kv.Key), nailShapeName)) return kv.Value;
 			}
 			return null;
 		}
 
 		private string? FindMainTexGuid(string materialName, string nailShapeName, string colorName) {
 			if (this._nailDesign.ColorTextures == null) return null;
-			if (this._nailDesign.ColorTextures.TryGetValue(nailShapeName, out var shapeEntry)) {
-				foreach (var kv in shapeEntry) {
+			// colorTextures のキーは小文字 ("oval") で格納されているため OrdinalIgnoreCase で検索
+			foreach (var shapeKv in this._nailDesign.ColorTextures) {
+				if (!ShapeEquals(shapeKv.Key, nailShapeName)) continue;
+				foreach (var kv in shapeKv.Value) {
 					if (!MatchesMaterialName(kv.Key, materialName)) continue;
 					if (kv.Value.TryGetValue(colorName, out string? guid)) return guid;
 				}
