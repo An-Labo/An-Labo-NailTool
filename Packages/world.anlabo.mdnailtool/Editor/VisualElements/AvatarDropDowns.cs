@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.Language;
 using world.anlabo.mdnailtool.Editor.Model;
+using world.anlabo.mdnailtool.Editor.NailDesigns;
 using Avatar = world.anlabo.mdnailtool.Editor.Entity.Avatar;
 
 #nullable enable
@@ -322,6 +323,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			Avatar? avatar = shop?.FindAvatarByName(avatarName);
 			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
 			if (variation == null) return null;
+
+			if (variation.NailNodes != null && variation.NailNodes.Length > 0)
+				return NailPrefabBuilder.BuildFromNodes(variation.NailNodes, variantName);
 
 			string guid = variation.NailPrefabGUID;
 			if (string.IsNullOrEmpty(guid)) return null;

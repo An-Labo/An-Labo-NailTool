@@ -51,6 +51,14 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("additionalObjectGUIDs")]
 		public IReadOnlyDictionary<string, string[]>? AdditionalObjectGUIDs { get; set; }
 
+		// materialName -> NailMaterialDelta。非 null なら zip 展開不要でマテリアル再構築可能
+		[JsonProperty("materialData")]
+		public IReadOnlyDictionary<string, NailMaterialDelta>? MaterialData { get; set; }
+
+		// shape -> materialName -> colorVariationName -> _MainTex GUID
+		[JsonProperty("colorTextures")]
+		public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>>? ColorTextures { get; set; }
+
 		public NailColorVariation? FindVariationByName(string? variationName) {
 			if (variationName == null) return null;
 			return this.ColorVariation!.GetValueOrDefault(variationName, null);

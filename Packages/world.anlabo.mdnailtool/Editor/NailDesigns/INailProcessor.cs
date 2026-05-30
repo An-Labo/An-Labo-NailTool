@@ -46,8 +46,12 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		}
 
 		public static INailProcessor CreateNailDesign(string designName) {
+			using var db = new Model.DBNailDesign();
+			Entity.NailDesign? nailDesign = db.FindNailDesignByDesignName(designName);
+			if (nailDesign?.MaterialData != null)
+				return new JsonMaterialProcessor(designName, nailDesign);
+
 			ResourceAutoExtractor.EnsureDesignExtracted(designName);
-			
 			DesignData designData = GetDesignData(designName);
 			switch (designData.Type) {
 				case DesignData.JsonType.Legacy:

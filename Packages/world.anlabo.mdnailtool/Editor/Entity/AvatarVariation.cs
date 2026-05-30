@@ -36,5 +36,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonRequired]
 		[JsonProperty("avatarFbxs")]
 		public AvatarFbx[] AvatarFbxs { get; set; } = null!;
+
+		// 非 null なら .prefab ファイルを zip から展開せずにノードデータから再構築する
+		[JsonProperty("nailNodes")]
+		public NailPrefabNodeData[]? NailNodes { get; set; }
 	}
 }
