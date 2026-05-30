@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
 
 #nullable enable
 
@@ -44,6 +46,38 @@ namespace world.anlabo.mdnailtool.Editor
 		internal static void Clear()
 		{
 			Buffer.Clear();
+		}
+
+		internal static void Error(string subsystem, string message, Exception? cause = null,
+			[CallerFilePath] string file = "",
+			[CallerMemberName] string method = "",
+			[CallerLineNumber] int line = 0)
+		{
+			string location = FormatLocation(subsystem, file, method, line);
+			string formatted = $"[Error]{location} {message}{(cause != null ? $" cause={cause}" : "")}";
+			Log(formatted);
+		}
+
+		internal static void Warn(string subsystem, string message,
+			[CallerFilePath] string file = "",
+			[CallerMemberName] string method = "",
+			[CallerLineNumber] int line = 0)
+		{
+			Log($"[Warning]{FormatLocation(subsystem, file, method, line)} {message}");
+		}
+
+		internal static void Info(string subsystem, string message,
+			[CallerFilePath] string file = "",
+			[CallerMemberName] string method = "",
+			[CallerLineNumber] int line = 0)
+		{
+			Log($"[Info]{FormatLocation(subsystem, file, method, line)} {message}");
+		}
+
+		private static string FormatLocation(string subsystem, string file, string method, int line)
+		{
+			string fileName = string.IsNullOrEmpty(file) ? "?" : Path.GetFileNameWithoutExtension(file);
+			return $"[{subsystem}/{fileName}.{method}@{line}]";
 		}
 	}
 }

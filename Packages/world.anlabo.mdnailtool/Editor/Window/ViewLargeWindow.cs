@@ -20,8 +20,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
 		private const string GUID = "de53629f6700d0a4d816623a220fef98";
 		private void CreateGUI() {
-			string uxmlPath = AssetDatabase.GUIDToAssetPath(GUID);
-			VisualTreeAsset uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath);
+			var uxmlPath = MDNailToolAssetLoader.ResolveGuidToPath(GUID);
+			VisualTreeAsset uxml = MDNailToolAssetLoader.LoadAssetSafe<VisualTreeAsset>(uxmlPath);
 			uxml.CloneTree(this.rootVisualElement);
 		}
 	}

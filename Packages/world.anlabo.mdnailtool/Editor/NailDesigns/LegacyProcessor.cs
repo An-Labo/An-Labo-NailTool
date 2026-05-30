@@ -21,7 +21,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			Material? baseMaterial = MDNailToolAssetLoader.LoadByPathCaseInsensitive<Material>(baseMaterialPath);
 			if (baseMaterial == null) {
 				string diag = MDNailToolAssetLoader.BuildMissingFileDiagnostics(baseMaterialPath);
-				throw new InvalidOperationException($"Not found base material. {this.DesignName} : {nailShapeName} : {baseMaterialPath}\n{diag}");
+				throw new NailToolResourceException("NailDesign", $"Not found base material. {this.DesignName} : {nailShapeName} : {baseMaterialPath}\n{diag}");
 			}
 			return baseMaterial;
 		}
@@ -31,7 +31,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			Texture2D? mainTex = MDNailToolAssetLoader.LoadByPathCaseInsensitive<Texture2D>(mainTexPath);
 			if (mainTex == null) {
 				string diag = MDNailToolAssetLoader.BuildMissingFileDiagnostics(mainTexPath);
-				throw new InvalidOperationException($"Not found Main texture. {this.DesignName} : {colorName} : {nailShapeName} : {mainTexPath}\n{diag}");
+				throw new NailToolResourceException("NailDesign", $"Not found Main texture. {this.DesignName} : {colorName} : {nailShapeName} : {mainTexPath}\n{diag}");
 			}
 			targetMaterial.SetTexture(MainTex, mainTex);
 		}
@@ -40,10 +40,10 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			string[]? guids = this.DesignData.Legacy?.AdditionalMaterialGUIDs;
 			if (guids == null) yield break;
 			foreach (string guid in guids) {
-				string materialPath = AssetDatabase.GUIDToAssetPath(guid);
+				string? materialPath = MDNailToolAssetLoader.ResolveGuidToPath(guid);
 				Material? material = MDNailToolAssetLoader.LoadAssetSafe<Material>(materialPath);
 				if (material == null) {
-					ToolConsole.Log($"[Error] Not found additional material : {this.DesignName} : {colorName} : {guid} : {materialPath}");
+					ToolConsole.Error("NailDesign", $"Not found additional material : {this.DesignName} : {colorName} : {guid} : {materialPath}");
 					continue;
 				}
 
@@ -56,10 +56,10 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			IEnumerable<string> allTargetGuids = this.DesignData.Legacy?.AdditionalObjectGUIDs?.GetValueOrDefault(MDNailToolDefines.TargetFinger.All) ?? Enumerable.Empty<string>();
 
 			foreach (string guid in guids.Concat(allTargetGuids)) {
-				string objectPath = AssetDatabase.GUIDToAssetPath(guid);
+				string? objectPath = MDNailToolAssetLoader.ResolveGuidToPath(guid);
 				GameObject? obj = MDNailToolAssetLoader.LoadPrefabSafe(objectPath);
 				if (obj == null) {
-					ToolConsole.Log($"[Error] Not found additional object : {this.DesignName} : {colorName} : {targetFinger} : {guid} : {objectPath}");
+					ToolConsole.Error("NailDesign", $"Not found additional object : {this.DesignName} : {colorName} : {targetFinger} : {guid} : {objectPath}");
 					continue;
 				}
 
@@ -102,7 +102,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			
 			string? guid = this.DesignData.Legacy?.DesignDirectoryGUID;
 			if (!string.IsNullOrEmpty(guid)) {
-				string guidPath = AssetDatabase.GUIDToAssetPath(guid);
+				string? guidPath = MDNailToolAssetLoader.ResolveGuidToPath(guid);
 				if (!string.IsNullOrEmpty(guidPath) && Directory.Exists(guidPath)) {
 					return guidPath;
 				}

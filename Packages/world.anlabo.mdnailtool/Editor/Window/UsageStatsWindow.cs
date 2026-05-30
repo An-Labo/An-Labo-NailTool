@@ -1161,7 +1161,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			catch (Exception e)
 			{
 				SetStatus($"Error: {e.Message}");
-				ToolConsole.Log($"[Error] Ranking image generation failed: {e}");
+				ToolConsole.Error("Stats", $"Ranking image generation failed: {e}");
 			}
 		}
 
@@ -1269,7 +1269,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			catch (Exception e)
 			{
-				ToolConsole.Log($"[Warning] Clipboard image copy failed: {e.Message}");
+				ToolConsole.Warn("Stats", $"Clipboard image copy failed: {e.Message}");
 				GUIUtility.systemCopyBuffer = imagePath;
 			}
 		}

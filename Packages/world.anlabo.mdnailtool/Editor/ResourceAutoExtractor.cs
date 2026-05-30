@@ -91,7 +91,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 FixTextureImportSettings(ASSETS_RESOURCE_PATH);
                 ClearDbCaches();
             } catch (Exception e) {
-                ToolConsole.Log($"[Error] 同期展開失敗: {e.Message}");
+                ToolConsole.Error("ResourceExtractor", $"同期展開失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
             }
@@ -141,7 +141,7 @@ namespace world.anlabo.mdnailtool.Editor {
                     ToolConsole.Log($"[ResourceAutoExtractor] バージョン変更検知 → {updated} 件のリソースを差分更新しました");
                 }
             } catch (Exception e) {
-                ToolConsole.Log($"[Error] リソース差分更新失敗: {e.Message}");
+                ToolConsole.Error("ResourceExtractor", $"リソース差分更新失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
             }
@@ -169,7 +169,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 return _zipRealPath;
             }
             
-            var zipAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(ZIP_ARCHIVE_PATH);
+            var zipAsset = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(ZIP_ARCHIVE_PATH);
             if (zipAsset != null) {
                 string assetPath = AssetDatabase.GetAssetPath(zipAsset);
                 string fullPath = Path.GetFullPath(assetPath);
@@ -179,7 +179,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
             }
             
-            var zipObj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(ZIP_ARCHIVE_PATH);
+            var zipObj = MDNailToolAssetLoader.LoadAssetSafe<UnityEngine.Object>(ZIP_ARCHIVE_PATH);
             if (zipObj != null) {
                 string assetPath = AssetDatabase.GetAssetPath(zipObj);
                 string fullPath = Path.GetFullPath(assetPath);
@@ -236,7 +236,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
             } catch (Exception e) {
                 Progress.Finish(progressId, Progress.Status.Failed);
-                ToolConsole.Log($"[Error] リソース展開失敗: {e.Message}");
+                ToolConsole.Error("ResourceExtractor", $"リソース展開失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
             }
@@ -376,7 +376,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
 
             } catch (Exception e) {
-                ToolConsole.Log($"[Error] デザイン展開失敗 ({designName}): {e.Message}");
+                ToolConsole.Error("ResourceExtractor", $"デザイン展開失敗 ({designName}): {e.Message}");
             }
         }
 
@@ -399,7 +399,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
                 return set.Count > 0 ? set : null;
             } catch (Exception e) {
-                ToolConsole.Log($"[Warning] legacy install lookup failed ({designName}): {e.Message}");
+                ToolConsole.Warn("ResourceExtractor", $"legacy install lookup failed ({designName}): {e.Message}");
                 return null;
             }
         }
@@ -467,11 +467,11 @@ namespace world.anlabo.mdnailtool.Editor {
                     ToolConsole.Log($"[NailDiag] GUID={guid} → folder='{targetFolder}' (meta={matchedMeta}) → extract開始");
                     ExtractPrefabFolder(targetFolder);
                 } else {
-                    ToolConsole.Log($"[NailDiag][Warning] GUID={guid} が zip 内に見つかりません (zip={zipPath})");
+                    ToolConsole.Warn("ResourceExtractor", $"[NailDiag] GUID={guid} が zip 内に見つかりません (zip={zipPath})");
                 }
 
             } catch (Exception e) {
-                ToolConsole.Log($"[NailDiag][Error] GUID検索失敗 ({guid}): {e.Message}");
+                ToolConsole.Error("ResourceExtractor", $"[NailDiag] GUID検索失敗 ({guid}): {e.Message}");
             }
         }
 
@@ -511,19 +511,19 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
 
             } catch (Exception e) {
-                ToolConsole.Log($"[Error] Prefabフォルダ展開失敗 ({prefabFolderName}): {e.Message}");
+                ToolConsole.Error("ResourceExtractor", $"Prefabフォルダ展開失敗 ({prefabFolderName}): {e.Message}");
             }
         }
 
         public static void ForceExtractAll() {
             if (_isExtracting) {
-                ToolConsole.Log("[Warning] 既に展開中です");
+                ToolConsole.Warn("ResourceExtractor", "既に展開中です");
                 return;
             }
 
             string? zipPath = GetZipRealPath();
             if (zipPath == null) {
-                ToolConsole.Log("[Error] ZIPファイルが見つかりません");
+                ToolConsole.Error("ResourceExtractor", "ZIPファイルが見つかりません");
                 return;
             }
             
@@ -566,7 +566,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
             } catch (Exception e) {
                 Progress.Finish(progressId, Progress.Status.Failed);
-                ToolConsole.Log($"[Error] リソース展開失敗: {e.Message}");
+                ToolConsole.Error("ResourceExtractor", $"リソース展開失敗: {e.Message}");
             } finally {
                 _isExtracting = false;
             }
@@ -575,7 +575,7 @@ namespace world.anlabo.mdnailtool.Editor {
         private static int ExtractAllFromZip() {
             string? zipPath = GetZipRealPath();
             if (zipPath == null) {
-                throw new FileNotFoundException("ZIPファイルが見つかりません");
+                throw new NailToolResourceException("ResourceExtractor", "ZIPファイルが見つかりません");
             }
 
             if (!Directory.Exists(ASSETS_RESOURCE_PATH)) {
@@ -596,13 +596,13 @@ namespace world.anlabo.mdnailtool.Editor {
 
         public static void ResetResources(bool skipConfirmDialog = false) {
             if (_isExtracting) {
-                ToolConsole.Log("[Warning] 既に展開中です");
+                ToolConsole.Warn("ResourceExtractor", "既に展開中です");
                 return;
             }
 
             string? zipPath = GetZipRealPath();
             if (zipPath == null) {
-                ToolConsole.Log("[Error] ZIPファイルが見つかりません");
+                ToolConsole.Error("ResourceExtractor", "ZIPファイルが見つかりません");
                 return;
             }
 
@@ -692,7 +692,7 @@ namespace world.anlabo.mdnailtool.Editor {
                         return assetPath;
                     }
                 } catch (Exception e) {
-                    ToolConsole.Log($"[Warning] .meta検索エラー ({root}): {e.Message}");
+                    ToolConsole.Warn("ResourceExtractor", $".meta検索エラー ({root}): {e.Message}");
                 }
             }
 
@@ -842,7 +842,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
                 File.WriteAllText(VersionFilePath, version);
             } catch (Exception e) {
-                ToolConsole.Log($"[Warning] バージョン保存失敗: {e.Message}");
+                ToolConsole.Warn("ResourceExtractor", $"バージョン保存失敗: {e.Message}");
             }
         }
     }

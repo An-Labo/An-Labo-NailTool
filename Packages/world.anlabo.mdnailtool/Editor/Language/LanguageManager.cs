@@ -65,12 +65,12 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 				}
 			}
 
-			ToolConsole.Log("言語データをリロードしました");
+			ToolConsole.Info("Language", "言語データをリロードしました");
 		}
 
 		internal static void ChangeLanguage(string language) {
 			if (!LanguageDataList.Select(data => data.language).Contains(language)) {
-				throw new InvalidOperationException($"It's a language that doesn't exist : {language}");
+				throw new NailToolDeveloperException("Language", $"It's a language that doesn't exist : {language}");
 			}
 			
 			GlobalSetting.Language = language;
@@ -111,9 +111,9 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 		/// 言語ファイルをリロードします。
 		/// </summary>
 		private static List<LanguageData> LoadLanguages() {
-			TextAsset langs = AssetDatabase.LoadAssetAtPath<TextAsset>(MDNailToolDefines.LANG_FILE_PATH);
+			TextAsset langs = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(MDNailToolDefines.LANG_FILE_PATH);
 			string json = langs.text;
-			return JsonConvert.DeserializeObject<List<LanguageData>>(json) ?? throw new InvalidOperationException("Not found language file.");
+			return JsonConvert.DeserializeObject<List<LanguageData>>(json) ?? throw new NailToolResourceException("Language", "Not found language file.");
 		}
 	}
 }

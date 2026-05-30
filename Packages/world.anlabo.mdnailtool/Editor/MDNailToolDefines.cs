@@ -280,12 +280,8 @@ namespace world.anlabo.mdnailtool.Editor
 		{
 			get
 			{
-				string packagePath = AssetDatabase.GUIDToAssetPath(PACKAGE_JSON_GUID);
-				if (string.IsNullOrEmpty(packagePath))
-				{
-					packagePath = ROOT_PACKAGE_PATH + "package.json";
-				}
-				TextAsset packageAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(packagePath);
+				var packagePath = MDNailToolAssetLoader.ResolveGuidToPath(PACKAGE_JSON_GUID, ROOT_PACKAGE_PATH + "package.json");
+				TextAsset packageAsset = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(packagePath);
 				if (packageAsset == null) return "0.0.0";
 				JObject package = JObject.Parse(packageAsset.text);
 				return package.GetValue("version")!.Value<string>();

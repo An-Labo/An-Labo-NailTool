@@ -186,7 +186,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			string? variantName = this._variantPopup.value;
 
 			Shop? shop = dbShop.FindShopByName(shopName);
-			if (shop == null) throw new InvalidOperationException("Not found shop.");
+			if (shop == null) throw new NailToolDeveloperException("Window", "Not found shop.");
 			Avatar? avatar = shop.FindAvatarByName(avatarName);
 			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
 			this.SetValues(shop, avatar, variation, this._shopPopup.value == ALL_ITEM);
@@ -326,12 +326,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			string guid = variation.NailPrefabGUID;
 			if (string.IsNullOrEmpty(guid)) return null;
 
-			string? path = AssetDatabase.GUIDToAssetPath(guid);
+			string? path = MDNailToolAssetLoader.ResolveGuidToPath(guid);
 
 			if (string.IsNullOrEmpty(path) || NailSetupUtil.LoadPrefabAtPath(path) == null) {
 				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(guid);
 				AssetDatabase.Refresh();
-				path = AssetDatabase.GUIDToAssetPath(guid);
+				path = MDNailToolAssetLoader.ResolveGuidToPath(guid);
 			}
 
 			if (!string.IsNullOrEmpty(path) && NailSetupUtil.LoadPrefabAtPath(path) == null) {
@@ -347,13 +347,13 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			}
 
 			if (string.IsNullOrEmpty(path)) {
-				ToolConsole.Log($"[NailDiag][Warning] GetSelectedPrefab: GUID={guid} (avatar={avatarName}, variation={variantName}) を解決できませんでした");
+				ToolConsole.Warn("Window", $"[NailDiag] GetSelectedPrefab: GUID={guid} (avatar={avatarName}, variation={variantName}) を解決できませんでした");
 				return null;
 			}
 
 			GameObject? nailPrefab = NailSetupUtil.LoadPrefabAtPath(path);
 			if (nailPrefab == null) {
-				ToolConsole.Log($"[NailDiag][Warning] GetSelectedPrefab: path={path} の LoadAssetAtPath 失敗 (GUID={guid})");
+				ToolConsole.Warn("Window", $"[NailDiag] GetSelectedPrefab: path={path} の LoadAssetAtPath 失敗 (GUID={guid})");
 			}
 			return nailPrefab;
 		}
@@ -430,12 +430,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 						string.Compare(this._shopDisplayNameDictionary?.GetValueOrDefault(s1) ?? s1, this._shopDisplayNameDictionary?.GetValueOrDefault(s) ?? s, StringComparison.CurrentCulture)));
 					break;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(order), order, null);
+					throw new NailToolDeveloperException("Window", $"Unknown sort order: {order}");
 			}
 		}
 
 		private void SortAvatarList(AvatarSortOrder order) {
-			if (this._avatarPopupElements == null) throw new InvalidOperationException("AvatarPopupElements is null");
+			if (this._avatarPopupElements == null) throw new NailToolDeveloperException("Window", "AvatarPopupElements is null");
 			switch (order) {
 				case AvatarSortOrder.AvatarNameAsc:
 					this._avatarPopupElements.Sort((a, b) =>
@@ -522,7 +522,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				case AvatarSortOrder.Default:
 					break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new NailToolDeveloperException("Window", "Unhandled AvatarSortOrder default case");
 			}
 		}
 

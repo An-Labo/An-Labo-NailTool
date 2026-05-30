@@ -35,8 +35,8 @@ namespace world.anlabo.mdnailtool.Editor.Report {
 		private TextField? _reportTextField;
 
 		public void CreateGUI() {
-			string uxmlPath = AssetDatabase.GUIDToAssetPath(GUID);
-			VisualTreeAsset uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath);
+			string? uxmlPath = MDNailToolAssetLoader.ResolveGuidToPath(GUID);
+			VisualTreeAsset uxml = MDNailToolAssetLoader.LoadAssetSafe<VisualTreeAsset>(uxmlPath);
 			TemplateContainer uxmlInstance = uxml.Instantiate();
 			uxmlInstance.style.flexGrow = 1;
 			uxmlInstance.style.marginTop = 5;

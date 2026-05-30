@@ -31,7 +31,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			string jsonPath = $"{designPath}_design.json";
 			
 			if (Directory.Exists(designPath) && File.Exists(jsonPath)) {
-				TextAsset? textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(jsonPath);
+				TextAsset? textAsset = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(jsonPath);
 				if (textAsset != null) {
 					return DesignData.ToObject(textAsset.text);
 				}
@@ -54,7 +54,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 					return new LegacyProcessor(designName, designData);
 				case DesignData.JsonType.None:
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new NailToolDeveloperException("NailDesign", $"Unknown DesignType: {designData.Type}");
 			}
 		}
 

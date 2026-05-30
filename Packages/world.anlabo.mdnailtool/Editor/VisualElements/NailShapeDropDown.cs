@@ -44,7 +44,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			string? path = null;
 			foreach (string guid in nailShape.FbxFolderGUID) {
 				if (string.IsNullOrEmpty(guid)) continue;
-				path = AssetDatabase.GUIDToAssetPath(guid);
+				path = MDNailToolAssetLoader.ResolveGuidToPath(guid);
 				if (string.IsNullOrEmpty(path)) continue;
 				if (Directory.Exists(path)) break;
 			}

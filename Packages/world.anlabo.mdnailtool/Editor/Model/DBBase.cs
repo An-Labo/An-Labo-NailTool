@@ -29,9 +29,9 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			if (_cash != null) {
 				this._data = _cash;
 			} else {
-				TextAsset? textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(dbFilePath);
+				TextAsset? textAsset = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(dbFilePath);
 				Dictionary<string, T>? data = JsonConvert.DeserializeObject<Dictionary<string, T>>(textAsset.text);
-				_cash = data ?? throw new FileNotFoundException($"Not found DB : {dbFilePath}");
+				_cash = data ?? throw new NailToolResourceException("DB", $"Not found DB : {dbFilePath}");
 				this._data = _cash;
 			}
 			this.dictionary = this._data;

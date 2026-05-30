@@ -25,24 +25,24 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 
 		private TextAsset LoadJsonAsset() {
 			// 1. GUIDで解決を試みる
-			string path = AssetDatabase.GUIDToAssetPath(this.guid);
-			TextAsset json = string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<TextAsset>(path);
+			var path = MDNailToolAssetLoader.ResolveGuidToPath(this.guid);
+			TextAsset json = string.IsNullOrEmpty(path) ? null : MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(path);
 			if (json != null) return json;
 
 			// 2. GUIDが解決できない場合、パスベースでフォールバック
 			string langFileName = this.language + ".json";
 			string langDir = MDNailToolDefines.LANG_FILE_PATH.Replace("langs.json", "");
 			string langFilePath = langDir + langFileName;
-			json = AssetDatabase.LoadAssetAtPath<TextAsset>(langFilePath);
+			json = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(langFilePath);
 			if (json != null) return json;
 
 			// 3. リソース展開を試みてリトライ
 			ResourceAutoExtractor.EnsureEssentialsExtractedSync();
-			path = AssetDatabase.GUIDToAssetPath(this.guid);
-			json = string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<TextAsset>(path);
+			path = MDNailToolAssetLoader.ResolveGuidToPath(this.guid);
+			json = string.IsNullOrEmpty(path) ? null : MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(path);
 			if (json != null) return json;
 
-			json = AssetDatabase.LoadAssetAtPath<TextAsset>(langFilePath);
+			json = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(langFilePath);
 			return json;
 		}
 
