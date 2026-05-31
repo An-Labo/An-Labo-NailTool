@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using world.anlabo.mdnailtool.Editor.Entity;
+using world.anlabo.mdnailtool.Editor.Model;
 
 namespace world.anlabo.mdnailtool.Editor.Develop {
 	internal static class NailResourceJsonConverter {
@@ -72,6 +73,7 @@ namespace world.anlabo.mdnailtool.Editor.Develop {
 
 			File.WriteAllText(dbFullPath, db.ToString(Formatting.Indented));
 			AssetDatabase.ImportAsset(dbAssetPath, ImportAssetOptions.ForceUpdate);
+			DBNailDesign.ClearCache();
 			Debug.Log($"[NailConverter] material 変換: {converted} デザイン");
 		}
 

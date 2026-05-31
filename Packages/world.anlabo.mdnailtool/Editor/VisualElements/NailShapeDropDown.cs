@@ -29,6 +29,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				.Select(shape => shape.ShapeName)
 				.Where(filter)
 				.ToList();
+			if (shapeNames.Count == 0) return;
 			this.choices = shapeNames;
 			this.SetValueWithoutNotify(shapeNames.Contains(GlobalSetting.LastUseShapeName) ? GlobalSetting.LastUseShapeName : shapeNames[0]);
 		}
