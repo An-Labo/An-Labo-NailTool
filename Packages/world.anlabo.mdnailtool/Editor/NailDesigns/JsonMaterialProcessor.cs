@@ -50,10 +50,11 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		public override bool IsInstalledColorVariation(string materialName, string colorName) {
 			if (this._nailDesign.ColorTextures == null) return false;
+			string normalizedColor = colorName.Trim('[', ']');
 			foreach (var shapeEntry in this._nailDesign.ColorTextures.Values) {
 				foreach (var matEntry in shapeEntry) {
 					if (!MatchesMaterialName(matEntry.Key, materialName)) continue;
-					if (matEntry.Value.ContainsKey(colorName)) return true;
+					if (matEntry.Value.ContainsKey(normalizedColor)) return true;
 				}
 			}
 			return false;
@@ -98,12 +99,13 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		private string? FindMainTexGuid(string materialName, string nailShapeName, string colorName) {
 			if (this._nailDesign.ColorTextures == null) return null;
+			string normalizedColor = colorName.Trim('[', ']');
 			// colorTextures のキーは小文字 ("oval") で格納されているため OrdinalIgnoreCase で検索
 			foreach (var shapeKv in this._nailDesign.ColorTextures) {
 				if (!ShapeEquals(shapeKv.Key, nailShapeName)) continue;
 				foreach (var kv in shapeKv.Value) {
 					if (!MatchesMaterialName(kv.Key, materialName)) continue;
-					if (kv.Value.TryGetValue(colorName, out string? guid)) return guid;
+					if (kv.Value.TryGetValue(normalizedColor, out string? guid)) return guid;
 				}
 			}
 			return null;
