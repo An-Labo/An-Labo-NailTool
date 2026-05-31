@@ -58,17 +58,10 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 		}
 
 		public void Dispose() {
-			_accessCount--;
+			if (_accessCount > 0) _accessCount--;
 #if DEBUG_MD_NAIL_DB
 			Debug.Log($"DBDisconnect : {this.GetType().Name}, {_accessCount} : {new StackFrame(1, false).GetMethod()!.DeclaringType!.FullName}");
 #endif
-			if (_accessCount <= 0) {
-				_accessCount = 0;
-				_cash = null;
-#if DEBUG_MD_NAIL_DB
-				Debug.Log($"DBClear : {this.GetType().Name}");
-#endif
-			}
 			GC.SuppressFinalize(this);
 		}
 	}
