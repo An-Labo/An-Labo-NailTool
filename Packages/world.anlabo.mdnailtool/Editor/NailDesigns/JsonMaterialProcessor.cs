@@ -64,12 +64,16 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			return this._nailDesign.MaterialData.Keys.Any(k => ShapeEquals(ExtractShape(k), shapeName));
 		}
 
-		// "[mat][X][lil-toon]oval" or "[mat][X][lil-toon][Var]_oval" -> "oval"
+		// "[mat][X][lil-toon]oval" or "[mat][X][lil-toon]Var_oval" -> "oval"
 		private static string ExtractShape(string matKey) {
 			int lastBracket = matKey.LastIndexOf(']');
-			if (lastBracket >= 0 && lastBracket < matKey.Length - 1)
-				return matKey.Substring(lastBracket + 1).TrimStart('_').Trim();
-			return matKey;
+			string suffix = lastBracket >= 0 && lastBracket < matKey.Length - 1
+				? matKey.Substring(lastBracket + 1).TrimStart('_').Trim()
+				: matKey;
+			int lastUnderscore = suffix.LastIndexOf('_');
+			if (lastUnderscore >= 0 && lastUnderscore < suffix.Length - 1)
+				return suffix.Substring(lastUnderscore + 1).Trim();
+			return string.IsNullOrEmpty(suffix) ? matKey : suffix;
 		}
 
 		private static bool ShapeEquals(string a, string b) =>

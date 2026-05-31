@@ -212,13 +212,16 @@ namespace world.anlabo.mdnailtool.Editor.Develop {
 			return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(tex));
 		}
 
-		// "[mat][WiredNail][lil-toon]oval" -> "oval"
-		// "[mat][SimpleNailSet][lil-toon][GradationNail]_oval" -> "oval"
+		// "]" 以降を取り、バリアント名_shape 形式なら最後の _ 以降を shape とする
 		private static string ExtractShape(string matFileName) {
 			int lastBracket = matFileName.LastIndexOf(']');
-			if (lastBracket >= 0 && lastBracket < matFileName.Length - 1)
-				return matFileName.Substring(lastBracket + 1).TrimStart('_').Trim();
-			return "default";
+			string suffix = lastBracket >= 0 && lastBracket < matFileName.Length - 1
+				? matFileName.Substring(lastBracket + 1).TrimStart('_').Trim()
+				: matFileName;
+			int lastUnderscore = suffix.LastIndexOf('_');
+			if (lastUnderscore >= 0 && lastUnderscore < suffix.Length - 1)
+				return suffix.Substring(lastUnderscore + 1).Trim();
+			return string.IsNullOrEmpty(suffix) ? "default" : suffix;
 		}
 
 		private static void ScanLegacyColorTextures(
@@ -268,6 +271,7 @@ namespace world.anlabo.mdnailtool.Editor.Develop {
 					remainder.EndsWith(matVariantName, StringComparison.OrdinalIgnoreCase))
 					remainder = remainder.Substring(0, remainder.Length - matVariantName.Length);
 
+				remainder = remainder.Trim('[', ']');
 				if (string.IsNullOrEmpty(remainder)) continue;
 
 				string texAssetPath = FullPathToAssetPath(texFull);

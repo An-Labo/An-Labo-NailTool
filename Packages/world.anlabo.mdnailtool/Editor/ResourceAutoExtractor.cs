@@ -18,14 +18,17 @@ namespace world.anlabo.mdnailtool.Editor {
         private const string PACKAGE_RESOURCE_PATH = "Packages/world.anlabo.mdnailtool/Resource/";
         private const string ASSETS_RESOURCE_PATH = "Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/";
         
-        // 起動時に最低限展開しておくフォルダ. Design/Prefab は on-demand (EnsureDesignExtracted / EnsurePrefabExtractedByGuid) で展開する.
+        // 起動時に最低限展開しておくフォルダ. Design/Prefab は on-demand で展開するが、
+        // materialData 未整備のレガシーデザインはここに列挙して起動時プリ展開する
         private static readonly string[] ESSENTIAL_FOLDERS = {
             "DB/",
             "Lang/",
             "Nail/Thumbnails/",
             "Nail/ShaderPresets/",
             "Preview/",
-            "uss/"
+            "uss/",
+            "Nail/Design/LILITHYNail/",
+            "Nail/Design/SchoolCheckNail/",
         };
 
         private static readonly string[] ESSENTIAL_FILES = {
@@ -58,12 +61,24 @@ namespace world.anlabo.mdnailtool.Editor {
             return true;
         }
 
+        // materialData 未整備のレガシーデザインをプリ展開する (起動時フリーズ回避)
+        private static readonly string[] LEGACY_PRELOAD_DESIGNS = {
+            "LILITHYNail",
+            "SchoolCheckNail",
+        };
+
+        private static void PreloadLegacyDesigns() {
+            foreach (string design in LEGACY_PRELOAD_DESIGNS)
+                EnsureDesignExtracted(design);
+        }
+
         private static void CheckAndExtractEssentials() {
             if (_isExtracting) return;
 
             // 既存展開済みでも、バージョン変更時は DB/Lang だけ強制上書き (GUID非保持データのみ)
             if (HasEssentialFiles()) {
                 UpdateForceFoldersIfVersionChanged();
+                EditorApplication.delayCall += PreloadLegacyDesigns;
                 return;
             }
 
@@ -701,7 +716,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
         /// <summary>
         /// メインNailPrefabの所在フォルダを基に、同ディレクトリ内から
-        /// 指定名パターンのPrefabを検索して返す（GUIDに依存しない最終フォールバック）。
+        /// 指定名パターンのPrefabを検索して返す (GUIDに依存しない最終フォールバック)。
         /// </summary>
         public static string? TryResolvePrefabByFolderSearch(string mainPrefabPath, string variantName) {
             if (string.IsNullOrEmpty(mainPrefabPath) || string.IsNullOrEmpty(variantName)) return null;
