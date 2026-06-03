@@ -114,6 +114,25 @@ namespace world.anlabo.mdnailtool.Editor.Develop {
 			Debug.Log($"[NailConverter] prefab 変換: {prefabCache.Count} GUID");
 		}
 
+		private static HashSet<string> CollectDisabledFeaturePrefixes(Material mat, Shader shader, int propCount) {
+			var disabled = new HashSet<string>();
+			for (int i = 0; i < propCount; i++) {
+				string pn = shader.GetPropertyName(i);
+				if (!pn.StartsWith("_Use")) continue;
+				if (shader.GetPropertyType(i) != UnityEngine.Rendering.ShaderPropertyType.Float) continue;
+				if (mat.GetFloat(pn) == 0f)
+					disabled.Add("_" + pn.Substring(4));
+			}
+			return disabled;
+		}
+
+		private static bool IsInDisabledGroup(string propName, HashSet<string> disabledPrefixes) {
+			foreach (string prefix in disabledPrefixes) {
+				if (propName.StartsWith(prefix)) return true;
+			}
+			return false;
+		}
+
 		private static NailMaterialDelta BuildDelta(Material mat, string matName) {
 			var delta = new NailMaterialDelta {
 				ShaderName = mat.shader?.name ?? "",
@@ -129,8 +148,11 @@ namespace world.anlabo.mdnailtool.Editor.Develop {
 			var vectors = new Dictionary<string, float[]>();
 
 			int propCount = shader.GetPropertyCount();
+			HashSet<string> disabledPrefixes = CollectDisabledFeaturePrefixes(mat, shader, propCount);
+
 			for (int i = 0; i < propCount; i++) {
 				string propName = shader.GetPropertyName(i);
+				if (IsInDisabledGroup(propName, disabledPrefixes)) continue;
 				switch (shader.GetPropertyType(i)) {
 					case UnityEngine.Rendering.ShaderPropertyType.Texture: {
 						if (propName == MAIN_TEX_KEY) break;
@@ -143,17 +165,20 @@ namespace world.anlabo.mdnailtool.Editor.Develop {
 					case UnityEngine.Rendering.ShaderPropertyType.Float:
 					case UnityEngine.Rendering.ShaderPropertyType.Range: {
 						float val = mat.GetFloat(propName);
-						if (val != 0f) floats[propName] = val;
+						float def = shader.GetPropertyDefaultFloatValue(i);
+						if (val != def) floats[propName] = val;
 						break;
 					}
 					case UnityEngine.Rendering.ShaderPropertyType.Color: {
 						Color c = mat.GetColor(propName);
-						if (c != Color.black) colors[propName] = new[] { c.r, c.g, c.b, c.a };
+						Color def = shader.GetPropertyDefaultVectorValue(i);
+						if (c != def) colors[propName] = new[] { c.r, c.g, c.b, c.a };
 						break;
 					}
 					case UnityEngine.Rendering.ShaderPropertyType.Vector: {
 						Vector4 v = mat.GetVector(propName);
-						if (v != Vector4.zero) vectors[propName] = new[] { v.x, v.y, v.z, v.w };
+						Vector4 def = shader.GetPropertyDefaultVectorValue(i);
+						if (v != def) vectors[propName] = new[] { v.x, v.y, v.z, v.w };
 						break;
 					}
 				}

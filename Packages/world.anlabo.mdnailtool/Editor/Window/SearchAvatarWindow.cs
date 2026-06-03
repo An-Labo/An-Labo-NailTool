@@ -28,8 +28,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 			var uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss, MDNailToolGuids.WindowUssPath);
 			if (uss != null) this.rootVisualElement.styleSheets.Add(uss);
 
-			string? uxmlPath = MDNailToolAssetLoader.ResolveGuidToPath(GUID);
-			VisualTreeAsset uxml = MDNailToolAssetLoader.LoadAssetSafe<VisualTreeAsset>(uxmlPath);
+			string uxmlPath = AssetDatabase.GUIDToAssetPath(GUID);
+			VisualTreeAsset uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uxmlPath);
 			uxml.CloneTree(this.rootVisualElement);
 
 			ToolbarSearchField searchField = this.rootVisualElement.Q<ToolbarSearchField>("search-field");

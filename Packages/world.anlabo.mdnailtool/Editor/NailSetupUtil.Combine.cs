@@ -180,9 +180,12 @@ namespace world.anlabo.mdnailtool.Editor
 						Mesh baseMesh = validPairs[si].smr.sharedMesh;
 						int siVertCount = baseMesh.vertexCount;
 
+						// Step 1: 名前完全一致
 						Transform? variantNail = variant.VariantNails.FirstOrDefault(t => t != null && t.name == baseNail.name);
+						// Step 2: 大文字小文字無視
 						if (variantNail == null)
 							variantNail = variant.VariantNails.FirstOrDefault(t => t != null && string.Equals(t.name, baseNail.name, StringComparison.OrdinalIgnoreCase));
+						// Step 3: インデックスでフォールバック
 						if (variantNail == null && si < variant.VariantNails.Length && variant.VariantNails[si] != null)
 						{
 							variantNail = variant.VariantNails[si];

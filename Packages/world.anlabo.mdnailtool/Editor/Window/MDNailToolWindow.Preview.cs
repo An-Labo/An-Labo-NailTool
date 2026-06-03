@@ -288,6 +288,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._scenePreviewController = null;
 		}
 
+		/// <summary>
+		/// BlendShapeバリアント名からバリアントプレハブを解決する（着用プレビュー用）。
+		/// 選択中のネイルシェイプに対応するプレハブまで解決して返す。
+		/// </summary>
 		private GameObject? ResolveVariantPrefabForPreview(string variantName)
 		{
 			AvatarBlendShapeVariant[]? variants = this.GetBlendShapeVariants();
@@ -312,7 +316,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return variantPrefab;
 		}
 
-		// BakeBS ON 時の variant BlendShape 補間. 体の重みに応じてネイル位置デルタを加算.
+		/// <summary>
+		/// BakeBS ON時: 体のBlendShape値に基づいてプレビューネイルの位置を補間する。
+		/// 各バリアントの体BlendShape重みを読み取り、ベースとバリアントの位置デルタを加算する。
+		/// </summary>
 		private void ApplyVariantPositionBlend(VRCAvatarDescriptor avatar, GameObject basePrefab, string nailShapeName)
 		{
 			Transform? previewRoot = avatar.transform.Find(SCENE_PREVIEW_NAME);
@@ -328,9 +335,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				if (string.IsNullOrEmpty(variant.SyncSourceSmrName)) continue;
 
+				// 体のSMRからBlendShape重みを取得
 				float weight = GetBodyBlendShapeWeight(avatar, variant);
 				if (weight <= 0f) continue;
 
+				// バリアントプレハブをロード
 				if (string.IsNullOrEmpty(variant.NailPrefabGUID)) continue;
 				string varPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
 				if (string.IsNullOrEmpty(varPath)) continue;
@@ -340,6 +349,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName);
 				var variantTransforms = variantPrefab.GetComponentsInChildren<Transform>(true);
 
+				// 各ネイルの位置・回転デルタを補間適用
 				foreach (Transform previewNail in previewTransforms)
 				{
 					if (previewNail == previewRoot) continue;
@@ -357,6 +367,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
+		/// <summary>バリアント一覧を取得する共通メソッド</summary>
 		private AvatarBlendShapeVariant[]? GetBlendShapeVariants()
 		{
 			var avatarVariationData = this._avatarDropDowns?.GetSelectedAvatarVariation();
@@ -380,6 +391,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return variants;
 		}
 
+		/// <summary>体のSMRからバリアントに対応するBlendShapeの重み（0〜1）を取得する</summary>
 		private static float GetBodyBlendShapeWeight(VRCAvatarDescriptor avatar, AvatarBlendShapeVariant variant)
 		{
 			Transform? srcSmrTransform = FindSyncSourceSmr(avatar, variant.SyncSourceSmrName!);
@@ -400,21 +412,25 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return 0f;
 		}
 
-		// NailSetupProcessor と同じフォールバックで SyncSourceSmr を特定する.
+		/// <summary>SyncSourceSmrNameからアバター上のSMR Transformを検索する（NailSetupProcessorと同じフォールバックロジック）</summary>
 		private static Transform? FindSyncSourceSmr(VRCAvatarDescriptor avatar, string syncSourceSmrName)
 		{
 			var allTransforms = avatar.transform.GetComponentsInChildren<Transform>(true);
 
+			// Step 1: 名前完全一致
 			Transform? t = System.Array.Find(allTransforms, tr => tr.name == syncSourceSmrName);
 			if (t != null) return t;
 
+			// Step 2: 大文字小文字無視
 			t = System.Array.Find(allTransforms, tr => string.Equals(tr.name, syncSourceSmrName, System.StringComparison.OrdinalIgnoreCase));
 			if (t != null) return t;
 
+			// Step 3: 部分一致
 			t = System.Array.Find(allTransforms, tr => tr.GetComponent<SkinnedMeshRenderer>() != null
 				&& (tr.name.Contains(syncSourceSmrName) || syncSourceSmrName.Contains(tr.name)));
 			if (t != null) return t;
 
+			// Step 4: BlendShapeを持つ非顔SMRから推測
 			SkinnedMeshRenderer? visemeSmr = avatar.VisemeSkinnedMesh;
 			return avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
 				.Where(smr => smr != visemeSmr && smr.sharedMesh != null && smr.sharedMesh.blendShapeCount > 0)

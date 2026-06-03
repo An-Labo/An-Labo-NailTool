@@ -68,8 +68,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (this._errorDetailArea != null) this._errorDetailArea.style.display = DisplayStyle.None;
 			if (this._errorDetailToggle != null)
 				this._errorDetailToggle.text = S("error.show_detail") ?? "▶ Show Details";
+			// Only show the detail toggle when there's exception detail to show
 			if (this._errorDetailToggle != null)
 				this._errorDetailToggle.style.display = ex != null ? DisplayStyle.Flex : DisplayStyle.None;
+			// ScrollView内でエラーバナーが見えるようにスクロール
 			var scrollView = this.rootVisualElement.Q<ScrollView>("Root");
 			if (scrollView != null && this._errorBanner != null)
 				this._errorBanner.schedule.Execute(() => scrollView.ScrollTo(this._errorBanner));
@@ -85,6 +87,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			if (this._errorBanner == null) return;
 
+			// 既存のcontactLinksAreaがあれば削除
 			if (this._contactLinksArea != null) {
 				this._contactLinksArea.RemoveFromHierarchy();
 			}
@@ -92,15 +95,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._contactLinksArea = new VisualElement();
 			this._contactLinksArea.style.marginTop = 8;
 
+			// 問い合わせ案内テキスト
 			var contactLabel = new Label(S("error.execute.contact_prompt"));
 			contactLabel.style.marginBottom = 4;
 			contactLabel.style.whiteSpace = WhiteSpace.Normal;
 			this._contactLinksArea.Add(contactLabel);
 
+			// ボタン行
 			var buttonRow = new VisualElement();
 			buttonRow.style.flexDirection = FlexDirection.Row;
 			buttonRow.style.flexWrap = Wrap.Wrap;
 
+			// エラーコピーボタン
 			var copyButton = new Button(() => {
 				GUIUtility.systemCopyBuffer = errorText;
 			});
@@ -111,6 +117,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			copyButton.style.color = Color.white;
 			buttonRow.Add(copyButton);
 
+			// Discord (紫)
 			var discordButton = new Button(() => {
 				Application.OpenURL("https://discord.gg/anlabo");
 			});
@@ -121,6 +128,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			discordButton.style.color = Color.white;
 			buttonRow.Add(discordButton);
 
+			// BOOTH (オレンジ)
 			var boothButton = new Button(() => {
 				Application.OpenURL("https://accounts.booth.pm/conversations/5331544/messages");
 			});
@@ -131,6 +139,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			boothButton.style.color = Color.white;
 			buttonRow.Add(boothButton);
 
+			// X (黒)
 			var xButton = new Button(() => {
 				Application.OpenURL("https://x.com/an_labo_virtual");
 			});

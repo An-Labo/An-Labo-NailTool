@@ -89,11 +89,11 @@ namespace world.anlabo.mdnailtool.Editor.Core
 		{
 			if (!AssetDatabase.IsValidFolder(folderPath)) yield break;
 
-			string[] guids = MDNailToolAssetLoader.FindAssetGuids("t:Material", new[] { folderPath });
+			string[] guids = AssetDatabase.FindAssets("t:Material", new[] { folderPath });
 			foreach (string guid in guids)
 			{
-				string? path = MDNailToolAssetLoader.ResolveGuidToPath(guid);
-				Material? mat = MDNailToolAssetLoader.LoadAssetSafe<Material>(path);
+				string path = AssetDatabase.GUIDToAssetPath(guid);
+				Material? mat = AssetDatabase.LoadAssetAtPath<Material>(path);
 				if (mat != null) yield return mat;
 			}
 		}

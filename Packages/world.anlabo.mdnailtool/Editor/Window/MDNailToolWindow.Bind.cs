@@ -529,6 +529,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return anyNonNull ? result : null;
 		}
 
+		// ---- 追加オブジェクト関連メソッド ----
+
+		/// <summary>GUIDリスト内に1つでも有効なアセットが存在するか</summary>
 		private static bool HasAnyValidGuid(IEnumerable<string> guids)
 		{
 			foreach (string guid in guids)

@@ -54,7 +54,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			foreach (var shapeEntry in this._nailDesign.ColorTextures.Values) {
 				foreach (var matEntry in shapeEntry) {
 					if (!MatchesMaterialName(matEntry.Key, materialName)) continue;
-					if (matEntry.Value.ContainsKey(normalizedColor)) return true;
+					if (matEntry.Value.Keys.Any(k => string.Equals(k, normalizedColor, System.StringComparison.OrdinalIgnoreCase))) return true;
 				}
 			}
 			return false;
@@ -100,12 +100,12 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		private string? FindMainTexGuid(string materialName, string nailShapeName, string colorName) {
 			if (this._nailDesign.ColorTextures == null) return null;
 			string normalizedColor = colorName.Trim('[', ']');
-			// colorTextures のキーは小文字 ("oval") で格納されているため OrdinalIgnoreCase で検索
 			foreach (var shapeKv in this._nailDesign.ColorTextures) {
 				if (!ShapeEquals(shapeKv.Key, nailShapeName)) continue;
 				foreach (var kv in shapeKv.Value) {
 					if (!MatchesMaterialName(kv.Key, materialName)) continue;
-					if (kv.Value.TryGetValue(normalizedColor, out string? guid)) return guid;
+					string? matchKey = kv.Value.Keys.FirstOrDefault(k => string.Equals(k, normalizedColor, System.StringComparison.OrdinalIgnoreCase));
+					if (matchKey != null) return kv.Value[matchKey];
 				}
 			}
 			return null;

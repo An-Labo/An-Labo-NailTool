@@ -19,19 +19,6 @@ namespace world.anlabo.mdnailtool.Editor
 			return AssetDatabase.LoadAllAssetsAtPath(path!).OfType<T>().FirstOrDefault();
 		}
 
-		internal static string AssetPathToGuid(string? path)
-		{
-			if (string.IsNullOrEmpty(path)) return "";
-			return AssetDatabase.AssetPathToGUID(path!);
-		}
-
-		internal static string[] FindAssetGuids(string filter, string[]? folders = null)
-		{
-			return folders == null
-				? AssetDatabase.FindAssets(filter)
-				: AssetDatabase.FindAssets(filter, folders);
-		}
-
 		internal static GameObject? LoadPrefabSafe(string? path)
 		{
 			if (string.IsNullOrEmpty(path)) return null;
@@ -247,7 +234,7 @@ namespace world.anlabo.mdnailtool.Editor
 					_caseResolveCache[path] = result;
 					if (_warnedPaths.Add(dir))
 					{
-						ToolConsole.Warn("AssetLoader", $"Case mismatch resolved in '{dir}' (e.g. '{fileName}' -> '{candidate}').");
+						ToolConsole.Log($"[Warning] Case mismatch resolved in '{dir}' (e.g. '{fileName}' -> '{candidate}').");
 					}
 					return result;
 				}

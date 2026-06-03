@@ -83,12 +83,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 		private static List<ChangelogEntry>? LoadChangelog() {
 			try {
-				TextAsset? asset = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(
+				TextAsset? asset = AssetDatabase.LoadAssetAtPath<TextAsset>(
 					MDNailToolDefines.DB_CHANGELOG_FILE_PATH);
 				if (asset == null) return null;
 				return JsonConvert.DeserializeObject<List<ChangelogEntry>>(asset.text);
 			} catch (Exception e) {
-				ToolConsole.Warn("Window", $"Failed to load changelog: {e}");
+				ToolConsole.Log($"[Warning] Failed to load changelog: {e}");
 				return null;
 			}
 		}

@@ -21,7 +21,7 @@ namespace world.anlabo.mdnailtool.Editor.Model
 			if (_cached != null) return _cached;
 
 			string path = MDNailToolDefines.DB_ADDITIONAL_ASSETS_FILE_PATH;
-			TextAsset? textAsset = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(path);
+			TextAsset? textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
 			if (textAsset == null)
 			{
 				// ファイルが無ければ空のレジストリを返す

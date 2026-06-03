@@ -129,7 +129,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			label.AddToClassList("mdn-tool-console-entry");
 			this._toolConsoleScroll.Add(label);
 
-				this._toolConsoleScroll.schedule.Execute(() =>
+			// 自動スクロール
+			this._toolConsoleScroll.schedule.Execute(() =>
 			{
 				this._toolConsoleScroll.scrollOffset = new Vector2(0, float.MaxValue);
 			});
@@ -173,6 +174,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			sb.AppendLine($"AdditionalObjectSource: {this._additionalObjectSourceDropdown?.value ?? "(null)"}");
 			sb.AppendLine($"AdditionalMaterialSource: {this._additionalMaterialSourceDropdown?.value ?? "(null)"}");
 
+			// Body BlendShape状態（値が0でないもののみ）
 			if (avatar != null)
 			{
 				try
@@ -202,7 +204,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				catch (Exception ex) { ToolConsole.Warn("NailTool", $"BlendShape診断情報の取得に失敗: {ex.Message}"); }
 			}
 
-			// PlayMode 実行後に AAOProcessor が収集した診断情報. 未実行時は空.
+			// ビルド診断（直近のPlayモード/ビルド時の結果、AAOProcessorが収集）
 			if (!string.IsNullOrEmpty(AAOProcessor.LastBuildDiagnostic))
 			{
 				sb.AppendLine("--- Build Diagnostic ---");
@@ -219,6 +221,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void BindLinksUI()
 		{
+			// Changelog バナーを動的追加
 			var bannerContainer = this.rootVisualElement.Q<VisualElement>("changelog-banner-container");
 			if (bannerContainer != null) {
 				var banner = new ChangelogBanner();
@@ -231,15 +234,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._manualLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
 			}
 
+			// ヘッダーのカタログリンク
 			var catalogLink = this.rootVisualElement.Q<Label>("link-catalog");
 			if (catalogLink != null) {
 				catalogLink.text = $"[{S("link.catalog.label") ?? "Catalog"}]";
 				catalogLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.catalog")));
 			}
 
+			// ヘッダーのFAQリンク
 			var headerContact = this.rootVisualElement.Q<Label>("link-contact-header");
 			headerContact?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
 
+			// 着用統計リンク
 			var usageStatsLink = this.rootVisualElement.Q<Label>("link-usage-stats");
 			if (usageStatsLink != null)
 			{
@@ -247,22 +253,26 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				usageStatsLink.RegisterCallback<ClickEvent>(_ => UsageStatsWindow.ShowWindow());
 			}
 
+			// フッターのコンタクトリンク
 			this._contactLink = this.rootVisualElement.Q<LocalizedLabel>("link-contact");
 			this._contactLink?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
 
+			// ヘッダーのバージョン表記
 		var versionStr = MDNailToolDefines.Version;
 		var headerVersion = this.rootVisualElement.Q<Label>("version");
 		if (headerVersion != null)
 			headerVersion.text = "v" + versionStr;
 
+		// フッターのバージョン表記
 		var footerVersion = this.rootVisualElement.Q<Label>("version-footer");
 		if (footerVersion != null)
 			footerVersion.text = versionStr;
 
+			// おすすめ設定ボタン
 			AddRecommendButton("mdn-section-header", 3, ApplyRecommendMA);
 			AddRecommendButtonToFoldout("mdn-advanced-foldout", ApplyRecommendAdvanced);
 
-			// 詳細設定Foldoutの開閉状態を EditorPrefs に保持する.
+			// 詳細設定Foldoutの開閉状態を記憶する
 			const string advancedFoldoutPrefKey = "MDNailTool.AdvancedFoldoutOpen";
 			var advancedFoldout = this.rootVisualElement.Q<Foldout>(className: "mdn-advanced-foldout");
 			if (advancedFoldout != null)
@@ -326,10 +336,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void ApplyRecommendAdvanced()
 		{
+			// ON
 			if (this._removeCurrentNail != null) this._removeCurrentNail.value = true;
 			if (this._backup != null) this._backup.value = true;
 			if (this._armatureScaleCompensation != null) this._armatureScaleCompensation.value = true;
 
+			// OFF
 			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = false;
 			if (this._penetrationCorrection != null) this._penetrationCorrection.value = false;
 

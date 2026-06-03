@@ -37,22 +37,9 @@ namespace world.anlabo.mdnailtool.Editor {
 	}
 
 	public class NailSetupProcessor {
-		// Process 中に各 step を貫いて流れる可変状態をまとめる. this のプロパティ更新で副作用を撒くのを避けるため.
-		private class ProcessContext {
-			public GameObject NailPrefab = null!;
-			public GameObject NailPrefabObject = null!;
-			public Dictionary<string, Transform?> TargetBoneDictionary = null!;
-			public Transform?[] HandsNailObjects = null!;
-			public Transform?[] LeftFootNailObjects = null!;
-			public Transform?[] RightFootNailObjects = null!;
-			public List<(SkinnedMeshRenderer sourceSmr, string sourcePath)> ResolvedSourceSmrs = new();
-			public Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? Corrections;
-			public Dictionary<Transform, Vector3> SavedBoneScales = new();
-		}
-
 		private VRCAvatarDescriptor Avatar { get; }
 		private AvatarVariation AvatarVariationData { get; }
-		private GameObject NailPrefab { get; }
+		private GameObject NailPrefab { get; set; }
 		private (INailProcessor, string, string)[] NailDesignAndVariationNames { get; }
 		private string NailShapeName { get; }
 		public Mesh?[]? OverrideMesh { get; set; }
@@ -90,123 +77,93 @@ namespace world.anlabo.mdnailtool.Editor {
 
 
 		public void Process() {
-			ProcessContext ctx = new() { NailPrefab = this.NailPrefab };
-
-			InitializeProcess();
-			ApplySelectedVariantPrefab(ctx);
-			ResolveShapePrefabForCurrentShape(ctx);
-			InstantiateNailPrefab(ctx);
-			CollectNailObjects(ctx);
-			RemoveExistingNails(ctx);
-			ApplyMeshAndMaterial(ctx);
-			ApplyAdditionalObjectsAndMipStreaming(ctx);
-			ResolveAndBakeBlendShapes(ctx);
-			ApplyNailBoundsGuardAll(ctx);
-
-			// scale退避→配置→復元。歪み防止 (Compute も try 内に置き、途中例外でも finally で必ず Restore する)
-			try
-			{
-				ComputeArmatureCorrections(ctx);
-				if (this.ForModularAvatar) {
-					SetupForModularAvatar(ctx);
-				} else {
-					SetupDirect(ctx);
-				}
-			}
-			finally
-			{
-				RestoreBoneScales(ctx.SavedBoneScales);
-			}
-
-			SchedulePostSetupRefresh(ctx.NailPrefabObject);
-		}
-
-		// Process Phase 0: Rig 検証 + マテリアルキャッシュクリア + Undo グループ開始.
-		private void InitializeProcess()
-		{
 			ValidateAvatarRig();
+
 			INailProcessor.ClearCreatedMaterialCash();
 			Undo.IncrementCurrentGroup();
-		}
 
-		// Process Phase 4: ターゲットボーン辞書取得 + 指ボーン存在チェック + プレハブ内ネイルオブジェクト収集 + null デザインスロットの破棄.
-		private void CollectNailObjects(ProcessContext ctx)
-		{
-			ctx.TargetBoneDictionary = GetTargetBoneDictionary(this.Avatar, this.AvatarVariationData.BoneMappingOverride);
+			ApplySelectedVariantPrefab();
+			ResolveShapePrefabForCurrentShape();
+			GameObject nailPrefabObject = InstantiateAndLabelNailPrefab();
+			Undo.RegisterCreatedObjectUndo(nailPrefabObject, "Nail Setup");
 
+			string prefix = this.getPrefabPrefix();
+
+			if (!string.IsNullOrEmpty(prefix)) {
+				foreach (Transform child in nailPrefabObject.transform) {
+					child.name = child.name.Replace(prefix, "");
+				}
+			}
+
+			// 装着対象ボーンの取得
+			Dictionary<string, Transform?> targetBoneDictionary = GetTargetBoneDictionary(this.Avatar, this.AvatarVariationData.BoneMappingOverride);
+
+			// 指ボーン存在チェック
 			bool hasAnyFingerBone = MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST
-				.Any(name => ctx.TargetBoneDictionary.ContainsKey(name) && ctx.TargetBoneDictionary[name] != null);
+				.Any(name => targetBoneDictionary.ContainsKey(name) && targetBoneDictionary[name] != null);
 			if (!hasAnyFingerBone) {
 				throw new NailSetupUserException(LanguageManager.S("error.execute.no_finger_bones") ?? "error.execute.no_finger_bones");
 			}
 
-			ctx.HandsNailObjects = GetHandsNailObjectList(ctx.NailPrefabObject);
-			ctx.LeftFootNailObjects = GetLeftFootNailObjectList(ctx.NailPrefabObject);
-			ctx.RightFootNailObjects = GetRightFootNailObjectList(ctx.NailPrefabObject);
+			// プレハブ内のネイルオブジェクトを取得
+			Transform?[] handsNailObjects = GetHandsNailObjectList(nailPrefabObject);
+			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(nailPrefabObject);
+			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(nailPrefabObject);
 
-			for (int i = 0; i < 10 && i < ctx.HandsNailObjects.Length; i++) {
-				if (i < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[i].Item1 == null && ctx.HandsNailObjects[i] != null) {
-					UnityEngine.Object.DestroyImmediate(ctx.HandsNailObjects[i]!.gameObject);
-					ctx.HandsNailObjects[i] = null;
+			for (int i = 0; i < 10 && i < handsNailObjects.Length; i++) {
+				if (i < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[i].Item1 == null && handsNailObjects[i] != null) {
+					UnityEngine.Object.DestroyImmediate(handsNailObjects[i]!.gameObject);
+					handsNailObjects[i] = null;
 				}
 			}
-			for (int i = 0; i < 5 && i < ctx.LeftFootNailObjects.Length; i++) {
+			for (int i = 0; i < 5 && i < leftFootNailObjects.Length; i++) {
 				int designIdx = 10 + i;
-				if (designIdx < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[designIdx].Item1 == null && ctx.LeftFootNailObjects[i] != null) {
-					UnityEngine.Object.DestroyImmediate(ctx.LeftFootNailObjects[i]!.gameObject);
-					ctx.LeftFootNailObjects[i] = null;
+				if (designIdx < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[designIdx].Item1 == null && leftFootNailObjects[i] != null) {
+					UnityEngine.Object.DestroyImmediate(leftFootNailObjects[i]!.gameObject);
+					leftFootNailObjects[i] = null;
 				}
 			}
-			for (int i = 0; i < 5 && i < ctx.RightFootNailObjects.Length; i++) {
+			for (int i = 0; i < 5 && i < rightFootNailObjects.Length; i++) {
 				int designIdx = 15 + i;
-				if (designIdx < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[designIdx].Item1 == null && ctx.RightFootNailObjects[i] != null) {
-					UnityEngine.Object.DestroyImmediate(ctx.RightFootNailObjects[i]!.gameObject);
-					ctx.RightFootNailObjects[i] = null;
+				if (designIdx < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[designIdx].Item1 == null && rightFootNailObjects[i] != null) {
+					UnityEngine.Object.DestroyImmediate(rightFootNailObjects[i]!.gameObject);
+					rightFootNailObjects[i] = null;
 				}
 			}
-		}
 
-		// Process Phase 5: RemoveCurrentNail フラグ ON のとき既存ネイルを除去.
-		private void RemoveExistingNails(ProcessContext ctx)
-		{
 			if (this.RemoveCurrentNail) {
-				RemoveNail(this.Avatar, ctx.TargetBoneDictionary);
+				RemoveNail(this.Avatar, targetBoneDictionary);
 			}
-		}
 
-		// Process Phase 6: 手メッシュ / 足メッシュ / マテリアルを順に適用. 失敗時は Undo 全戻し.
-		private void ApplyMeshAndMaterial(ProcessContext ctx)
-		{
+			// メッシュの適用
 			if (this.OverrideMesh is { Length: > 0 }) {
 				try {
-					NailSetupUtil.ReplaceHandsNailMesh(ctx.HandsNailObjects, this.OverrideMesh);
+					NailSetupUtil.ReplaceHandsNailMesh(handsNailObjects, this.OverrideMesh);
 				} catch (Exception) {
 					Undo.RevertAllInCurrentGroup();
 					throw;
 				}
 			}
 
+			// 足のメッシュの適用
 			try {
-				NailSetupUtil.ReplaceFootNailMesh(ctx.LeftFootNailObjects, ctx.RightFootNailObjects, this.NailShapeName);
+				NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, this.NailShapeName);
 			} catch (Exception) {
 				Undo.RevertAllInCurrentGroup();
 				throw;
 			}
 
+			// マテリアルの適用
 			try {
-				NailSetupUtil.ReplaceNailMaterial(ctx.HandsNailObjects, ctx.LeftFootNailObjects, ctx.RightFootNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, this.GenerateMaterial, false, this.OverrideMaterial,
+				NailSetupUtil.ReplaceNailMaterial(handsNailObjects, leftFootNailObjects, rightFootNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, this.GenerateMaterial, false, this.OverrideMaterial,
 					this.EnableAdditionalMaterials, this.PerFingerAdditionalMaterials);
 			} catch (Exception) {
 				Undo.RevertAllInCurrentGroup();
 				throw;
 			}
-		}
 
-		// Process Phase 7: 追加オブジェクト親付け (手 / 足) + Mip Streaming 有効化.
-		private void ApplyAdditionalObjectsAndMipStreaming(ProcessContext ctx)
-		{
 			try {
-				NailSetupUtil.AttachAdditionalObjects(ctx.HandsNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, false, this.PerFingerAdditionalObjects);
+				NailSetupUtil.AttachAdditionalObjects(handsNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, false, this.PerFingerAdditionalObjects);
 			} catch (Exception) {
 				Undo.RevertAllInCurrentGroup();
 				throw;
@@ -216,7 +173,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			if (this.UseFootNail && this.PerFingerAdditionalObjects != null)
 			{
 				try {
-					Transform?[] footNailObjects = ctx.LeftFootNailObjects.Concat(ctx.RightFootNailObjects).ToArray();
+					Transform?[] footNailObjects = leftFootNailObjects.Concat(rightFootNailObjects).ToArray();
 					for (int fi = 0; fi < footNailObjects.Length; fi++)
 					{
 						int perFingerIdx = fi + 10;
@@ -241,43 +198,52 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			// Mip Streaming有効化
 			try {
-				var allRenderers = ctx.HandsNailObjects
+				var allRenderers = handsNailObjects
 					.Concat(this.UseFootNail
-						? ctx.LeftFootNailObjects.Concat(ctx.RightFootNailObjects)
+						? leftFootNailObjects.Concat(rightFootNailObjects)
 						: Enumerable.Empty<Transform?>())
 					.Where(t => t != null)
 					.SelectMany(t => t!.GetComponentsInChildren<Renderer>(true))
 					.Cast<Renderer?>();
 				NailSetupUtil.EnableMipStreamingForRenderers(allRenderers);
 			} catch (Exception e) {
-				ToolConsole.Warn("NailSetup", $"{LanguageManager.S("warn.mip_streaming_failed") ?? "Failed to enable Mip Streaming"}: {e.Message}{BuildDiagnosticInfo()}");
+				ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? "Mip Streamingの有効化に失敗しました" : "Failed to enable Mip Streaming")}: {e.Message}{BuildDiagnosticInfo()}");
 			}
-		}
 
-		// Process Phase 8: BlendShape 同期元解決 + ベイク.
-		private void ResolveAndBakeBlendShapes(ProcessContext ctx)
-		{
-			ctx.ResolvedSourceSmrs = ResolveBlendShapeSyncSources();
-			BakeBlendShapesIfNeeded(ctx.ResolvedSourceSmrs, ctx.HandsNailObjects, ctx.LeftFootNailObjects, ctx.RightFootNailObjects);
-		}
+			// ---- BlendShapeのベイクとMA同期設定 ----
+			List<(SkinnedMeshRenderer sourceSmr, string sourcePath)> resolvedSourceSmrs =
+				ResolveBlendShapeSyncSources();
+			BakeBlendShapesIfNeeded(resolvedSourceSmrs, handsNailObjects, leftFootNailObjects, rightFootNailObjects);
 
-		// Process Phase 9: ネイル SMR の localBounds を広めに固定. MA MeshSettings 未適用時のフラスタムカリング対策.
-		private void ApplyNailBoundsGuardAll(ProcessContext ctx)
-		{
-			ApplyNailBoundsGuard(ctx.HandsNailObjects);
+			// ---- ネイルSMRのlocalBoundsを広めに固定(フラスタムカリング・最適化対策)----
+			// MA MeshSettings 未適用時のフォールバック。Bounds ベースの可視性判定にも対応する。
+			ApplyNailBoundsGuard(handsNailObjects);
 			if (this.UseFootNail) {
-				ApplyNailBoundsGuard(ctx.LeftFootNailObjects);
-				ApplyNailBoundsGuard(ctx.RightFootNailObjects);
+				ApplyNailBoundsGuard(leftFootNailObjects);
+				ApplyNailBoundsGuard(rightFootNailObjects);
 			}
-		}
 
-		// Process Phase 10: ArmatureScaleCompensation=true のとき Bone Scale を退避し位置補正テーブルを生成.
-		// 退避 scale は呼び出し側 finally で必ず Restore される.
-		private void ComputeArmatureCorrections(ProcessContext ctx)
-		{
-			ctx.Corrections = ComputeArmatureScaleCorrections(
-				ctx.HandsNailObjects, ctx.LeftFootNailObjects, ctx.RightFootNailObjects,
-				ctx.TargetBoneDictionary, ref ctx.SavedBoneScales);
+			// scale退避→配置→復元。歪み防止 (Save/Compute も try 内に置き、途中例外でも finally で必ず Restore する)
+			Dictionary<Transform, Vector3> savedBoneScales = new();
+			try
+			{
+				Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections =
+					ComputeArmatureScaleCorrections(handsNailObjects, leftFootNailObjects, rightFootNailObjects, targetBoneDictionary, ref savedBoneScales);
+
+				if (this.ForModularAvatar) {
+					SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
+						leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
+				} else {
+					SetupDirect(nailPrefabObject, targetBoneDictionary, handsNailObjects,
+						leftFootNailObjects, rightFootNailObjects, corrections);
+				}
+			}
+			finally
+			{
+				RestoreBoneScales(savedBoneScales);
+			}
+
+			SchedulePostSetupRefresh(nailPrefabObject);
 		}
 
 		// アバターの Animator / Humanoid Rig をチェックし、欠落時はユーザー向け例外を投げる.
@@ -292,8 +258,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		// Process Phase 1: SelectedBlendShapeVariantName が指定されていればベース NailPrefab をバリアント差し替えする.
-		private void ApplySelectedVariantPrefab(ProcessContext ctx)
+		// SelectedBlendShapeVariantName が指定されていればベース NailPrefab をバリアント差し替えする.
+		private void ApplySelectedVariantPrefab()
 		{
 			ToolConsole.Log($"  SelectedBlendShapeVariantName={this.SelectedBlendShapeVariantName ?? "(null)"}");
 			if (string.IsNullOrEmpty(this.SelectedBlendShapeVariantName))
@@ -319,22 +285,22 @@ namespace world.anlabo.mdnailtool.Editor {
 			ToolConsole.Log($"  variantPrefab={variantPrefab?.name ?? "(null)"}");
 			if (variantPrefab == null) return;
 
-			ctx.NailPrefab = variantPrefab;
+			this.NailPrefab = variantPrefab;
 			ToolConsole.Log($"  → NailPrefab replaced: {variantPrefab.name}");
 		}
 
-		// Process Phase 2: 現在の NailShapeName に対応する [shape]Name.prefab を探して NailPrefab を差し替える.
-		private void ResolveShapePrefabForCurrentShape(ProcessContext ctx)
+		// 現在の NailShapeName に対応する [shape]Name.prefab を探して NailPrefab を差し替える.
+		private void ResolveShapePrefabForCurrentShape()
 		{
 			Regex nailPrefabNamePattern = new(@"(?<prefix>\[.+\])(?<prefabName>.+)");
-			Match match = nailPrefabNamePattern.Match(ctx.NailPrefab.name);
+			Match match = nailPrefabNamePattern.Match(this.NailPrefab.name);
 			if (!match.Success) return;
 
 			string prefabName = match.Groups["prefabName"].Value;
-			string prefabPath = AssetDatabase.GetAssetPath(ctx.NailPrefab);
+			string prefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
 			// Path.GetDirectoryName は Windows で `\` 区切りを返す. AssetDatabase は `/` 前提のため正規化する.
 			string prefabDirPath = (Path.GetDirectoryName(prefabPath) ?? "").Replace('\\', '/');
-			GameObject current = ctx.NailPrefab;
+			GameObject current = this.NailPrefab;
 			using DBNailShape dbNailShape = new();
 			foreach (NailShape nailShape in dbNailShape.collection) {
 				string newPrefabPath = $"{prefabDirPath}/[{nailShape.ShapeName}]{prefabName}.prefab";
@@ -346,17 +312,17 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 				if (nailShape.ShapeName == this.NailShapeName) break;
 			}
-			ctx.NailPrefab = current;
+			this.NailPrefab = current;
 		}
 
-		// Process Phase 3: NailPrefab をアバター配下に Instantiate し [An-Labo]デザイン名_カラー名 でラベル付け. Undo 登録と prefix 除去も同時に行う.
-		private void InstantiateNailPrefab(ProcessContext ctx)
+		// NailPrefab をアバター配下に Instantiate し [An-Labo]デザイン名_カラー名 でラベル付けする.
+		private GameObject InstantiateAndLabelNailPrefab()
 		{
-			if (ctx.NailPrefab == null) {
+			if (this.NailPrefab == null) {
 				ToolConsole.Log($"[NailDiag] NailPrefab=null. Avatar='{this.Avatar?.gameObject.name}' AvatarVariation='{this.AvatarVariationData?.VariationName ?? "(null)"}' SelectedBSV='{this.SelectedBlendShapeVariantName ?? "(null)"}' BaseGUID='{this.AvatarVariationData?.NailPrefabGUID ?? "(null)"}' Shape='{this.NailShapeName}'");
 				throw new NailSetupUserException(LanguageManager.S("error.execute.nail_prefab_load_failed") ?? "error.execute.nail_prefab_load_failed");
 			}
-			GameObject nailPrefabObject = Object.Instantiate(ctx.NailPrefab, this.Avatar.transform);
+			GameObject nailPrefabObject = Object.Instantiate(this.NailPrefab, this.Avatar.transform);
 			var firstEntry = this.NailDesignAndVariationNames.FirstOrDefault(t => t.Item1 != null);
 			string designName = firstEntry.Item1 != null
 				? firstEntry.Item1.DesignName
@@ -364,16 +330,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			string colorName = firstEntry.Item1 != null ? firstEntry.Item3 : "";
 			string nailLabel = string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}";
 			nailPrefabObject.name = $"[An-Labo]{nailLabel}";
-			Undo.RegisterCreatedObjectUndo(nailPrefabObject, "Nail Setup");
-
-			string prefix = this.getPrefabPrefix(ctx);
-			if (!string.IsNullOrEmpty(prefix)) {
-				foreach (Transform child in nailPrefabObject.transform) {
-					child.name = child.name.Replace(prefix, "");
-				}
-			}
-
-			ctx.NailPrefabObject = nailPrefabObject;
+			return nailPrefabObject;
 		}
 
 		// AvatarVariationData.BlendShapeSyncSources を解決し SMR とパスのペアを返す.
@@ -396,12 +353,12 @@ namespace world.anlabo.mdnailtool.Editor {
 						.FirstOrDefault(t => string.Equals(t.name, sourceName, System.StringComparison.OrdinalIgnoreCase));
 				}
 				if (sourceTransform == null) {
-					ToolConsole.Warn("NailSetup", $"{LanguageManager.S("warn.blendshape_sync_source_not_found") ?? "BlendShape sync source mesh not found"}: '{sourcePath}'{BuildDiagnosticInfo()}");
+					ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShape同期元のメッシュが見つかりません" : "BlendShape sync source mesh not found")}: '{sourcePath}'{BuildDiagnosticInfo()}");
 					continue;
 				}
 				SkinnedMeshRenderer? sourceSmr = sourceTransform.GetComponent<SkinnedMeshRenderer>();
 				if (sourceSmr == null || sourceSmr.sharedMesh == null) {
-					ToolConsole.Warn("NailSetup", $"{LanguageManager.S("warn.blendshape_sync_source_no_mesh") ?? "BlendShape sync source has no mesh data"}: '{sourcePath}'{BuildDiagnosticInfo()}");
+					ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShape同期元にメッシュデータがありません" : "BlendShape sync source has no mesh data")}: '{sourcePath}'{BuildDiagnosticInfo()}");
 					continue;
 				}
 				resolvedSourceSmrs.Add((sourceSmr, sourcePath));
@@ -416,7 +373,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					.FirstOrDefault();
 				if (fallbackCandidate != null) {
 					resolvedSourceSmrs.Add((fallbackCandidate, fallbackCandidate.gameObject.name));
-					ToolConsole.Log(string.Format(LanguageManager.S("info.blendshape_sync_source_fallback") ?? "BlendShapeSyncSource fallback: using '{0}'", fallbackCandidate.gameObject.name));
+					ToolConsole.Log($"{(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShapeSyncSource フォールバック: '{fallbackCandidate.gameObject.name}' を使用します" : $"BlendShapeSyncSource fallback: using '{fallbackCandidate.gameObject.name}'")}");
 				}
 			}
 
@@ -442,7 +399,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					bakeBasePath,
 					this.AvatarVariationData.BlendShapeInitialWeights);
 			} catch (Exception e) {
-				ToolConsole.Warn("NailSetup", $"{LanguageManager.S("warn.blendshape_bake_failed") ?? "Failed to bake BlendShapes"}: {e.Message}{BuildDiagnosticInfo()}");
+				ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? "BlendShapeのベイクに失敗しました" : "Failed to bake BlendShapes")}: {e.Message}{BuildDiagnosticInfo()}");
 			}
 		}
 
@@ -557,16 +514,15 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		// Process Phase 11a: Modular Avatar 経路で配置 + Wrapper / Combine / MA コンポ群を構成.
-		private void SetupForModularAvatar(ProcessContext ctx) {
+		private void SetupForModularAvatar(
+			GameObject nailPrefabObject,
+			Dictionary<string, Transform?> targetBoneDictionary,
+			Transform?[] handsNailObjects,
+			Transform?[] leftFootNailObjects,
+			Transform?[] rightFootNailObjects,
+			List<(SkinnedMeshRenderer sourceSmr, string sourcePath)> resolvedSourceSmrs,
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections) {
 #if MD_NAIL_FOR_MA
-				GameObject nailPrefabObject = ctx.NailPrefabObject;
-				Dictionary<string, Transform?> targetBoneDictionary = ctx.TargetBoneDictionary;
-				Transform?[] handsNailObjects = ctx.HandsNailObjects;
-				Transform?[] leftFootNailObjects = ctx.LeftFootNailObjects;
-				Transform?[] rightFootNailObjects = ctx.RightFootNailObjects;
-				List<(SkinnedMeshRenderer sourceSmr, string sourcePath)> resolvedSourceSmrs = ctx.ResolvedSourceSmrs;
-				Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections = ctx.Corrections;
 				string variationName = this.AvatarVariationData.VariationName;
 				string handWrapperName = $"HandNail_{variationName}";
 				string footWrapperName = $"FootNail_{variationName}";
@@ -659,9 +615,11 @@ namespace world.anlabo.mdnailtool.Editor {
 							{
 								if (!string.IsNullOrEmpty(variant.NailPrefabGUID))
 								{
-									string msg = string.Format(LanguageManager.S("warn.variant_path_not_found") ?? "Variant '{0}': path not found for GUID={1}", variant.Name, variant.NailPrefabGUID);
-								msg += BuildDiagnosticInfo(includeFolder: true);
-									ToolConsole.Warn("NailSetup", msg);
+									string msg = LanguageManager.CurrentLanguageData.language == "ja"
+									? $"Variant '{variant.Name}': GUID={variant.NailPrefabGUID} のパスが見つかりません"
+									: $"Variant '{variant.Name}': path not found for GUID={variant.NailPrefabGUID}";
+									msg += BuildDiagnosticInfo(includeFolder: true);
+									ToolConsole.Log($"[Warning] {msg}");
 									this.Warnings.Add(msg);
 								}
 								continue;
@@ -678,14 +636,16 @@ namespace world.anlabo.mdnailtool.Editor {
 								// 認識失敗時の詳細診断 (File.Exists / meta / GUID 整合)
 								bool fileExists = File.Exists(Path.GetFullPath(variantPath));
 								bool metaExists = File.Exists(Path.GetFullPath(variantPath + ".meta"));
-								string guidFromAdb = MDNailToolAssetLoader.AssetPathToGuid(variantPath);
-								string pathFromAdb = MDNailToolAssetLoader.ResolveGuidToPath(variant.NailPrefabGUID) ?? "";
+								string guidFromAdb = AssetDatabase.AssetPathToGUID(variantPath);
+								string pathFromAdb = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
 								string diag = $"[NailDiag] variant='{variant.Name}' GUID={variant.NailPrefabGUID} path={variantPath} fileExists={fileExists} metaExists={metaExists} AssetPathToGUID(path)={guidFromAdb} GUIDToAssetPath(guid)={pathFromAdb} guidMatch={string.Equals(guidFromAdb, variant.NailPrefabGUID, StringComparison.OrdinalIgnoreCase)}";
 								ToolConsole.Log(diag);
 
-								string msg = string.Format(LanguageManager.S("warn.variant_prefab_load_failed") ?? "Variant '{0}': failed to load prefab (path={1})", variant.Name, variantPath);
+								string msg = LanguageManager.CurrentLanguageData.language == "ja"
+								? $"Variant '{variant.Name}': プレハブの読み込みに失敗しました (path={variantPath})"
+								: $"Variant '{variant.Name}': failed to load prefab (path={variantPath})";
 								msg += BuildDiagnosticInfo(includeFolder: true);
-								ToolConsole.Warn("NailSetup", msg);
+								ToolConsole.Log($"[Warning] {msg}");
 								this.Warnings.Add(msg);
 								continue;
 							}
@@ -1211,11 +1171,11 @@ namespace world.anlabo.mdnailtool.Editor {
 									.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
 									.FirstOrDefault()?.transform;
 								if (srcSmrTransform != null) {
-									ToolConsole.Log(string.Format(LanguageManager.S("info.blendshape_sync_using_fallback") ?? "BlendShapeSync: '{0}' not found, using fallback '{1}'", variant.SyncSourceSmrName, srcSmrTransform.name));
+									ToolConsole.Log($"{(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShapeSync: '{variant.SyncSourceSmrName}' が見つからないため、フォールバック '{srcSmrTransform.name}' を使用します" : $"BlendShapeSync: '{variant.SyncSourceSmrName}' not found, using fallback '{srcSmrTransform.name}'")}");
 
 								}
 							}
-							if (srcSmrTransform == null) { ToolConsole.Warn("NailSetup", string.Format(LanguageManager.S("warn.blendshape_sync_source_missing") ?? "BlendShape sync source mesh '{0}' not found on avatar", variant.SyncSourceSmrName) + BuildDiagnosticInfo()); continue; }
+							if (srcSmrTransform == null) { ToolConsole.Log($"[Warning] {(LanguageManager.CurrentLanguageData.language == "ja" ? $"BlendShape同期元のメッシュ '{variant.SyncSourceSmrName}' がアバターに見つかりません" : $"BlendShape sync source mesh '{variant.SyncSourceSmrName}' not found on avatar")}{BuildDiagnosticInfo()}"); continue; }
 
 							if (!string.IsNullOrEmpty(variant.LeftBlendShapeName) && !string.IsNullOrEmpty(variant.RightBlendShapeName))
 							{
@@ -1282,25 +1242,24 @@ namespace world.anlabo.mdnailtool.Editor {
 					this.SetupExpressionMenu(nailPrefabObject);
 #else
 				Undo.RevertAllInCurrentGroup();
-				throw new NailToolUserException("NailSetup", "The setup for ModularAvatar cannot be executed in environments where ModularAvatar is not installed.");
+				throw new InvalidOperationException("The setup for ModularAvatar cannot be executed in environments where ModularAvatar is not installed.");
 #endif
 		}
 
-		// Process Phase 11b: Modular Avatar 非使用時の直接アタッチ経路. ターゲットボーンに親付け後 prefab 本体を破棄.
-		private void SetupDirect(ProcessContext ctx) {
-				GameObject nailPrefabObject = ctx.NailPrefabObject;
-				Dictionary<string, Transform?> targetBoneDictionary = ctx.TargetBoneDictionary;
-				Transform?[] handsNailObjects = ctx.HandsNailObjects;
-				Transform?[] leftFootNailObjects = ctx.LeftFootNailObjects;
-				Transform?[] rightFootNailObjects = ctx.RightFootNailObjects;
-				Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections = ctx.Corrections;
+		private void SetupDirect(
+			GameObject nailPrefabObject,
+			Dictionary<string, Transform?> targetBoneDictionary,
+			Transform?[] handsNailObjects,
+			Transform?[] leftFootNailObjects,
+			Transform?[] rightFootNailObjects,
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections) {
 				int index = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
 				foreach (Transform? nailObject in handsNailObjects) {
 					index++;
 					if (nailObject == null) continue;
 					Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 					if (target == null) {
-						ToolConsole.Error("NailSetup", $"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
+						ToolConsole.Log($"[Error] Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
 						continue;
 					}
 
@@ -1321,7 +1280,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject == null) continue;
 						Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 						if (target == null) {
-							ToolConsole.Error("NailSetup", $"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
+							ToolConsole.Log($"[Error] Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
 							continue;
 						}
 
@@ -1340,7 +1299,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject == null) continue;
 						Transform? target = targetBoneDictionary[MDNailToolDefines.TARGET_BONE_NAME_LIST[index]];
 						if (target == null) {
-							ToolConsole.Error("NailSetup", $"Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
+							ToolConsole.Log($"[Error] Not found target bone : {MDNailToolDefines.TARGET_BONE_NAME_LIST[index]}");
 							continue;
 						}
 
@@ -1403,12 +1362,12 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 
-		private string getPrefabPrefix(ProcessContext ctx) {
+		private string getPrefabPrefix() {
 			Regex regex = new(@"(?<prefix>\[.+\]).+");
-			Match match = regex.Match(ctx.NailPrefab.name);
+			Match match = regex.Match(this.NailPrefab.name);
 			if (match.Success) return match.Groups["prefix"].Value;
 
-			ToolConsole.Error("NailSetup", $"Failed to obtain nail prefix. ({ctx.NailPrefab?.name ?? "(null)"})");
+			ToolConsole.Log($"[Error] Failed to obtain nail prefix. ({this.NailPrefab?.name ?? "(null)"})");
 			return "";
 		}
 
@@ -1514,7 +1473,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								return (name, targetBone);
 							}
 
-							ToolConsole.Warn("NailSetup", $"Not found bone : {handFingerBonePath}");
+							ToolConsole.Log($"[Warning] Not found bone : {handFingerBonePath}");
 						}
 
 						return (name, searchRoot.FindRecursive(boneNameDictionary[name]));
@@ -1528,7 +1487,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							return (name, targetBone);
 						}
 
-						ToolConsole.Warn("NailSetup", $"Not found bone : {footFingerBonePath}");
+						ToolConsole.Log($"[Warning] Not found bone : {footFingerBonePath}");
 					}
 
 					// 足の指のボーン名から、どちらのつま先かを求める
@@ -1539,7 +1498,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					string footBoneName = toeBoneName switch {
 						MDNailToolDefines.LEFT_TOES => MDNailToolDefines.LEFT_FOOT,
 						MDNailToolDefines.RIGHT_TOES => MDNailToolDefines.RIGHT_FOOT,
-						_ => throw new NailToolDeveloperException("NailSetup", $"Unknown name: {name}")
+						_ => throw new ArgumentOutOfRangeException(nameof(name), name, null)
 					};
 
 					string? targetBoneName = boneNameDictionary.GetValueOrDefault(toeBoneName);
@@ -1860,7 +1819,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				foreach (AvatarPrefab ap in this.AvatarVariationData.AvatarPrefabs)
 				{
 					if (string.IsNullOrEmpty(ap.PrefabGUID)) continue;
-					string? path = MDNailToolAssetLoader.ResolveGuidToPath(ap.PrefabGUID);
+					string path = AssetDatabase.GUIDToAssetPath(ap.PrefabGUID);
 					if (!string.IsNullOrEmpty(path))
 						return Path.GetDirectoryName(path)?.Replace("\\", "/");
 				}
@@ -1870,7 +1829,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				foreach (AvatarFbx fbx in this.AvatarVariationData.AvatarFbxs)
 				{
 					if (string.IsNullOrEmpty(fbx.FbxGUID)) continue;
-					string? path = MDNailToolAssetLoader.ResolveGuidToPath(fbx.FbxGUID);
+					string path = AssetDatabase.GUIDToAssetPath(fbx.FbxGUID);
 					if (!string.IsNullOrEmpty(path))
 						return Path.GetDirectoryName(path)?.Replace("\\", "/");
 				}
@@ -1882,12 +1841,12 @@ namespace world.anlabo.mdnailtool.Editor {
 		private string? ResolveVariantPath(AvatarBlendShapeVariant variant)
 		{
 			// Step 1: GUID検索
-			string? variantPath = MDNailToolAssetLoader.ResolveGuidToPath(variant.NailPrefabGUID);
+			string variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
 			if (string.IsNullOrEmpty(variantPath) || NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 			{
 				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
 				AssetDatabase.Refresh();
-				variantPath = MDNailToolAssetLoader.ResolveGuidToPath(variant.NailPrefabGUID);
+				variantPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
 			}
 			if (!string.IsNullOrEmpty(variantPath) && NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 			{
@@ -1964,23 +1923,107 @@ namespace world.anlabo.mdnailtool.Editor {
 			return null;
 		}
 
-		private DiagContext ToDiagContext() => new DiagContext
+		/// <summary>
+		/// デバッグ用の診断情報を生成する。
+		/// バージョン、着用設定、アバター情報を含む。
+		/// </summary>
+		private string BuildDiagnosticInfo(bool includeFolder = false)
 		{
-			Avatar = this.Avatar,
-			AvatarName = this.AvatarName,
-			Variation = this.AvatarVariationData,
-			NailShapeName = this.NailShapeName,
-			NailPrefab = this.NailPrefab,
-			ForModularAvatar = this.ForModularAvatar,
-			BakeBlendShapes = this.BakeBlendShapes,
-			SyncBlendShapesWithMA = this.SyncBlendShapesWithMA,
-			ArmatureScaleCompensation = this.ArmatureScaleCompensation,
-			UseFootNail = this.UseFootNail,
-			GenerateMaterial = this.GenerateMaterial,
-		};
+			bool isJa = LanguageManager.CurrentLanguageData.language == "ja";
+			var sb = new System.Text.StringBuilder();
+			sb.AppendLine();
+			sb.AppendLine(isJa ? "--- 診断情報 ---" : "--- Diagnostic Info ---");
 
-		private string BuildDiagnosticInfo(bool includeFolder = false) =>
-			NailToolDiagnosticReport.Build(ToDiagContext(), includeFolder);
+			try { sb.AppendLine($"NailTool Version: {MDNailToolDefines.Version}"); }
+			catch { sb.AppendLine(isJa ? "NailTool Version: (取得失敗)" : "NailTool Version: (unavailable)"); }
 
+			sb.AppendLine($"ModularAvatar: {GetModularAvatarVersion()}");
+
+			sb.AppendLine($"Avatar: {this.Avatar?.gameObject?.name ?? "(null)"}");
+			sb.AppendLine($"Avatar Root Scale: {this.Avatar?.transform?.localScale.ToString() ?? "(null)"}");
+			sb.AppendLine($"AvatarName: {this.AvatarName ?? (isJa ? "(未設定)" : "(not set)")}");
+			sb.AppendLine($"Variation: {this.AvatarVariationData?.VariationName ?? "(null)"}");
+			sb.AppendLine($"NailShape: {this.NailShapeName}");
+			sb.AppendLine($"NailPrefab: {this.NailPrefab?.name ?? "(null)"}");
+			sb.AppendLine($"ForModularAvatar: {this.ForModularAvatar}");
+			sb.AppendLine($"BakeBlendShapes: {this.BakeBlendShapes}");
+			sb.AppendLine($"SyncBlendShapesWithMA: {this.SyncBlendShapesWithMA}");
+			sb.AppendLine($"ArmatureScaleCompensation: {this.ArmatureScaleCompensation}");
+			sb.AppendLine($"UseFootNail: {this.UseFootNail}");
+			sb.AppendLine($"GenerateMaterial: {this.GenerateMaterial}");
+
+			if (includeFolder)
+			{
+				string listing = ListPrefabFolderContents();
+				if (!string.IsNullOrEmpty(listing))
+				{
+					sb.AppendLine(isJa ? "--- Resourceフォルダ内容 ---" : "--- Resource Folder Contents ---");
+					sb.Append(listing);
+				}
+			}
+
+			return sb.ToString();
+		}
+
+		private static string GetModularAvatarVersion()
+		{
+			try
+			{
+				string packageJsonPath = "Packages/nadena.dev.modular-avatar/package.json";
+				TextAsset? packageJson = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(packageJsonPath);
+				if (packageJson != null)
+				{
+					var json = Newtonsoft.Json.Linq.JObject.Parse(packageJson.text);
+					return json["version"]?.ToString() ?? "unknown";
+				}
+			}
+			catch { /* ignore */ }
+
+			return "not installed";
+		}
+
+		/// <summary>
+		/// Nail/Prefab フォルダ内の .prefab ファイル一覧を返す（デバッグ用）。
+		/// </summary>
+		private static string ListPrefabFolderContents()
+		{
+			string[] searchRoots = {
+				"Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab",
+				"Packages/world.anlabo.mdnailtool/Resource/Nail/Prefab"
+			};
+
+			var sb = new System.Text.StringBuilder();
+			foreach (string root in searchRoots)
+			{
+				string fullRoot = Path.GetFullPath(root);
+				if (!Directory.Exists(fullRoot)) continue;
+
+				sb.AppendLine($"[{root}]");
+				try
+				{
+					ListPrefabFolderRecursive(fullRoot, fullRoot, sb, 1);
+				}
+				catch (Exception e)
+				{
+					sb.AppendLine($"  (読み取りエラー: {e.Message})");
+				}
+			}
+			return sb.ToString();
+		}
+
+		private static void ListPrefabFolderRecursive(string current, string root, System.Text.StringBuilder sb, int depth)
+		{
+			string indent = new string(' ', depth * 2);
+			foreach (string dir in Directory.GetDirectories(current))
+			{
+				string dirName = Path.GetFileName(dir);
+				sb.AppendLine($"{indent}{dirName}/");
+				ListPrefabFolderRecursive(dir, root, sb, depth + 1);
+			}
+			foreach (string prefab in Directory.GetFiles(current, "*.prefab"))
+			{
+				sb.AppendLine($"{indent}{Path.GetFileName(prefab)}");
+			}
+		}
 	}
 }

@@ -53,12 +53,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this.RequestScenePreviewUpdate();
 			}
 
+			// Selection.activeGameObject からアバターを検出
 			VRCAvatarDescriptor? descriptor = null;
 			if (Selection.activeGameObject != null)
 			{
 				descriptor = Selection.activeGameObject.GetComponentInParent<VRCAvatarDescriptor>();
 			}
 
+			// 見つからなかった場合、Hierarchy全体をスキャンして1体だけなら自動設定
 			if (descriptor == null)
 			{
 				VRCAvatarDescriptor[] allDescriptors = Object.FindObjectsByType<VRCAvatarDescriptor>(
@@ -101,6 +103,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			string[] toeTextIds = { "window.thumb", "window.index_finger", "window.middle_finger", "window.ring_finger", "window.little_finger" };
 
+			// ---- 左足ヘッダー行（ハンドネイルと同じ構造） ----
 			var leftHeader = new VisualElement();
 			leftHeader.AddToClassList("mdn-finger-header");
 
@@ -140,6 +143,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			footSelects.Add(leftHeader);
 
+			// ---- 左足 5本 ----
 			string[] leftToes = { "left-foot-thumb", "left-foot-index", "left-foot-middle", "left-foot-ring", "left-foot-little" };
 			for (int i = 0; i < 5; i++)
 			{
@@ -148,6 +152,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				footSelects.Add(dd);
 			}
 
+			// ---- 右足区切り行 ----
 			var divider = new VisualElement();
 			divider.AddToClassList("mdn-hand-divider");
 
@@ -162,6 +167,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			footSelects.Add(divider);
 
+			// ---- 右足 5本 ----
 			string[] rightToes = { "right-foot-thumb", "right-foot-index", "right-foot-middle", "right-foot-ring", "right-foot-little" };
 			for (int i = 0; i < 5; i++)
 			{
@@ -409,6 +415,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			this.HideErrorBanner();
 
+			// ---- Validation ----
 			VRCAvatarDescriptor? avatar = this._avatarObjectField!.value as VRCAvatarDescriptor;
 			if (avatar == null)
 			{
@@ -456,6 +463,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				NailSetupProcessor.CreateBackup(avatar.gameObject);
 			}
 
+			// ---- Process ----
 			AssetDatabase.StartAssetEditing();
 			try
 			{

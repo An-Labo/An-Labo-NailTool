@@ -51,7 +51,7 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
                 var matchResult = matching.Match();
 
                 if (matchResult == null) {
-                    ToolConsole.Warn("Installer", $"アバターに対応する設定が見つかりません: {descriptor.gameObject.name}");
+                    ToolConsole.Log($"[Warning] [Installer] アバターに対応する設定が見つかりません: {descriptor.gameObject.name}");
                     return;
                 }
 
@@ -60,7 +60,7 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
                 GameObject? avatarNailPrefab = FindAvatarSpecificPrefab(avatar, variation, installer.nailShape);
 
                 if (avatarNailPrefab == null) {
-                    ToolConsole.Error("Installer", $"アバター '{avatar.AvatarName}' ({variation.VariationName}) 用のネイルPrefabが見つかりませんでした。");
+                    ToolConsole.Log($"[Error] [Installer] アバター '{avatar.AvatarName}' ({variation.VariationName}) 用のネイルPrefabが見つかりませんでした。");
                     return;
                 }
 
@@ -86,12 +86,12 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
                 };
 
                 processor.Process();
-                ToolConsole.Info("Installer", $"Auto Setup: {installer.designName} on {descriptor.gameObject.name}");
+                ToolConsole.Log($"[Installer] Auto Setup: {installer.designName} on {descriptor.gameObject.name}");
 
                 UnityEngine.Object.DestroyImmediate(installer.gameObject);
 
             } catch (Exception e) {
-                ToolConsole.Error("Installer", $"Setup Failed: {e.Message}\n{e.StackTrace}");
+                ToolConsole.Log($"[Error] [Installer] Setup Failed: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -110,27 +110,27 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
             foreach (string query in searchQueries) {
                 if(string.IsNullOrEmpty(query)) continue;
 
-                string[] guids = MDNailToolAssetLoader.FindAssetGuids($"t:Prefab {query}", _nailPrefabSearchScope);
+                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}", _nailPrefabSearchScope);
 
                 foreach (string guid in guids) {
-                    string? path = MDNailToolAssetLoader.ResolveGuidToPath(guid);
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
 
                     string fileName = Path.GetFileName(path);
 
                     if (fileName.Contains($"[{shape}]") && fileName.Contains(query, StringComparison.OrdinalIgnoreCase)) {
-                        return MDNailToolAssetLoader.LoadAssetSafe<GameObject>(path);
+                        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     }
                 }
             }
 
             foreach (string query in searchQueries) {
                 if(string.IsNullOrEmpty(query)) continue;
-                string[] guids = MDNailToolAssetLoader.FindAssetGuids($"t:Prefab {query}", _nailPrefabSearchScope);
+                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}", _nailPrefabSearchScope);
                 foreach (string guid in guids) {
-                    string? path = MDNailToolAssetLoader.ResolveGuidToPath(guid);
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
 
                     if (path.Contains(query, StringComparison.OrdinalIgnoreCase)) {
-                        return MDNailToolAssetLoader.LoadAssetSafe<GameObject>(path);
+                        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     }
                 }
             }
