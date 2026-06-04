@@ -324,8 +324,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
 			if (variation == null) return null;
 
-			if (variation.NailNodes != null && variation.NailNodes.Length > 0)
-				return NailPrefabBuilder.BuildFromNodes(variation.NailNodes, variantName);
+			// 一旦ノード方式を無効化し従来prefabルートに戻す (NailNodes不整合調査中)
+			// if (variation.NailNodes != null && variation.NailNodes.Length > 0) return NailPrefabBuilder.BuildFromNodes(variation.NailNodes, variantName);
 
 			string guid = variation.NailPrefabGUID;
 			if (string.IsNullOrEmpty(guid)) return null;

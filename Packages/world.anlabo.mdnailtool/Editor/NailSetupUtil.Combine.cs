@@ -354,7 +354,17 @@ namespace world.anlabo.mdnailtool.Editor
 			combinedMesh.RecalculateBounds();
 
 			string assetPath = $"{saveBasePath}/{zoneName}.asset";
-			AssetDatabase.CreateAsset(combinedMesh, assetPath);
+			Mesh? existingMesh = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
+			if (existingMesh != null)
+			{
+				// 同ポーズ再着用時、新規作成だと前回ネイルの参照が切れる。中身更新でIDを保ち外れを防ぐ
+				EditorUtility.CopySerialized(combinedMesh, existingMesh);
+				combinedMesh = existingMesh;
+			}
+			else
+			{
+				AssetDatabase.CreateAsset(combinedMesh, assetPath);
+			}
 			AssetDatabase.SaveAssets();
 
 			SkinnedMeshRenderer combinedSmr = combinedGo.AddComponent<SkinnedMeshRenderer>();
