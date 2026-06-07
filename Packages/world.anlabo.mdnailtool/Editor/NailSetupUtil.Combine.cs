@@ -58,6 +58,7 @@ namespace world.anlabo.mdnailtool.Editor
 			var allUVs      = new List<Vector2>();
 			var allWeights  = new List<BoneWeight>();
 			int[] vertexOffsets = new int[validPairs.Length];
+			Mesh[] cachedMeshes = new Mesh[validPairs.Length];
 			int vertexOffset = 0;
 
 			Matrix4x4 combinedGoW2L = combinedGo.transform.worldToLocalMatrix;
@@ -66,6 +67,7 @@ namespace world.anlabo.mdnailtool.Editor
 			{
 				vertexOffsets[si] = vertexOffset;
 				Mesh mesh = validPairs[si].smr.sharedMesh;
+				cachedMeshes[si] = mesh;
 
 				Mesh bakedMesh = new Mesh();
 				validPairs[si].smr.BakeMesh(bakedMesh);
@@ -355,10 +357,17 @@ namespace world.anlabo.mdnailtool.Editor
 
 			string assetPath = $"{saveBasePath}/{zoneName}.asset";
 			Mesh? existingMesh = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
-			if (existingMesh != null)
+			// 既存assetのインスタンスIDを保持し、再着用時に他オブジェクトからの参照を維持する
+			// 頂点数が変わると CopySerialized が旧頂点を残し点線混在する (issue #495). 一致時のみ ID 保持コピー.
+			if (existingMesh != null && existingMesh.vertexCount == combinedMesh.vertexCount)
 			{
-				// 同ポーズ再着用時、新規作成だと前回ネイルの参照が切れる。中身更新でIDを保ち外れを防ぐ
 				EditorUtility.CopySerialized(combinedMesh, existingMesh);
+				combinedMesh = existingMesh;
+			}
+			else if (existingMesh != null)
+			{
+				// 頂点数変更時. DeleteAsset は ID が変わり OFF 複数着用で Missing 化するため全データを手で書き写し ID を保持する (issue #495).
+				CopyMeshContents(combinedMesh, existingMesh);
 				combinedMesh = existingMesh;
 			}
 			else
@@ -382,6 +391,40 @@ namespace world.anlabo.mdnailtool.Editor
 				UnityEngine.Object.DestroyImmediate(t.gameObject);
 
 			return combinedGo;
+		}
+
+		// src の全データを dst へ書き写す. asset の ID を保持したまま頂点数を変えるために使う (issue #495).
+		private static void CopyMeshContents(Mesh src, Mesh dst)
+		{
+			dst.Clear();
+			dst.indexFormat = src.indexFormat;
+			dst.vertices    = src.vertices;
+			dst.normals     = src.normals;
+			dst.tangents    = src.tangents;
+			dst.uv          = src.uv;
+			dst.boneWeights = src.boneWeights;
+			dst.bindposes   = src.bindposes;
+
+			dst.subMeshCount = src.subMeshCount;
+			for (int i = 0; i < src.subMeshCount; i++)
+				dst.SetTriangles(src.GetTriangles(i), i);
+
+			for (int bsIdx = 0; bsIdx < src.blendShapeCount; bsIdx++)
+			{
+				string bsName = src.GetBlendShapeName(bsIdx);
+				int frames = src.GetBlendShapeFrameCount(bsIdx);
+				for (int f = 0; f < frames; f++)
+				{
+					var dv = new Vector3[src.vertexCount];
+					var dn = new Vector3[src.vertexCount];
+					var dt = new Vector3[src.vertexCount];
+					float w = src.GetBlendShapeFrameWeight(bsIdx, f);
+					src.GetBlendShapeFrameVertices(bsIdx, f, dv, dn, dt);
+					dst.AddBlendShapeFrame(bsName, w, dv, dn, dt);
+				}
+			}
+
+			dst.RecalculateBounds();
 		}
 
 		// 三角形上の最近傍点を計算
