@@ -545,7 +545,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void PopulateAdditionalObjectSourceDropdown()
 		{
-			ToolConsole.Log("PopulateAdditionalObjectSourceDropdown 開始");
 			if (this._additionalObjectSourceDropdown == null) return;
 
 			var choices = new List<string>();
@@ -565,14 +564,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 
 			this._additionalObjectSourceDropdown.choices = choices;
-			ToolConsole.Log($"  choices.Count={choices.Count}");
 
 			// per-finger ドロップダウンにも同じ選択肢を設定
 			this.PopulatePerFingerAdditionalObjectDropdowns(choices);
 
 			// 保存された選択を復元
 			string? saved = GlobalSetting.AdditionalObjectSourceDesign;
-			ToolConsole.Log($"  saved={saved ?? "(null)"}");
 			if (!string.IsNullOrEmpty(saved) && choices.Contains(saved!))
 			{
 				this._additionalObjectSourceDropdown.SetValueWithoutNotify(saved!);
@@ -656,7 +653,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void SyncPerFingerAdditionalObject(string? displayValue)
 		{
-			ToolConsole.Log($"SyncPerFingerAdditionalObject: displayValue={displayValue ?? "(null)"}");
 			if (this._nailDesignDropDowns == null) return;
 
 			var registry = DBAdditionalAssets.Load();
@@ -686,18 +682,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private IEnumerable<Transform>?[]? BuildPerFingerAdditionalObjects(bool isPreview)
 		{
-			ToolConsole.Log($"BuildPerFingerAdditionalObjects: isPreview={isPreview}");
 			if (this._nailDesignDropDowns == null)
 			{
-				ToolConsole.Log("  _nailDesignDropDowns == null → return null");
 				return null;
 			}
 
 			string? noneLabel = this._additionalObjectSourceDropdown?.choices.FirstOrDefault();
 			string? globalValue = this._additionalObjectSourceDropdown?.value;
 			string? globalSource = (globalValue == noneLabel) ? null : globalValue;
-
-			ToolConsole.Log($"  globalSource={globalSource ?? "(null)"}, dropdownValue={globalValue ?? "(null)"}");
 
 			// 指ごとのソースを決定（MDNailSelectionBuilder経由）
 			string?[] sources = MDNailSelectionBuilder.BuildAdditionalObjectSources(
@@ -719,7 +711,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				string? registryName = sources[i];
 				if (string.IsNullOrEmpty(registryName) || registryName == noneLabel)
 				{
-					ToolConsole.Log($"  finger[{i}]: registryName is empty/none → skip");
 					continue;
 				}
 
@@ -738,7 +729,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 						ToolConsole.Warn("Window", $"finger[{i}]: AdditionalObject could not load: {objectPath} (registryName={registryName})");
 						continue;
 					}
-					ToolConsole.Log($"  finger[{i}]: instantiated {obj.name} from {objectPath}");
 					transforms.Add(Object.Instantiate(obj, Vector3.zero, Quaternion.identity).transform);
 				}
 
@@ -749,7 +739,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				}
 			}
 
-			ToolConsole.Log($"  → result: anyNonNull={anyNonNull}");
 			return anyNonNull ? result : null;
 		}
 

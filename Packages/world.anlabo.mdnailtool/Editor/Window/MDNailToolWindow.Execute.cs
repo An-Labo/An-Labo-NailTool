@@ -402,7 +402,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnExecute()
 		{
-			ToolConsole.Log("=== OnExecute 開始 ===");
 			this.CleanupScenePreview();
 			this._nailPreviewController?.CleanupAdditionalObjects();
 
@@ -457,29 +456,25 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				return;
 			}
 
-			// StartAssetEditing 外で呼ぶ (バッチ中はシーン保存が書込失敗するため)
-			if (this._backup!.value)
-			{
-				NailSetupProcessor.CreateBackup(avatar.gameObject);
-			}
-
 			// ---- Process ----
-			AssetDatabase.StartAssetEditing();
+			bool assetEditingStarted = false;
 			try
 			{
+				// StartAssetEditing 外で呼ぶ (バッチ中はシーン保存が書込失敗するため)
+				if (this._backup!.value)
+				{
+					NailSetupProcessor.CreateBackup(avatar.gameObject);
+				}
+
+				AssetDatabase.StartAssetEditing();
+				assetEditingStarted = true;
+
 				(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
 
 				Mesh?[]? selectedMeshes = this._nailShapeDropDown!.GetSelectedShapeMeshes();
 				Mesh?[]? overrideMesh = isHandActive ? selectedMeshes : new Mesh?[10];
 
 				Material? directMaterial = this.GetDirectMaterial();
-
-				// BlendShapeVariant ドロップダウンの状態をログ
-				{
-					var bsPopup = this._avatarDropDowns?.BlendShapeVariantPopup;
-					ToolConsole.Log($"  BlendShapeVariantPopup: null?={bsPopup == null}, index={bsPopup?.index ?? -1}, value={bsPopup?.value ?? "(null)"}, enabled={bsPopup?.enabledSelf}, choices=[{string.Join(", ", bsPopup?.choices ?? new List<string>())}]");
-					ToolConsole.Log($"  MA={this._forModularAvatar?.value}, BakeBS={this._bakeBlendShapes?.value}");
-				}
 
 				NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName)
 				{
@@ -512,14 +507,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					PerFingerAdditionalObjects = this.BuildPerFingerAdditionalObjects(false),
 				};
 
-				// ToolConsole: PerFingerAdditionalObjects の状態をログ
-				ToolConsole.Log($"  PerFingerAdditionalObjects null? {processor.PerFingerAdditionalObjects == null}");
-				if (processor.PerFingerAdditionalObjects != null)
-				{
-					for (int i = 0; i < processor.PerFingerAdditionalObjects.Length; i++)
-						ToolConsole.Log($"    finger[{i}]: {(processor.PerFingerAdditionalObjects[i] != null ? "あり" : "null")}");
-				}
-
 				// AvatarEntityをprocessorにセット（shop.jsonのblendShapeVariantsを参照するため）
 				{
 					using DBShop dbShop = new();
@@ -535,9 +522,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					}
 				}
 
-				ToolConsole.Log("  processor.Process() 開始");
 				processor.Process();
-				ToolConsole.Log("  processor.Process() 完了");
 
 				if (!isHandActive) this.RemoveHandNailObjects(avatar);
 				if (!isFootActive) this.RemoveFootNailObjects(avatar);
@@ -594,7 +579,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			finally
 			{
-				AssetDatabase.StopAssetEditing();
+				if (assetEditingStarted) AssetDatabase.StopAssetEditing();
 				AssetDatabase.Refresh();
 			}
 		}

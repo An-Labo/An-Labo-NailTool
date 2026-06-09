@@ -110,7 +110,6 @@ namespace world.anlabo.mdnailtool.Editor
 		public static void AttachAdditionalObjects(Transform?[] handsNailObjects, (INailProcessor, string, string)[] nailDesignAndVariationNames, string nailShapeName, bool isPreview,
 			IEnumerable<Transform>?[]? perFingerAdditionalObjects = null)
 		{
-			ToolConsole.Log($"AttachAdditionalObjects: perFinger null? {perFingerAdditionalObjects == null}, isPreview={isPreview}");
 			if (handsNailObjects.Length != 10)
 			{
 				throw new NailToolDeveloperException("NailSetup", $"Incorrect length of {nameof(handsNailObjects)} parameter : {handsNailObjects.Length}");
@@ -125,7 +124,6 @@ namespace world.anlabo.mdnailtool.Editor
 
 				if (transform == null)
 				{
-					ToolConsole.Log($"  index={index}: transform=null -> skip");
 					// 親付け先がない場合は Instantiate 済み孤児 GO を Destroy する (Scene 残留防止).
 					if (fingerObjects != null)
 					{
@@ -137,17 +135,12 @@ namespace world.anlabo.mdnailtool.Editor
 					continue;
 				}
 
-				ToolConsole.Log($"  index={index}: transform={transform.name}, fingerObjects null? {fingerObjects == null}");
-
 				if (fingerObjects != null)
 				{
-					int count = 0;
 					foreach (Transform additionalObject in fingerObjects)
 					{
 						additionalObject.SetParent(transform, false);
-						count++;
 					}
-					ToolConsole.Log($"  index={index}: attached {count} per-finger objects");
 				}
 				else
 				{
@@ -155,17 +148,13 @@ namespace world.anlabo.mdnailtool.Editor
 					(INailProcessor processor, string _, string colorName) = nailDesignAndVariationNames[index];
 					if (processor == null)
 					{
-						ToolConsole.Log($"  index={index}: processor=null -> skip");
 						continue;
 					}
 
-					int count = 0;
 					foreach (Transform additionalObject in processor.GetAdditionalObjects(colorName, nailShapeName, (MDNailToolDefines.TargetFinger)index, isPreview))
 					{
 						additionalObject.SetParent(transform, false);
-						count++;
 					}
-					ToolConsole.Log($"  index={index}: attached {count} fallback objects via processor");
 				}
 			}
 		}

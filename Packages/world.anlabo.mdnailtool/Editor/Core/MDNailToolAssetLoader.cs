@@ -149,29 +149,13 @@ namespace world.anlabo.mdnailtool.Editor
 		private static readonly Dictionary<string, string?> _caseResolveCache = new();
 		private static readonly HashSet<string> _warnedPaths = new();
 
-		private static bool? _isCaseSensitiveFS;
-
 		/// <summary>
-		/// 実行環境のファイルシステムが大小文字を区別するかを判定する。初回アクセス時にキャッシュする。
-		/// </summary>
-		private static bool IsCaseSensitiveFS
-		{
-			get
-			{
-				if (_isCaseSensitiveFS.HasValue) return _isCaseSensitiveFS.Value;
-				_isCaseSensitiveFS = !Directory.Exists("ASSETS");
-				return _isCaseSensitiveFS.Value;
-			}
-		}
-
-		/// <summary>
-		/// パスからアセットをロードする。ロード失敗時はファイル名の大小無視でフォールバック。
+		/// パスからアセットをロードする。ロード失敗時はパス全体の大小無視でフォールバック。
 		/// </summary>
 		internal static T? LoadByPathCaseInsensitive<T>(string assetPath) where T : Object
 		{
 			T? asset = LoadAssetSafe<T>(assetPath);
 			if (asset != null) return asset;
-			if (!IsCaseSensitiveFS) return null;
 
 			string? resolved = ResolveCaseInsensitivePath(assetPath);
 			if (resolved == null) return null;
@@ -184,7 +168,6 @@ namespace world.anlabo.mdnailtool.Editor
 		internal static bool FileExistsCaseInsensitive(string path)
 		{
 			if (File.Exists(path)) return true;
-			if (!IsCaseSensitiveFS) return false;
 			return ResolveCaseInsensitivePath(path) != null;
 		}
 
@@ -194,22 +177,7 @@ namespace world.anlabo.mdnailtool.Editor
 		internal static bool DirectoryExistsCaseInsensitive(string path)
 		{
 			if (Directory.Exists(path)) return true;
-			if (!IsCaseSensitiveFS) return false;
-			if (string.IsNullOrEmpty(path)) return false;
-			string normalized = path.TrimEnd('/', '\\').Replace('\\', '/');
-			int slash = normalized.LastIndexOf('/');
-			if (slash < 0) return false;
-
-			string parentDir = normalized.Substring(0, slash);
-			string dirName = normalized.Substring(slash + 1);
-			if (!Directory.Exists(parentDir)) return false;
-
-			foreach (string sub in Directory.EnumerateDirectories(parentDir))
-			{
-				if (string.Equals(Path.GetFileName(sub), dirName, StringComparison.OrdinalIgnoreCase))
-					return true;
-			}
-			return false;
+			return ResolveCaseInsensitiveDirectoryPath(path) != null;
 		}
 
 		private static string? ResolveCaseInsensitivePath(string path)
@@ -223,24 +191,50 @@ namespace world.anlabo.mdnailtool.Editor
 
 			string dir = normalized.Substring(0, slash);
 			string fileName = normalized.Substring(slash + 1);
-			if (!Directory.Exists(dir)) { _caseResolveCache[path] = null; return null; }
+			string? resolvedDir = ResolveCaseInsensitiveDirectoryPath(dir);
+			if (resolvedDir == null) { _caseResolveCache[path] = null; return null; }
 
-			foreach (string file in Directory.EnumerateFiles(dir))
+			foreach (string file in Directory.EnumerateFiles(resolvedDir))
 			{
 				string candidate = Path.GetFileName(file);
 				if (string.Equals(candidate, fileName, StringComparison.OrdinalIgnoreCase))
 				{
-					string result = $"{dir}/{candidate}";
+					string result = $"{resolvedDir}/{candidate}";
 					_caseResolveCache[path] = result;
-					if (_warnedPaths.Add(dir))
+					if (!string.Equals(result, normalized, StringComparison.Ordinal) && _warnedPaths.Add(normalized))
 					{
-						ToolConsole.Log($"[Warning] Case mismatch resolved in '{dir}' (e.g. '{fileName}' -> '{candidate}').");
+						ToolConsole.Log($"[Warning] Case mismatch resolved: '{normalized}' -> '{result}'.");
 					}
 					return result;
 				}
 			}
 			_caseResolveCache[path] = null;
 			return null;
+		}
+
+		private static string? ResolveCaseInsensitiveDirectoryPath(string path)
+		{
+			if (string.IsNullOrEmpty(path)) return null;
+			string normalized = path.TrimEnd('/', '\\').Replace('\\', '/');
+			if (string.IsNullOrEmpty(normalized)) return null;
+
+			string[] segments = normalized.Split('/');
+			string current = string.Empty;
+			foreach (string segment in segments)
+			{
+				if (string.IsNullOrEmpty(segment)) return null;
+				string searchDir = string.IsNullOrEmpty(current) ? "." : current;
+				if (!Directory.Exists(searchDir)) return null;
+
+				string? match = Directory.EnumerateDirectories(searchDir)
+					.FirstOrDefault(dir => string.Equals(Path.GetFileName(dir), segment, StringComparison.OrdinalIgnoreCase));
+				if (match == null) return null;
+
+				string matchedName = Path.GetFileName(match);
+				current = string.IsNullOrEmpty(current) ? matchedName : $"{current}/{matchedName}";
+			}
+
+			return current;
 		}
 
 		/// <summary>

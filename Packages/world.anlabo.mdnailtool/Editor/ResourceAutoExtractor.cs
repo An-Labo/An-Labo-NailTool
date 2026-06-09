@@ -85,7 +85,8 @@ namespace world.anlabo.mdnailtool.Editor {
             string? zipPath = GetZipRealPath();
             if (zipPath == null) return;
 
-            StartEssentialExtraction(MDNailToolDefines.Version);
+            EnsureEssentialsExtractedSync();
+            EditorApplication.delayCall += PreloadLegacyDesigns;
         }
 
         public static void EnsureEssentialsExtractedSync() {
@@ -386,7 +387,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
 
                 if (copiedFiles > 0) {
-                    AssetDatabase.Refresh(ImportAssetOptions.Default);
+                    AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                     FixTextureImportSettings(assetsDesignPath);
                 }
 
@@ -521,7 +522,7 @@ namespace world.anlabo.mdnailtool.Editor {
                 }
 
                 if (copiedFiles > 0) {
-                    AssetDatabase.Refresh(ImportAssetOptions.Default);
+                    AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                     FixTextureImportSettings(assetsPrefabPath);
                 }
 
