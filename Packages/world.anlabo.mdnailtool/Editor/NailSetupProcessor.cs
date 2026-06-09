@@ -505,7 +505,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		// 親ボーン scale 復元後の最終行列で、ネイルのワールド姿勢と見かけサイズを締め直す.
+		// 親ボーン scale 復元後の最終行列で、ネイルの見かけサイズだけ締め直す.
+		// 位置・回転は scale 復元後の親ボーンに追従させるため、ここでは再適用しない.
 		private static void ReapplyArmatureScaleCorrections(
 			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections)
 		{
@@ -517,7 +518,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (nail == null) continue;
 
 				var c = kv.Value;
-				nail.SetPositionAndRotation(c.position, c.rotation);
 				EnforceLossyScale(nail, c.desiredLossyScale);
 			}
 		}
