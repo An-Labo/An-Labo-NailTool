@@ -463,7 +463,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				// StartAssetEditing 外で呼ぶ (バッチ中はシーン保存が書込失敗するため)
 				if (this._backup!.value)
 				{
-					NailSetupProcessor.CreateBackup(avatar.gameObject);
+					try
+					{
+						NailSetupProcessor.CreateBackup(avatar.gameObject);
+					}
+					catch (Exception e)
+					{
+						ToolConsole.Warn("Backup", $"Backup creation failed. Continue setup without backup.\n{e}");
+					}
 				}
 
 				AssetDatabase.StartAssetEditing();

@@ -5,9 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using VRC.SDK3.Avatars.Components;
 using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.Model;
@@ -242,7 +240,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			finally
 			{
 				RestoreBoneScales(savedBoneScales);
-				ReapplyArmatureScaleCorrections(corrections);
 			}
 
 			SchedulePostSetupRefresh(nailPrefabObject);
@@ -502,23 +499,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			foreach (var kv in saved)
 			{
 				if (kv.Key != null) kv.Key.localScale = kv.Value;
-			}
-		}
-
-		// 親ボーン scale 復元後の最終行列で、ネイルの見かけサイズだけ締め直す.
-		// 位置・回転は scale 復元後の親ボーンに追従させるため、ここでは再適用しない.
-		private static void ReapplyArmatureScaleCorrections(
-			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections)
-		{
-			if (corrections == null || corrections.Count == 0) return;
-
-			foreach (var kv in corrections)
-			{
-				Transform nail = kv.Key;
-				if (nail == null) continue;
-
-				var c = kv.Value;
-				EnforceLossyScale(nail, c.desiredLossyScale);
 			}
 		}
 
@@ -1357,28 +1337,21 @@ namespace world.anlabo.mdnailtool.Editor {
 			return string.IsNullOrEmpty(sanitized) ? "avatar" : sanitized;
 		}
 
-		// SaveAsPrefabAsset は Native 内部で .meta 二重書込エラーを出すため避ける
 		public static void CreateBackup(GameObject avatarGameObject) {
 			if (!Directory.Exists(MDNailToolDefines.BACKUP_PATH)) {
 				Directory.CreateDirectory(MDNailToolDefines.BACKUP_PATH);
 				AssetDatabase.Refresh();
 			}
 
+			GameObject clonedObject = Object.Instantiate(avatarGameObject);
 			string safeAvatarName = SanitizeForFileName(avatarGameObject.name);
-			string sceneName = $"bk_{safeAvatarName}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.unity";
-			string destPath = MDNailToolDefines.BACKUP_PATH + sceneName;
+			string prefabName = $"bk_{safeAvatarName}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.prefab";
 
-			Scene previousActive = SceneManager.GetActiveScene();
-			Scene backupScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
 			try {
-				GameObject clonedObject = Object.Instantiate(avatarGameObject);
-				SceneManager.MoveGameObjectToScene(clonedObject, backupScene);
-				EditorSceneManager.SaveScene(backupScene, destPath);
+				PrefabUtility.SaveAsPrefabAsset(clonedObject, MDNailToolDefines.BACKUP_PATH + prefabName);
+				AssetDatabase.Refresh();
 			} finally {
-				EditorSceneManager.CloseScene(backupScene, removeScene: true);
-				if (previousActive.IsValid()) {
-					EditorSceneManager.SetActiveScene(previousActive);
-				}
+				Object.DestroyImmediate(clonedObject);
 			}
 		}
 
