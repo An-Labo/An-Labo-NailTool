@@ -115,10 +115,10 @@ namespace world.anlabo.mdnailtool.Editor
 					}
 				}
 
-				// 頂点数の違うメッシュへ差し替えると GPU の vertex stride が古いまま残り
-				// 中間SMRが描画停止する (issue #495). null 経由でバッファ再構築を強制する.
-				smr.sharedMesh = null;
+				// enabled トグルで内部頂点バッファを再確保させ、差し替え時の描画停止を防ぐ (issue #495)
+				smr.enabled = false;
 				smr.sharedMesh = newMesh;
+				smr.enabled = true;
 
 				foreach (var weightInfo in savedWeights)
 				{

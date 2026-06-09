@@ -399,6 +399,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public string? GetSelectedAdditionalMaterialSource() {
+			if (!this.IsFingerEnabled) return null;
 			string value = this._additionalMaterialPopup.value;
 			if (string.IsNullOrEmpty(value) || this._additionalMaterialPopup.choices == null ||
 			    this._additionalMaterialPopup.choices.Count == 0) return null;
@@ -423,6 +424,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public string? GetSelectedAdditionalObjectSource() {
+			if (!this.IsFingerEnabled) return null;
 			string value = this._additionalObjectPopup.value;
 			if (string.IsNullOrEmpty(value) || this._additionalObjectPopup.choices == null ||
 			    this._additionalObjectPopup.choices.Count == 0) return null;

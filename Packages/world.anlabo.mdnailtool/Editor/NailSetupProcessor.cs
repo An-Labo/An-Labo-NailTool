@@ -225,9 +225,10 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			// scale退避→配置→復元。歪み防止 (Save/Compute も try 内に置き、途中例外でも finally で必ず Restore する)
 			Dictionary<Transform, Vector3> savedBoneScales = new();
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections = null;
 			try
 			{
-				Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections =
+				corrections =
 					ComputeArmatureScaleCorrections(handsNailObjects, leftFootNailObjects, rightFootNailObjects, targetBoneDictionary, ref savedBoneScales);
 
 				if (this.ForModularAvatar) {
@@ -241,6 +242,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			finally
 			{
 				RestoreBoneScales(savedBoneScales);
+				ReapplyArmatureScaleCorrections(corrections);
 			}
 
 			SchedulePostSetupRefresh(nailPrefabObject);
@@ -503,6 +505,23 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
+		// 親ボーン scale 復元後の最終行列で、ネイルのワールド姿勢と見かけサイズを締め直す.
+		private static void ReapplyArmatureScaleCorrections(
+			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections)
+		{
+			if (corrections == null || corrections.Count == 0) return;
+
+			foreach (var kv in corrections)
+			{
+				Transform nail = kv.Key;
+				if (nail == null) continue;
+
+				var c = kv.Value;
+				nail.SetPositionAndRotation(c.position, c.rotation);
+				EnforceLossyScale(nail, c.desiredLossyScale);
+			}
+		}
+
 		// 表示範囲を広めに固定。カリング対策
 		private static void ApplyNailBoundsGuard(Transform?[] nailObjects) {
 			var guardBounds = new Bounds(Vector3.zero, Vector3.one);
@@ -711,6 +730,8 @@ namespace world.anlabo.mdnailtool.Editor {
 								variantCorrections = ComputeScaleCompensatedTransforms(
 									this.Avatar, targetBoneDictionary,
 									varAllNails.ToArray(), varAllBoneIndices.ToArray());
+								foreach (var kv in variantCorrections)
+									corrections[kv.Key] = kv.Value;
 							}
 
 							// バリアントネイルも実際の指ボーンの子にして、ローカル座標差分を計算できるようにする
