@@ -808,7 +808,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
             if (!isMeta && File.Exists(destPath)) {
                 try {
-                    if (ComputeFileCrc32(destPath) == entry.Crc32) return false;
+                    if (Resource.Crc32Util.ComputeFile(destPath) == entry.Crc32) return false;
                 } catch {
                     // 比較失敗時は安全側で上書き
                 }
@@ -820,34 +820,6 @@ namespace world.anlabo.mdnailtool.Editor {
             }
             entry.ExtractToFile(destPath, overwrite: true);
             return true;
-        }
-
-        private static readonly uint[] _crc32Table = BuildCrc32Table();
-
-        private static uint[] BuildCrc32Table() {
-            uint[] table = new uint[256];
-            for (uint i = 0; i < 256; i++) {
-                uint c = i;
-                for (int j = 0; j < 8; j++) {
-                    c = ((c & 1) != 0) ? (0xEDB88320u ^ (c >> 1)) : (c >> 1);
-                }
-                table[i] = c;
-            }
-            return table;
-        }
-
-        private static uint ComputeFileCrc32(string path) {
-            uint crc = 0xFFFFFFFFu;
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = fs.Read(buffer, 0, buffer.Length)) > 0) {
-                    for (int i = 0; i < read; i++) {
-                        crc = _crc32Table[(crc ^ buffer[i]) & 0xFF] ^ (crc >> 8);
-                    }
-                }
-            }
-            return ~crc;
         }
 
         private static void SaveInstalledVersion(string version) {

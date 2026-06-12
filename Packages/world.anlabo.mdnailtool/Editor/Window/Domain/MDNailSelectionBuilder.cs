@@ -31,26 +31,26 @@ namespace world.anlabo.mdnailtool.Editor.Window.Domain
 
 			if (isHandActive)
 			{
-				for (int i = 0; i < 10; i++)
+				for (int i = MDNailSlot.HandStartIndex; i < MDNailSlot.HandStartIndex + MDNailSlot.HandCount; i++)
 				{
 					finalSelectionList.Add(isHandDetail ? allSelections[i] : globalMasterSource);
 				}
 			}
 			else
 			{
-				for (int i = 0; i < 10; i++) finalSelectionList.Add(emptyDummy);
+				for (int i = 0; i < MDNailSlot.HandCount; i++) finalSelectionList.Add(emptyDummy);
 			}
 
 			if (isFootActive)
 			{
-				for (int i = 10; i < 20; i++)
+				for (int i = MDNailSlot.FootStartIndex; i < MDNailSlot.TotalCount; i++)
 				{
 					finalSelectionList.Add(isFootDetail ? allSelections[i] : globalMasterSource);
 				}
 			}
 			else
 			{
-				for (int i = 0; i < 10; i++) finalSelectionList.Add(emptyDummy);
+				for (int i = 0; i < MDNailSlot.FootCount; i++) finalSelectionList.Add(emptyDummy);
 			}
 
 			Dictionary<string, INailProcessor> designDictionary = new();
@@ -71,61 +71,48 @@ namespace world.anlabo.mdnailtool.Editor.Window.Domain
 			bool isHandDetail,
 			bool isFootActive,
 			bool isFootDetail,
-			string? globalSource)
-		{
-			string?[] result = new string?[20];
+			string? globalSource) =>
+			BuildAdditionalSources(nailDesignDropDowns, dd => dd.GetSelectedAdditionalMaterialSource(),
+				isHandActive, isHandDetail, isFootActive, isFootDetail, globalSource);
 
-			string?[] perFingerSources = nailDesignDropDowns
-				.Select(dd => dd.GetSelectedAdditionalMaterialSource())
-				.ToArray();
-
-			if (isHandActive)
-			{
-				string? handSource = isHandDetail ? null : perFingerSources.Take(10).FirstOrDefault(s => !string.IsNullOrEmpty(s));
-				for (int i = 0; i < 10; i++)
-				{
-					result[i] = isHandDetail ? perFingerSources[i] : (handSource ?? globalSource);
-				}
-			}
-
-			if (isFootActive)
-			{
-				for (int i = 10; i < 20; i++)
-				{
-					result[i] = isFootDetail ? perFingerSources[i] : globalSource;
-				}
-			}
-
-			return result;
-		}
-
+		// 追加オブジェクトは手のみ対応(TargetFingerは0-9)。足側 result[10..19] は呼び出し側で読まれないが配列構造の対称性を保つ。
 		internal static string?[] BuildAdditionalObjectSources(
 			NailDesignDropDowns[] nailDesignDropDowns,
 			bool isHandActive,
 			bool isHandDetail,
 			bool isFootActive,
 			bool isFootDetail,
+			string? globalSource) =>
+			BuildAdditionalSources(nailDesignDropDowns, dd => dd.GetSelectedAdditionalObjectSource(),
+				isHandActive, isHandDetail, isFootActive, isFootDetail, globalSource);
+
+		private static string?[] BuildAdditionalSources(
+			NailDesignDropDowns[] nailDesignDropDowns,
+			Func<NailDesignDropDowns, string?> selector,
+			bool isHandActive,
+			bool isHandDetail,
+			bool isFootActive,
+			bool isFootDetail,
 			string? globalSource)
 		{
-			string?[] result = new string?[20];
+			string?[] result = new string?[MDNailSlot.TotalCount];
 
 			string?[] perFingerSources = nailDesignDropDowns
-				.Select(dd => dd.GetSelectedAdditionalObjectSource())
+				.Select(selector)
 				.ToArray();
 
 			if (isHandActive)
 			{
-				string? handSource = isHandDetail ? null : perFingerSources.Take(10).FirstOrDefault(s => !string.IsNullOrEmpty(s));
-				for (int i = 0; i < 10; i++)
+				string? handSource = isHandDetail ? null : perFingerSources.Take(MDNailSlot.HandCount).FirstOrDefault(s => !string.IsNullOrEmpty(s));
+				for (int i = MDNailSlot.HandStartIndex; i < MDNailSlot.HandStartIndex + MDNailSlot.HandCount; i++)
 				{
 					result[i] = isHandDetail ? perFingerSources[i] : (handSource ?? globalSource);
 				}
 			}
 
-			// 追加オブジェクトは手のみ対応(TargetFingerは0-9)。足にも同ロジックを通して対称性を保つ
 			if (isFootActive)
 			{
-				for (int i = 10; i < 20; i++)
+				for (int i = MDNailSlot.FootStartIndex; i < MDNailSlot.TotalCount; i++)
 				{
 					result[i] = isFootDetail ? perFingerSources[i] : globalSource;
 				}
