@@ -20,5 +20,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 
 		[JsonProperty("rightBlendShapeName")]
 		public string? RightBlendShapeName { get; set; }
+
+		// Stage9: 物理 prefab を廃止する経路. NailNodes が居れば NailPrefabGUID 経路を skip して BuildFromNodes で復元.
+		[JsonProperty("nailNodes")]
+		public NailPrefabNodeData[]? NailNodes { get; set; }
 	}
 }

@@ -162,7 +162,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			sb.AppendLine($"AvatarName: {this._avatarDropDowns?.GetAvatarName() ?? "(未設定)"}");
 			sb.AppendLine($"Variation: {this._avatarDropDowns?.GetSelectedAvatarVariation()?.VariationName ?? "(null)"}");
 			sb.AppendLine($"NailShape: {this._nailShapeDropDown?.value ?? "(null)"}");
-			sb.AppendLine($"NailPrefab: {this._avatarDropDowns?.GetSelectedPrefab()?.name ?? "(null)"}");
+			{
+				GameObject? diagPrefab = this._avatarDropDowns?.GetSelectedPrefab();
+				sb.AppendLine($"NailPrefab: {diagPrefab?.name ?? "(null)"}");
+				// GetSelectedPrefab は in-memory orphan を生成するため、 使い終わったら即 destroy する (Scene root 残留防止).
+				if (diagPrefab != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(diagPrefab))) {
+					Object.DestroyImmediate(diagPrefab);
+				}
+			}
 			sb.AppendLine($"ForModularAvatar: {this._forModularAvatar?.value}");
 			sb.AppendLine($"BakeBlendShapes: {this._bakeBlendShapes?.value}");
 			sb.AppendLine($"SyncBlendShapesWithMA: {this._syncBlendShapesWithMA?.value}");

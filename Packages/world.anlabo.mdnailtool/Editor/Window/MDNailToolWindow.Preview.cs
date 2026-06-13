@@ -215,8 +215,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			if (avatar == null) return;
 
-			var prefab = this._avatarDropDowns?.GetSelectedPrefab();
-			if (prefab == null) return;
+			GameObject? originalPrefab = this._avatarDropDowns?.GetSelectedPrefab();
+			if (originalPrefab == null) return;
+			var prefab = originalPrefab;
 
 			string nailShapeName = this._nailShapeDropDown?.value ?? GlobalSetting.LastUseShapeName ?? "oval";
 			if (string.IsNullOrEmpty(nailShapeName)) nailShapeName = "oval";
@@ -275,6 +276,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				this.ApplyVariantPositionBlend(avatar, prefab, nailShapeName);
 			}
+
+			// GetSelectedPrefab / ResolveShapePrefab が返した in-memory orphan は controller が Instantiate 済なので即 destroy.
+			if (prefab != originalPrefab && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(prefab)))
+			{
+				Object.DestroyImmediate(prefab);
+			}
+			if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(originalPrefab)))
+			{
+				Object.DestroyImmediate(originalPrefab);
+			}
 		}
 
 
@@ -286,6 +297,25 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._scenePreviewController?.ForceRestoreAllRenderers();
 			this._scenePreviewController?.Cleanup(avatar);
 			this._scenePreviewController = null;
+
+			// 過去の orphan 蓄積掃除 (旧版で発生した Scene root の [Shape]xxx 残骸を一括除去).
+			SweepScenePreviewOrphans();
+		}
+
+		private static void SweepScenePreviewOrphans()
+		{
+			UnityEngine.SceneManagement.Scene scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+			if (!scene.IsValid()) return;
+			var shapePrefix = new System.Text.RegularExpressions.Regex(@"^\[(?:[^\]]+)\]");
+			foreach (GameObject go in scene.GetRootGameObjects())
+			{
+				if (go == null) continue;
+				if (go.transform.parent != null) continue;
+				if (!shapePrefix.IsMatch(go.name)) continue;
+				SkinnedMeshRenderer[] smrs = go.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+				if (smrs.Length == 0) continue;
+				Object.DestroyImmediate(go);
+			}
 		}
 
 		/// <summary>

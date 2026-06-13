@@ -28,16 +28,15 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 		[JsonProperty("fingers")]
 		public Dictionary<string, List<string>>? Fingers { get; set; }
 
-		/// <summary>
-		/// 全指共通GUIDリスト。
-		/// Fingers が null の場合にこちらが使用される。
-		/// </summary>
+		/// <summary>全指共通GUIDリスト. Fingers が null の場合にこちらが使用される.</summary>
 		[JsonProperty("guids")]
 		public List<string>? Guids { get; set; }
 
-		/// <summary>
-		/// 指定指インデックスでこのオブジェクトセットが使用可能か判定する。
-		/// </summary>
+		/// <summary>GUID -> ノード木. Converter 埋め込み済なら物理 prefab 無しで復元される.</summary>
+		[JsonProperty("nodesByGuid")]
+		public Dictionary<string, NailPrefabNodeData[]>? NodesByGuid { get; set; }
+
+		/// <summary>指定指インデックスでこのオブジェクトセットが使用可能か判定する.</summary>
 		public bool IsAllowedForFinger(int fingerIndex)
 		{
 			if (AllowedFingers == null) return true;

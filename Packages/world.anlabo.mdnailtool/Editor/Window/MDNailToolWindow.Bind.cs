@@ -717,6 +717,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				var transforms = new List<Transform>();
 				foreach (string resolvedGuid in registry.ResolveObjectGuids(registryName!, i))
 				{
+					// nodes 埋め込み済なら物理 prefab 不要で復元
+					NailPrefabNodeData[]? nodes = null;
+					if (registry.Objects != null
+					    && registry.Objects.TryGetValue(registryName!, out AdditionalObjectEntry? lookupEntry)
+					    && lookupEntry.NodesByGuid != null
+					    && lookupEntry.NodesByGuid.TryGetValue(resolvedGuid, out NailPrefabNodeData[]? foundNodes)) {
+						nodes = foundNodes;
+					}
+					if (nodes != null && nodes.Length > 0) {
+						GameObject built = NailPrefabBuilder.BuildFromNodes(nodes, $"additional_{resolvedGuid}");
+						transforms.Add(built.transform);
+						continue;
+					}
+
 					string objectPath = AssetDatabase.GUIDToAssetPath(resolvedGuid);
 					if (string.IsNullOrEmpty(objectPath))
 					{

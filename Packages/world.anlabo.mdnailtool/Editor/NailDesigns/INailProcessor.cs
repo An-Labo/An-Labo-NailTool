@@ -27,16 +27,16 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		
 		
 		public static DesignData GetDesignData(string designName) {
-			string designPath = $"{MDNailToolDefines.NAIL_DESIGN_PATH}{designName}/";
-			string jsonPath = $"{designPath}_design.json";
-			
-			if (Directory.Exists(designPath) && File.Exists(jsonPath)) {
+			// Stage8: _design.json は LegacyDesignInstaller が Assets/.../Generated/LegacyDesignMeta/ 配下に書く.
+			string jsonPath = LegacyDesignInstaller.GetLegacyDesignJsonPath(designName);
+
+			if (File.Exists(jsonPath)) {
 				TextAsset? textAsset = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(jsonPath);
 				if (textAsset != null) {
 					return DesignData.ToObject(textAsset.text);
 				}
 			}
-			
+
 			return new DesignData {
 				Type = DesignData.JsonType.Legacy,
 				Legacy = new LegacyDesignData {

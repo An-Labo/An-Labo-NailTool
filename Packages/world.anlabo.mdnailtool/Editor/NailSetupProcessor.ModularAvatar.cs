@@ -116,7 +116,17 @@ namespace world.anlabo.mdnailtool.Editor {
 					{
 						foreach (AvatarBlendShapeVariant variant in activeVariants)
 						{
-							string? variantPath = ResolveVariantPath(variant);
+							GameObject? variantPrefabAsset = null;
+							string? variantPath = null;
+							if (variant.NailNodes != null && variant.NailNodes.Length > 0)
+							{
+								variantPrefabAsset = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildFromNodes(variant.NailNodes, variant.Name);
+								if (variantPrefabAsset != null) objectsToDestroy.Add(variantPrefabAsset);
+								ToolConsole.Log($"    variant='{variant.Name}' nailNodes -> in-memory build");
+							}
+							if (variantPrefabAsset == null)
+							{
+								variantPath = ResolveVariantPath(variant);
 							ToolConsole.Log($"    variant='{variant.Name}' GUID={variant.NailPrefabGUID} path={variantPath ?? "(null)"}");
 							if (string.IsNullOrEmpty(variantPath))
 							{
@@ -130,11 +140,12 @@ namespace world.anlabo.mdnailtool.Editor {
 								continue;
 							}
 							// ResolveVariantPath 内で既に load 確認済みのため初回 ImportAsset は省略.
-							GameObject? variantPrefabAsset = NailSetupUtil.LoadPrefabAtPath(variantPath);
+							variantPrefabAsset = NailSetupUtil.LoadPrefabAtPath(variantPath);
 							if (variantPrefabAsset == null)
 							{
 								AssetDatabase.ImportAsset(variantPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 								variantPrefabAsset = NailSetupUtil.LoadPrefabAtPath(variantPath);
+							}
 							}
 							if (variantPrefabAsset == null)
 							{

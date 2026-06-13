@@ -87,6 +87,11 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			string prefix = this.getPrefabPrefix();
 
+			// NailPrefabBuilder.BuildFromNodes 出力 (in-memory orphan) は Scene root に残り Default-Material のままマゼンタ描画されるため、prefix 取得後に destroy する.
+			if (this.NailPrefab != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(this.NailPrefab))) {
+				Object.DestroyImmediate(this.NailPrefab);
+			}
+
 			if (!string.IsNullOrEmpty(prefix)) {
 				foreach (Transform child in nailPrefabObject.transform) {
 					child.name = child.name.Replace(prefix, "");
@@ -159,6 +164,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				Undo.RevertAllInCurrentGroup();
 				throw;
 			}
+
 
 			try {
 				NailSetupUtil.AttachAdditionalObjects(handsNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, false, this.PerFingerAdditionalObjects);
@@ -242,7 +248,32 @@ namespace world.anlabo.mdnailtool.Editor {
 				RestoreBoneScales(savedBoneScales);
 			}
 
+
+			CleanupOrphanedNailPrefabsInScene();
+
 			SchedulePostSetupRefresh(nailPrefabObject);
+		}
+
+		// Scene root に取り残された NailPrefabBuilder.BuildFromNodes 出力 (parent=null, SMR が Default-Material のみ) を一掃する.
+		private static void CleanupOrphanedNailPrefabsInScene() {
+			UnityEngine.SceneManagement.Scene scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+			if (!scene.IsValid()) return;
+			Regex shapePrefixPattern = new(@"^\[(?:[^\]]+)\]");
+			foreach (GameObject go in scene.GetRootGameObjects()) {
+				if (go == null) continue;
+				if (go.transform.parent != null) continue;
+				if (!shapePrefixPattern.IsMatch(go.name)) continue;
+				SkinnedMeshRenderer[] smrs = go.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+				if (smrs.Length == 0) continue;
+				bool junk = true;
+				foreach (SkinnedMeshRenderer smr in smrs) {
+					foreach (Material m in smr.sharedMaterials) {
+						if (m != null && m.name != "Default-Material") { junk = false; break; }
+					}
+					if (!junk) break;
+				}
+				if (junk) Object.DestroyImmediate(go);
+			}
 		}
 
 		// アバターの Animator / Humanoid Rig をチェックし、欠落時はユーザー向け例外を投げる.
@@ -291,12 +322,25 @@ namespace world.anlabo.mdnailtool.Editor {
 		// 現在の NailShapeName に対応する [shape]Name.prefab を探して NailPrefab を差し替える.
 		private void ResolveShapePrefabForCurrentShape()
 		{
+			string prefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
+
+			// NailNodes 経路: in-memory GameObject なので AssetPath は空。NailNodesByShape から shape 別ノードを取得して再構築.
+			if (string.IsNullOrEmpty(prefabPath)) {
+				var byShape = this.AvatarVariationData?.NailNodesByShape;
+				if (byShape != null &&
+				    byShape.TryGetValue(this.NailShapeName, out NailPrefabNodeData[]? shapeNodes) &&
+				    shapeNodes != null && shapeNodes.Length > 0) {
+					Object.DestroyImmediate(this.NailPrefab);
+					this.NailPrefab = NailPrefabBuilder.BuildFromNodes(shapeNodes, this.AvatarVariationData!.VariationName);
+				}
+				return;
+			}
+
 			Regex nailPrefabNamePattern = new(@"(?<prefix>\[.+\])(?<prefabName>.+)");
 			Match match = nailPrefabNamePattern.Match(this.NailPrefab.name);
 			if (!match.Success) return;
 
 			string prefabName = match.Groups["prefabName"].Value;
-			string prefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
 			// Path.GetDirectoryName は Windows で `\` 区切りを返す. AssetDatabase は `/` 前提のため正規化する.
 			string prefabDirPath = (Path.GetDirectoryName(prefabPath) ?? "").Replace('\\', '/');
 			GameObject current = this.NailPrefab;

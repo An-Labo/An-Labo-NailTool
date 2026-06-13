@@ -40,5 +40,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		// 非 null なら .prefab ファイルを zip から展開せずにノードデータから再構築する
 		[JsonProperty("nailNodes")]
 		public NailPrefabNodeData[]? NailNodes { get; set; }
+
+		// シェイプ別 NailNodes (Natural / Oval / Point / Square 等)。ResolveShapePrefabForCurrentShape で参照
+		[JsonProperty("nailNodesByShape")]
+		public IReadOnlyDictionary<string, NailPrefabNodeData[]>? NailNodesByShape { get; set; }
 	}
 }

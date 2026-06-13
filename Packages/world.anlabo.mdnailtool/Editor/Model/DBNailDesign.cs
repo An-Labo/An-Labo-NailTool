@@ -10,7 +10,13 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 
 		public NailDesign? FindNailDesignByDesignName(string? name) {
 			if (name == null) return null;
-			return this._data!.GetValueOrDefault(name, null);
+			// 完全一致を最優先. ヒットしなければ大小無視 fallback (Legacy 商品名と Resource フォルダ名の表記揺れ吸収).
+			NailDesign? hit = this._data!.GetValueOrDefault(name, null);
+			if (hit != null) return hit;
+			foreach (var kv in this._data) {
+				if (string.Equals(kv.Key, name, System.StringComparison.OrdinalIgnoreCase)) return kv.Value;
+			}
+			return null;
 		}
 
 		/// <summary>指定デザインを親として参照している子バリ一覧を返す</summary>

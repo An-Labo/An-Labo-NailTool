@@ -12,6 +12,13 @@ using world.anlabo.mdnailtool.Editor.NailDesigns;
 
 namespace world.anlabo.mdnailtool.Editor {
 	public class LegacyDesignInstaller : AssetPostprocessor {
+		// Stage8: _design.json の置き場を Package 配下 (read-only) → Assets 書込可能領域へ移行.
+		public const string LEGACY_DESIGN_META_PATH = MDNailToolDefines.GENERATED_ASSET_PATH + "LegacyDesignMeta/";
+
+		public static string GetLegacyDesignJsonPath(string designName) {
+			return LEGACY_DESIGN_META_PATH + designName + "/_design.json";
+		}
+
 		public static void ReInstallLegacyNail() {
 			if (!UnityEngine.Windows.Directory.Exists(MDNailToolDefines.LEGACY_DESIGN_PATH)) return;
 			using DBNailDesign dbNailDesign = new();
@@ -20,8 +27,9 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (!INailProcessor.IsInstalledDesign(nailDesign.DesignName)) continue;
 				INailProcessor processor = INailProcessor.CreateNailDesign(nailDesign.DesignName);
 				if (processor.DesignData.Type != DesignData.JsonType.Legacy) continue;
-				File.Delete($"{MDNailToolDefines.NAIL_DESIGN_PATH}{nailDesign.DesignName}/_design.json");
-				File.Delete($"{MDNailToolDefines.NAIL_DESIGN_PATH}{nailDesign.DesignName}/_design.json.meta");
+				string jsonPath = GetLegacyDesignJsonPath(nailDesign.DesignName);
+				File.Delete(jsonPath);
+				File.Delete(jsonPath + ".meta");
 				ToolConsole.Log($"[Legacy] Uninstall {nailDesign.DesignName}");
 			}
 
@@ -56,10 +64,9 @@ namespace world.anlabo.mdnailtool.Editor {
 				ToolConsole.Log($"[Legacy] Find Legacy NailDesign: {designName}");
 
 
-				string targetPath = $"{MDNailToolDefines.NAIL_DESIGN_PATH}{designName}/";
-				if (!Directory.Exists(targetPath)) {
-					ToolConsole.Log($"[Legacy] Not found Legacy design install Directory : {targetPath}");
-					continue;
+				string targetDir = LEGACY_DESIGN_META_PATH + designName + "/";
+				if (!Directory.Exists(targetDir)) {
+					Directory.CreateDirectory(targetDir);
 				}
 
 				DesignData designData = new() {
@@ -80,7 +87,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					designData.Legacy.AdditionalObjectGUIDs = ParseObjectGUIDs(nailDesign.AdditionalObjectGUIDs);
 				}
 
-				File.WriteAllText($"{targetPath}_design.json", designData.ToJson());
+				File.WriteAllText(GetLegacyDesignJsonPath(designName), designData.ToJson());
 				AssetDatabase.Refresh();
 				ToolConsole.Log($"[Legacy] Installed Legacy NailDesign: {designName}");
 			}

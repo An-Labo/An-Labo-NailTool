@@ -25,39 +25,13 @@ namespace world.anlabo.mdnailtool.Editor
 
 		public const string ROOT_PACKAGE_PATH = "Packages/world.anlabo.mdnailtool/";
 		
-		private const string ASSETS_RESOURCE_PATH = ROOT_ASSET_PATH + "Resource/";
 		private const string PACKAGE_RESOURCE_PATH = ROOT_PACKAGE_PATH + "Resource/";
-		
-		private static string _resourcePath = null;
-		public static string RESOURCE_PATH {
-			get {
-				string assetsLangFile = ASSETS_RESOURCE_PATH + "Lang/langs.json";
-				
-				if (File.Exists(assetsLangFile)) {
-					_resourcePath = ASSETS_RESOURCE_PATH;
-					return _resourcePath;
-				}
-				
-				string packageLangFileFull = Path.GetFullPath(PACKAGE_RESOURCE_PATH + "Lang/langs.json");
-				if (File.Exists(packageLangFileFull)) {
-					_resourcePath = PACKAGE_RESOURCE_PATH;
-					return _resourcePath;
-				}
-				
-				ResourceAutoExtractor.EnsureEssentialsExtractedSync();
-				
-				if (File.Exists(assetsLangFile)) {
-					_resourcePath = ASSETS_RESOURCE_PATH;
-					return _resourcePath;
-				}
-				
-				_resourcePath = ASSETS_RESOURCE_PATH;
-				return _resourcePath;
-			}
-		}
-		
+
+		// Stage8: 静的リソースは Package 配下を直接読む. Assets/Resource/ への zip 展開キャッシュは廃止.
+		public const string RESOURCE_PATH = PACKAGE_RESOURCE_PATH;
+
 		public static void ClearResourcePathCache() {
-			_resourcePath = null;
+			// Stage8: RESOURCE_PATH 固定化により no-op. 旧コード互換のため残置.
 		}
 		public static string LANG_FILE_PATH => RESOURCE_PATH + "Lang/langs.json";
 		public static string DB_PATH => RESOURCE_PATH + "DB/";

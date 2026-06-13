@@ -52,6 +52,8 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			string prefabName = match.Groups["prefabName"].Value;
 			string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
+			// in-memory orphan (NodesByGuid から復元された Prefab) は AssetPath が空. シェイプ別物理 Prefab 探索の意味が無いのでそのまま返す.
+			if (string.IsNullOrEmpty(prefabPath)) return basePrefab;
 			// Path.GetDirectoryName は Windows で `\` 区切りを返す. AssetDatabase は `/` 前提のため正規化する.
 			string prefabDirPath = (Path.GetDirectoryName(prefabPath) ?? "").Replace('\\', '/');
 			GameObject current = basePrefab;

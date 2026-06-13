@@ -26,7 +26,12 @@ namespace world.anlabo.mdnailtool.Editor {
 			sb.AppendLine($"AvatarName: {this.AvatarName ?? (isJa ? "(未設定)" : "(not set)")}");
 			sb.AppendLine($"Variation: {this.AvatarVariationData?.VariationName ?? "(null)"}");
 			sb.AppendLine($"NailShape: {this.NailShapeName}");
-			sb.AppendLine($"NailPrefab: {this.NailPrefab?.name ?? "(null)"}");
+			// NailPrefab は Process 中で getPrefabPrefix() 後に destroy される (in-memory orphan 残留防止).
+			// destroyed 状態でも参照は != null だが name で MissingReferenceException が出るため安全アクセス.
+			string nailPrefabName;
+			try { nailPrefabName = this.NailPrefab != null ? this.NailPrefab.name : "(null)"; }
+			catch (UnityEngine.MissingReferenceException) { nailPrefabName = "(destroyed)"; }
+			sb.AppendLine($"NailPrefab: {nailPrefabName}");
 			sb.AppendLine($"ForModularAvatar: {this.ForModularAvatar}");
 			sb.AppendLine($"BakeBlendShapes: {this.BakeBlendShapes}");
 			sb.AppendLine($"SyncBlendShapesWithMA: {this.SyncBlendShapesWithMA}");
