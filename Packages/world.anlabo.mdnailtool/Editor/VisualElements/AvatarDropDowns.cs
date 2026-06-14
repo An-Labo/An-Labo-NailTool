@@ -324,7 +324,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
 			if (variation == null) return null;
 
-			if (variation.NailNodes != null && variation.NailNodes.Length > 0) return NailPrefabBuilder.BuildFromNodes(variation.NailNodes, variantName);
+			if (variation.NailNodes != null && variation.NailNodes.Length > 0) {
+				// NailNodes は全 shape concat 配列. UI 初期表示用にデフォルト shape (Natural) を filter.
+				NailPrefabNodeData[] natural = System.Array.FindAll(variation.NailNodes, n => n.Name != null && n.Name.StartsWith("[Natural]"));
+				NailPrefabNodeData[] src = natural.Length > 0 ? natural : new[] { variation.NailNodes[0] };
+				return NailPrefabBuilder.BuildFromNodes(src, variantName);
+			}
 
 			string guid = variation.NailPrefabGUID;
 			if (string.IsNullOrEmpty(guid)) return null;

@@ -37,12 +37,8 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("avatarFbxs")]
 		public AvatarFbx[] AvatarFbxs { get; set; } = null!;
 
-		// 非 null なら .prefab ファイルを zip から展開せずにノードデータから再構築する
+		// 全 shape の root を concat した配列. 各 root の name は `[Shape]xxx` 形式. Loader 側で prefix filter で shape 別に取り出す.
 		[JsonProperty("nailNodes")]
 		public NailPrefabNodeData[]? NailNodes { get; set; }
-
-		// シェイプ別 NailNodes (Natural / Oval / Point / Square 等)。ResolveShapePrefabForCurrentShape で参照
-		[JsonProperty("nailNodesByShape")]
-		public IReadOnlyDictionary<string, NailPrefabNodeData[]>? NailNodesByShape { get; set; }
 	}
 }

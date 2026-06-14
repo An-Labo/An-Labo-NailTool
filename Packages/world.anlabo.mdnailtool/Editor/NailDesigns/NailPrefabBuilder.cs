@@ -69,12 +69,14 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 					smr.sharedMesh = mesh;
 					smr.updateWhenOffscreen = true;
 
-					if (data.BoundsCenter != null && data.BoundsCenter.Length >= 3 &&
-					    data.BoundsExtent != null && data.BoundsExtent.Length >= 3) {
-						var center = new Vector3(data.BoundsCenter[0], data.BoundsCenter[1], data.BoundsCenter[2]);
-						var size = new Vector3(data.BoundsExtent[0] * 2f, data.BoundsExtent[1] * 2f, data.BoundsExtent[2] * 2f);
-						smr.localBounds = new Bounds(center, size);
-					}
+					// 全 node の 98.5% が center=[0,0.02,0] / extent=[0.02,0.02,0.02] のため null をデフォルトとして扱う.
+					Vector3 boundsCenter = (data.BoundsCenter != null && data.BoundsCenter.Length >= 3)
+						? new Vector3(data.BoundsCenter[0], data.BoundsCenter[1], data.BoundsCenter[2])
+						: new Vector3(0f, 0.02f, 0f);
+					Vector3 boundsSize = (data.BoundsExtent != null && data.BoundsExtent.Length >= 3)
+						? new Vector3(data.BoundsExtent[0] * 2f, data.BoundsExtent[1] * 2f, data.BoundsExtent[2] * 2f)
+						: new Vector3(0.04f, 0.04f, 0.04f);
+					smr.localBounds = new Bounds(boundsCenter, boundsSize);
 
 					if (data.BlendShapeWeights != null) {
 						for (int i = 0; i < mesh.blendShapeCount; i++) {

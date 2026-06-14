@@ -324,14 +324,22 @@ namespace world.anlabo.mdnailtool.Editor {
 		{
 			string prefabPath = AssetDatabase.GetAssetPath(this.NailPrefab);
 
-			// NailNodes 経路: in-memory GameObject なので AssetPath は空。NailNodesByShape から shape 別ノードを取得して再構築.
+			// NailNodes 経路: 不在 shape の fallback は ResolveShapePrefab と同様「collection 順で target まで walk して最新存在」.
 			if (string.IsNullOrEmpty(prefabPath)) {
-				var byShape = this.AvatarVariationData?.NailNodesByShape;
-				if (byShape != null &&
-				    byShape.TryGetValue(this.NailShapeName, out NailPrefabNodeData[]? shapeNodes) &&
-				    shapeNodes != null && shapeNodes.Length > 0) {
-					Object.DestroyImmediate(this.NailPrefab);
-					this.NailPrefab = NailPrefabBuilder.BuildFromNodes(shapeNodes, this.AvatarVariationData!.VariationName);
+				NailPrefabNodeData[]? allNodes = this.AvatarVariationData?.NailNodes;
+				if (allNodes != null && allNodes.Length > 0) {
+					NailPrefabNodeData[]? currentShapeNodes = null;
+					using DBNailShape dbNailShapeFb = new();
+					foreach (NailShape ns in dbNailShapeFb.collection) {
+						string p = $"[{ns.ShapeName}]";
+						NailPrefabNodeData[] found = System.Array.FindAll(allNodes, n => n.Name != null && n.Name.StartsWith(p));
+						if (found.Length > 0) currentShapeNodes = found;
+						if (ns.ShapeName == this.NailShapeName) break;
+					}
+					if (currentShapeNodes != null) {
+						Object.DestroyImmediate(this.NailPrefab);
+						this.NailPrefab = NailPrefabBuilder.BuildFromNodes(currentShapeNodes, this.AvatarVariationData!.VariationName);
+					}
 				}
 				return;
 			}

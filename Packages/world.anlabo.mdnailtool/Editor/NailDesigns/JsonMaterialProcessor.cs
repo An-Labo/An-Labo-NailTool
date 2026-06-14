@@ -20,18 +20,55 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			this._nailDesign = nailDesign;
 		}
 
+		// 全 lilToon material で 100% 一致するプロパティ. nailDesign.json から omit, ここで補完.
+		private static readonly Dictionary<string, float> GlobalFloatDefaults = new() {
+			{ "_lilToonVersion", 45f },
+			{ "_Cull", 0f },
+			{ "_VertexLightStrength", 1f },
+			{ "_LightMinLimit", 0f },
+			{ "_UseBumpMap", 1f },
+			{ "_UseMatCap", 1f },
+			{ "_SpecularToon", 0f },
+			{ "_UseReflection", 1f },
+		};
+		private static readonly Dictionary<string, float[]> GlobalVectorDefaults = new() {
+			{ "_LightDirectionOverride", new[] { 0f, 0.001f, 0f, 0f } },
+		};
+		private const string GlobalShaderDefault = "lilToon";
+
 		protected override Material GetBaseMaterial(string materialName, string nailShapeName) {
 			NailMaterialDelta? delta = FindDelta(materialName, nailShapeName);
 			if (delta == null)
 				throw new NailToolResourceException("NailDesign", $"materialData not found: {this.DesignName}/{materialName}/{nailShapeName}");
 
-			Shader? shader = Shader.Find(delta.ShaderName);
+			// ShaderName 未指定なら default (lilToon).
+			string shaderName = string.IsNullOrEmpty(delta.ShaderName) ? GlobalShaderDefault : delta.ShaderName;
+			Shader? shader = Shader.Find(shaderName);
 			if (shader == null)
-				throw new NailToolResourceException("NailDesign", $"Shader not found: {delta.ShaderName}");
+				throw new NailToolResourceException("NailDesign", $"Shader not found: {shaderName}");
 
 			var mat = new Material(shader);
+			ApplyDefaults(mat, this._nailDesign.MatCapDefault);
 			ApplyDelta(mat, delta);
 			return mat;
+		}
+
+		// global + per-design default を delta 適用前に当てる. delta の個別値が後で上書き.
+		private static void ApplyDefaults(Material mat, string? matCapDefaultGuid) {
+			foreach (var kv in GlobalFloatDefaults) {
+				if (mat.HasProperty(kv.Key)) mat.SetFloat(kv.Key, kv.Value);
+			}
+			foreach (var kv in GlobalVectorDefaults) {
+				if (mat.HasProperty(kv.Key)) {
+					float[] v = kv.Value;
+					mat.SetVector(kv.Key, new Vector4(v[0], v[1], v[2], v[3]));
+				}
+			}
+			if (!string.IsNullOrEmpty(matCapDefaultGuid) && mat.HasProperty("_MatCapTex")) {
+				string path = AssetDatabase.GUIDToAssetPath(matCapDefaultGuid);
+				Texture? tex = MDNailToolAssetLoader.LoadAssetSafe<Texture>(path);
+				if (tex != null) mat.SetTexture("_MatCapTex", tex);
+			}
 		}
 
 		protected override void ProcessMaterial(Material targetMaterial, string materialName, string colorName, string nailShapeName) {

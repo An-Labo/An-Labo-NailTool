@@ -59,6 +59,10 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("colorTextures")]
 		public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>>? ColorTextures { get; set; }
 
+		// design 単位のデフォルト MatCap テクスチャ GUID. material 個別の _MatCapTex が無ければこれを当てる.
+		[JsonProperty("_matCapDefault")]
+		public string? MatCapDefault { get; set; }
+
 		public NailColorVariation? FindVariationByName(string? variationName) {
 			if (variationName == null) return null;
 			return this.ColorVariation!.GetValueOrDefault(variationName, null);
