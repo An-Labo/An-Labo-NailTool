@@ -1,39 +1,76 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using world.anlabo.mdnailtool.Editor.Entity;
+using world.anlabo.mdnailtool.Editor.Model;
 
 namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 	internal static class NailPrefabBuilder {
-		// Unity DefaultResources の GUID 固定値.
 		private const string UNITY_DEFAULT_RES_GUID = "0000000000000000e000000000000000";
 
-		// 内蔵 mesh fileID -> Resources.GetBuiltinResource 用ファイル名. CreatePrimitive 由来は "New-*.fbx".
 		private static readonly Dictionary<long, string> BUILTIN_MESH_NAMES = new() {
 			{ 10202, "Cube.fbx" }, { 10206, "New-Cylinder.fbx" }, { 10207, "New-Sphere.fbx" },
 			{ 10208, "New-Capsule.fbx" }, { 10209, "New-Plane.fbx" }, { 10210, "Quad.fbx" },
 		};
 
+		private static readonly Regex ShapePrefixRegex = new(@"^\[([A-Za-z]+)\]", RegexOptions.Compiled);
+
 		internal static GameObject BuildFromNodes(NailPrefabNodeData[] rootNodes, string fallbackName) {
 			if (rootNodes == null || rootNodes.Length == 0)
 				return new GameObject(fallbackName);
 
-			GameObject root = BuildSubtree(rootNodes[0], null);
+			GameObject root = BuildSubtree(rootNodes[0], null, ExtractShape(rootNodes[0].Name));
 			for (int i = 1; i < rootNodes.Length; i++)
-				BuildSubtree(rootNodes[i], root.transform);
+				BuildSubtree(rootNodes[i], root.transform, ExtractShape(rootNodes[i].Name));
 			return root;
 		}
 
-		private static Mesh? ResolveMesh(NailPrefabNodeData data) {
-			if (string.IsNullOrEmpty(data.MeshGuid)) return null;
-			if (data.MeshGuid == UNITY_DEFAULT_RES_GUID && data.MeshFileId.HasValue
-			    && BUILTIN_MESH_NAMES.TryGetValue(data.MeshFileId.Value, out string? builtinName)) {
-				return Resources.GetBuiltinResource<Mesh>(builtinName);
+		private static string ExtractShape(string? name) {
+			if (string.IsNullOrEmpty(name)) return "";
+			Match m = ShapePrefixRegex.Match(name);
+			return m.Success ? m.Groups[1].Value : "";
+		}
+
+		private static Mesh? ResolveMesh(NailPrefabNodeData data, string shape) {
+			if (!string.IsNullOrEmpty(data.MeshGuid)) {
+				if (data.MeshGuid == UNITY_DEFAULT_RES_GUID && data.MeshFileId.HasValue
+				    && BUILTIN_MESH_NAMES.TryGetValue(data.MeshFileId.Value, out string? builtinName)) {
+					return Resources.GetBuiltinResource<Mesh>(builtinName);
+				}
+				string meshPath = AssetDatabase.GUIDToAssetPath(data.MeshGuid!);
+				return MDNailToolAssetLoader.LoadAssetSafe<Mesh>(meshPath);
 			}
-			string meshPath = AssetDatabase.GUIDToAssetPath(data.MeshGuid!);
-			return MDNailToolAssetLoader.LoadAssetSafe<Mesh>(meshPath);
+			return ResolveMeshByName(data.Name, shape);
+		}
+
+		// nailShape.json の folder/prefix から fbx path を構築. shop.json から meshGuid 廃止経路.
+		private static Mesh? ResolveMeshByName(string? nailName, string shape) {
+			if (string.IsNullOrEmpty(nailName) || string.IsNullOrEmpty(shape)) return null;
+			string bare = ShapePrefixRegex.Replace(nailName, "");
+			using DBNailShape db = new();
+			NailShape? ns = db.FindNailShapeByName(shape);
+			if (ns == null) return null;
+			bool isFoot = bare.StartsWith("Foot", System.StringComparison.OrdinalIgnoreCase);
+			string[] folderGuids = isFoot ? ns.FootFbxFolderGUID : ns.FbxFolderGUID;
+			string prefix = isFoot ? ns.FootFbxNamePrefix : ns.FbxNamePrefix;
+			if (folderGuids == null) return null;
+			foreach (string folderGuid in folderGuids) {
+				string folderPath = AssetDatabase.GUIDToAssetPath(folderGuid);
+				if (string.IsNullOrEmpty(folderPath)) continue;
+				string fbxPath = $"{folderPath}/{prefix}{bare}.fbx";
+				Mesh? mesh = MDNailToolAssetLoader.LoadAssetSafe<Mesh>(fbxPath);
+				if (mesh != null) return mesh;
+			}
+			return null;
+		}
+
+		private static bool CanDeriveMesh(string? nailName, string shape) {
+			if (string.IsNullOrEmpty(nailName) || string.IsNullOrEmpty(shape)) return false;
+			string bare = ShapePrefixRegex.Replace(nailName, "");
+			return (bare.StartsWith("Hand") || bare.StartsWith("Foot")) && bare.Contains(".");
 		}
 
 		private static Material?[] ResolveMaterials(string[]? guids) {
@@ -47,7 +84,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			return result;
 		}
 
-		private static GameObject BuildSubtree(NailPrefabNodeData data, Transform? parent) {
+		private static GameObject BuildSubtree(NailPrefabNodeData data, Transform? parent, string shape) {
 			var go = new GameObject(data.Name);
 			if (parent != null) go.transform.SetParent(parent, false);
 
@@ -58,12 +95,14 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			if (data.LocalScale != null && data.LocalScale.Length >= 3)
 				go.transform.localScale = new Vector3(data.LocalScale[0], data.LocalScale[1], data.LocalScale[2]);
 
-			// RendererType 明示なし & MeshGuid あり = 既存 SMR データ (後方互換).
+			// SMR 推定: 明示 smr / 旧 MeshGuid あり / 名前から mesh 導出可.
 			string? rendererType = data.RendererType;
-			if (rendererType == null && !string.IsNullOrEmpty(data.MeshGuid)) rendererType = "smr";
+			if (rendererType == null
+			    && (!string.IsNullOrEmpty(data.MeshGuid) || CanDeriveMesh(data.Name, shape)))
+				rendererType = "smr";
 
 			if (rendererType == "smr") {
-				Mesh? mesh = ResolveMesh(data);
+				Mesh? mesh = ResolveMesh(data, shape);
 				if (mesh != null) {
 					var smr = go.AddComponent<SkinnedMeshRenderer>();
 					smr.sharedMesh = mesh;
@@ -87,7 +126,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 					}
 				}
 			} else if (rendererType == "mr") {
-				Mesh? mesh = ResolveMesh(data);
+				Mesh? mesh = ResolveMesh(data, shape);
 				if (mesh != null) {
 					var mf = go.AddComponent<MeshFilter>();
 					mf.sharedMesh = mesh;
@@ -103,7 +142,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 			if (data.Children != null) {
 				foreach (var child in data.Children)
-					BuildSubtree(child, go.transform);
+					BuildSubtree(child, go.transform, shape);
 			}
 			return go;
 		}

@@ -18,10 +18,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 		public static void CreateBackup(GameObject avatarGameObject) {
-			if (!Directory.Exists(MDNailToolDefines.BACKUP_PATH)) {
-				Directory.CreateDirectory(MDNailToolDefines.BACKUP_PATH);
-				AssetDatabase.Refresh();
-			}
+			EnsureAssetFolderExists(MDNailToolDefines.BACKUP_PATH.TrimEnd('/'));
 
 			GameObject clonedObject = Object.Instantiate(avatarGameObject);
 			string safeAvatarName = SanitizeForFileName(avatarGameObject.name);
@@ -33,6 +30,17 @@ namespace world.anlabo.mdnailtool.Editor {
 			} finally {
 				Object.DestroyImmediate(clonedObject);
 			}
+		}
+
+		// AssetDatabase.CreateFolder で親階層も含めて .meta 同時生成する. Directory.CreateDirectory だと
+		// 角括弧 / 空白入り path で .meta 連動が壊れ SaveAsPrefabAsset の .meta 書込が失敗する.
+		private static void EnsureAssetFolderExists(string assetPath) {
+			if (string.IsNullOrEmpty(assetPath) || AssetDatabase.IsValidFolder(assetPath)) return;
+			string parent = Path.GetDirectoryName(assetPath)?.Replace('\\', '/') ?? "";
+			string leaf = Path.GetFileName(assetPath);
+			if (string.IsNullOrEmpty(parent) || string.IsNullOrEmpty(leaf)) return;
+			EnsureAssetFolderExists(parent);
+			if (!AssetDatabase.IsValidFolder(assetPath)) AssetDatabase.CreateFolder(parent, leaf);
 		}
 
 		private string getPrefabPrefix() {

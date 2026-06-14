@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -18,152 +18,50 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		public event Action? OnSearchButtonClicked;
 		public string? FirstDesignName { get; private set; }
 
-		private readonly VisualElement _listView;
-		private readonly VisualElement _clip;
+		private readonly ScrollView _scroll;
 		private readonly VisualElement _list;
-		private readonly Button _leftButton;
-		private readonly Button _rightButton;
-		private readonly Button _searchButton;
-		private Label? _searchButtonLabel;
-		private Label? _pageLabel;
-
-		private int _pageIndex;
-		private int _onePageCount;
-		private int _maxPageCount;
-		private int _elementSize;
 
 		public NailDesignSelect() {
-			this._listView = new VisualElement {
+			this._scroll = new ScrollView(ScrollViewMode.Horizontal) {
+				horizontalScrollerVisibility = ScrollerVisibility.Auto,
+				verticalScrollerVisibility = ScrollerVisibility.Hidden,
 				style = {
-					width = new Length(100, LengthUnit.Percent),
+					flexGrow = 1,
+					marginTop = new Length(5, LengthUnit.Pixel),
 				}
 			};
-			this.Add(this._listView);
-
-			this._clip = new VisualElement {
-				style = {
-					overflow = Overflow.Hidden
-				}
-			};
-			this._listView.Add(this._clip);
+			this.Add(this._scroll);
 
 			this._list = new VisualElement {
 				style = {
 					flexDirection = FlexDirection.Row,
-					marginTop = new Length(5, LengthUnit.Pixel),
-					justifyContent = Justify.SpaceAround,
 				}
 			};
-
-			this._clip.Add(this._list);
-
-			VisualElement footer = new() {
-				style = {
-					flexDirection = FlexDirection.Row,
-					justifyContent = Justify.Center,
-					alignItems = Align.Center,
-					marginTop = new Length(5, LengthUnit.Pixel),
-					height = new Length(36, LengthUnit.Pixel),
-					position = Position.Relative
-				}
-			};
-			this.Add(footer);
-
-			var arrowsContainer = new VisualElement {
-				style = {
-					flexDirection = FlexDirection.Row,
-					alignItems = Align.Center,
-					justifyContent = Justify.Center
-				}
-			};
-			footer.Add(arrowsContainer);
-
-			
-			this._leftButton = new Button {
-				text = "◀",
-				style = {
-					flexShrink = 0,
-					width = new Length(38, LengthUnit.Pixel),
-					height = new Length(38, LengthUnit.Pixel),
-					fontSize = 16,
-					unityFontStyleAndWeight = FontStyle.Normal,
-					backgroundColor = new Color(0.25f, 0.25f, 0.25f),
-					borderTopWidth = 0, borderBottomWidth = 0,
-					borderLeftWidth = 0, borderRightWidth = 0,
-					borderTopLeftRadius = 4, borderTopRightRadius = 4,
-					borderBottomLeftRadius = 4, borderBottomRightRadius = 4,
-				}
-			};
-			this._leftButton.clicked += this.OnLeftButton;
-			arrowsContainer.Add(this._leftButton);
-
-			this._pageLabel = new Label("- / -") {
-				style = {
-					width = new Length(60, LengthUnit.Pixel),
-					unityTextAlign = TextAnchor.MiddleCenter,
-					fontSize = 11,
-				}
-			};
-			arrowsContainer.Add(this._pageLabel);
-
-			this._rightButton = new Button {
-				text = "▶",
-				style = {
-					flexShrink = 0,
-					width = new Length(38, LengthUnit.Pixel),
-					height = new Length(38, LengthUnit.Pixel),
-					fontSize = 16,
-					unityFontStyleAndWeight = FontStyle.Normal,
-					backgroundColor = new Color(0.25f, 0.25f, 0.25f),
-					borderTopWidth = 0, borderBottomWidth = 0,
-					borderLeftWidth = 0, borderRightWidth = 0,
-					borderTopLeftRadius = 4, borderTopRightRadius = 4,
-					borderBottomLeftRadius = 4, borderBottomRightRadius = 4,
-				}
-			};
-			this._rightButton.clicked += this.OnRightButton;
-			arrowsContainer.Add(this._rightButton);
-
-
-			this._searchButton = new Button {
-				style = {
-					height = new Length(30, LengthUnit.Pixel),
-					flexDirection = FlexDirection.Row,
-					alignItems = Align.Center,
-					justifyContent = Justify.Center,
-					paddingLeft = 10, paddingRight = 10,
-					borderTopLeftRadius = 15, borderBottomLeftRadius = 15,
-					borderTopRightRadius = 15, borderBottomRightRadius = 15,
-					position = Position.Absolute,
-					right = 0 
-				}
-			};
-
-				var searchIcon = new Image {
-				image = EditorGUIUtility.Load("d_Search Icon") as Texture2D, 
-				style = { width = 16, height = 16, marginRight = 5 }
-			};
-
-			searchIcon.tintColor = EditorGUIUtility.isProSkin ? new Color(0.9f, 0.9f, 0.9f) : Color.black;
-			this._searchButton.Add(searchIcon);
-
-			this._searchButtonLabel = new Label(LanguageManager.S("window.search_nail") ?? "Search Nail") {
-				style = {
-					unityTextAlign = TextAnchor.MiddleCenter,
-					paddingTop = 0, paddingBottom = 0,
-				}
-			};
-			this._searchButton.Add(this._searchButtonLabel);
-
-			this._searchButton.clicked += () => OnSearchButtonClicked?.Invoke();
-			footer.Add(this._searchButton);
+			this._scroll.Add(this._list);
 
 			this.Init();
 		}
 
 		public void UpdateLanguage() {
-			if (this._searchButtonLabel != null)
-				this._searchButtonLabel.text = LanguageManager.S("window.search_nail") ?? "Search Nail";
+			// 旧 search button label 廃止. ヘッダ側で管理.
+		}
+
+		public void TriggerSearch() => this.OnSearchButtonClicked?.Invoke();
+
+		public void ToggleSortMode() {
+			// AvatarDropDowns と同じく GenericMenu でドロップダウン表示.
+			var menu = new UnityEditor.GenericMenu();
+			var current = GlobalSetting.NailDesignSort;
+			void AddItem(GlobalSetting.NailDesignSortMode mode, string langKey, string fallback) {
+				string label = LanguageManager.S(langKey) ?? fallback;
+				menu.AddItem(new GUIContent(label), current == mode, () => {
+					GlobalSetting.NailDesignSort = mode;
+					this.Init();
+				});
+			}
+			AddItem(GlobalSetting.NailDesignSortMode.UseCount, "sort_order.use_count", "着用数順");
+			AddItem(GlobalSetting.NailDesignSortMode.Newest, "sort_order.newer_asc", "新着順");
+			menu.ShowAsContext();
 		}
 
 		public void Init() {
@@ -173,18 +71,22 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			using DBNailDesign dbNailDesign = new();
 			Action<EventBase> selectNailAction = SelectNail;
 			IReadOnlyDictionary<string, DateTime> lastUsedTime = GlobalSetting.DesignLastUsedTimes;
-IReadOnlyDictionary<string, int> useCounts = GlobalSetting.DesignUseCount;
-string langKey = LanguageManager.CurrentLanguageData.language;
+			IReadOnlyDictionary<string, int> useCounts = GlobalSetting.DesignUseCount;
+			string langKey = LanguageManager.CurrentLanguageData.language;
+			bool sortByNewest = GlobalSetting.NailDesignSort == GlobalSetting.NailDesignSortMode.Newest;
 
-foreach (NailDesign nailDesign in dbNailDesign.collection
-         // 子バリアント(parentVariantが設定されているもの)はメインリストに表示しない
-         .Where(design => string.IsNullOrEmpty(design.ParentVariant))
-         .OrderByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName))
-         .ThenByDescending(design => useCounts.GetValueOrDefault(design.DesignName, 0))
-         .ThenByDescending(design => lastUsedTime.GetValueOrDefault(design.DesignName, DateTime.MinValue))
-         .ThenByDescending(design => design.Id))
-{
-{
+			IOrderedEnumerable<NailDesign> ordered = dbNailDesign.collection
+				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
+				.OrderByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName));
+			ordered = sortByNewest
+				? ordered.ThenByDescending(d => d.Id)
+				         .ThenByDescending(d => useCounts.GetValueOrDefault(d.DesignName, 0))
+				         .ThenByDescending(d => lastUsedTime.GetValueOrDefault(d.DesignName, DateTime.MinValue))
+				: ordered.ThenByDescending(d => useCounts.GetValueOrDefault(d.DesignName, 0))
+				         .ThenByDescending(d => lastUsedTime.GetValueOrDefault(d.DesignName, DateTime.MinValue))
+				         .ThenByDescending(d => d.Id);
+
+			foreach (NailDesign nailDesign in ordered) {
 				VisualElement nailElement = new() {
 					style = {
 						marginTop = new Length(5, LengthUnit.Pixel),
@@ -208,7 +110,7 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 						marginTop = new Length(0, LengthUnit.Pixel),
 						marginRight = new Length(0, LengthUnit.Pixel),
 						marginBottom = new Length(0, LengthUnit.Pixel),
-						marginLeft =	new Length(0, LengthUnit.Pixel),
+						marginLeft = new Length(0, LengthUnit.Pixel),
 						flexShrink = 0
 					},
 					name = nailDesign.DesignName
@@ -240,7 +142,7 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 					thumbnailButton.style.borderBottomWidth = 0;
 					thumbnailButton.style.borderLeftWidth = 0;
 				}
-				
+
 				Texture2D? thumbnail = MDNailToolAssetLoader.LoadThumbnail(nailDesign.ThumbnailGUID, nailDesign.DesignName);
 				if (thumbnail == null) continue;
 
@@ -259,9 +161,6 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 					});
 				}
 			}
-
-			this.CalculateListWidth();
-		}
 		}
 
 		private void SelectNail(EventBase evt) {
@@ -272,74 +171,8 @@ foreach (NailDesign nailDesign in dbNailDesign.collection
 			this.OnSelectNail?.Invoke(designName);
 		}
 
-		private void OnLeftButton() {
-			this._pageIndex--;
-			if (this._pageIndex < 0) {
-				this._pageIndex = this._maxPageCount;
-			}
-
-			this.CalculatePageOffset();
-		}
-
-		private void OnRightButton() {
-			this._pageIndex++;
-
-			if (this._maxPageCount < this._pageIndex) {
-				this._pageIndex = 0;
-			}
-
-			this.CalculatePageOffset();
-		}
-
-		private void CalculateListWidth() {
-			int count = this._list.childCount;	
-			int width = (int)this._listView.contentRect.width;
-			const int elementSize = 60 + 10;
-
-			if (width < elementSize) return;
-
-			this._onePageCount = width / elementSize;
-
-			if (this._onePageCount == 0) return;
-			
-			this._maxPageCount = Mathf.Max(Mathf.CeilToInt(count / (float)this._onePageCount) - 1, 0);
-
-			int surplus = width - this._onePageCount * elementSize;
-			int margin = surplus / this._onePageCount;
-			this._elementSize = elementSize + margin;
-
-			this._list.style.width = new Length(count * this._elementSize, LengthUnit.Pixel);
-			this._clip.style.width = new Length(this._onePageCount * this._elementSize, LengthUnit.Pixel);
-			if (this._maxPageCount < this._pageIndex) {
-				this._pageIndex = this._maxPageCount;
-			}
-			this.UpdatePageLabel();
-		}
-
-		private void CalculatePageOffset() {
-			int offset = this._elementSize * this._pageIndex * this._onePageCount;
-			this._list.style.left = new Length(-offset, LengthUnit.Pixel);
-			this.UpdatePageLabel();
-		}
-
-		private void UpdatePageLabel() {
-			if (this._pageLabel == null) return;
-			this._pageLabel.text = $"{this._pageIndex + 1} / {this._maxPageCount + 1}";
-		}
-
-		protected override void ExecuteDefaultAction(EventBase evt) {
-			base.ExecuteDefaultAction(evt);
-			switch (evt) {
-				case GeometryChangedEvent:
-					this.CalculateListWidth();
-					this.CalculatePageOffset();
-					break;
-			}
-		}
-		
-
 		internal new class UxmlFactory : UxmlFactory<NailDesignSelect, UxmlTraits> { }
-		
+
 		internal new class UxmlTraits : VisualElement.UxmlTraits { }
 
 

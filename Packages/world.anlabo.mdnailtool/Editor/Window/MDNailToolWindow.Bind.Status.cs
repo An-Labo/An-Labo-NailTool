@@ -279,6 +279,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			AddRecommendButton("mdn-section-header", 3, ApplyRecommendMA);
 			AddRecommendButtonToFoldout("mdn-advanced-foldout", ApplyRecommendAdvanced);
 
+			// ネイルデザイン (section index 1) ヘッダ: 並び替え → 検索 の順
+			AddHeaderButton("mdn-section-header", 1, S("window.sort") ?? "Sort", null, () => this._nailDesignSelect?.ToggleSortMode());
+			AddHeaderButton("mdn-section-header", 1, S("window.search_nail") ?? "Search", "d_Search Icon", () => this._nailDesignSelect?.TriggerSearch());
+
+			// ネイル設定 (section index 2) ヘッダ: デフォルト設定に戻す
+			AddHeaderButton("mdn-section-header", 2, S("window.reset_to_default") ?? "Reset", null, ApplyResetNailSettings);
+
 			// 詳細設定Foldoutの開閉状態を記憶する
 			const string advancedFoldoutPrefKey = "MDNailTool.AdvancedFoldoutOpen";
 			var advancedFoldout = this.rootVisualElement.Q<Foldout>(className: "mdn-advanced-foldout");
@@ -302,6 +309,70 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			btn.style.paddingRight = 8;
 			btn.style.marginLeft = new StyleLength(StyleKeyword.Auto);
 			return btn;
+		}
+
+		private Button CreateHeaderButton(string label, string? iconName, System.Action onClick)
+		{
+			var btn = new Button(onClick);
+			btn.style.height = 20;
+			btn.style.paddingLeft = 8;
+			btn.style.paddingRight = 8;
+			btn.style.marginLeft = 4;
+			btn.style.flexDirection = FlexDirection.Row;
+			btn.style.alignItems = Align.Center;
+			btn.style.flexShrink = 0;
+			if (!string.IsNullOrEmpty(iconName))
+			{
+				var icon = new Image { image = EditorGUIUtility.Load(iconName) as Texture2D };
+				icon.style.width = 12; icon.style.height = 12; icon.style.marginRight = 3;
+				icon.tintColor = EditorGUIUtility.isProSkin ? new Color(0.9f, 0.9f, 0.9f) : Color.black;
+				icon.pickingMode = PickingMode.Ignore;
+				btn.Add(icon);
+			}
+			var lbl = new Label(label) {
+				style = {
+					fontSize = 10,
+					whiteSpace = WhiteSpace.NoWrap,
+					unityTextAlign = TextAnchor.MiddleCenter,
+					paddingTop = 0, paddingBottom = 0, paddingLeft = 0, paddingRight = 0,
+				}
+			};
+			lbl.pickingMode = PickingMode.Ignore;
+			btn.Add(lbl);
+			return btn;
+		}
+
+		private void AddHeaderButton(string headerClass, int headerIndex, string label, string? iconName, System.Action onClick)
+		{
+			var headers = this.rootVisualElement.Query(className: headerClass).ToList();
+			if (headerIndex >= headers.Count) return;
+			var header = headers[headerIndex];
+			header.style.flexDirection = FlexDirection.Row;
+			header.style.alignItems = Align.Center;
+			// 右寄せ Spacer (1度だけ追加). 以降のボタンは隣接表示.
+			const string SPACER_NAME = "mdn-header-spacer";
+			if (header.Q<VisualElement>(SPACER_NAME) == null)
+			{
+				var spacer = new VisualElement { name = SPACER_NAME };
+				spacer.style.flexGrow = 1;
+				header.Add(spacer);
+			}
+			var btn = CreateHeaderButton(label, iconName, onClick);
+			header.Add(btn);
+		}
+
+		private void ApplyResetNailSettings()
+		{
+			if (this._tglHandActive != null) this._tglHandActive.value = true;
+			if (this._tglFootActive != null) this._tglFootActive.value = true;
+			if (this._tglHandDetail != null) this._tglHandDetail.value = false;
+			if (this._tglFootDetail != null) this._tglFootDetail.value = false;
+			// 指ごと有効化 (bulk 全 ON で 20 指すべて enabled に揃える).
+			if (this._bulkLeftHand != null) this._bulkLeftHand.value = true;
+			if (this._bulkRightHand != null) this._bulkRightHand.value = true;
+			if (this._bulkLeftFoot != null) this._bulkLeftFoot.value = true;
+			if (this._bulkRightFoot != null) this._bulkRightFoot.value = true;
+			// 追加マテリアル / 追加オブジェクトは現在の選択を維持 (ネイルに設定されてる値を尊重).
 		}
 
 		private void AddRecommendButton(string headerClass, int headerIndex, System.Action onClick)

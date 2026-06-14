@@ -365,15 +365,24 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				if (string.IsNullOrEmpty(variant.SyncSourceSmrName)) continue;
 
-				// 体のSMRからBlendShape重みを取得
 				float weight = GetBodyBlendShapeWeight(avatar, variant);
 				if (weight <= 0f) continue;
 
-				// バリアントプレハブをロード
-				if (string.IsNullOrEmpty(variant.NailPrefabGUID)) continue;
-				string varPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
-				if (string.IsNullOrEmpty(varPath)) continue;
-				GameObject? variantPrefab = MDNailToolAssetLoader.LoadPrefabSafe(varPath);
+				GameObject? variantPrefab = null;
+				bool variantIsOrphan = false;
+				if (variant.NailNodes != null && variant.NailNodes.Length > 0)
+				{
+					variantPrefab = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildFromNodes(variant.NailNodes, variant.Name ?? "variant");
+					variantIsOrphan = true;
+				}
+				else if (!string.IsNullOrEmpty(variant.NailPrefabGUID))
+				{
+					string varPath = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+					if (!string.IsNullOrEmpty(varPath))
+					{
+						variantPrefab = MDNailToolAssetLoader.LoadPrefabSafe(varPath);
+					}
+				}
 				if (variantPrefab == null) continue;
 
 				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName);
@@ -394,6 +403,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					Quaternion rotDelta = variantNail.localRotation * Quaternion.Inverse(baseNail.localRotation);
 					previewNail.localRotation = Quaternion.Slerp(Quaternion.identity, rotDelta, weight) * previewNail.localRotation;
 				}
+
+				if (variantIsOrphan && variantPrefab != null) Object.DestroyImmediate(variantPrefab);
 			}
 		}
 

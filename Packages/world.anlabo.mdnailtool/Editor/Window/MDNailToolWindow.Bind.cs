@@ -253,6 +253,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._bakeBlendShapes.RegisterValueChangedCallback(evt => {
 					GlobalSetting.BakeBlendShapes = evt.newValue;
 					this.UpdateBlendShapeVariantDropDown();
+					if (this._autoLinkShrinkBS != null) {
+						bool en = GlobalSetting.UseModularAvatar && evt.newValue;
+						this._autoLinkShrinkBS.SetEnabled(en);
+						if (!en && this._autoLinkShrinkBS.value) this._autoLinkShrinkBS.value = false;
+					}
 				});
 				this._bakeBlendShapes.SetEnabled(GlobalSetting.UseModularAvatar);
 				var lblBake = this.rootVisualElement.Q<LocalizedLabel>("label-bake-blendshapes");
@@ -269,7 +274,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._autoLinkShrinkBS.RegisterValueChangedCallback(evt => {
 					GlobalSetting.AutoLinkShrinkBS = evt.newValue;
 				});
-				this._autoLinkShrinkBS.SetEnabled(GlobalSetting.UseModularAvatar);
+				this._autoLinkShrinkBS.SetEnabled(GlobalSetting.UseModularAvatar && GlobalSetting.BakeBlendShapes);
 				var lblShrink = this.rootVisualElement.Q<LocalizedLabel>("label-auto-link-shrink-bs");
 				lblShrink?.RegisterCallback<ClickEvent>(_ => {
 					if (this._autoLinkShrinkBS != null && this._autoLinkShrinkBS.enabledSelf)
@@ -367,20 +372,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				string text = string.Join("\n", lines);
 				text += this.BuildConsoleDiagnosticInfo();
 				EditorGUIUtility.systemCopyBuffer = text;
-			});
-
-			// リソース初期化ボタン
-			var resetBtn = this.rootVisualElement.Q<Button>("reset-resources");
-			resetBtn?.RegisterCallback<ClickEvent>(_ =>
-			{
-				if (EditorUtility.DisplayDialog(
-					S("window.reset_resources") ?? "Reset Resources",
-					S("window.reset_resources_confirm_body") ?? "This will delete the Resource folder and re-extract essential resources.\n\nContinue?",
-					"OK",
-					"Cancel"))
-				{
-					ResourceAutoExtractor.ResetResources(skipConfirmDialog: true);
-				}
 			});
 
 			// ToolConsole コールバック接続

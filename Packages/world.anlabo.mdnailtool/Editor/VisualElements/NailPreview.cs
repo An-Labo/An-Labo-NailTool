@@ -140,14 +140,14 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			private GameObject CreateCameraObject(out Camera camera) {
 				GameObject cameraObj = new("Camera", typeof(Camera)) {
 					transform = {
-						position = new Vector3(0, 0.5f, 0.016f),
+						position = new Vector3(0, 0.5f, 0.010f),
 						rotation = Quaternion.Euler(90, 0, 0)
 					}
 				};
 				camera = cameraObj.GetComponent<Camera>();
 				camera.cameraType = CameraType.Preview;
 				camera.orthographic = true;
-				camera.orthographicSize = 0.035f;
+				camera.orthographicSize = 0.028f;
 				camera.forceIntoRenderTexture = true;
 				camera.scene = this._scene;
 				camera.enabled = false;

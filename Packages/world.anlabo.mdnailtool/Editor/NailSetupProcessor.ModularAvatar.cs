@@ -476,11 +476,14 @@ namespace world.anlabo.mdnailtool.Editor {
 							desired = c.desiredLossyScale;
 						}
 						if (targetBone == null) continue;
+						// MA-only: edit時はwrapper配下にキープ. BoneProxyがMA build時にtargetBone下へ移動する.
+						Transform? originalParent = nailObject.parent;
 						nailObject.SetParent(targetBone, true);
 						if (desired.HasValue) EnforceLossyScale(nailObject, desired.Value);
 						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 						boneProxy.target = targetBone;
+						if (originalParent != null) nailObject.SetParent(originalParent, true);
 					}
 
 					if (this.UseFootNail)
@@ -499,11 +502,13 @@ namespace world.anlabo.mdnailtool.Editor {
 								desired = c.desiredLossyScale;
 								}
 							if (targetBone == null) continue;
+							Transform? originalParent = nailObject.parent;
 							nailObject.SetParent(targetBone, true);
 							if (desired.HasValue) EnforceLossyScale(nailObject, desired.Value);
 							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 							boneProxy.target = targetBone;
+							if (originalParent != null) nailObject.SetParent(originalParent, true);
 						}
 						index = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
 						foreach (Transform? nailObject in rightFootNailObjects)
@@ -519,11 +524,13 @@ namespace world.anlabo.mdnailtool.Editor {
 								desired = c.desiredLossyScale;
 								}
 							if (targetBone == null) continue;
+							Transform? originalParent = nailObject.parent;
 							nailObject.SetParent(targetBone, true);
 							if (desired.HasValue) EnforceLossyScale(nailObject, desired.Value);
 							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
 							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 							boneProxy.target = targetBone;
+							if (originalParent != null) nailObject.SetParent(originalParent, true);
 						}
 					}
 				}

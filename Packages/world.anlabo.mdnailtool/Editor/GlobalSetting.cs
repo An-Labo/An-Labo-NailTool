@@ -197,6 +197,14 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(AUTO_LINK_SHRINK_BS_KEY, value);
 		}
 
+		public enum NailDesignSortMode { UseCount = 0, Newest = 1 }
+		private const string NAIL_DESIGN_SORT_MODE_KEY = "world.anlabo.mdnailtool.nail_design_sort_mode";
+		internal static NailDesignSortMode NailDesignSort
+		{
+			get => (NailDesignSortMode)EditorPrefs.GetInt(NAIL_DESIGN_SORT_MODE_KEY, 0);
+			set => EditorPrefs.SetInt(NAIL_DESIGN_SORT_MODE_KEY, (int)value);
+		}
+
 		private const string ENABLE_PENETRATION_CORRECTION_KEY = "world.anlabo.mdnailtool.enable_penetration_correction";
 		internal static bool EnablePenetrationCorrection
 		{

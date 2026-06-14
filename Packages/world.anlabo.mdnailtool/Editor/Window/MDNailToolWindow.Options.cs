@@ -50,6 +50,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			this._bakeBlendShapes?.SetEnabled(useMA);
 			this._syncBlendShapesWithMA?.SetEnabled(useMA && (this._bakeBlendShapes?.value == true));
+			if (this._autoLinkShrinkBS != null) {
+				bool en = useMA && (this._bakeBlendShapes?.value == true);
+				this._autoLinkShrinkBS.SetEnabled(en);
+				if (!en && this._autoLinkShrinkBS.value) this._autoLinkShrinkBS.value = false;
+			}
 		}
 		private void ShowAvatarSearchWindow() { SearchAvatarWindow.ShowWindow(this); }
 		private void ShowNailSearchWindow() { SearchNailDesignWindow.ShowWindow(this); }

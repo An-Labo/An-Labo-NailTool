@@ -132,9 +132,6 @@
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel text-id="window.shader_preset_settings_title" class="mdn-shader-preset-settings-title" />
                         <ui:VisualElement name="shader-preset-settings-list" class="mdn-shader-preset-settings-list" />
                     </ui:VisualElement>
-                    <ui:VisualElement class="mdn-shader-preset-hint">
-                        <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel name="shader-preset-hint-text" text-id="window.shader_preset_hint" />
-                    </ui:VisualElement>
                 </ui:VisualElement>
 
                 <!-- プレビューエリアヘッダー（ON/OFF トグル付き） -->
@@ -253,7 +250,7 @@
                             text-id="window.bake_blendshapes"
                             class="mdn-option-label mdn-option-clickable" />
                     </ui:VisualElement>
-                    <ui:VisualElement class="mdn-option-row mdn-option-indent">
+                    <ui:VisualElement class="mdn-option-row mdn-option-indent-2">
                         <ui:Toggle name="auto-link-shrink-bs" class="mdn-toggle" />
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
                             name="label-auto-link-shrink-bs"
@@ -377,10 +374,6 @@
         <ui:VisualElement name="tool-console-container" class="mdn-tool-console-container">
             <ui:VisualElement class="mdn-tool-console-header">
                 <ui:Label name="tool-console-title" class="mdn-tool-console-title" />
-                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedButton
-                    name="reset-resources"
-                    text-id="window.reset_resources"
-                    class="mdn-tool-console-header-btn" />
                 <ui:Button name="tool-console-copy" class="mdn-tool-console-header-btn" />
             </ui:VisualElement>
             <ui:ScrollView name="tool-console-scroll" class="mdn-tool-console-scroll" />
