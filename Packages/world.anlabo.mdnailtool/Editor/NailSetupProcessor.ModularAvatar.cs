@@ -851,18 +851,30 @@ namespace world.anlabo.mdnailtool.Editor {
 
 				ModularAvatarObjectToggle rootToggle = nailRoot.AddComponent<ModularAvatarObjectToggle>();
 				var toggleTargets = new System.Collections.Generic.List<ToggledObject>();
-				// HandNailラッパー内の各ネイルオブジェクトを個別に登録
+				// HandNailラッパー内の各ネイルオブジェクトを個別に登録 (BakeBS で子無し時は wrapper 自身)
 				Transform? hw = nailRoot.transform.Find(handWrapperName);
 				if (hw != null) {
-					foreach (Transform child in hw)
+					int handAdded = 0;
+					foreach (Transform child in hw) {
 						toggleTargets.Add(new ToggledObject { Object = CreateAvatarRef(child.gameObject), Active = false });
+						handAdded++;
+					}
+					if (handAdded == 0) {
+						toggleTargets.Add(new ToggledObject { Object = CreateAvatarRef(hw.gameObject), Active = false });
+					}
 				}
-				// FootNailラッパー内の各ネイルオブジェクトを個別に登録
+				// FootNailラッパー内の各ネイルオブジェクトを個別に登録 (BakeBS で子無し時は wrapper 自身)
 				if (this.UseFootNail) {
 					Transform? fw = nailRoot.transform.Find(footWrapperName);
 					if (fw != null) {
-						foreach (Transform child in fw)
+						int footAdded = 0;
+						foreach (Transform child in fw) {
 							toggleTargets.Add(new ToggledObject { Object = CreateAvatarRef(child.gameObject), Active = false });
+							footAdded++;
+						}
+						if (footAdded == 0) {
+							toggleTargets.Add(new ToggledObject { Object = CreateAvatarRef(fw.gameObject), Active = false });
+						}
 					}
 				}
 				rootToggle.Objects = toggleTargets;
@@ -873,12 +885,17 @@ namespace world.anlabo.mdnailtool.Editor {
 				Transform? handWrapperT = nailRoot.transform.Find(handWrapperName);
 				if (handWrapperT != null) {
 					ModularAvatarObjectToggle handToggle = handWrapperT.gameObject.AddComponent<ModularAvatarObjectToggle>();
-					handToggle.Objects = handWrapperT.Cast<Transform>()
+					// BakeBS で wrapper 自身が SMR 統合 GO になり子なしのケース対応: 子があれば子を、無ければ wrapper 自身を target に.
+					List<ToggledObject> handToggleObjects = handWrapperT.Cast<Transform>()
 						.Select(t => new ToggledObject {
 							Object = CreateAvatarRef(t.gameObject),
 							Active = false
 						})
 						.ToList();
+					if (handToggleObjects.Count == 0) {
+						handToggleObjects.Add(new ToggledObject { Object = CreateAvatarRef(handWrapperT.gameObject), Active = false });
+					}
+					handToggle.Objects = handToggleObjects;
 
 					ModularAvatarMenuItem handMenuItem = handWrapperT.gameObject.AddComponent<ModularAvatarMenuItem>();
 					SetMenuToggle(handMenuItem, 1);
@@ -893,12 +910,16 @@ namespace world.anlabo.mdnailtool.Editor {
 					Transform? footWrapperT = nailRoot.transform.Find(footWrapperName);
 					if (footWrapperT != null) {
 						ModularAvatarObjectToggle footToggle = footWrapperT.gameObject.AddComponent<ModularAvatarObjectToggle>();
-						footToggle.Objects = footWrapperT.Cast<Transform>()
+						List<ToggledObject> footToggleObjects = footWrapperT.Cast<Transform>()
 							.Select(t => new ToggledObject {
 								Object = CreateAvatarRef(t.gameObject),
 								Active = false
 							})
 							.ToList();
+						if (footToggleObjects.Count == 0) {
+							footToggleObjects.Add(new ToggledObject { Object = CreateAvatarRef(footWrapperT.gameObject), Active = false });
+						}
+						footToggle.Objects = footToggleObjects;
 
 						ModularAvatarMenuItem footMenuItem = footWrapperT.gameObject.AddComponent<ModularAvatarMenuItem>();
 						SetMenuToggle(footMenuItem, 1);

@@ -116,7 +116,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					name = nailDesign.DesignName
 				};
 				nailElement.Add(thumbnailButton);
-				string displayName = nailDesign.DisplayNames.GetValueOrDefault(langKey, nailDesign.DesignName);
+				string displayName = nailDesign.DisplayNames?.GetValueOrDefault(langKey, nailDesign.DesignName) ?? nailDesign.DesignName;
 				Label nailTitle = new(displayName) {
 					style = {
 						width = new Length(60, LengthUnit.Pixel),

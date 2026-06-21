@@ -38,12 +38,13 @@ namespace world.anlabo.mdnailtool.Editor {
 		// バリアントのパスを GUID 優先 -> 抽出 retry -> ファイル名検索 の順で解決する
 		private string? ResolveVariantPath(AvatarBlendShapeVariant variant)
 		{
-			string? variantPath = MDNailToolAssetLoader.ResolveGuidToPath(variant.NailPrefabGUID);
+			string guid = variant.NailPrefabGUID ?? string.Empty;
+			string? variantPath = MDNailToolAssetLoader.ResolveGuidToPath(guid);
 			if (string.IsNullOrEmpty(variantPath) || NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 			{
-				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
+				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(guid);
 				AssetDatabase.Refresh();
-				variantPath = MDNailToolAssetLoader.ResolveGuidToPath(variant.NailPrefabGUID);
+				variantPath = MDNailToolAssetLoader.ResolveGuidToPath(guid);
 			}
 			if (!string.IsNullOrEmpty(variantPath) && NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 			{
@@ -51,7 +52,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 			if (string.IsNullOrEmpty(variantPath) || NailSetupUtil.LoadPrefabAtPath(variantPath) == null)
 			{
-				string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(variant.NailPrefabGUID);
+				string? diskPath = ResourceAutoExtractor.TryResolvePrefabFromDiskMeta(guid);
 				if (!string.IsNullOrEmpty(diskPath))
 				{
 					AssetDatabase.ImportAsset(diskPath!, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);

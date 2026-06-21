@@ -330,12 +330,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			AvatarBlendShapeVariant? variant = variants.FirstOrDefault(v => v.Name == variantName);
 			if (variant == null || string.IsNullOrEmpty(variant.NailPrefabGUID)) return null;
 
-			string path = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+			string guid = variant.NailPrefabGUID!;
+			string path = AssetDatabase.GUIDToAssetPath(guid);
 			if (string.IsNullOrEmpty(path) || MDNailToolAssetLoader.LoadPrefabSafe(path) == null)
 			{
-				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(variant.NailPrefabGUID);
+				ResourceAutoExtractor.EnsurePrefabExtractedByGuid(guid);
 				AssetDatabase.Refresh();
-				path = AssetDatabase.GUIDToAssetPath(variant.NailPrefabGUID);
+				path = AssetDatabase.GUIDToAssetPath(guid);
 			}
 			if (string.IsNullOrEmpty(path)) return null;
 

@@ -30,7 +30,8 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 				this._data = _cash;
 			} else {
 				TextAsset? textAsset = MDNailToolAssetLoader.LoadAssetSafe<TextAsset>(dbFilePath);
-				Dictionary<string, T>? data = JsonConvert.DeserializeObject<Dictionary<string, T>>(textAsset.text);
+				if (textAsset == null) throw new NailToolResourceException("DB", $"Not found DB : {dbFilePath}");
+				Dictionary<string, T>? data = this.DeserializeRoot(textAsset.text);
 				_cash = data ?? throw new NailToolResourceException("DB", $"Not found DB : {dbFilePath}");
 				this._data = _cash;
 			}
@@ -45,6 +46,11 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 
 		~DBBase() {
 			this.Dispose();
+		}
+
+		// json text を Dictionary<string, T> に展開するフック. 派生で root が非 Dictionary な json を扱える.
+		protected virtual Dictionary<string, T>? DeserializeRoot(string jsonText) {
+			return JsonConvert.DeserializeObject<Dictionary<string, T>>(jsonText);
 		}
 
 		/// <summary>

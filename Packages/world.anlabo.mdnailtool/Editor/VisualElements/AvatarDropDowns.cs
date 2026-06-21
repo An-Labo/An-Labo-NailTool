@@ -155,14 +155,14 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			using DBShop dbShop = new();
 			this._shopPopupElements = dbShop.collection.Select(shop => shop.ShopName).Prepend(ALL_ITEM).ToList();
 			this._shopDisplayNameDictionary = dbShop.collection
-				.ToDictionary(shop => shop.ShopName, shop => shop.DisplayNames.GetValueOrDefault(langKey, shop.ShopName));
+				.ToDictionary(shop => shop.ShopName, shop => (shop.DisplayNames?.GetValueOrDefault(langKey, shop.ShopName) ?? shop.ShopName));
 			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop") ?? "Filter by Shop";
 			this._shopPopup.choices = this._shopPopupElements;
 			this._shopPopup.value = this._shopPopupElements?[0];
 
 			this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName)).ToList();
 			this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => (shop, avatar)))
-				.ToDictionary(tuple => tuple.shop.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
+				.ToDictionary(tuple => tuple.shop.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => (tuple.avatar.DisplayNames?.GetValueOrDefault(langKey, tuple.avatar.AvatarName) ?? tuple.avatar.AvatarName));
 			this._avatarPopup.choices = this._avatarPopupElements;
 			this._avatarPopup.value = this._avatarPopupElements[0];
 
@@ -171,7 +171,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			this._variantPopupElements = avatar.AvatarVariations.Values.Select(variation => variation.VariationName).ToList();
 			this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
-				.ToDictionary(variation => variation.VariationName, variation => variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName));
+				.ToDictionary(variation => variation.VariationName, variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
 			this._variantPopup.choices = this._variantPopupElements;
 			this._variantPopup.value = this._variantPopupElements?[0];
 		}
@@ -203,11 +203,11 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				this._avatarPopupElements = dbShop.collection.SelectMany(s => s.Avatars.Values.Where(a => a.AvatarVariations.Count > 0).Select(a => s.ShopName + SPLIT + a.AvatarName))
 					.ToList();
 				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(s => s.Avatars.Values.Where(a => a.AvatarVariations.Count > 0).Select(a => (s, a)))
-					.ToDictionary(tuple => tuple.s.ShopName + SPLIT + tuple.a.AvatarName, tuple => tuple.a.DisplayNames.GetValueOrDefault(langKey, tuple.a.AvatarName));
+					.ToDictionary(tuple => tuple.s.ShopName + SPLIT + tuple.a.AvatarName, tuple => (tuple.a.DisplayNames?.GetValueOrDefault(langKey, tuple.a.AvatarName) ?? tuple.a.AvatarName));
 			} else {
 				this._avatarPopupElements = shop.Avatars.Values.Where(_avatar => _avatar.AvatarVariations.Count > 0).Select(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName).ToList();
 				this._avatarDisplayNameDictionary = shop.Avatars.Values.Where(_avatar => _avatar.AvatarVariations.Count > 0)
-					.ToDictionary(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName, _avatar => _avatar.DisplayNames.GetValueOrDefault(langKey, _avatar.AvatarName));
+					.ToDictionary(_avatar => shop.ShopName + SPLIT + _avatar.AvatarName, _avatar => (_avatar.DisplayNames?.GetValueOrDefault(langKey, _avatar.AvatarName) ?? _avatar.AvatarName));
 			}
 
 			this.SortAvatarList(this._avatarSortOrder);
@@ -218,7 +218,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			this._variantPopupElements = avatar.AvatarVariations.Values.Select(variation => variation.VariationName).ToList();
 			this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
-				.ToDictionary(variation => variation.VariationName, variation => variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName));
+				.ToDictionary(variation => variation.VariationName, variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
 			this._variantPopup.choices = this._variantPopupElements;
 			avatarVariation ??= avatar.AvatarVariations.Values.First();
 			this._variantPopup.SetValueWithoutNotify(avatarVariation.VariationName);
@@ -232,7 +232,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => (shop.ShopName, avatar.AvatarName)))
 					.Select(tuple => tuple.ShopName + SPLIT + tuple.AvatarName).ToList();
 				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => (shop.ShopName, avatar)))
-					.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
+					.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => (tuple.avatar.DisplayNames?.GetValueOrDefault(langKey, tuple.avatar.AvatarName) ?? tuple.avatar.AvatarName));
 			} else {
 				Shop? shop = dbShop.FindShopByName(evt.newValue);
 				if (shop == null) {
@@ -245,7 +245,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 				this._avatarPopupElements = shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName).ToList();
 				this._avatarDisplayNameDictionary = shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0)
-					.ToDictionary(avatar => shop.ShopName + SPLIT + avatar.AvatarName, avatar => avatar.DisplayNames.GetValueOrDefault(langKey, avatar.AvatarName));
+					.ToDictionary(avatar => shop.ShopName + SPLIT + avatar.AvatarName, avatar => (avatar.DisplayNames?.GetValueOrDefault(langKey, avatar.AvatarName) ?? avatar.AvatarName));
 			}
 
 			this._avatarPopup.choices = this._avatarPopupElements;
@@ -273,7 +273,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			this._variantPopupElements = avatar.AvatarVariations.Values.Select(variation => variation.VariationName).ToList();
 			this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
-				.ToDictionary(variation => variation.VariationName, variation => variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName));
+				.ToDictionary(variation => variation.VariationName, variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
 			this._variantPopup.choices = this._variantPopupElements;
 			this._variantPopup.value = this._variantPopupElements?[0];
 		}
@@ -331,7 +331,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				return NailPrefabBuilder.BuildFromNodes(src, variantName);
 			}
 
-			string guid = variation.NailPrefabGUID;
+			string guid = variation.NailPrefabGUID ?? string.Empty;
 			if (string.IsNullOrEmpty(guid)) return null;
 
 			string? path = MDNailToolAssetLoader.ResolveGuidToPath(guid);
@@ -378,32 +378,32 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		public void UpdateLanguage() {
 			string langKey = LanguageManager.CurrentLanguageData.language;
 			using DBShop dbShop = new();
-			this._shopDisplayNameDictionary = dbShop.collection.ToDictionary(shop => shop.ShopName, shop => shop.DisplayNames.GetValueOrDefault(langKey, shop.ShopName));
+			this._shopDisplayNameDictionary = dbShop.collection.ToDictionary(shop => shop.ShopName, shop => (shop.DisplayNames?.GetValueOrDefault(langKey, shop.ShopName) ?? shop.ShopName));
 			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop") ?? "Filter by Shop";
 			this.SortShopList(this._avatarSortOrder);
 			this._shopPopup.SetValueWithoutNotify(this._shopPopup.value);
 
 			if (this._shopPopup.value == ALL_ITEM) {
 				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar)))
-					.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.DisplayNames.GetValueOrDefault(langKey, tuple.avatar.AvatarName));
+					.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => (tuple.avatar.DisplayNames?.GetValueOrDefault(langKey, tuple.avatar.AvatarName) ?? tuple.avatar.AvatarName));
 				string[] names = this._avatarPopup.value.Split(SPLIT);
 				string shopName = names[0];
 				string avatarName = names[1];
 				Avatar? avatar = dbShop.FindShopByName(shopName)?.FindAvatarByName(avatarName);
 				if (avatar != null) {
 					this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
-						.ToDictionary(variation => variation.VariationName, variation => variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName));
+						.ToDictionary(variation => variation.VariationName, variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
 				}
 			} else {
 				Shop? shop = dbShop.FindShopByName(this._shopPopup.value);
 				if (shop != null) {
-					this._avatarDisplayNameDictionary = shop.Avatars.Values.ToDictionary(avatar => avatar.AvatarName, avatar => avatar.DisplayNames.GetValueOrDefault(langKey, avatar.AvatarName));
+					this._avatarDisplayNameDictionary = shop.Avatars.Values.ToDictionary(avatar => avatar.AvatarName, avatar => (avatar.DisplayNames?.GetValueOrDefault(langKey, avatar.AvatarName) ?? avatar.AvatarName));
 				}
 
 				Avatar? avatar = shop?.FindAvatarByName(this._avatarPopup.value);
 				if (avatar != null) {
 					this._variantDisplayNameDictionary = avatar.AvatarVariations.Values.ToDictionary(variation => variation.VariationName,
-						variation => variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName));
+						variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
 				}
 			}
 

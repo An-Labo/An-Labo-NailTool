@@ -40,7 +40,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			List<TreeViewItem> BuildShopTree() {
 				using DBShop _dbShop = new();
 				IEnumerable<TreeViewItem> shopItems = _dbShop.collection.Select(shop => {
-					string displayName = shop.DisplayNames.GetValueOrDefault(langKey, shop.ShopName);
+					string displayName = (shop.DisplayNames?.GetValueOrDefault(langKey, shop.ShopName) ?? shop.ShopName);
 					TreeItemData data = new() {
 						type = ItemType.Shop,
 						name = displayName,
@@ -62,7 +62,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			List<TreeViewItem> BuildAvatarTree(Shop shop, bool parentMatched) {
 				IEnumerable<TreeViewItem> avatarItems = shop.Avatars.Values.Select(avatar => {
-					string displayName = avatar.DisplayNames.GetValueOrDefault(langKey, avatar.AvatarName);
+					string displayName = (avatar.DisplayNames?.GetValueOrDefault(langKey, avatar.AvatarName) ?? avatar.AvatarName);
 					TreeItemData data = new() {
 						type = ItemType.Avatar,
 						name = displayName,
@@ -84,7 +84,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			List<TreeViewItem> BuildVariationTree(Shop shop, Avatar avatar, bool parentMatched) {
 				IEnumerable<TreeViewItem> variationItems = avatar.AvatarVariations.Values.Select(variation => {
-					string variationName = variation.DisplayNames.GetValueOrDefault(langKey, variation.VariationName);
+					string variationName = (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName);
 					TreeItemData data = new() {
 						type = ItemType.Variation,
 						name = variationName,

@@ -444,7 +444,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             nameRow.AddToClassList("mdn-nail-name-row");
 
             string currentLang = LanguageManager.CurrentLanguageData?.language ?? "jp";
-            string displayName = design.DisplayNames.GetValueOrDefault(currentLang, design.DesignName);
+            string displayName = (design.DisplayNames?.GetValueOrDefault(currentLang, design.DesignName) ?? design.DesignName);
 
             var nameLbl = new Label(displayName);
             nameLbl.AddToClassList("mdn-nail-name");

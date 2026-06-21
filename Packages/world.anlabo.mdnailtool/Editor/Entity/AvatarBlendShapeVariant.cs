@@ -8,9 +8,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("name")]
 		public string Name { get; set; } = null!;
 
-		[JsonRequired]
+		// NailNodes 経路に統一. NailPrefabGUID は legacy 後方互換 (旧 JSON で nailNodes 不在時のみ参照).
 		[JsonProperty("nailPrefabGUID")]
-		public string NailPrefabGUID { get; set; } = null!;
+		public string? NailPrefabGUID { get; set; }
 
 		[JsonProperty("syncSourceSmrName")]
 		public string? SyncSourceSmrName { get; set; }

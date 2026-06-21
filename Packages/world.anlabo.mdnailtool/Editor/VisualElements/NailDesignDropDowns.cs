@@ -192,7 +192,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					nailDesign => nailDesign.DesignName,
 					nailDesign => nailDesign.DisplayNames == null
 						? nailDesign.DesignName
-						: nailDesign.DisplayNames.GetValueOrDefault(LanguageManager.CurrentLanguageData.language, nailDesign.DesignName));
+						: (nailDesign.DisplayNames?.GetValueOrDefault(LanguageManager.CurrentLanguageData.language, nailDesign.DesignName) ?? nailDesign.DesignName));
 			this._designPopup.choices = this._designPopupElements;
 			this._designPopup.value = this._designPopupElements.Count <= 0 ? string.Empty : this._designPopupElements[0];
 
@@ -307,8 +307,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				variantChoices.Add(parentDesignName);
 			}
 
-			// 子
+			// 子 (installed のみ表示. DailyNail 月別など未取得バリは除外).
 			foreach (NailDesign child in children) {
+				if (!INailProcessor.IsInstalledDesign(child.DesignName)) continue;
 				if (this._variantDisplayToDesign.ContainsKey(child.DesignName)) continue;
 				string cDisplay = child.DisplayNames?.GetValueOrDefault(langKey, child.DesignName) ?? child.DesignName;
 				this._variantDisplayToDesign[child.DesignName] = cDisplay;
