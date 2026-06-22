@@ -44,7 +44,8 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 		private string getPrefabPrefix() {
-			Regex regex = new(@"(?<prefix>\[.+\]).+");
+			// `[Point]` 単独 (BuildFromNodes 出力の root 名) でも match させる. 末尾 `.+` だと [...] の後に文字必須で fail.
+			Regex regex = new(@"(?<prefix>\[[^\]]+\])");
 			Match match = regex.Match(this.NailPrefab.name);
 			if (match.Success) return match.Groups["prefix"].Value;
 

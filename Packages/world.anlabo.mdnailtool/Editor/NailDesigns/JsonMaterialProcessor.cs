@@ -72,29 +72,51 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		}
 
 		protected override void ProcessMaterial(Material targetMaterial, string materialName, string colorName, string nailShapeName) {
+			Texture2D? tex = null;
 			string? texGuid = FindMainTexGuid(materialName, nailShapeName, colorName);
-			if (string.IsNullOrEmpty(texGuid)) return;
+			if (!string.IsNullOrEmpty(texGuid)) {
+				string texPath = AssetDatabase.GUIDToAssetPath(texGuid!);
+				tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(texPath);
+			}
 
-			string texPath = AssetDatabase.GUIDToAssetPath(texGuid!);
-			Texture2D? tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(texPath);
+			// フォールバック: ColorTextures 未登録 (DailyNail 等) なら disk のファイル名規約で探す.
+			// パターン: 【{Design}】/[Data]/[Texture]/[{Shape}]/{material}/[tex][{Design}][{shape小}]{material}.png
+			if (tex == null) {
+				string shapeLower = nailShapeName.ToLowerInvariant();
+				string fallbackPath = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]/[{nailShapeName}]/{materialName}/[tex][{this.DesignName}][{shapeLower}]{materialName}.png";
+				tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(fallbackPath);
+			}
+
 			if (tex != null) targetMaterial.SetTexture(MainTex, tex);
 		}
 
 		public override bool IsInstalledMaterialVariation(string materialName) {
 			if (this._nailDesign.MaterialData == null) return false;
-			return this._nailDesign.MaterialData.Keys.Any(k => MatchesMaterialName(k, materialName));
+			if (!this._nailDesign.MaterialData.Keys.Any(k => MatchesMaterialName(k, materialName))) return false;
+
+			// DB に登録あっても disk 上に .mat 未展開 (extract 前) なら hidden. DailyNail #001-#260 等の ghost エントリ抑止.
+			string dataDir = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]";
+			if (!System.IO.Directory.Exists(dataDir)) return false;
+			string pattern = string.IsNullOrEmpty(materialName) ? "*.mat" : $"*{materialName}*.mat";
+			return System.IO.Directory.EnumerateFiles(dataDir, pattern, System.IO.SearchOption.AllDirectories).Any();
 		}
 
 		public override bool IsInstalledColorVariation(string materialName, string colorName) {
-			if (this._nailDesign.ColorTextures == null) return false;
 			string normalizedColor = colorName.Trim('[', ']');
-			foreach (var shapeEntry in this._nailDesign.ColorTextures.Values) {
-				foreach (var matEntry in shapeEntry) {
-					if (!MatchesMaterialName(matEntry.Key, materialName)) continue;
-					if (matEntry.Value.Keys.Any(k => string.Equals(k, normalizedColor, System.StringComparison.OrdinalIgnoreCase))) return true;
+			if (this._nailDesign.ColorTextures != null) {
+				foreach (var shapeEntry in this._nailDesign.ColorTextures.Values) {
+					foreach (var matEntry in shapeEntry) {
+						if (!MatchesMaterialName(matEntry.Key, materialName)) continue;
+						if (matEntry.Value.Keys.Any(k => string.Equals(k, normalizedColor, System.StringComparison.OrdinalIgnoreCase))) return true;
+					}
 				}
 			}
-			return false;
+
+			// フォールバック: ColorTextures 未登録 (DailyNail 等) なら disk 上の texture 存在で判定.
+			string textureDir = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]";
+			if (!System.IO.Directory.Exists(textureDir)) return false;
+			string pattern = string.IsNullOrEmpty(materialName) ? "*.png" : $"*{materialName}*.png";
+			return System.IO.Directory.EnumerateFiles(textureDir, pattern, System.IO.SearchOption.AllDirectories).Any();
 		}
 
 		public override bool IsSupportedNailShape(string shapeName) {

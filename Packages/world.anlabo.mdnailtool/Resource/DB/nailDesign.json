@@ -694,13 +694,6 @@
         },
         "materialName": "[mat][HoroNail][lil-toon]Gemini_square"
       },
-      "HoroNail": {
-        "textures": {
-          "_BumpMap": "0ed96bd4762d8bc4fa03c52e24ee2327",
-          "_EmissionMap": "daf15d52ebaa18f4ea145174207bade4"
-        },
-        "materialName": "HoroNail"
-      },
       "[mat][HoroNail][lil-toon]Leo_natural": {
         "textures": {
           "_BumpMap": "0ed96bd4762d8bc4fa03c52e24ee2327",
@@ -954,6 +947,13 @@
           "_EmissionMap": "9e183b36fb531fd489673231a64f9512"
         },
         "materialName": "[mat][HoroNail][lil-toon]Virgo_square"
+      },
+      "HoroNail": {
+        "textures": {
+          "_BumpMap": "0ed96bd4762d8bc4fa03c52e24ee2327",
+          "_EmissionMap": "daf15d52ebaa18f4ea145174207bade4"
+        },
+        "materialName": "HoroNail"
       }
     },
     "colorTextures": {
@@ -14000,26 +14000,6 @@
       }
     },
     "materialData": {
-      "[mat][LineyStellaNail][lil-toon]square": {
-        "textures": {
-          "_BumpMap": "02231599bb650f94b878927c5f0c857d"
-        },
-        "floats": {
-          "_BumpScale": 0.34,
-          "_Smoothness": 0.63,
-          "_Reflectance": 0.7,
-          "_MatCapLod": 5
-        },
-        "colors": {
-          "_MatCapColor": [
-            1,
-            1,
-            1,
-            0.9
-          ]
-        },
-        "materialName": "[mat][LineyStellaNail][lil-toon]square"
-      },
       "[mat][LineyStellaNail][lil-toon]Aquarius_natural": {
         "textures": {
           "_BumpMap": "9a68869a8ae5d744c933dbc8fb30951b",
@@ -14623,6 +14603,26 @@
           "_Reflectance": 0
         },
         "materialName": "[mat][LineyStellaNail][lil-toon]Scorpio_square"
+      },
+      "[mat][LineyStellaNail][lil-toon]square": {
+        "textures": {
+          "_BumpMap": "02231599bb650f94b878927c5f0c857d"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.63,
+          "_Reflectance": 0.7,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][LineyStellaNail][lil-toon]square"
       },
       "[mat][LineyStellaNail][lil-toon]Taurus_natural": {
         "textures": {
@@ -31519,6 +31519,358 @@
           ]
         },
         "materialName": "[mat][DailyNail][lil-toon]#284_square"
+      },
+      "[mat][DailyNail][lil-toon]#285_natural": {
+        "textures": {
+          "_BumpMap": "87888b4aef63d764084b42c1ebace0c0",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "dbeae8b8f1473324d9b67f8e7ec7e58d",
+          "_BaseColorMap": "dbeae8b8f1473324d9b67f8e7ec7e58d"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#285_natural"
+      },
+      "[mat][DailyNail][lil-toon]#285_oval": {
+        "textures": {
+          "_BumpMap": "8eb7f26e7ef74864ba68a01fc91c26bd",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "5fc9846d1138bfa4ba8b3ea9e79445fa",
+          "_BaseColorMap": "5fc9846d1138bfa4ba8b3ea9e79445fa"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#285_oval"
+      },
+      "[mat][DailyNail][lil-toon]#285_point": {
+        "textures": {
+          "_BumpMap": "8a3abb8bc6976914aaeb567109cb0b9c",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "5a037527b6599c745b0b238d3615f2c8",
+          "_BaseColorMap": "5a037527b6599c745b0b238d3615f2c8"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#285_point"
+      },
+      "[mat][DailyNail][lil-toon]#285_square": {
+        "textures": {
+          "_BumpMap": "29dc4e563202e6b49ba50badea045887",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "034cbcc59f8c7b3459c40621cef31bc4",
+          "_BaseColorMap": "034cbcc59f8c7b3459c40621cef31bc4"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#285_square"
+      },
+      "[mat][DailyNail][lil-toon]#286_natural": {
+        "textures": {
+          "_BumpMap": "87888b4aef63d764084b42c1ebace0c0",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "acbe1e94275d96842bfb0a43cb0043a9",
+          "_BaseColorMap": "acbe1e94275d96842bfb0a43cb0043a9"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#286_natural"
+      },
+      "[mat][DailyNail][lil-toon]#286_oval": {
+        "textures": {
+          "_BumpMap": "8eb7f26e7ef74864ba68a01fc91c26bd",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "593a48571dfd0494f811e88a4f917d21",
+          "_BaseColorMap": "593a48571dfd0494f811e88a4f917d21"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#286_oval"
+      },
+      "[mat][DailyNail][lil-toon]#286_point": {
+        "textures": {
+          "_BumpMap": "8a3abb8bc6976914aaeb567109cb0b9c",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "73e9bfe76ec3ecd4a985fd529d59ea6e",
+          "_BaseColorMap": "73e9bfe76ec3ecd4a985fd529d59ea6e"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#286_point"
+      },
+      "[mat][DailyNail][lil-toon]#286_square": {
+        "textures": {
+          "_BumpMap": "29dc4e563202e6b49ba50badea045887",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "b4a86abae729b184cbfd2216773272e5",
+          "_BaseColorMap": "b4a86abae729b184cbfd2216773272e5"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#286_square"
+      },
+      "[mat][DailyNail][lil-toon]#287_natural": {
+        "textures": {
+          "_BumpMap": "87888b4aef63d764084b42c1ebace0c0",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "3c173a153adf8a34a9f5eac37d254142",
+          "_BaseColorMap": "3c173a153adf8a34a9f5eac37d254142"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#287_natural"
+      },
+      "[mat][DailyNail][lil-toon]#287_oval": {
+        "textures": {
+          "_BumpMap": "8eb7f26e7ef74864ba68a01fc91c26bd",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "6573eff690dcf844a82ec153aeb57d78",
+          "_BaseColorMap": "6573eff690dcf844a82ec153aeb57d78"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#287_oval"
+      },
+      "[mat][DailyNail][lil-toon]#287_point": {
+        "textures": {
+          "_BumpMap": "8a3abb8bc6976914aaeb567109cb0b9c",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "66704decfc7c1d24899990330444691b",
+          "_BaseColorMap": "66704decfc7c1d24899990330444691b"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#287_point"
+      },
+      "[mat][DailyNail][lil-toon]#287_square": {
+        "textures": {
+          "_BumpMap": "29dc4e563202e6b49ba50badea045887",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "0203e522eb5390e46a7ddc8e32521762",
+          "_BaseColorMap": "0203e522eb5390e46a7ddc8e32521762"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#287_square"
+      },
+      "[mat][DailyNail][lil-toon]#288_natural": {
+        "textures": {
+          "_BumpMap": "87888b4aef63d764084b42c1ebace0c0",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "1b00b8244b9f138419e2ca5d26a2ee8a",
+          "_BaseColorMap": "1b00b8244b9f138419e2ca5d26a2ee8a"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#288_natural"
+      },
+      "[mat][DailyNail][lil-toon]#288_oval": {
+        "textures": {
+          "_BumpMap": "8eb7f26e7ef74864ba68a01fc91c26bd",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "8f335b8ff4ed84a448543ede5fb59af0",
+          "_BaseColorMap": "8f335b8ff4ed84a448543ede5fb59af0"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#288_oval"
+      },
+      "[mat][DailyNail][lil-toon]#288_point": {
+        "textures": {
+          "_BumpMap": "8a3abb8bc6976914aaeb567109cb0b9c",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "9ebb28c3cff90894a94f48fd9dd5f202",
+          "_BaseColorMap": "9ebb28c3cff90894a94f48fd9dd5f202"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#288_point"
+      },
+      "[mat][DailyNail][lil-toon]#288_square": {
+        "textures": {
+          "_BumpMap": "29dc4e563202e6b49ba50badea045887",
+          "_MatCapTex": "ffd99dabaaa388d43a2c669f0b338b23",
+          "_BaseMap": "3396124cc69a1d043a1fbd436f87f8a8",
+          "_BaseColorMap": "3396124cc69a1d043a1fbd436f87f8a8"
+        },
+        "floats": {
+          "_Smoothness": 0.58,
+          "_Reflectance": 0.3,
+          "_MatCapNormalStrength": 0.71
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.92
+          ]
+        },
+        "materialName": "[mat][DailyNail][lil-toon]#288_square"
       }
     }
   },
@@ -43285,7 +43637,7 @@
         ]
       },
       "brown": {
-        "colorName": "black",
+        "colorName": "brown",
         "tagColor": [
           "beige",
           "brown",
@@ -43303,7 +43655,7 @@
         ]
       },
       "brow": {
-        "colorName": "brown",
+        "colorName": "brow",
         "tagColor": [
           "gray",
           "brown"
@@ -44328,7 +44680,7 @@
         ]
       },
       "yellow": {
-        "colorName": "orange",
+        "colorName": "yellow",
         "tagColor": [
           "blue",
           "gray",
