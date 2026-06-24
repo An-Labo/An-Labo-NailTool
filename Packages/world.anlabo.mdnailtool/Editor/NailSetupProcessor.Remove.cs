@@ -92,28 +92,25 @@ namespace world.anlabo.mdnailtool.Editor {
 
 		internal static Dictionary<string, Transform?> GetTargetBoneDictionary(VRCAvatarDescriptor avatar, IReadOnlyDictionary<string, string>? boneMappingOverride) {
 			Animator? avatarAnimator = avatar.GetComponent<Animator>();
-			UEAvatar? animatorAvatar = avatarAnimator.avatar;
-			HumanDescription humanDescription = animatorAvatar.humanDescription;
-			HumanBone[] humanBones = humanDescription.human;
-			Dictionary<string, string> boneNameDictionary = humanBones.ToDictionary(humanBone => humanBone.humanName, humanBone => humanBone.boneName);
+			UEAvatar? animatorAvatar = avatarAnimator != null ? avatarAnimator.avatar : null;
+			bool isHumanoid = animatorAvatar != null && animatorAvatar.isHuman;
 
-			// HumanoidリグのHipsからアーマチュアルートを特定 (ヒエラルキー順や衣装Armatureに依存しない)
-			Transform? armatureRoot = null;
-			Transform? hipsTransform = avatarAnimator.GetBoneTransform(HumanBodyBones.Hips);
-			if (hipsTransform != null) {
-				armatureRoot = hipsTransform.parent;
-				while (armatureRoot != null && armatureRoot.parent != avatar.transform) {
-					armatureRoot = armatureRoot.parent;
-				}
+			Dictionary<string, string> boneNameDictionary;
+			if (isHumanoid) {
+				HumanBone[] humanBones = animatorAvatar!.humanDescription.human;
+				boneNameDictionary = humanBones.ToDictionary(humanBone => humanBone.humanName, humanBone => humanBone.boneName);
+			} else {
+				boneNameDictionary = new Dictionary<string, string>();
 			}
-			// 特定できなければアバター全体をフォールバック
-			Transform searchRoot = armatureRoot != null ? armatureRoot : avatar.transform;
 
+			// 素体 Armature root を 3 段階フォールバックで特定する (衣装/髪型 Armature に侵入させないための物理境界).
+			Transform searchRoot = ResolveSearchRoot(avatar, avatarAnimator, isHumanoid);
+
+			// Humanoid アバターは Animator.GetBoneTransform を最優先で使い、boneName 衝突を完全に回避する.
 			return MDNailToolDefines.TARGET_BONE_NAME_LIST
 				.Select(name => {
-					if (MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST.Contains(name)) {
-						// 通常はつま先同様、ボーンが未マップを想定するべきだが、指が未マップのアバターは普通存在しないため、エラーを出させるために処理を分ける。
-						// ReSharper disable once InvertIf
+					int handIndex = ((IList<string>)MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST).IndexOf(name);
+					if (handIndex >= 0) {
 						if (boneMappingOverride != null && boneMappingOverride.TryGetValue(name, out string handFingerBonePath)) {
 							Transform? targetBone = avatar.transform.Find(handFingerBonePath);
 							if (targetBone != null) {
@@ -123,12 +120,19 @@ namespace world.anlabo.mdnailtool.Editor {
 							ToolConsole.Warn("NailSetup", $"Not found bone : {handFingerBonePath}");
 						}
 
-						return (name, searchRoot.FindRecursive(boneNameDictionary[name]));
+						if (isHumanoid) {
+							Transform? mapped = avatarAnimator!.GetBoneTransform(MDNailToolDefines.HANDS_HUMAN_BODY_BONE_LIST[handIndex]);
+							if (mapped != null) {
+								return (name, (Transform?)mapped);
+							}
+						}
+
+						string handTargetName = boneNameDictionary.GetValueOrDefault(name, name);
+						return (name, searchRoot.FindRecursive(handTargetName));
 					}
 
 
 					if (boneMappingOverride != null && boneMappingOverride.TryGetValue(name, out string footFingerBonePath)) {
-						// ボーンが上書きされていればそれを返す
 						Transform? targetBone = avatar.transform.Find(footFingerBonePath);
 						if (targetBone != null) {
 							return (name, targetBone);
@@ -137,10 +141,22 @@ namespace world.anlabo.mdnailtool.Editor {
 						ToolConsole.Warn("NailSetup", $"Not found bone : {footFingerBonePath}");
 					}
 
-					// 足の指のボーン名から、どちらのつま先かを求める
 					string toeBoneName = MDNailToolDefines.LEFT_FOOT_FINGER_BONE_NAME_LIST.Contains(name) ? MDNailToolDefines.LEFT_TOES : MDNailToolDefines.RIGHT_TOES;
 
-					// つま先がアバターにマッピングされていないアバターがあった。そもそもつま先がないアバターがありそうなため、つま先がない場合足を取得する
+					if (isHumanoid) {
+						HumanBodyBones toeBodyBone = toeBoneName == MDNailToolDefines.LEFT_TOES ? MDNailToolDefines.LEFT_TOE_HUMAN_BODY_BONE : MDNailToolDefines.RIGHT_TOE_HUMAN_BODY_BONE;
+						Transform? toe = avatarAnimator!.GetBoneTransform(toeBodyBone);
+						if (toe != null) {
+							return (name, (Transform?)toe);
+						}
+
+						HumanBodyBones footBodyBone = toeBoneName == MDNailToolDefines.LEFT_TOES ? HumanBodyBones.LeftFoot : HumanBodyBones.RightFoot;
+						Transform? foot = avatarAnimator.GetBoneTransform(footBodyBone);
+						if (foot != null) {
+							return (name, (Transform?)foot);
+						}
+					}
+
 					string footBoneName = toeBoneName switch {
 						MDNailToolDefines.LEFT_TOES => MDNailToolDefines.LEFT_FOOT,
 						MDNailToolDefines.RIGHT_TOES => MDNailToolDefines.RIGHT_FOOT,
@@ -152,6 +168,58 @@ namespace world.anlabo.mdnailtool.Editor {
 					return (name, searchRoot.FindRecursive(targetBoneName));
 				})
 				.ToDictionary(tuple => tuple.name, tuple => tuple.Item2);
+		}
+
+		// 素体 Armature の root Transform を特定する. Humanoid なら Hips、未設定なら Eye Look Bone、最後に体メッシュ bones[] の先祖を辿って avatar 直下まで上がる.
+		private static Transform ResolveSearchRoot(VRCAvatarDescriptor avatar, Animator? animator, bool isHumanoid) {
+			Transform? candidate = null;
+
+			if (isHumanoid && animator != null) {
+				Transform? hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+				if (hips != null) {
+					candidate = AscendToAvatarChild(hips, avatar.transform);
+				}
+			}
+
+			if (candidate == null && avatar.enableEyeLook) {
+				Transform? leftEye = avatar.customEyeLookSettings.leftEye;
+				Transform? rightEye = avatar.customEyeLookSettings.rightEye;
+				Transform? eye = leftEye != null ? leftEye : rightEye;
+				if (eye != null) {
+					candidate = AscendToAvatarChild(eye, avatar.transform);
+				}
+			}
+
+			if (candidate == null) {
+				SkinnedMeshRenderer? bodySmr = FindBodyMesh(avatar);
+				if (bodySmr != null && bodySmr.bones.Length > 0) {
+					Transform? anyBone = bodySmr.bones.FirstOrDefault(b => b != null);
+					if (anyBone != null) {
+						candidate = AscendToAvatarChild(anyBone, avatar.transform);
+					}
+				}
+			}
+
+			// 全フォールバック失敗時は avatar.transform に落とす (旧実装と同等). 衣装同名ボーン衝突リスクが残るが、それ以上の手がかりが無い以上 boneMappingOverride 手動指定に委ねる.
+			return candidate != null ? candidate : avatar.transform;
+		}
+
+		// `bone` から `avatarRoot` の直接の子に到達するまで親方向へ辿る. 親辿りの途中で root に到達した場合は bone 自身を返す.
+		private static Transform AscendToAvatarChild(Transform bone, Transform avatarRoot) {
+			Transform current = bone;
+			while (current.parent != null && current.parent != avatarRoot) {
+				current = current.parent;
+			}
+			return current.parent == avatarRoot ? current : bone;
+		}
+
+		// 素体メッシュ候補の SkinnedMeshRenderer を返す. Viseme 以外で BlendShape を最多に持つ SMR を選ぶ (NailSetupProcessor.BlendShape.cs のフォールバックと同じ判定).
+		private static SkinnedMeshRenderer? FindBodyMesh(VRCAvatarDescriptor avatar) {
+			SkinnedMeshRenderer? visemeSmr = avatar.VisemeSkinnedMesh;
+			return avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+				.Where(smr => smr != visemeSmr && smr.sharedMesh != null && smr.sharedMesh.blendShapeCount > 0)
+				.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
+				.FirstOrDefault();
 		}
 	}
 }
