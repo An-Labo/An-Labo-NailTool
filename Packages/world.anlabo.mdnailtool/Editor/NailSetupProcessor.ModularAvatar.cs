@@ -164,7 +164,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								continue;
 							}
 
-							GameObject resolvedVariantPrefab = ResolveShapePrefab(variantPrefabAsset, this.NailShapeName);
+							GameObject resolvedVariantPrefab = ResolveShapePrefab(variantPrefabAsset, this.NailShapeName, variant.NailNodes);
 							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab, this.Avatar.transform);
 							// C-1 fix: instVariant の objectsToDestroy 追加は全 vNail.SetParent 完了後に移動 (詳細は variants ループ末尾参照).
 

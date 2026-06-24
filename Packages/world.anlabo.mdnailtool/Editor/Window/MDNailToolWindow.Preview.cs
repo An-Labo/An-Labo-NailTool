@@ -238,8 +238,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				}
 			}
 
-			// シェイプ別 Prefab ([Oval]〜.prefab 等) を解決して着用と同じPrefabでプレビュー
-			prefab = NailSetupProcessor.ResolveShapePrefab(prefab, nailShapeName);
+			// シェイプ別 Prefab ([Oval]〜.prefab 等) を解決して着用と同じPrefabでプレビュー.
+			// disk fallback 失敗時 (NailNodes 経路) 用に AvatarVariation.NailNodes を渡す. 渡さないと Preview が natural 固定で実 Process と sizing がズレる.
+			var avatarVariationForShape = this._avatarDropDowns?.GetSelectedAvatarVariation();
+			prefab = NailSetupProcessor.ResolveShapePrefab(prefab, nailShapeName, avatarVariationForShape?.NailNodes);
 
 			Mesh?[]? overrideMeshes = this._nailShapeDropDown?.GetSelectedShapeMeshes();
 			if (overrideMeshes == null) overrideMeshes = new Mesh?[0];
@@ -386,7 +388,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				}
 				if (variantPrefab == null) continue;
 
-				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName);
+				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName, variant.NailNodes);
 				var variantTransforms = variantPrefab.GetComponentsInChildren<Transform>(true);
 
 				// 各ネイルの位置・回転デルタを補間適用

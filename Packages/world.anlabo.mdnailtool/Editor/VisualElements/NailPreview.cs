@@ -122,7 +122,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				this._camera.Render();
 				Unsupported.useScriptableRenderPipeline = oldAllowPipes;
 
-				if (this._material == null) {
+				if (this._material == null || this._material.shader == null) {
+					if (this._material != null) Object.DestroyImmediate(this._material);
 					this._material = CreateMaterial();
 				}
 

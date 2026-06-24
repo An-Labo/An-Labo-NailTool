@@ -45,15 +45,33 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
-		internal static GameObject ResolveShapePrefab(GameObject basePrefab, string targetShape) {
+		internal static GameObject ResolveShapePrefab(GameObject basePrefab, string targetShape, NailPrefabNodeData[]? nailNodes = null) {
+			string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
+
+			// in-memory orphan (BuildFromNodes 出力) は AssetPath 空. shape 別 disk prefab 探索不可なので NailNodes から target shape で再ビルド試行.
+			// fallback 無しだと Process は Point で組み直すのに Preview は Natural のまま残り「scene 試着と着用結果で sizing がズレる」事故になる.
+			if (string.IsNullOrEmpty(prefabPath)) {
+				if (nailNodes != null && nailNodes.Length > 0) {
+					NailPrefabNodeData[]? currentShapeNodes = null;
+					using DBNailShape dbFb = new();
+					foreach (NailShape ns in dbFb.collection) {
+						string p = $"[{ns.ShapeName}]";
+						NailPrefabNodeData[] found = Array.FindAll(nailNodes, n => n.Name != null && n.Name.StartsWith(p));
+						if (found.Length > 0) currentShapeNodes = found;
+						if (ns.ShapeName == targetShape) break;
+					}
+					if (currentShapeNodes != null) {
+						return NailDesigns.NailPrefabBuilder.BuildFromNodes(currentShapeNodes, basePrefab.name);
+					}
+				}
+				return basePrefab;
+			}
+
 			System.Text.RegularExpressions.Regex nailPrefabNamePattern = new(@"(?<prefix>\[.+\])(?<prefabName>.+)");
 			System.Text.RegularExpressions.Match match = nailPrefabNamePattern.Match(basePrefab.name);
 			if (!match.Success) return basePrefab;
 
 			string prefabName = match.Groups["prefabName"].Value;
-			string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
-			// in-memory orphan (NodesByGuid から復元された Prefab) は AssetPath が空. シェイプ別物理 Prefab 探索の意味が無いのでそのまま返す.
-			if (string.IsNullOrEmpty(prefabPath)) return basePrefab;
 			// Path.GetDirectoryName は Windows で `\` 区切りを返す. AssetDatabase は `/` 前提のため正規化する.
 			string prefabDirPath = (Path.GetDirectoryName(prefabPath) ?? "").Replace('\\', '/');
 			GameObject current = basePrefab;
