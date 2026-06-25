@@ -8,8 +8,9 @@ namespace world.anlabo.mdnailtool.Editor {
     // 0.10.0 以降は Package/Resource/ 直参照のため Assets 側は不要.
     [InitializeOnLoad]
     public static class LegacyResourceCleanup {
-        private const string LEGACY_RESOURCE_PATH = "Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource";
         private const string CLEANUP_DONE_FLAG = "world.anlabo.mdnailtool.legacy_resource_cleanup_done";
+
+        private static string LegacyResourcePath => MDNailToolDefines.ROOT_ASSET_PATH.TrimEnd('/') + "/Resource";
 
         static LegacyResourceCleanup() {
             EditorApplication.delayCall += TryCleanup;
@@ -19,15 +20,16 @@ namespace world.anlabo.mdnailtool.Editor {
             if (SessionState.GetBool(CLEANUP_DONE_FLAG, false)) return;
             SessionState.SetBool(CLEANUP_DONE_FLAG, true);
 
-            if (!AssetDatabase.IsValidFolder(LEGACY_RESOURCE_PATH)) return;
+            string legacyResourcePath = LegacyResourcePath;
+            if (!AssetDatabase.IsValidFolder(legacyResourcePath)) return;
 
-            string full = Path.GetFullPath(LEGACY_RESOURCE_PATH);
+            string full = Path.GetFullPath(legacyResourcePath);
             ToolConsole.Log($"[Stage8] 旧版 Assets 配下 Resource キャッシュを検出. 削除します: {full}");
-            if (AssetDatabase.DeleteAsset(LEGACY_RESOURCE_PATH)) {
+            if (AssetDatabase.DeleteAsset(legacyResourcePath)) {
                 ToolConsole.Log("[Stage8] 旧 Resource キャッシュ削除完了.");
                 AssetDatabase.Refresh();
             } else {
-                ToolConsole.Warn("[Stage8]", $"旧 Resource キャッシュ削除失敗: {LEGACY_RESOURCE_PATH}");
+                ToolConsole.Warn("[Stage8]", $"旧 Resource キャッシュ削除失敗: {legacyResourcePath}");
             }
         }
     }

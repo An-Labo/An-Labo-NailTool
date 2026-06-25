@@ -86,7 +86,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			string expectedFileName = $"[{shapeName}]{variantName}.prefab";
 
 			string[] searchRoots = {
-				"Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab",
+				MDNailToolDefines.ROOT_ASSET_PATH.TrimEnd('/') + "/Resource/Nail/Prefab",
 				"Packages/world.anlabo.mdnailtool/Nail/Prefab"
 			};
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -12,16 +13,55 @@ namespace world.anlabo.mdnailtool.Editor
 	[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 	public static class MDNailToolDefines
 	{
-		public const string ROOT_ASSET_PATH = "Assets/[An-Labo.Virtual]/An-Labo Nail Tool/";
+		// [An-Labo.Virtual] フォルダはユーザーが Assets 配下の任意位置に配置可能.
+		// AssetDatabase で動的探索し、見つかった先頭を採用.
+		private const string AN_LABO_VIRTUAL_FOLDER_NAME = "[An-Labo.Virtual]";
+		private const string AN_LABO_VIRTUAL_DEFAULT_PATH = "Assets/" + AN_LABO_VIRTUAL_FOLDER_NAME;
+
+		private static string? _anLaboVirtualRootCache;
+
+		public static string AN_LABO_VIRTUAL_ROOT_PATH {
+			get {
+				if (_anLaboVirtualRootCache != null) return _anLaboVirtualRootCache;
+				// 想定場所 (Assets 直下) を先見て、あればそのまま使う. 9割のユーザーがここで終わる.
+				if (AssetDatabase.IsValidFolder(AN_LABO_VIRTUAL_DEFAULT_PATH)) {
+					_anLaboVirtualRootCache = AN_LABO_VIRTUAL_DEFAULT_PATH;
+					return _anLaboVirtualRootCache;
+				}
+				// 想定場所に無い場合のみ全 Assets を走査.
+				string[] guids = AssetDatabase.FindAssets(AN_LABO_VIRTUAL_FOLDER_NAME);
+				List<string> matches = guids
+					.Select(AssetDatabase.GUIDToAssetPath)
+					.Where(p => !string.IsNullOrEmpty(p) && Path.GetFileName(p) == AN_LABO_VIRTUAL_FOLDER_NAME && AssetDatabase.IsValidFolder(p))
+					.Distinct()
+					.ToList();
+				if (matches.Count == 0) {
+					_anLaboVirtualRootCache = AN_LABO_VIRTUAL_DEFAULT_PATH;
+				} else {
+					if (matches.Count > 1) {
+						Debug.LogError($"[NailTool] {AN_LABO_VIRTUAL_FOLDER_NAME} フォルダが複数見つかりました: {string.Join(", ", matches)} . 先頭を採用: {matches[0]}");
+					}
+					_anLaboVirtualRootCache = matches[0];
+				}
+				return _anLaboVirtualRootCache;
+			}
+		}
+
+		// テスト/ユーザーがフォルダ移動した直後に強制再探索したい時に呼ぶ.
+		public static void InvalidateAnLaboVirtualRootCache() {
+			_anLaboVirtualRootCache = null;
+		}
+
+		public static string ROOT_ASSET_PATH => AN_LABO_VIRTUAL_ROOT_PATH + "/An-Labo Nail Tool/";
 
 		// ---- Nail Chip v2 update badge ----
 		// MDollnailのBOOTH商品ページURL (v2更新誘導用、空文字ならスキップ)
 		public const string MDOLL_NAIL_BOOTH_URL = "https://minuetdoll.booth.pm/items/3114352";
 		// ⑨未購入案内用: ネイルラボ (コレクションサイト)
 		public const string ANLABO_NAILLAB_URL = "https://anlabo.world/nail-lab/";
-		public const string GENERATED_ASSET_PATH = ROOT_ASSET_PATH + "Generated/";
-		public const string BACKUP_PATH = ROOT_ASSET_PATH + "Backup/";
-		public const string REPORT_PATH = ROOT_ASSET_PATH + "Report/";
+		public static string GENERATED_ASSET_PATH => ROOT_ASSET_PATH + "Generated/";
+		public static string BACKUP_PATH => ROOT_ASSET_PATH + "Backup/";
+		public static string REPORT_PATH => ROOT_ASSET_PATH + "Report/";
 
 		public const string ROOT_PACKAGE_PATH = "Packages/world.anlabo.mdnailtool/";
 		
@@ -43,9 +83,9 @@ namespace world.anlabo.mdnailtool.Editor
 		public static string NAIL_DESIGN_PATH => RESOURCE_PATH + "Nail/Design/";
 
 		public static string SHADER_PRESET_BUILTIN_PATH => RESOURCE_PATH + "Nail/ShaderPresets/";
-		public const string SHADER_PRESET_USER_PATH = ROOT_ASSET_PATH + "ShaderPresets/";
+		public static string SHADER_PRESET_USER_PATH => ROOT_ASSET_PATH + "ShaderPresets/";
 
-		public const string LEGACY_DESIGN_PATH = "Assets/[An-Labo.Virtual]/【Nail】/";
+		public static string LEGACY_DESIGN_PATH => AN_LABO_VIRTUAL_ROOT_PATH + "/【Nail】/";
 		public const string PREVIEW_SHADER_GUID = MDNailToolGuids.PreviewShader;
 		public const string PREVIEW_PREFAB_GUID = MDNailToolGuids.PreviewPrefab;
 		public const string GRAY_SHADER_GUID = MDNailToolGuids.GrayShader;

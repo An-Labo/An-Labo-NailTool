@@ -64,7 +64,7 @@ namespace world.anlabo.mdnailtool.Editor.Report {
 
 			{
 				builder.AppendLine("[DirectoryDump]");
-				foreach (string directory in this.DumpDirectory("Assets/[An-Labo.Virtual]")) {
+				foreach (string directory in this.DumpDirectory(MDNailToolDefines.AN_LABO_VIRTUAL_ROOT_PATH)) {
 					builder.AppendLine(directory);
 				}
 

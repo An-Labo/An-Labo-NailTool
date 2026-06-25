@@ -96,8 +96,8 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
         }
 
         // プロジェクト全域を走査する理由はないので An-Labo NailTool 配下に検索スコープを限定
-        private static readonly string[] _nailPrefabSearchScope = {
-            "Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab"
+        private static string[] NailPrefabSearchScope => new[] {
+            MDNailToolDefines.ROOT_ASSET_PATH.TrimEnd('/') + "/Resource/Nail/Prefab"
         };
 
         private static GameObject? FindAvatarSpecificPrefab(Avatar avatar, AvatarVariation variation, string shape) {
@@ -110,7 +110,7 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
             foreach (string query in searchQueries) {
                 if(string.IsNullOrEmpty(query)) continue;
 
-                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}", _nailPrefabSearchScope);
+                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}", NailPrefabSearchScope);
 
                 foreach (string guid in guids) {
                     string path = AssetDatabase.GUIDToAssetPath(guid);
@@ -125,7 +125,7 @@ namespace world.anlabo.mdnailtool.Editor.Logic {
 
             foreach (string query in searchQueries) {
                 if(string.IsNullOrEmpty(query)) continue;
-                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}", _nailPrefabSearchScope);
+                string[] guids = AssetDatabase.FindAssets($"t:Prefab {query}", NailPrefabSearchScope);
                 foreach (string guid in guids) {
                     string path = AssetDatabase.GUIDToAssetPath(guid);
 

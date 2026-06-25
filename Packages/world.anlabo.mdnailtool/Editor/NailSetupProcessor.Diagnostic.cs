@@ -73,7 +73,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		private static string ListPrefabFolderContents()
 		{
 			string[] searchRoots = {
-				"Assets/[An-Labo.Virtual]/An-Labo Nail Tool/Resource/Nail/Prefab",
+				MDNailToolDefines.ROOT_ASSET_PATH.TrimEnd('/') + "/Resource/Nail/Prefab",
 				"Packages/world.anlabo.mdnailtool/Resource/Nail/Prefab"
 			};
 

@@ -13,7 +13,7 @@ using world.anlabo.mdnailtool.Editor.NailDesigns;
 namespace world.anlabo.mdnailtool.Editor {
 	public class LegacyDesignInstaller : AssetPostprocessor {
 		// Stage8: _design.json の置き場を Package 配下 (read-only) → Assets 書込可能領域へ移行.
-		public const string LEGACY_DESIGN_META_PATH = MDNailToolDefines.GENERATED_ASSET_PATH + "LegacyDesignMeta/";
+		public static string LEGACY_DESIGN_META_PATH => MDNailToolDefines.GENERATED_ASSET_PATH + "LegacyDesignMeta/";
 
 		public static string GetLegacyDesignJsonPath(string designName) {
 			return LEGACY_DESIGN_META_PATH + designName + "/_design.json";

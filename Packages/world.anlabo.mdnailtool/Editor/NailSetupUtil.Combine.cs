@@ -55,6 +55,7 @@ namespace world.anlabo.mdnailtool.Editor
 
 			var allVerts    = new List<Vector3>();
 			var allNormals  = new List<Vector3>();
+			var allTangents = new List<Vector4>();
 			var allUVs      = new List<Vector2>();
 			var allWeights  = new List<BoneWeight>();
 			int[] vertexOffsets = new int[validPairs.Length];
@@ -76,11 +77,16 @@ namespace world.anlabo.mdnailtool.Editor
 
 				Vector3[] srcVerts   = bakedMesh.vertices;
 				Vector3[] srcNormals = bakedMesh.normals;
+				Vector4[] tangents   = mesh.tangents;
 				for (int vi = 0; vi < mesh.vertexCount; vi++)
 				{
 					allVerts.Add(toLocal.MultiplyPoint3x4(srcVerts[vi]));
 					Vector3 n = srcNormals.Length > vi ? srcNormals[vi] : Vector3.up;
 					allNormals.Add(toLocal.MultiplyVector(n).normalized);
+
+					Vector4 tangent = tangents.Length > vi ? tangents[vi] : new Vector4(1f, 0f, 0f, 1f);
+					Vector3 tangentDir = toLocal.MultiplyVector(new Vector3(tangent.x, tangent.y, tangent.z)).normalized;
+					allTangents.Add(new Vector4(tangentDir.x, tangentDir.y, tangentDir.z, tangent.w));
 				}
 
 				Vector2[] uvs = mesh.uv;
@@ -96,6 +102,7 @@ namespace world.anlabo.mdnailtool.Editor
 
 			combinedMesh.vertices    = allVerts.ToArray();
 			combinedMesh.normals     = allNormals.ToArray();
+			combinedMesh.tangents    = allTangents.ToArray();
 			combinedMesh.uv          = allUVs.ToArray();
 			combinedMesh.boneWeights = allWeights.ToArray();
 
@@ -374,6 +381,8 @@ namespace world.anlabo.mdnailtool.Editor
 			{
 				AssetDatabase.CreateAsset(combinedMesh, assetPath);
 			}
+			// Reapply after asset identity-preserving copy paths so existing mesh assets keep tangents.
+			combinedMesh.tangents = allTangents.ToArray();
 			AssetDatabase.SaveAssets();
 
 			SkinnedMeshRenderer combinedSmr = combinedGo.AddComponent<SkinnedMeshRenderer>();
