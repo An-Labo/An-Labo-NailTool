@@ -79,12 +79,21 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(texPath);
 			}
 
-			// フォールバック: ColorTextures 未登録 (DailyNail 等) なら disk のファイル名規約で探す.
-			// パターン: 【{Design}】/[Data]/[Texture]/[{Shape}]/{material}/[tex][{Design}][{shape小}]{material}.png
+			// フォールバック: ColorTextures GUID 解決失敗 (.meta 再生成等) or 未登録なら disk のファイル名規約で探す.
+			// 試行: [1] color 軸型 (SpookyMagnet 等) / [2] material 軸型 (DailyNail 等)
 			if (tex == null) {
 				string shapeLower = nailShapeName.ToLowerInvariant();
-				string fallbackPath = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]/[{nailShapeName}]/{materialName}/[tex][{this.DesignName}][{shapeLower}]{materialName}.png";
-				tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(fallbackPath);
+				string normalizedColor = colorName.Trim('[', ']');
+				string designRoot = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]/[{nailShapeName}]";
+				string fileNamePrefix = $"[tex][{this.DesignName}][{shapeLower}]";
+				string[] candidates = {
+					$"{designRoot}/{fileNamePrefix}{normalizedColor}.png",
+					$"{designRoot}/{materialName}/{fileNamePrefix}{materialName}.png",
+				};
+				foreach (string path in candidates) {
+					tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(path);
+					if (tex != null) break;
+				}
 			}
 
 			if (tex != null) targetMaterial.SetTexture(MainTex, tex);
