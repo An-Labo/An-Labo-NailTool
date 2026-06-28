@@ -388,6 +388,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				}
 				if (variantPrefab == null) continue;
 
+				GameObject originalVariantPrefab = variantPrefab;
 				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName, variant.NailNodes);
 				var variantTransforms = variantPrefab.GetComponentsInChildren<Transform>(true);
 
@@ -407,7 +408,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					previewNail.localRotation = Quaternion.Slerp(Quaternion.identity, rotDelta, weight) * previewNail.localRotation;
 				}
 
-				if (variantIsOrphan && variantPrefab != null) Object.DestroyImmediate(variantPrefab);
+				if (variantIsOrphan) {
+					if (variantPrefab != null) Object.DestroyImmediate(variantPrefab);
+					if (originalVariantPrefab != null && !ReferenceEquals(originalVariantPrefab, variantPrefab)) Object.DestroyImmediate(originalVariantPrefab);
+				}
 			}
 		}
 

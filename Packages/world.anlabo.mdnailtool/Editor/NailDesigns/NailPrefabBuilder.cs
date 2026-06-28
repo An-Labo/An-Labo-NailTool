@@ -18,13 +18,20 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		private static readonly Regex ShapePrefixRegex = new(@"^\[([A-Za-z]+)\]", RegexOptions.Compiled);
 
-		internal static GameObject BuildFromNodes(NailPrefabNodeData[] rootNodes, string fallbackName) {
+		internal static GameObject BuildFromNodes(NailPrefabNodeData[] rootNodes, string fallbackName, string? shapeOverride = null) {
 			if (rootNodes == null || rootNodes.Length == 0)
 				return new GameObject(fallbackName);
 
-			GameObject root = BuildSubtree(rootNodes[0], null, ExtractShape(rootNodes[0].Name));
-			for (int i = 1; i < rootNodes.Length; i++)
-				BuildSubtree(rootNodes[i], root.transform, ExtractShape(rootNodes[i].Name));
+			if (rootNodes.Length == 1) {
+				string rootShape = !string.IsNullOrEmpty(shapeOverride) ? shapeOverride! : ExtractShape(rootNodes[0].Name);
+				return BuildSubtree(rootNodes[0], null, rootShape);
+			}
+
+			GameObject root = new GameObject(fallbackName);
+			foreach (NailPrefabNodeData node in rootNodes) {
+				string shape = !string.IsNullOrEmpty(shapeOverride) ? shapeOverride! : ExtractShape(node.Name);
+				BuildSubtree(node, root.transform, shape);
+			}
 			return root;
 		}
 

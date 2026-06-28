@@ -62,11 +62,11 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			List<TreeViewItem> BuildAvatarTree(Shop shop, bool parentMatched) {
 				IEnumerable<TreeViewItem> avatarItems = shop.Avatars.Values.Select(avatar => {
-					string displayName = (avatar.DisplayNames?.GetValueOrDefault(langKey, avatar.AvatarName) ?? avatar.AvatarName);
+					string displayName = avatar.GetDisplayName(langKey);
 					TreeItemData data = new() {
 						type = ItemType.Avatar,
 						name = displayName,
-						allNames = avatar.DisplayNames?.Values.ToArray(),
+						allNames = avatar.GetSearchNames(),
 						url = avatar.Url,
 						shop = shop,
 						avatar = avatar

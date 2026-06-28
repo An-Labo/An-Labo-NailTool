@@ -15,20 +15,27 @@ namespace world.anlabo.mdnailtool.Editor {
 	public partial class NailSetupProcessor {
 		private static Transform?[] GetHandsNailObjectList(GameObject nailPrefabObject) {
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
-				.Select(name => nailPrefabObject.transform.Find(name))
+				.Select(name => FindNailObject(nailPrefabObject, name))
 				.ToArray();
 		}
 
 		private static Transform?[] GetLeftFootNailObjectList(GameObject nailPrefabObject) {
 			return MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST
-				.Select(name => nailPrefabObject.transform.Find(name))
+				.Select(name => FindNailObject(nailPrefabObject, name))
 				.ToArray();
 		}
 
 		private static Transform?[] GetRightFootNailObjectList(GameObject nailPrefabObject) {
 			return MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST
-				.Select(name => nailPrefabObject.transform.Find(name))
+				.Select(name => FindNailObject(nailPrefabObject, name))
 				.ToArray();
+		}
+
+		private static Transform? FindNailObject(GameObject nailPrefabObject, string name) {
+			Transform? direct = nailPrefabObject.transform.Find(name);
+			if (direct != null) return direct;
+			return nailPrefabObject.GetComponentsInChildren<Transform>(true)
+				.FirstOrDefault(t => t != nailPrefabObject.transform && t.name == name);
 		}
 
 		// メッシュ無ければベースからコピー
@@ -63,6 +70,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					if (currentShapeNodes != null) {
 						return NailDesigns.NailPrefabBuilder.BuildFromNodes(currentShapeNodes, basePrefab.name);
 					}
+					return NailDesigns.NailPrefabBuilder.BuildFromNodes(nailNodes, basePrefab.name, targetShape);
 				}
 				return basePrefab;
 			}

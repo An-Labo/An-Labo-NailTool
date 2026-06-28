@@ -483,6 +483,22 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 				Material? directMaterial = this.GetDirectMaterial();
 
+				Avatar? freshAvatarEntity = null;
+				DBShop.ClearCache();
+				using (DBShop dbShop = new())
+				{
+					string avatarName = this._avatarDropDowns!.GetAvatarName();
+					foreach (Shop s in dbShop.collection)
+					{
+						Avatar? av = s.FindAvatarByName(avatarName);
+						if (av == null) continue;
+						freshAvatarEntity = av;
+						AvatarVariation? freshVariation = av.FindAvatarVariation(avatarVariationData.VariationName);
+						if (freshVariation != null) avatarVariationData = freshVariation;
+						break;
+					}
+				}
+
 				NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName)
 				{
 					AvatarName = this._avatarDropDowns?.GetAvatarName(),
@@ -515,19 +531,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				};
 
 				// AvatarEntityをprocessorにセット（shop.jsonのblendShapeVariantsを参照するため）
-				{
-					using DBShop dbShop = new();
-					string avatarName = this._avatarDropDowns!.GetAvatarName();
-					foreach (Shop s in dbShop.collection)
-					{
-						Avatar? av = s.FindAvatarByName(avatarName);
-						if (av != null)
-						{
-							processor.AvatarEntity = av;
-							break;
-						}
-					}
-				}
+				processor.AvatarEntity = freshAvatarEntity;
 
 				processor.Process();
 

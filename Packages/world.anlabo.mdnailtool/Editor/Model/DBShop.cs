@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using world.anlabo.mdnailtool.Editor.Entity;
@@ -32,9 +32,25 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			Dictionary<string, Shop>? shops = root.ToObject<Dictionary<string, Shop>>();
 			if (shops == null) return null;
 
+			ValidateAvatarReadings(shops);
 			ExpandSharedBodiesIntoVariations(shops, pool);
 			MergeFootNailNodesIntoShapeRoots(shops);
 			return shops;
+		}
+
+		private static void ValidateAvatarReadings(Dictionary<string, Shop> shops) {
+			foreach (var shopPair in shops) {
+				Shop shop = shopPair.Value;
+				if (shop.Avatars == null) continue;
+				foreach (var avatarPair in shop.Avatars) {
+					Avatar avatar = avatarPair.Value;
+					if (avatar == null) continue;
+					if (!string.IsNullOrWhiteSpace(avatar.Reading)) continue;
+					string shopName = string.IsNullOrEmpty(shop.ShopName) ? shopPair.Key : shop.ShopName;
+					string avatarName = string.IsNullOrEmpty(avatar.AvatarName) ? avatarPair.Key : avatar.AvatarName;
+					throw new NailToolResourceException("DB", $"shop.json avatar reading is required: {shopName}/{avatarName}");
+				}
+			}
 		}
 
 		private static void ExpandSharedBodiesIntoVariations(Dictionary<string, Shop> shops, Dictionary<string, SharedBody> pool) {

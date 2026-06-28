@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1104,12 +1104,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 					string avatarDn = avatarName;
 					Entity.Avatar? avatar = shop.FindAvatarByName(avatarName);
-					if (avatar?.DisplayNames != null)
+					if (avatar != null)
 					{
-						if (avatar.DisplayNames.TryGetValue(lang, out string? adn) && !string.IsNullOrEmpty(adn))
-							avatarDn = adn;
-						else if (avatar.DisplayNames.TryGetValue("ja", out adn) && !string.IsNullOrEmpty(adn))
-							avatarDn = adn;
+						avatarDn = avatar.GetDisplayName(lang);
 					}
 
 					string shopDn = shopName;
