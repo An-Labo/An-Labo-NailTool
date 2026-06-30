@@ -103,11 +103,11 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			if (this._nailDesign.MaterialData == null) return false;
 			if (!this._nailDesign.MaterialData.Keys.Any(k => MatchesMaterialName(k, materialName))) return false;
 
-			// DB に登録あっても disk 上に .mat 未展開 (extract 前) なら hidden. DailyNail #001-#260 等の ghost エントリ抑止.
-			string dataDir = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]";
-			if (!System.IO.Directory.Exists(dataDir)) return false;
-			string pattern = string.IsNullOrEmpty(materialName) ? "*.mat" : $"*{materialName}*.mat";
-			return System.IO.Directory.EnumerateFiles(dataDir, pattern, System.IO.SearchOption.AllDirectories).Any();
+			// mat は runtime 生成のため disk 配置を見ない. 実体必要なのは texture, ghost エントリは texture 不在で弾く.
+			string textureDir = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]";
+			if (!System.IO.Directory.Exists(textureDir)) return false;
+			string pattern = string.IsNullOrEmpty(materialName) ? "*.png" : $"*{materialName}*.png";
+			return System.IO.Directory.EnumerateFiles(textureDir, pattern, System.IO.SearchOption.AllDirectories).Any();
 		}
 
 		public override bool IsInstalledColorVariation(string materialName, string colorName) {
