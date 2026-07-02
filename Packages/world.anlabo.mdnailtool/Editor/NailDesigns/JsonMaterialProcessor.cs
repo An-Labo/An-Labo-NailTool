@@ -102,12 +102,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		public override bool IsInstalledMaterialVariation(string materialName) {
 			if (this._nailDesign.MaterialData == null) return false;
 			if (!this._nailDesign.MaterialData.Keys.Any(k => MatchesMaterialName(k, materialName))) return false;
-
-			// mat は runtime 生成のため disk 配置を見ない. 実体必要なのは texture, ghost エントリは texture 不在で弾く.
-			string textureDir = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]";
-			if (!System.IO.Directory.Exists(textureDir)) return false;
-			string pattern = string.IsNullOrEmpty(materialName) ? "*.png" : $"*{materialName}*.png";
-			return System.IO.Directory.EnumerateFiles(textureDir, pattern, System.IO.SearchOption.AllDirectories).Any();
+			return HasTexturePngContaining(materialName);
 		}
 
 		public override bool IsInstalledColorVariation(string materialName, string colorName) {
@@ -122,10 +117,26 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			}
 
 			// フォールバック: ColorTextures 未登録 (DailyNail 等) なら disk 上の texture 存在で判定.
-			string textureDir = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]";
-			if (!System.IO.Directory.Exists(textureDir)) return false;
-			string pattern = string.IsNullOrEmpty(materialName) ? "*.png" : $"*{materialName}*.png";
-			return System.IO.Directory.EnumerateFiles(textureDir, pattern, System.IO.SearchOption.AllDirectories).Any();
+			return HasTexturePngContaining(materialName);
+		}
+
+		private List<string>? _texturePngNames;
+
+		// 初回のみ textureDir 全 png を 1 回列挙して cache. materialData ×300 呼びのハング (数十秒) 対策.
+		private bool HasTexturePngContaining(string materialName) {
+			if (this._texturePngNames == null) {
+				string textureDir = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]";
+				if (!System.IO.Directory.Exists(textureDir)) {
+					this._texturePngNames = new List<string>();
+				} else {
+					this._texturePngNames = System.IO.Directory
+						.EnumerateFiles(textureDir, "*.png", System.IO.SearchOption.AllDirectories)
+						.Select(System.IO.Path.GetFileName)
+						.ToList();
+				}
+			}
+			if (string.IsNullOrEmpty(materialName)) return this._texturePngNames.Count > 0;
+			return this._texturePngNames.Any(n => n.IndexOf(materialName, System.StringComparison.OrdinalIgnoreCase) >= 0);
 		}
 
 		public override bool IsSupportedNailShape(string shapeName) {

@@ -374,6 +374,17 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				EditorGUIUtility.systemCopyBuffer = text;
 			});
 
+			// マテリアルキャッシュクリアボタン
+			var clearCacheBtn = this.rootVisualElement.Q<Button>("tool-console-clear-cache");
+			if (clearCacheBtn != null) clearCacheBtn.text = S("window.debug_clear_cache") ?? "Clear Material Cache";
+			clearCacheBtn?.RegisterCallback<ClickEvent>(_ =>
+			{
+				INailProcessor.ClearCreatedMaterialCash();
+				INailProcessor.ClearPreviewMaterialCash();
+				Debug.Log("[MDNailTool] Material cache cleared.");
+				this.Close();
+			});
+
 			// ToolConsole コールバック接続
 			ToolConsole.OnLog = this.AppendConsoleLog;
 			ToolConsole.Flush();
