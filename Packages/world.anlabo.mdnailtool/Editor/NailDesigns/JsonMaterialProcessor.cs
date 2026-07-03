@@ -179,15 +179,31 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		private string? FindMainTexGuid(string materialName, string nailShapeName, string colorName) {
 			if (this._nailDesign.ColorTextures == null) return null;
 			string normalizedColor = colorName.Trim('[', ']');
+			string normalizedMaterial = materialName.Trim('[', ']');
 			foreach (var shapeKv in this._nailDesign.ColorTextures) {
 				if (!ShapeEquals(shapeKv.Key, nailShapeName)) continue;
 				foreach (var kv in shapeKv.Value) {
-					if (!MatchesMaterialName(kv.Key, materialName)) continue;
-					string? matchKey = kv.Value.Keys.FirstOrDefault(k => string.Equals(k, normalizedColor, System.StringComparison.OrdinalIgnoreCase));
-					if (matchKey != null) return kv.Value[matchKey];
+					// 材料軸型: matKey に materialName を含む + colorKey が color 単体
+					if (MatchesMaterialName(kv.Key, materialName)) {
+						string? matchKey = kv.Value.Keys.FirstOrDefault(k => string.Equals(k, normalizedColor, System.StringComparison.OrdinalIgnoreCase));
+						if (matchKey != null) return kv.Value[matchKey];
+					}
+					// 複合キー型 (HoroNail/SimpleNailSet 等): matKey は shape 汎用、colorKey が color と material の複合
+					foreach (var colorKv in kv.Value) {
+						if (MatchesCompositeColorKey(colorKv.Key, normalizedColor, normalizedMaterial))
+							return colorKv.Value;
+					}
 				}
 			}
 			return null;
+		}
+
+		// colorKey が `[color]material` (HoroNail 型) or `color[material]` (SimpleNailSet 型) の複合形式で
+		// 指定 color/material の両方を含むか判定. bracket 位置に依存しない.
+		private static bool MatchesCompositeColorKey(string colorKey, string normalizedColor, string normalizedMaterial) {
+			if (string.IsNullOrEmpty(normalizedColor) || string.IsNullOrEmpty(normalizedMaterial)) return false;
+			return colorKey.IndexOf(normalizedColor, System.StringComparison.OrdinalIgnoreCase) >= 0
+				&& colorKey.IndexOf(normalizedMaterial, System.StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		private static void ApplyDelta(Material mat, NailMaterialDelta delta) {
