@@ -379,9 +379,21 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (clearCacheBtn != null) clearCacheBtn.text = S("window.debug_clear_cache") ?? "Clear Material Cache";
 			clearCacheBtn?.RegisterCallback<ClickEvent>(_ =>
 			{
+				// VCC アプデ後の古い TextAsset が残るので DB json を強制再インポート
+				AssetDatabase.ImportAsset(MDNailToolDefines.DB_NAIL_DESIGN_FILE_PATH, ImportAssetOptions.ForceUpdate);
+				AssetDatabase.ImportAsset(MDNailToolDefines.DB_SHOP_FILE_PATH, ImportAssetOptions.ForceUpdate);
+				AssetDatabase.ImportAsset(MDNailToolDefines.DB_NAIL_SHAPE_FILE_PATH, ImportAssetOptions.ForceUpdate);
+				AssetDatabase.ImportAsset(MDNailToolDefines.DB_ADDITIONAL_ASSETS_FILE_PATH, ImportAssetOptions.ForceUpdate);
+
+				// DBBase 静的キャッシュを全 T についてクリア (次の new で TextAsset 再読込)
+				DBNailDesign.ClearCache();
+				DBShop.ClearCache();
+				DBNailShape.ClearCache();
+				DBAdditionalAssets.ClearCache();
+
 				INailProcessor.ClearCreatedMaterialCash();
 				INailProcessor.ClearPreviewMaterialCash();
-				Debug.Log("[MDNailTool] Material cache cleared.");
+				Debug.Log("[MDNailTool] Cache cleared (DB reimport + DB cache + material + preview).");
 				this.Close();
 			});
 
