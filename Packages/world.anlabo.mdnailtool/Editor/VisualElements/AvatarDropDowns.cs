@@ -126,6 +126,11 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				tooltip = LanguageManager.S("tooltip.blendshape_variant") ?? ""
 			};
 
+			NailDesignDropDowns.UseScrollablePopup(this._shopPopup);
+			NailDesignDropDowns.UseScrollablePopup(this._avatarPopup);
+			NailDesignDropDowns.UseScrollablePopup(this._variantPopup);
+			NailDesignDropDowns.UseScrollablePopup(this.BlendShapeVariantPopup);
+
 			// 検索・ソートボタングループ（バリエーションの右）
 			VisualElement buttonGroup = new() {
 				style = {

@@ -94,14 +94,17 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailShapeDropDown.SetNailShape(GlobalSetting.LastUseShapeName);
 			this._nailShapeDropDown.RegisterValueChangedCallback(this.OnChangeShapeDropDown);
 			NailDesignDropDowns.AddArrowKeyNavigation(this._nailShapeDropDown);
+			NailDesignDropDowns.UseScrollablePopup(this._nailShapeDropDown);
 
 			this._nailMaterialDropDown = this.rootVisualElement.Q<LocalizedDropDown>("nail-material");
 			this._nailMaterialDropDown.RegisterValueChangedCallback(this.OnChangeNailMaterialDropDown);
 			NailDesignDropDowns.AddArrowKeyNavigation(this._nailMaterialDropDown);
+			NailDesignDropDowns.UseScrollablePopup(this._nailMaterialDropDown);
 
 			this._nailColorDropDown = this.rootVisualElement.Q<LocalizedDropDown>("nail-color");
 			this._nailColorDropDown.RegisterValueChangedCallback(this.OnChangeNailColorDropDown);
 			NailDesignDropDowns.AddArrowKeyNavigation(this._nailColorDropDown);
+			NailDesignDropDowns.UseScrollablePopup(this._nailColorDropDown);
 
 			// バリアント選択ドロップダウンをマテリアルバリエーション欄に配置（初期は非表示）
 			// バリアントがあるデザインの場合、マテリアルドロップダウンを隠してこちらを表示する
@@ -110,6 +113,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailVariantDropDown.style.display = DisplayStyle.None;
 			this._nailVariantDropDown.RegisterValueChangedCallback(this.OnChangeNailVariantDropDown);
 			NailDesignDropDowns.AddArrowKeyNavigation(this._nailVariantDropDown);
+			NailDesignDropDowns.UseScrollablePopup(this._nailVariantDropDown);
 			// マテリアルドロップダウンの直後に挿入（同じmdn-style-item内）
 			this._nailMaterialDropDown!.parent.Insert(
 				this._nailMaterialDropDown.parent.IndexOf(this._nailMaterialDropDown) + 1,
@@ -298,6 +302,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				this.PopulateAdditionalMaterialSourceDropdown();
 				NailDesignDropDowns.AddArrowKeyNavigation(this._additionalMaterialSourceDropdown);
+				NailDesignDropDowns.UseScrollablePopup(this._additionalMaterialSourceDropdown);
 				this._additionalMaterialSourceDropdown.RegisterValueChangedCallback(evt =>
 				{
 					string? noneLabel = this._additionalMaterialSourceDropdown.choices.FirstOrDefault();
@@ -316,6 +321,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				this.PopulateAdditionalObjectSourceDropdown();
 				NailDesignDropDowns.AddArrowKeyNavigation(this._additionalObjectSourceDropdown);
+				NailDesignDropDowns.UseScrollablePopup(this._additionalObjectSourceDropdown);
 				this._additionalObjectSourceDropdown.RegisterValueChangedCallback(evt =>
 				{
 					string? noneLabel = this._additionalObjectSourceDropdown.choices.FirstOrDefault();
@@ -331,6 +337,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			// シェーダープリセット
 			EnsureShaderPresetUserFolder();
 			this._shaderPresetSelect = this.rootVisualElement.Q<DropdownField>("shader-preset-select");
+			if (this._shaderPresetSelect != null) NailDesignDropDowns.UseScrollablePopup(this._shaderPresetSelect);
 			this._shaderPresetReloadBtn = this.rootVisualElement.Q<Button>("shader-preset-reload");
 			this._shaderPresetPingBtn = this.rootVisualElement.Q<Button>("shader-preset-ping");
 			this._shaderPresetAddField = this.rootVisualElement.Q<ObjectField>("shader-preset-add-field");

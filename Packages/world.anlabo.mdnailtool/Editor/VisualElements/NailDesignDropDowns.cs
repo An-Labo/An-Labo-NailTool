@@ -147,10 +147,15 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			});
 
 			AddArrowKeyNavigation(this._designPopup);
+			UseScrollablePopup(this._designPopup);
 			AddArrowKeyNavigation(this._materialPopup);
+			UseScrollablePopup(this._materialPopup);
 			AddArrowKeyNavigation(this._colorPopup);
+			UseScrollablePopup(this._colorPopup);
 			AddArrowKeyNavigation(this._additionalMaterialPopup);
+			UseScrollablePopup(this._additionalMaterialPopup);
 			AddArrowKeyNavigation(this._additionalObjectPopup);
+			UseScrollablePopup(this._additionalObjectPopup);
 
 			this.Init();
 		}
@@ -177,6 +182,153 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					evt.PreventDefault();
 				}
 			});
+		}
+
+		// Unity 標準 DropdownField は大量候補の popup ホイール操作が弱いため、
+		// フィールド自体は維持したままクリック時の popup だけ ScrollView で描画する。
+		internal static void UseScrollablePopup(DropdownField dropdown) {
+			dropdown.RegisterCallback<MouseDownEvent>(evt => {
+				if (evt.button != 0) return;
+				if (dropdown.choices == null || dropdown.choices.Count == 0) return;
+				evt.StopImmediatePropagation();
+				evt.PreventDefault();
+				ShowScrollablePopup(dropdown);
+			}, TrickleDown.TrickleDown);
+			dropdown.RegisterCallback<PointerDownEvent>(evt => {
+				if (evt.button != 0) return;
+				if (dropdown.choices == null || dropdown.choices.Count == 0) return;
+				evt.StopImmediatePropagation();
+				evt.PreventDefault();
+				ShowScrollablePopup(dropdown);
+			}, TrickleDown.TrickleDown);
+		}
+
+		private const string PopupElementName = "nail-scrollable-popup";
+
+		private static void ShowScrollablePopup(DropdownField dropdown) {
+			VisualElement? root = dropdown.panel?.visualTree;
+			if (root == null) return;
+
+			root.Q<VisualElement>(PopupElementName)?.RemoveFromHierarchy();
+
+			VisualElement popup = new() { name = PopupElementName };
+			popup.style.position = Position.Absolute;
+			Rect dropdownBounds = dropdown.worldBound;
+			Rect rootBounds = root.worldBound;
+			popup.style.left = dropdownBounds.xMin - rootBounds.xMin;
+			popup.style.top = dropdownBounds.yMax - rootBounds.yMin;
+			popup.style.width = dropdown.layout.width;
+			const float rowHeight = 18f;
+			float maxHeight = Mathf.Clamp(rootBounds.height * 0.5f, rowHeight * 6f, rowHeight * 14f);
+			float popupHeight = Mathf.Min(maxHeight, dropdown.choices.Count * rowHeight);
+			popup.style.height = popupHeight;
+			popup.style.maxHeight = maxHeight;
+			popup.style.overflow = Overflow.Hidden;
+			popup.style.backgroundColor = new StyleColor(new Color(0.22f, 0.22f, 0.22f, 1f));
+			popup.style.borderTopWidth = 1;
+			popup.style.borderBottomWidth = 1;
+			popup.style.borderLeftWidth = 1;
+			popup.style.borderRightWidth = 1;
+			StyleColor borderColor = new(new Color(0f, 0f, 0f, 1f));
+			popup.style.borderTopColor = borderColor;
+			popup.style.borderBottomColor = borderColor;
+			popup.style.borderLeftColor = borderColor;
+			popup.style.borderRightColor = borderColor;
+
+			ScrollView scroll = new(ScrollViewMode.Vertical);
+			scroll.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+			scroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+			scroll.style.height = popupHeight;
+			scroll.style.maxHeight = maxHeight;
+			scroll.style.overflow = Overflow.Hidden;
+
+			bool needsScrollbar = dropdown.choices.Count * rowHeight > popupHeight + 0.5f;
+			VisualElement scrollbarTrack = new();
+			scrollbarTrack.style.position = Position.Absolute;
+			scrollbarTrack.style.top = 0;
+			scrollbarTrack.style.right = 0;
+			scrollbarTrack.style.bottom = 0;
+			scrollbarTrack.style.width = 12;
+			scrollbarTrack.style.backgroundColor = new StyleColor(new Color(0.14f, 0.14f, 0.14f, 1f));
+			scrollbarTrack.style.display = needsScrollbar ? DisplayStyle.Flex : DisplayStyle.None;
+			VisualElement scrollbarThumb = new();
+			scrollbarThumb.style.position = Position.Absolute;
+			scrollbarThumb.style.left = 2;
+			scrollbarThumb.style.right = 2;
+			scrollbarThumb.style.top = 0;
+			scrollbarThumb.style.height = 24;
+			scrollbarThumb.style.backgroundColor = new StyleColor(new Color(0.52f, 0.52f, 0.52f, 1f));
+			scrollbarTrack.Add(scrollbarThumb);
+
+			void UpdateScrollbar() {
+				if (!needsScrollbar) return;
+				float contentHeight = dropdown.choices.Count * rowHeight;
+				float viewportHeight = popupHeight;
+				float thumbHeight = Mathf.Clamp(viewportHeight / contentHeight * viewportHeight, 24f, viewportHeight);
+				float maxOffset = Mathf.Max(1f, contentHeight - viewportHeight);
+				float travel = Mathf.Max(0f, viewportHeight - thumbHeight);
+				float normalizedOffset = Mathf.Clamp01(scroll.scrollOffset.y / maxOffset);
+				scrollbarThumb.style.height = thumbHeight;
+				scrollbarThumb.style.top = normalizedOffset * travel;
+			}
+			scroll.RegisterCallback<GeometryChangedEvent>(_ => UpdateScrollbar());
+			scroll.RegisterCallback<WheelEvent>(_ => scroll.schedule.Execute(UpdateScrollbar));
+			foreach (string choice in dropdown.choices) {
+				string captured = choice;
+				string displayText = dropdown.formatListItemCallback?.Invoke(choice) ?? choice;
+				Label label = new(displayText);
+				label.style.color = new StyleColor(new Color(0.9f, 0.9f, 0.9f, 1f));
+				label.style.fontSize = 12;
+				label.style.unityFont = dropdown.resolvedStyle.unityFont;
+				label.style.unityFontDefinition = new StyleFontDefinition(dropdown.resolvedStyle.unityFontDefinition);
+				label.style.paddingLeft = 8;
+				label.style.paddingRight = needsScrollbar ? 20 : 8;
+				label.style.paddingTop = 0;
+				label.style.paddingBottom = 0;
+				label.style.height = rowHeight;
+				label.style.minHeight = rowHeight;
+				label.style.flexShrink = 0;
+				label.style.unityTextAlign = TextAnchor.MiddleLeft;
+				bool isCurrent = choice == dropdown.value;
+				if (isCurrent) {
+					label.style.backgroundColor = new StyleColor(new Color(0.3f, 0.5f, 0.8f, 1f));
+				}
+				label.RegisterCallback<MouseEnterEvent>(_ => {
+					if (choice != dropdown.value) {
+						label.style.backgroundColor = new StyleColor(new Color(0.35f, 0.35f, 0.35f, 1f));
+					}
+				});
+				label.RegisterCallback<MouseLeaveEvent>(_ => {
+					if (choice != dropdown.value) {
+						label.style.backgroundColor = new StyleColor(StyleKeyword.Null);
+					}
+				});
+				label.RegisterCallback<MouseDownEvent>(mouseEvt => {
+					dropdown.value = captured;
+					popup.RemoveFromHierarchy();
+					mouseEvt.StopImmediatePropagation();
+				});
+				scroll.Add(label);
+			}
+			popup.Add(scroll);
+			popup.Add(scrollbarTrack);
+			UpdateScrollbar();
+			root.Add(popup);
+			popup.BringToFront();
+
+			// 外部クリックで閉じる
+			EventCallback<MouseDownEvent>? closeHandler = null;
+			closeHandler = mouseEvt => {
+				if (popup.parent == null) {
+					if (closeHandler != null) root.UnregisterCallback(closeHandler, TrickleDown.TrickleDown);
+					return;
+				}
+				if (!popup.worldBound.Contains(mouseEvt.mousePosition)) {
+					popup.RemoveFromHierarchy();
+					if (closeHandler != null) root.UnregisterCallback(closeHandler, TrickleDown.TrickleDown);
+				}
+			};
+			root.RegisterCallback(closeHandler, TrickleDown.TrickleDown);
 		}
 
 		private void Init() {

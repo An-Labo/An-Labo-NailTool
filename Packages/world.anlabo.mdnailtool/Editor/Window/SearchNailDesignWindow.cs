@@ -9,6 +9,7 @@ using world.anlabo.mdnailtool.Editor.Model;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
 using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.Language;
+using world.anlabo.mdnailtool.Editor.VisualElements;
 
 namespace world.anlabo.mdnailtool.Editor.Window {
     public class SearchNailDesignWindow : EditorWindow {
@@ -140,6 +141,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             string sortName   = LanguageManager.S("window.sort.name")   ?? "Name";
             string sortUsage  = LanguageManager.S("window.sort.usage")  ?? "Usage Count";
             _sortDropdown = new DropdownField(new List<string> { sortNewest, sortName, sortUsage }, 0);
+            NailDesignDropDowns.UseScrollablePopup(_sortDropdown);
             _sortDropdown.AddToClassList("mdn-search-sort");
             _sortDropdown.RegisterValueChangedCallback(_ => UpdateFilter());
             topBar.Add(_sortDropdown);
