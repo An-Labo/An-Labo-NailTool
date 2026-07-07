@@ -250,6 +250,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				});
 			}
 
+			this._bakeBlendShapeGeneratedList = this.rootVisualElement.Q<Label>("bake-blendshape-generated-list");
+
 			this._bakeBlendShapes = this.rootVisualElement.Q<Toggle>("bake-blendshapes");
 			if (this._bakeBlendShapes != null)
 			{
@@ -277,6 +279,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._autoLinkShrinkBS.SetValueWithoutNotify(GlobalSetting.AutoLinkShrinkBS);
 				this._autoLinkShrinkBS.RegisterValueChangedCallback(evt => {
 					GlobalSetting.AutoLinkShrinkBS = evt.newValue;
+					this.UpdateBakeBlendShapeGeneratedList();
 				});
 				this._autoLinkShrinkBS.SetEnabled(GlobalSetting.UseModularAvatar && GlobalSetting.BakeBlendShapes);
 				var lblShrink = this.rootVisualElement.Q<LocalizedLabel>("label-auto-link-shrink-bs");
@@ -295,6 +298,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 
 			this.UpdateMASubOptionsVisibility(GlobalSetting.UseModularAvatar);
+			this.UpdateBlendShapeVariantDropDown();
 
 			// 追加マテリアルソース選択ドロップダウン
 			this._additionalMaterialSourceDropdown = this.rootVisualElement.Q<DropdownField>("additional-material-source");
@@ -372,12 +376,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (copyBtn != null) copyBtn.text = S("window.debug_copy") ?? "Copy Support Info";
 			copyBtn?.RegisterCallback<ClickEvent>(_ =>
 			{
-				if (this._toolConsoleScroll == null) return;
-				var lines = this._toolConsoleScroll.Children()
-					.OfType<Label>()
-					.Select(l => l.text);
-				string text = string.Join("\n", lines);
-				text += this.BuildConsoleDiagnosticInfo();
+				string text = this.BuildConsoleDiagnosticInfo();
+				string toolLog = this.BuildToolConsoleLog();
+				if (!string.IsNullOrWhiteSpace(toolLog))
+				{
+					text += toolLog;
+				}
 				EditorGUIUtility.systemCopyBuffer = text;
 			});
 

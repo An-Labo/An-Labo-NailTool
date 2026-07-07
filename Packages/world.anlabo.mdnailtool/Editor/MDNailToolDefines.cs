@@ -80,6 +80,7 @@ namespace world.anlabo.mdnailtool.Editor
 		public static string DB_NAIL_DESIGN_FILE_PATH => DB_PATH + "nailDesign.json";
 		public static string DB_ADDITIONAL_ASSETS_FILE_PATH => DB_PATH + "additionalAssets.json";
 		public static string DB_CHANGELOG_FILE_PATH => DB_PATH + "changelog.json";
+		public static string DB_FAQ_FILE_PATH => DB_PATH + "faq.json";
 		public static string NAIL_DESIGN_PATH => RESOURCE_PATH + "Nail/Design/";
 
 		public static string SHADER_PRESET_BUILTIN_PATH => RESOURCE_PATH + "Nail/ShaderPresets/";

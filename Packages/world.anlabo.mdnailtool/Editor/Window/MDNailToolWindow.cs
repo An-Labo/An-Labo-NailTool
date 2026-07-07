@@ -72,6 +72,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _bakeBlendShapes;
 		private Toggle? _syncBlendShapesWithMA;
 		private Toggle? _autoLinkShrinkBS;
+		private Label? _bakeBlendShapeGeneratedList;
 		private Toggle? _closeWindowOnExecute;
 		private DropdownField? _additionalMaterialSourceDropdown;
 		private DropdownField? _additionalObjectSourceDropdown;

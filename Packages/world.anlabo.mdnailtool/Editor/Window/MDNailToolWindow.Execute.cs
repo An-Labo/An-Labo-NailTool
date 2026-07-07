@@ -392,6 +392,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnDestroy()
 		{
+			FAQWindow.CloseAll();
 			INailProcessor.ClearPreviewMaterialCash();
 			this.CleanupScenePreview();
 			ToolConsole.OnLog = null;

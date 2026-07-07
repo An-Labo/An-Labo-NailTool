@@ -1,0 +1,54 @@
+[
+  {
+    "id": "nails-not-shown",
+    "priority": 10,
+    "includeInTool": true,
+    "title": {
+      "ja": "新しいネイルが一覧に表示されない",
+      "en": "New nails do not appear in the list"
+    },
+    "body": {
+      "ja": "まず、An-Labo NailToolを最新版に更新してください。\n新しいネイルは、古いバージョンのツールでは一覧に表示されない場合があります。\n\nVCCまたはALCOMでご利用中のプロジェクトを開き、An-Labo NailToolに更新がないか確認してください。\n更新後、ネイルツールを起動しても表示されない場合、Unityを再起動してもう一度お試しください。\n\nそれでも表示されない場合は、購入した商品のzip内にあるunitypackageがすべてインポートされているか確認してください。\n商品によっては複数のunitypackageが含まれている場合があります。",
+      "en": "First, update An-Labo NailTool to the latest version.\nNew nails may not appear in older versions of the tool.\n\nOpen your project in VCC or ALCOM and check whether An-Labo NailTool has an update available.\nIf the nails still do not appear after updating, restart Unity and try again.\n\nIf the issue persists, check that all unitypackage files included in the purchased product zip have been imported. Some products include multiple unitypackage files."
+    }
+  },
+  {
+    "id": "copy-support-info",
+    "priority": 20,
+    "includeInTool": true,
+    "title": {
+      "ja": "お問い合わせ時に必要な情報",
+      "en": "Information needed when contacting support"
+    },
+    "body": {
+      "ja": "Unity上で問題が起きている場合は、ネイルツール内の「詳細設定 > トラブルシューティング > サポート情報をコピー」で取得した情報を添えてお問い合わせください。\n\nサポート情報には、NailToolのバージョン、Unityのバージョン、選択中のアバター、設定内容、Unity Consoleのエラー/警告などが含まれます。",
+      "en": "If the issue occurs in Unity, include the information copied from Detailed Settings > Troubleshooting > Copy Support Info in NailTool when contacting support.\n\nThe support info includes the NailTool version, Unity version, selected avatar, option values, and Unity Console errors/warnings."
+    }
+  },
+  {
+    "id": "nail-position-off",
+    "priority": 40,
+    "includeInTool": true,
+    "title": {
+      "ja": "ネイルの位置がズレる",
+      "en": "Nail position is misaligned"
+    },
+    "body": {
+      "ja": "まず、着用したいアバターの体にあたる基準アバターが正しく選択されているか確認してください。\n\nModularAvatarを使用している場合は、推奨設定を使ってから再度お試しください。\nアバター側でArmatureやスケールを大きく変更している場合、位置がズレることがあります。",
+      "en": "First, check that the base avatar matching the body of the avatar you want to use is selected correctly.\n\nIf you are using ModularAvatar, apply the recommended settings and try again.\nIf the avatar's Armature or scale has been heavily modified, the nail position may be misaligned."
+    }
+  },
+  {
+    "id": "blendshape-bake",
+    "priority": 50,
+    "includeInTool": true,
+    "title": {
+      "ja": "BlendShapeに追従させたい",
+      "en": "Make nails follow BlendShapes"
+    },
+    "body": {
+      "ja": "ModularAvatarを使用する場合は、「ネイルを結合し、BlendShapesに自動で追従する」をONにすると、対応しているBlendShape用のネイルが生成されます。\n\n生成されるBlendShape名は、設定欄の下に表示されます。\nShrink系BlendShapeにも追従させたい場合は、「ShrinkのBlendShapeにも追従する」をONにしてください。",
+      "en": "When using ModularAvatar, enable Merge nails and auto-follow body BlendShapes to generate nails for supported BlendShapes.\n\nThe generated BlendShape names are shown below the option.\nTo also follow Shrink BlendShapes, enable Auto-follow Shrink BlendShapes."
+    }
+  }
+]

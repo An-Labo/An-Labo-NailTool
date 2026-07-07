@@ -95,6 +95,31 @@
     color: #aad0ff;
 }
 
+/* ---- Update notice ---- */
+.mdn-update-notice {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 5px;
+    padding: 7px 9px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: #d4a04a;
+    background-color: rgba(212, 160, 74, 0.20);
+}
+
+.mdn-update-notice:hover {
+    background-color: rgba(212, 160, 74, 0.30);
+}
+
+.mdn-update-notice-title {
+    color: #ffd666;
+    -unity-font-style: bold;
+    font-size: 12px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
 /* ---- Section card ---- */
 .mdn-section {
     background-color: #333333;
@@ -647,6 +672,100 @@
 
 .mdn-changelog-new:hover {
     color: #ffe08a;
+}
+
+
+/* ---- FAQ window ---- */
+.mdn-faq-root {
+    flex-grow: 1;
+    padding: 12px;
+    background-color: #2b2b2b;
+}
+
+.mdn-faq-title {
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: #f4f4f4;
+    margin-bottom: 5px;
+}
+
+.mdn-faq-lead {
+    font-size: 12px;
+    color: #c7ced8;
+    white-space: normal;
+    margin-bottom: 10px;
+}
+
+.mdn-faq-scroll {
+    flex-grow: 1;
+}
+
+.mdn-faq-item {
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: #484848;
+    background-color: #333333;
+}
+
+.mdn-faq-foldout {
+    padding-top: 4px;
+    padding-bottom: 7px;
+}
+
+.mdn-faq-foldout > .unity-foldout__toggle {
+    margin: 0;
+    padding: 0;
+}
+
+.mdn-faq-foldout > .unity-foldout__toggle > .unity-toggle__label {
+    color: #efd07a;
+    -unity-font-style: bold;
+    font-size: 13px;
+    white-space: normal;
+}
+
+.mdn-faq-foldout > .unity-foldout__content {
+    margin-left: 15px;
+    margin-top: 6px;
+}
+
+.mdn-faq-more-item {
+    border-color: #536b8f;
+    background-color: rgba(54, 74, 104, 0.26);
+}
+
+.mdn-faq-question {
+    color: #efd07a;
+    -unity-font-style: bold;
+    font-size: 13px;
+    white-space: normal;
+    margin-bottom: 6px;
+}
+
+.mdn-faq-answer {
+    color: #e1e1e1;
+    font-size: 12px;
+    white-space: normal;
+}
+
+.mdn-faq-link {
+    color: #9ec4ff;
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-top: 7px;
+    cursor: link;
+}
+
+.mdn-faq-link:hover {
+    color: #c7ddff;
+}
+
+.mdn-faq-empty {
+    color: #c7ced8;
+    font-size: 13px;
+    white-space: normal;
 }
 
 /* ---- Howto box ---- */

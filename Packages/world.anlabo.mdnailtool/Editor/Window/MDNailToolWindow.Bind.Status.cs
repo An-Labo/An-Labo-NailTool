@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -106,6 +107,85 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				popup.SetEnabled(true);
 			}
+
+			this.UpdateBakeBlendShapeGeneratedList(bakeEnabled);
+		}
+
+		private void UpdateBakeBlendShapeGeneratedList(bool? bakeEnabledOverride = null)
+		{
+			if (this._bakeBlendShapeGeneratedList == null) return;
+			bool bakeEnabled = bakeEnabledOverride ?? (GlobalSetting.UseModularAvatar && GlobalSetting.BakeBlendShapes);
+			if (!bakeEnabled)
+			{
+				this._bakeBlendShapeGeneratedList.text = string.Empty;
+				this._bakeBlendShapeGeneratedList.style.display = DisplayStyle.None;
+				return;
+			}
+
+			List<string> names = this.GetGeneratedBlendShapeNames();
+			string text = names.Count > 0
+				? string.Format(S("window.bake_blendshape_generated_list") ?? "生成されるBlendShape: {0}", string.Join(", ", names))
+				: S("window.bake_blendshape_generated_list_empty") ?? "生成されるBlendShapeはありません";
+			this._bakeBlendShapeGeneratedList.text = text;
+			this._bakeBlendShapeGeneratedList.style.display = DisplayStyle.Flex;
+		}
+
+		private List<string> GetGeneratedBlendShapeNames()
+		{
+			var result = new List<string>();
+			AvatarBlendShapeVariant[]? variants = this.GetCurrentBlendShapeVariants();
+			if (variants == null) return result;
+
+			foreach (AvatarBlendShapeVariant variant in variants)
+			{
+				bool isShrink = IsShrinkBlendShapeVariant(variant);
+				if (isShrink)
+				{
+					if (GlobalSetting.AutoLinkShrinkBS && !string.IsNullOrEmpty(variant.Name)) result.Add(variant.Name);
+					continue;
+				}
+
+				if (string.IsNullOrEmpty(variant.NailPrefabGUID) && (variant.NailNodes == null || variant.NailNodes.Length == 0)) continue;
+				if (!string.IsNullOrEmpty(variant.LeftBlendShapeName) && !string.IsNullOrEmpty(variant.RightBlendShapeName))
+				{
+					result.Add(variant.LeftBlendShapeName!);
+					result.Add(variant.RightBlendShapeName!);
+				}
+				else if (!string.IsNullOrEmpty(variant.Name))
+				{
+					result.Add(variant.Name);
+				}
+			}
+
+			return result;
+		}
+
+		private AvatarBlendShapeVariant[]? GetCurrentBlendShapeVariants()
+		{
+			if (this._avatarDropDowns == null) return null;
+			AvatarVariation? avatarVariationData = this._avatarDropDowns.GetSelectedAvatarVariation();
+			AvatarBlendShapeVariant[]? variants = avatarVariationData?.BlendShapeVariants;
+			if (variants != null) return variants;
+
+			using DBShop dbShop = new();
+			string avatarName = this._avatarDropDowns.GetAvatarName();
+			foreach (Shop s in dbShop.collection)
+			{
+				Avatar? av = s.FindAvatarByName(avatarName);
+				if (av?.BlendShapeVariants != null)
+				{
+					return av.BlendShapeVariants;
+				}
+			}
+			return null;
+		}
+
+		private static bool IsShrinkBlendShapeVariant(AvatarBlendShapeVariant variant)
+		{
+			return string.IsNullOrEmpty(variant.NailPrefabGUID)
+			       && (variant.NailNodes == null || variant.NailNodes.Length == 0)
+			       && !string.IsNullOrEmpty(variant.Name)
+			       && variant.Name.StartsWith("Shrink_", StringComparison.OrdinalIgnoreCase);
 		}
 
 		private void UpdatePreviewAreaVisibility(bool visible)
@@ -136,17 +216,36 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			});
 		}
 
+		private string BuildToolConsoleLog()
+		{
+			if (this._toolConsoleScroll == null) return string.Empty;
+			var lines = this._toolConsoleScroll.Children()
+				.OfType<Label>()
+				.Select(l => l.text)
+				.Where(line => !string.IsNullOrWhiteSpace(line))
+				.ToArray();
+			if (lines.Length == 0) return string.Empty;
+
+			var sb = new System.Text.StringBuilder();
+			sb.AppendLine();
+			sb.AppendLine("--- NailTool Log ---");
+			foreach (string line in lines)
+			{
+				sb.AppendLine(line);
+			}
+			return sb.ToString();
+		}
+
 		private string BuildConsoleDiagnosticInfo()
 		{
 			var sb = new System.Text.StringBuilder();
-			sb.AppendLine();
-			sb.AppendLine("--- 診断情報 ---");
-
-			sb.AppendLine($"OS: {SystemInfo.operatingSystem}");
-			sb.AppendLine($"Unity: {Application.unityVersion}");
+			sb.AppendLine("--- An-Labo NailTool Support Info ---");
 
 			try { sb.AppendLine($"NailTool Version: {MDNailToolDefines.Version}"); }
 			catch (Exception ex) { sb.AppendLine($"NailTool Version: (取得失敗: {ex.Message})"); }
+
+			sb.AppendLine($"Unity: {Application.unityVersion}");
+			sb.AppendLine($"OS: {SystemInfo.operatingSystem}");
 
 			try
 			{
@@ -165,8 +264,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				GameObject? diagPrefab = this._avatarDropDowns?.GetSelectedPrefab();
 				sb.AppendLine($"NailPrefab: {diagPrefab?.name ?? "(null)"}");
-				// GetSelectedPrefab は in-memory orphan を生成するため、 使い終わったら即 destroy する (Scene root 残留防止).
-				if (diagPrefab != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(diagPrefab))) {
+				if (diagPrefab != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(diagPrefab)))
+				{
 					Object.DestroyImmediate(diagPrefab);
 				}
 			}
@@ -180,6 +279,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			sb.AppendLine($"FootDetail: {this._tglFootDetail?.value}");
 			sb.AppendLine($"AdditionalObjectSource: {this._additionalObjectSourceDropdown?.value ?? "(null)"}");
 			sb.AppendLine($"AdditionalMaterialSource: {this._additionalMaterialSourceDropdown?.value ?? "(null)"}");
+
+			AppendUnityConsoleMessages(sb);
 
 			// Body BlendShape状態（値が0でないもののみ）
 			if (avatar != null)
@@ -226,8 +327,120 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return sb.ToString();
 		}
 
+		private static void AppendUnityConsoleMessages(System.Text.StringBuilder sb)
+		{
+			sb.AppendLine("--- Unity Console Errors/Warnings (newest first) ---");
+			try
+			{
+				Type? logEntriesType = Type.GetType("UnityEditor.LogEntries,UnityEditor");
+				Type? logEntryType = Type.GetType("UnityEditor.LogEntry,UnityEditor");
+				if (logEntriesType == null || logEntryType == null)
+				{
+					sb.AppendLine("(Unity Console API unavailable)");
+					return;
+				}
+
+				const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+				MethodInfo? getCount = logEntriesType.GetMethod("GetCount", flags);
+				MethodInfo? getEntryInternal = logEntriesType.GetMethod("GetEntryInternal", flags);
+				if (getCount == null || getEntryInternal == null)
+				{
+					sb.AppendLine("(Unity Console API unavailable)");
+					return;
+				}
+
+				object? entry = Activator.CreateInstance(logEntryType);
+				if (entry == null)
+				{
+					sb.AppendLine("(Unity Console entry unavailable)");
+					return;
+				}
+
+				FieldInfo? conditionField = logEntryType.GetField("condition", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				FieldInfo? stackTraceField = logEntryType.GetField("stackTrace", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				FieldInfo? modeField = logEntryType.GetField("mode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+				logEntriesType.GetMethod("StartGettingEntries", flags)?.Invoke(null, null);
+				try
+				{
+					int count = Convert.ToInt32(getCount.Invoke(null, null));
+					int appended = 0;
+					for (int i = count - 1; i >= 0 && appended < 20; i--)
+					{
+						getEntryInternal.Invoke(null, new[] { (object)i, entry });
+						string condition = conditionField?.GetValue(entry)?.ToString() ?? string.Empty;
+						string stackTrace = stackTraceField?.GetValue(entry)?.ToString() ?? string.Empty;
+						int mode = Convert.ToInt32(modeField?.GetValue(entry) ?? 0);
+						string level = GetUnityConsoleLevel(mode, condition);
+						if (level == "Log") continue;
+
+						sb.AppendLine($"[{level}] {FirstLine(condition)}");
+						AppendStackTraceSummary(sb, stackTrace);
+						appended++;
+					}
+
+					if (appended == 0)
+					{
+						sb.AppendLine("(no recent errors/warnings)");
+					}
+				}
+				finally
+				{
+					logEntriesType.GetMethod("EndGettingEntries", flags)?.Invoke(null, null);
+				}
+			}
+			catch (Exception ex)
+			{
+				sb.AppendLine($"(failed to read Unity Console: {ex.Message})");
+			}
+		}
+
+		private static string GetUnityConsoleLevel(int mode, string condition)
+		{
+			const int errorFlags = 1 | 2 | 16 | 64 | 256 | 2048 | 8192 | 131072;
+			const int warningFlags = 128 | 512 | 4096;
+			if ((mode & errorFlags) != 0) return "Error";
+			if ((mode & warningFlags) != 0) return "Warning";
+			if (condition.IndexOf("exception", StringComparison.OrdinalIgnoreCase) >= 0 ||
+			    condition.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0)
+			{
+				return "Error";
+			}
+			if (condition.IndexOf("warning", StringComparison.OrdinalIgnoreCase) >= 0)
+			{
+				return "Warning";
+			}
+			return "Log";
+		}
+
+		private static string FirstLine(string text)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return "(empty message)";
+			string[] lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+			return lines.FirstOrDefault(line => !string.IsNullOrWhiteSpace(line))?.Trim() ?? "(empty message)";
+		}
+
+		private static void AppendStackTraceSummary(System.Text.StringBuilder sb, string stackTrace)
+		{
+			if (string.IsNullOrWhiteSpace(stackTrace)) return;
+			string[] lines = stackTrace.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n')
+				.Where(line => !string.IsNullOrWhiteSpace(line))
+				.Take(6)
+				.ToArray();
+			foreach (string line in lines)
+			{
+				sb.AppendLine("  " + line.Trim());
+			}
+		}
+
 		private void BindLinksUI()
 		{
+			var updateNoticeContainer = this.rootVisualElement.Q<VisualElement>("update-notice-container");
+			if (updateNoticeContainer != null)
+			{
+				updateNoticeContainer.Add(new UpdateNoticeBanner());
+			}
+
 			// Changelog バナーを動的追加
 			var bannerContainer = this.rootVisualElement.Q<VisualElement>("changelog-banner-container");
 			if (bannerContainer != null) {
@@ -250,7 +463,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			// ヘッダーのFAQリンク
 			var headerContact = this.rootVisualElement.Q<Label>("link-contact-header");
-			headerContact?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));
+			headerContact?.RegisterCallback<ClickEvent>(_ => FAQWindow.ShowWindow(this));
 
 			// 着用統計リンク
 			var usageStatsLink = this.rootVisualElement.Q<Label>("link-usage-stats");

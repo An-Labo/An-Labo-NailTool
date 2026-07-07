@@ -14,6 +14,8 @@
                 <world.anlabo.mdnailtool.Editor.VisualElements.LanguageDropDown focusable="true" class="mdn-lang-dropdown" />
             </ui:VisualElement>
 
+            <ui:VisualElement name="update-notice-container" />
+
             <!-- Changelog + Manual / FAQ リンク行 -->
             <ui:VisualElement class="mdn-helplink-row">
                 <ui:VisualElement name="changelog-banner-container" />
@@ -253,6 +255,10 @@
                     <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
                         text-id="window.bake_blendshapes_footnail_note"
                         class="mdn-option-note mdn-option-indent" />
+                    <ui:Label
+                        name="bake-blendshape-generated-list"
+                        class="mdn-option-note mdn-option-indent"
+                        style="display: none;" />
                     <ui:VisualElement class="mdn-option-row mdn-option-indent-2">
                         <ui:Toggle name="auto-link-shrink-bs" class="mdn-toggle" />
                         <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
