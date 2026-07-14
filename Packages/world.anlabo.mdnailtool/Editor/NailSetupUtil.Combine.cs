@@ -389,7 +389,7 @@ namespace world.anlabo.mdnailtool.Editor
 			combinedSmr.bones           = boneTransforms;
 			combinedSmr.rootBone        = boneTransforms[0];
 			combinedSmr.sharedMaterials = materialList.ToArray();
-			combinedSmr.sharedMesh      = MDNailToolAssetLoader.LoadAssetSafe<Mesh>(assetPath);
+			combinedSmr.sharedMesh      = combinedMesh;
 
 			for (int bsIdx = 0; bsIdx < combinedMesh.blendShapeCount; bsIdx++)
 			{

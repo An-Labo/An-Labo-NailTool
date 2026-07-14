@@ -223,6 +223,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (string.IsNullOrEmpty(nailShapeName)) nailShapeName = "oval";
 			if (string.IsNullOrEmpty(nailShapeName)) return;
 
+			var avatarVariationForShape = this._avatarDropDowns?.GetSelectedAvatarVariation();
+			NailPrefabNodeData[]? shapeNailNodes = avatarVariationForShape?.NailNodes;
+
 			// BakeBS OFF: バリアント選択時はプレハブを丸ごと差し替え
 			bool bakeBS = this._bakeBlendShapes?.value == true && this._forModularAvatar?.value == true;
 			if (!bakeBS)
@@ -230,18 +233,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				var bsPopup = this._avatarDropDowns?.BlendShapeVariantPopup;
 				if (bsPopup != null && bsPopup.index > 0)
 				{
-					GameObject? variantPrefab = this.ResolveVariantPrefabForPreview(bsPopup.value);
+					GameObject? variantPrefab = this.ResolveVariantPrefabForPreview(bsPopup.value, out NailPrefabNodeData[]? variantNailNodes);
 					if (variantPrefab != null)
 					{
 						prefab = variantPrefab;
+						if (variantNailNodes != null && variantNailNodes.Length > 0) shapeNailNodes = variantNailNodes;
 					}
 				}
 			}
 
 			// シェイプ別 Prefab ([Oval]〜.prefab 等) を解決して着用と同じPrefabでプレビュー.
-			// disk fallback 失敗時 (NailNodes 経路) 用に AvatarVariation.NailNodes を渡す. 渡さないと Preview が natural 固定で実 Process と sizing がズレる.
-			var avatarVariationForShape = this._avatarDropDowns?.GetSelectedAvatarVariation();
-			prefab = NailSetupProcessor.ResolveShapePrefab(prefab, nailShapeName, avatarVariationForShape?.NailNodes);
+			// disk fallback 失敗時 (NailNodes 経路) は、そのprefabの生成元NailNodesを渡す.
+			prefab = NailSetupProcessor.ResolveShapePrefab(prefab, nailShapeName, shapeNailNodes);
 
 			Mesh?[]? overrideMeshes = this._nailShapeDropDown?.GetSelectedShapeMeshes();
 			if (overrideMeshes == null) overrideMeshes = new Mesh?[0];
@@ -324,13 +327,22 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		/// BlendShapeバリアント名からバリアントプレハブを解決する（着用プレビュー用）。
 		/// 選択中のネイルシェイプに対応するプレハブまで解決して返す。
 		/// </summary>
-		private GameObject? ResolveVariantPrefabForPreview(string variantName)
+		private GameObject? ResolveVariantPrefabForPreview(string variantName, out NailPrefabNodeData[]? variantNailNodes)
 		{
+			variantNailNodes = null;
 			AvatarBlendShapeVariant[]? variants = this.GetBlendShapeVariants();
 			if (variants == null) return null;
 
 			AvatarBlendShapeVariant? variant = variants.FirstOrDefault(v => v.Name == variantName);
-			if (variant == null || string.IsNullOrEmpty(variant.NailPrefabGUID)) return null;
+			if (variant == null) return null;
+
+			if (variant.NailNodes != null && variant.NailNodes.Length > 0)
+			{
+				variantNailNodes = variant.NailNodes;
+				return world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildFromNodes(variant.NailNodes, variant.Name ?? "variant");
+			}
+
+			if (string.IsNullOrEmpty(variant.NailPrefabGUID)) return null;
 
 			string guid = variant.NailPrefabGUID!;
 			string path = AssetDatabase.GUIDToAssetPath(guid);

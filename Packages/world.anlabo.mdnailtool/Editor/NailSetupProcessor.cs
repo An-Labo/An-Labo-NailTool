@@ -55,6 +55,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		public bool BakeBlendShapes { get; set; }
 		public bool SyncBlendShapesWithMA { get; set; }
 		public string? SelectedBlendShapeVariantName { get; set; }
+		private NailPrefabNodeData[]? SelectedBlendShapeVariantNailNodes { get; set; }
 		public Entity.Avatar? AvatarEntity { get; set; }
 		public bool EnablePenetrationCorrection { get; set; }
 		public bool EnableAdditionalMaterials { get; set; } = true;
@@ -291,6 +292,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		// SelectedBlendShapeVariantName が指定されていればベース NailPrefab をバリアント差し替えする.
 		private void ApplySelectedVariantPrefab()
 		{
+			this.SelectedBlendShapeVariantNailNodes = null;
 			ToolConsole.Log($"  SelectedBlendShapeVariantName={this.SelectedBlendShapeVariantName ?? "(null)"}");
 			if (string.IsNullOrEmpty(this.SelectedBlendShapeVariantName))
 			{
@@ -303,9 +305,19 @@ namespace world.anlabo.mdnailtool.Editor {
 			if (activeVariants == null) return;
 
 			ToolConsole.Log($"  activeVariants names: [{string.Join(", ", activeVariants.Select(v => v.Name))}]");
-			AvatarBlendShapeVariant variant = activeVariants.FirstOrDefault(v => v.Name == this.SelectedBlendShapeVariantName);
-			ToolConsole.Log($"  variant match? {variant != null}, GUID={variant?.NailPrefabGUID ?? "(null)"}");
-			if (variant == null || string.IsNullOrEmpty(variant.NailPrefabGUID)) return;
+			AvatarBlendShapeVariant? variant = activeVariants.FirstOrDefault(v => v.Name == this.SelectedBlendShapeVariantName);
+			ToolConsole.Log($"  variant match? {variant != null}, GUID={variant?.NailPrefabGUID ?? "(null)"}, NailNodes={variant?.NailNodes?.Length ?? 0}");
+			if (variant == null) return;
+
+			if (variant.NailNodes != null && variant.NailNodes.Length > 0)
+			{
+				this.SelectedBlendShapeVariantNailNodes = variant.NailNodes;
+				this.NailPrefab = NailPrefabBuilder.BuildFromNodes(variant.NailNodes, variant.Name);
+				ToolConsole.Log($"  → NailPrefab replaced from NailNodes: {variant.Name}");
+				return;
+			}
+
+			if (string.IsNullOrEmpty(variant.NailPrefabGUID)) return;
 
 			string? variantPath = ResolveVariantPath(variant);
 			ToolConsole.Log($"  variantPath={variantPath ?? "(null)"}");
@@ -326,7 +338,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			// NailNodes 経路: 不在 shape の fallback は ResolveShapePrefab と同様「collection 順で target まで walk して最新存在」.
 			if (string.IsNullOrEmpty(prefabPath)) {
-				NailPrefabNodeData[]? allNodes = this.AvatarVariationData?.NailNodes;
+				NailPrefabNodeData[]? allNodes = this.SelectedBlendShapeVariantNailNodes ?? this.AvatarVariationData?.NailNodes;
 				if (allNodes != null && allNodes.Length > 0) {
 					NailPrefabNodeData[]? currentShapeNodes = null;
 					using DBNailShape dbNailShapeFb = new();
@@ -338,7 +350,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 					if (currentShapeNodes != null) {
 						Object.DestroyImmediate(this.NailPrefab);
-						this.NailPrefab = NailPrefabBuilder.BuildFromNodes(currentShapeNodes, this.AvatarVariationData!.VariationName);
+						this.NailPrefab = NailPrefabBuilder.BuildFromNodes(currentShapeNodes, this.SelectedBlendShapeVariantName ?? this.AvatarVariationData!.VariationName);
 					}
 				}
 				return;

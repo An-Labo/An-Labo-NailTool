@@ -39,7 +39,10 @@ namespace world.anlabo.mdnailtool.Editor {
 				GameObject? footCombinedGo = null;
 				if (this.BakeBlendShapes)
 				{
-					string bsPath = $"{MDNailToolDefines.GENERATED_ASSET_PATH}CombinedMesh/{this.AvatarName}";
+					string avatarAssetName = string.IsNullOrEmpty(this.AvatarName)
+						? this.Avatar.gameObject.name
+						: this.AvatarName;
+					string bsPath = $"{MDNailToolDefines.GENERATED_ASSET_PATH}CombinedMesh/{SanitizeAssetPathSegment(avatarAssetName)}/{SanitizeAssetPathSegment(this.Avatar.gameObject.name)}";
 
 					// ターゲットボーンへの親設定
 					int bpIndex = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
@@ -933,6 +936,11 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 				}
 			}
+		}
+
+		private static string SanitizeAssetPathSegment(string value) {
+			string sanitized = Regex.Replace(value, @"[\\/:*?""<>|]", "_").Trim();
+			return string.IsNullOrEmpty(sanitized) ? "Avatar" : sanitized;
 		}
 #endif
 	}
