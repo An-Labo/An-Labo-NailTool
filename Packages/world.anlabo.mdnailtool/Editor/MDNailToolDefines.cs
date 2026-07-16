@@ -1,4 +1,6 @@
-﻿using System;
+#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -303,7 +305,7 @@ namespace world.anlabo.mdnailtool.Editor
 				TextAsset packageAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(packagePath);
 				if (packageAsset == null) return "0.0.0";
 				JObject package = JObject.Parse(packageAsset.text);
-				return package.GetValue("version")!.Value<string>();
+				return package.GetValue("version")?.Value<string>() ?? "0.0.0";
 			}
 		}
 

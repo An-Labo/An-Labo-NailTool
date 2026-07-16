@@ -39,10 +39,11 @@ namespace world.anlabo.mdnailtool.Editor {
 				GameObject? footCombinedGo = null;
 				if (this.BakeBlendShapes)
 				{
-					string avatarAssetName = string.IsNullOrEmpty(this.AvatarName)
-						? this.Avatar.gameObject.name
-						: this.AvatarName;
-					string bsPath = $"{MDNailToolDefines.GENERATED_ASSET_PATH}CombinedMesh/{SanitizeAssetPathSegment(avatarAssetName)}/{SanitizeAssetPathSegment(this.Avatar.gameObject.name)}";
+					string avatarAssetName = !string.IsNullOrEmpty(this.AvatarName)
+						? this.AvatarName!
+						: this.Avatar.gameObject.name;
+					string avatarObjectName = this.Avatar.gameObject.name ?? avatarAssetName;
+					string bsPath = $"{MDNailToolDefines.GENERATED_ASSET_PATH}CombinedMesh/{SanitizeAssetPathSegment(avatarAssetName)}/{SanitizeAssetPathSegment(avatarObjectName)}";
 
 					// ターゲットボーンへの親設定
 					int bpIndex = (int)MDNailToolDefines.TargetFingerAndToe.LeftThumb - 1;
@@ -121,9 +122,10 @@ namespace world.anlabo.mdnailtool.Editor {
 						{
 							GameObject? variantPrefabAsset = null;
 							string? variantPath = null;
-							if (variant.NailNodes != null && variant.NailNodes.Length > 0)
+							NailPrefabNodeData[]? scaledVariantNodes = CloneVariantNodes(variant.NailNodes);
+							if (scaledVariantNodes != null && scaledVariantNodes.Length > 0)
 							{
-								variantPrefabAsset = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildFromNodes(variant.NailNodes, variant.Name);
+								variantPrefabAsset = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildFromNodes(scaledVariantNodes, variant.Name);
 								if (variantPrefabAsset != null) objectsToDestroy.Add(variantPrefabAsset);
 								ToolConsole.Log($"    variant='{variant.Name}' nailNodes -> in-memory build");
 							}
@@ -167,7 +169,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								continue;
 							}
 
-							GameObject resolvedVariantPrefab = ResolveShapePrefab(variantPrefabAsset, this.NailShapeName, variant.NailNodes);
+							GameObject resolvedVariantPrefab = ResolveShapePrefab(variantPrefabAsset, this.NailShapeName, scaledVariantNodes);
 							if (!ReferenceEquals(resolvedVariantPrefab, variantPrefabAsset) && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(resolvedVariantPrefab)))
 								objectsToDestroy.Add(resolvedVariantPrefab);
 							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab, this.Avatar.transform);
@@ -464,6 +466,31 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (nailObject != null) Object.DestroyImmediate(nailObject.gameObject);
 				}
 
+				void AttachNailWithBoneProxyLikeDirect(Transform nailObject, Transform targetBone, Vector3? desired)
+				{
+					Transform? wrapperParent = nailObject.parent;
+					nailObject.SetParent(targetBone, true);
+					if (desired.HasValue) EnforceLossyScale(nailObject, desired.Value);
+
+					Vector3 directLocalPosition = nailObject.localPosition;
+					Quaternion directLocalRotation = nailObject.localRotation;
+					Vector3 directLocalScale = nailObject.localScale;
+
+					GameObject proxyObject = new GameObject($"{nailObject.name}_BoneProxy");
+					Undo.RegisterCreatedObjectUndo(proxyObject, "Nail Setup BoneProxy");
+					if (wrapperParent != null) proxyObject.transform.SetParent(wrapperParent, false);
+					proxyObject.transform.SetPositionAndRotation(targetBone.position, targetBone.rotation);
+					proxyObject.transform.localScale = Vector3.one;
+
+					ModularAvatarBoneProxy boneProxy = proxyObject.AddComponent<ModularAvatarBoneProxy>();
+					boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildAtRoot;
+					boneProxy.target = targetBone;
+
+					nailObject.SetParent(proxyObject.transform, false);
+					nailObject.localPosition = directLocalPosition;
+					nailObject.localRotation = directLocalRotation;
+					nailObject.localScale = directLocalScale;
+				}
 				// ---- BoneProxy設定 (BakeBlendShapes=falseの場合のみ) ----
 				if (!this.BakeBlendShapes)
 				{
@@ -481,14 +508,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							desired = c.desiredLossyScale;
 						}
 						if (targetBone == null) continue;
-						// MA-only: edit時はwrapper配下にキープ. BoneProxyがMA build時にtargetBone下へ移動する.
-						Transform? originalParent = nailObject.parent;
-						nailObject.SetParent(targetBone, true);
-						if (desired.HasValue) EnforceLossyScale(nailObject, desired.Value);
-						ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
-						boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-						boneProxy.target = targetBone;
-						if (originalParent != null) nailObject.SetParent(originalParent, true);
+						AttachNailWithBoneProxyLikeDirect(nailObject, targetBone, desired);
 					}
 
 					if (this.UseFootNail)
@@ -507,13 +527,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								desired = c.desiredLossyScale;
 								}
 							if (targetBone == null) continue;
-							Transform? originalParent = nailObject.parent;
-							nailObject.SetParent(targetBone, true);
-							if (desired.HasValue) EnforceLossyScale(nailObject, desired.Value);
-							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
-							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-							boneProxy.target = targetBone;
-							if (originalParent != null) nailObject.SetParent(originalParent, true);
+						AttachNailWithBoneProxyLikeDirect(nailObject, targetBone, desired);
 						}
 						index = (int)MDNailToolDefines.TargetFingerAndToe.RightFootThumb - 1;
 						foreach (Transform? nailObject in rightFootNailObjects)
@@ -529,13 +543,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								desired = c.desiredLossyScale;
 								}
 							if (targetBone == null) continue;
-							Transform? originalParent = nailObject.parent;
-							nailObject.SetParent(targetBone, true);
-							if (desired.HasValue) EnforceLossyScale(nailObject, desired.Value);
-							ModularAvatarBoneProxy boneProxy = nailObject.gameObject.AddComponent<ModularAvatarBoneProxy>();
-							boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
-							boneProxy.target = targetBone;
-							if (originalParent != null) nailObject.SetParent(originalParent, true);
+						AttachNailWithBoneProxyLikeDirect(nailObject, targetBone, desired);
 						}
 					}
 				}
@@ -748,6 +756,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						{
 							ModularAvatarBlendshapeSync variantBsSync = child.gameObject.AddComponent<ModularAvatarBlendshapeSync>();
 							variantBsSync.Bindings = variantBindings;
+
 						}
 					}
 				}
@@ -761,6 +770,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 #if MD_NAIL_FOR_MA
+
 		private static AvatarObjectReference CreateAvatarRef(GameObject obj) {
 			// MAバージョン非依存. Set(GameObject)は全バージョンで存在し例外を投げない
 			var r = new AvatarObjectReference();

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using world.anlabo.mdnailtool.Editor.Entity;
@@ -64,11 +64,58 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 						if (!pool.TryGetValue(variation.SharedBodyId!, out SharedBody? sb) || sb == null) continue;
 						variation.NailNodes = CloneNodes(sb.NailNodes);
 						variation.FootNailNodes = CloneNodes(sb.FootNailNodes);
+						ApplySharedBodyScale(variation.NailNodes, variation.SharedBodyScale);
+						ApplySharedBodyScale(variation.FootNailNodes, variation.SharedBodyScale);
+						ApplySharedBodyScale(variation.BlendShapeVariants, variation.SharedBodyScale);
 					}
 				}
 			}
 		}
 
+		private static void ApplySharedBodyScale(NailPrefabNodeData[]? nodes, float[]? scale) {
+			if (nodes == null || nodes.Length == 0 || !HasSharedBodyScale(scale)) return;
+			for (int i = 0; i < nodes.Length; i++) ApplyRootScale(nodes[i], scale!);
+		}
+
+		private static void ApplySharedBodyScale(AvatarBlendShapeVariant[]? variants, float[]? scale) {
+			if (variants == null || variants.Length == 0 || !HasSharedBodyScale(scale)) return;
+			foreach (AvatarBlendShapeVariant variant in variants) ApplySharedBodyScale(variant.NailNodes, scale);
+		}
+
+		private static bool HasSharedBodyScale(float[]? scale) {
+			if (scale == null || scale.Length < 3) return false;
+			return !IsNearlyOne(scale[0]) || !IsNearlyOne(scale[1]) || !IsNearlyOne(scale[2]);
+		}
+
+		private static bool IsNearlyOne(float value) {
+			return value > 0.9999f && value < 1.0001f;
+		}
+
+		private static void ApplyRootScale(NailPrefabNodeData node, float[] scale) {
+			if (node.Children != null && node.Children.Length > 0) {
+				foreach (NailPrefabNodeData child in node.Children) ApplyScaleAsChild(child, scale);
+				return;
+			}
+			ApplyScaleToSelf(node, scale);
+		}
+
+		private static void ApplyScaleAsChild(NailPrefabNodeData node, float[] scale) {
+			if (node.LocalPosition != null && node.LocalPosition.Length >= 3) {
+				node.LocalPosition = new[] { node.LocalPosition[0] * scale[0], node.LocalPosition[1] * scale[1], node.LocalPosition[2] * scale[2] };
+			}
+			ApplyScaleToSelf(node, scale);
+		}
+
+		private static void ApplyScaleToSelf(NailPrefabNodeData node, float[] scale) {
+			float x = scale[0];
+			float y = scale[1];
+			float z = scale[2];
+			if (node.LocalScale != null && node.LocalScale.Length >= 3) {
+				node.LocalScale = new[] { node.LocalScale[0] * x, node.LocalScale[1] * y, node.LocalScale[2] * z };
+			} else {
+				node.LocalScale = new[] { x, y, z };
+			}
+		}
 		// footNailNodes (prefix なし) を各 [Shape] root の children に prefix 付きで再注入する. consumer は従来通り NailNodes だけで完結する.
 		private static void MergeFootNailNodesIntoShapeRoots(Dictionary<string, Shop> shops) {
 			foreach (Shop shop in shops.Values) {

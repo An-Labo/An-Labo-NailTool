@@ -436,6 +436,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			this.ClearHandFootError();
 
+			DBShop.ClearCache();
 			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
 			if (avatarVariationData == null)
 			{
@@ -648,6 +649,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 			this.ClearAvatarFieldError();
 
+			DBShop.ClearCache();
 			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
 			if (avatarVariationData != null) NailSetupProcessor.RemoveNail(avatar, avatarVariationData.BoneMappingOverride);
 		}

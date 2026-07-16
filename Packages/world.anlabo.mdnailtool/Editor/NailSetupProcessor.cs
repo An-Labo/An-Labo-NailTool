@@ -236,6 +236,14 @@ namespace world.anlabo.mdnailtool.Editor {
 				corrections =
 					ComputeArmatureScaleCorrections(handsNailObjects, leftFootNailObjects, rightFootNailObjects, targetBoneDictionary, ref savedBoneScales);
 
+				// 補正値はFBX素体基準で計算するが、実際の着用/BakeBSはユーザーが編集したArmatureスケール上で行う。
+				// NeutralizeしたままSkinnedMeshRendererのbindposeを作ると、MA+BakeBSだけDirectと見た目がズレる。
+				if (savedBoneScales.Count > 0)
+				{
+					RestoreBoneScales(savedBoneScales);
+					savedBoneScales.Clear();
+				}
+
 				if (this.ForModularAvatar) {
 					SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
 						leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
@@ -311,8 +319,9 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			if (variant.NailNodes != null && variant.NailNodes.Length > 0)
 			{
-				this.SelectedBlendShapeVariantNailNodes = variant.NailNodes;
-				this.NailPrefab = NailPrefabBuilder.BuildFromNodes(variant.NailNodes, variant.Name);
+				NailPrefabNodeData[]? scaledVariantNodes = CloneVariantNodes(variant.NailNodes);
+				this.SelectedBlendShapeVariantNailNodes = scaledVariantNodes;
+				this.NailPrefab = NailPrefabBuilder.BuildFromNodes(scaledVariantNodes!, variant.Name);
 				ToolConsole.Log($"  → NailPrefab replaced from NailNodes: {variant.Name}");
 				return;
 			}
@@ -438,6 +447,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				this.Avatar, targetBoneDictionary,
 				allNails.ToArray(), allBoneIndices.ToArray());
 		}
+
 
 		// 装着完了後の Editor 表示リフレッシュ (bake 直後の SMR 描画キャッシュ問題対策).
 		// 生成された ネイル SMR のみを対象 + 1 frame 遅延で MA pipeline 完了後に走らせる.

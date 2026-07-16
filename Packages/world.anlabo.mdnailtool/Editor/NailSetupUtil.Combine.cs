@@ -364,16 +364,10 @@ namespace world.anlabo.mdnailtool.Editor
 
 			string assetPath = $"{saveBasePath}/{zoneName}.asset";
 			Mesh? existingMesh = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
-			// 既存assetのインスタンスIDを保持し、再着用時に他オブジェクトからの参照を維持する
-			// 頂点数が変わると CopySerialized が旧頂点を残し点線混在する (issue #495). 一致時のみ ID 保持コピー.
-			if (existingMesh != null && existingMesh.vertexCount == combinedMesh.vertexCount)
+			// 既存assetのインスタンスIDを保持し、再着用時に他オブジェクトからの参照を維持する。
+			// CopySerialized は同頂点数でも頂点バッファが古く残るケースがあるため、常に明示コピーする。
+			if (existingMesh != null)
 			{
-				EditorUtility.CopySerialized(combinedMesh, existingMesh);
-				combinedMesh = existingMesh;
-			}
-			else if (existingMesh != null)
-			{
-				// 頂点数変更時. DeleteAsset は ID が変わり OFF 複数着用で Missing 化するため全データを手で書き写し ID を保持する (issue #495).
 				CopyMeshContents(combinedMesh, existingMesh);
 				combinedMesh = existingMesh;
 			}

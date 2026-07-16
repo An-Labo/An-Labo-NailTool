@@ -52,6 +52,46 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
+		private static NailPrefabNodeData[]? CloneVariantNodes(NailPrefabNodeData[]? nodes) {
+			if (nodes == null || nodes.Length == 0) return nodes;
+			return CloneNodes(nodes);
+		}
+
+		private static NailPrefabNodeData[] CloneNodes(NailPrefabNodeData[] src) {
+			NailPrefabNodeData[] copy = new NailPrefabNodeData[src.Length];
+			for (int i = 0; i < src.Length; i++) copy[i] = CloneNode(src[i]);
+			return copy;
+		}
+
+		private static NailPrefabNodeData CloneNode(NailPrefabNodeData src) {
+			NailPrefabNodeData copy = new() {
+				Name = src.Name,
+				LocalPosition = CloneArray(src.LocalPosition),
+				LocalRotation = CloneArray(src.LocalRotation),
+				LocalScale = CloneArray(src.LocalScale),
+				MeshGuid = src.MeshGuid,
+				RootBoneName = src.RootBoneName,
+				BlendShapeWeights = src.BlendShapeWeights,
+				BoundsCenter = CloneArray(src.BoundsCenter),
+				BoundsExtent = CloneArray(src.BoundsExtent),
+				RendererType = src.RendererType,
+				MeshFileId = src.MeshFileId,
+				MaterialGuids = src.MaterialGuids,
+			};
+			if (src.Children != null) {
+				copy.Children = new NailPrefabNodeData[src.Children.Length];
+				for (int i = 0; i < src.Children.Length; i++) copy.Children[i] = CloneNode(src.Children[i]);
+			}
+			return copy;
+		}
+
+		private static float[]? CloneArray(float[]? src) {
+			if (src == null) return null;
+			float[] copy = new float[src.Length];
+			Array.Copy(src, copy, src.Length);
+			return copy;
+		}
+
 		internal static GameObject ResolveShapePrefab(GameObject basePrefab, string targetShape, NailPrefabNodeData[]? nailNodes = null) {
 			string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
 

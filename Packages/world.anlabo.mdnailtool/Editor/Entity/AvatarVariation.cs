@@ -45,6 +45,10 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("sharedBodyId")]
 		public string? SharedBodyId { get; set; }
 
+		// sharedBodyId で共有した素体を、この variation 用に XYZ 倍率補正する. 未指定は [1,1,1].
+		[JsonProperty("sharedBodyScale")]
+		public float[]? SharedBodyScale { get; set; }
+
 		// shape 非依存の足ネイル node. name は prefix なし (例: `FootR.Thumb`). Loader 側で各 [Shape] root の children に再注入される.
 		[JsonProperty("footNailNodes")]
 		public NailPrefabNodeData[]? FootNailNodes { get; set; }
