@@ -489,16 +489,24 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				DBShop.ClearCache();
 				using (DBShop dbShop = new())
 				{
+					string shopName = this._avatarDropDowns!.GetShopName();
 					string avatarName = this._avatarDropDowns!.GetAvatarName();
-					foreach (Shop s in dbShop.collection)
+					Shop? selectedShop = dbShop.FindShopByName(shopName);
+					Avatar? av = selectedShop?.FindAvatarByName(avatarName);
+					if (av != null)
 					{
-						Avatar? av = s.FindAvatarByName(avatarName);
-						if (av == null) continue;
 						freshAvatarEntity = av;
 						AvatarVariation? freshVariation = av.FindAvatarVariation(avatarVariationData.VariationName);
 						if (freshVariation != null) avatarVariationData = freshVariation;
-						break;
 					}
+				}
+
+				if (avatarVariationData.NailNodes != null && avatarVariationData.NailNodes.Length > 0)
+				{
+					GameObject nodePrefab = NailPrefabBuilder.BuildFromNodes(avatarVariationData.NailNodes, avatarVariationData.VariationName);
+					GameObject resolvedNodePrefab = NailSetupProcessor.ResolveShapePrefab(nodePrefab, nailShapeName, avatarVariationData.NailNodes);
+					if (!ReferenceEquals(resolvedNodePrefab, nodePrefab)) Object.DestroyImmediate(nodePrefab);
+					prefab = resolvedNodePrefab;
 				}
 
 				NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName)
@@ -667,3 +675,4 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		}
 	}
 }
+

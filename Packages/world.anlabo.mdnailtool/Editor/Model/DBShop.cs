@@ -65,17 +65,24 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 						variation.NailNodes = CloneNodes(sb.NailNodes);
 						variation.FootNailNodes = CloneNodes(sb.FootNailNodes);
 						ApplySharedBodyScale(variation.NailNodes, variation.SharedBodyScale);
-						ApplySharedBodyScale(variation.FootNailNodes, variation.SharedBodyScale);
+						ApplySharedBodyScaleAsChildren(variation.FootNailNodes, variation.SharedBodyScale);
 						ApplySharedBodyScale(variation.BlendShapeVariants, variation.SharedBodyScale);
 					}
 				}
 			}
 		}
 
+
 		private static void ApplySharedBodyScale(NailPrefabNodeData[]? nodes, float[]? scale) {
 			if (nodes == null || nodes.Length == 0 || !HasSharedBodyScale(scale)) return;
 			for (int i = 0; i < nodes.Length; i++) ApplyRootScale(nodes[i], scale!);
 		}
+
+		private static void ApplySharedBodyScaleAsChildren(NailPrefabNodeData[]? nodes, float[]? scale) {
+			if (nodes == null || nodes.Length == 0 || !HasSharedBodyScale(scale)) return;
+			for (int i = 0; i < nodes.Length; i++) ApplyScaleAsChild(nodes[i], scale!);
+		}
+
 
 		private static void ApplySharedBodyScale(AvatarBlendShapeVariant[]? variants, float[]? scale) {
 			if (variants == null || variants.Length == 0 || !HasSharedBodyScale(scale)) return;
@@ -92,16 +99,20 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 		}
 
 		private static void ApplyRootScale(NailPrefabNodeData node, float[] scale) {
-			if (node.Children != null && node.Children.Length > 0) {
-				foreach (NailPrefabNodeData child in node.Children) ApplyScaleAsChild(child, scale);
+			if (node.Children == null || node.Children.Length == 0) {
+				ApplyScaleToSelf(node, scale);
 				return;
 			}
-			ApplyScaleToSelf(node, scale);
+			foreach (NailPrefabNodeData child in node.Children) ApplyScaleAsChild(child, scale);
 		}
 
 		private static void ApplyScaleAsChild(NailPrefabNodeData node, float[] scale) {
 			if (node.LocalPosition != null && node.LocalPosition.Length >= 3) {
 				node.LocalPosition = new[] { node.LocalPosition[0] * scale[0], node.LocalPosition[1] * scale[1], node.LocalPosition[2] * scale[2] };
+			}
+			if (node.Children != null && node.Children.Length > 0) {
+				foreach (NailPrefabNodeData child in node.Children) ApplyScaleAsChild(child, scale);
+				return;
 			}
 			ApplyScaleToSelf(node, scale);
 		}
@@ -204,3 +215,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 		}
 	}
 }
+
+
+
+

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -379,6 +379,10 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			return this._avatarPopup.value.Split(SPLIT)[1];
 		}
 
+		public string GetShopName() {
+			return this._avatarPopup.value.Split(SPLIT)[0];
+		}
+
 
 		public void UpdateLanguage() {
 			string langKey = LanguageManager.CurrentLanguageData.language;
@@ -605,3 +609,4 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		internal new class UxmlTraits : VisualElement.UxmlTraits { }
 	}
 }
+

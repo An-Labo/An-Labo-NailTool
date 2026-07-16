@@ -639,26 +639,24 @@ namespace world.anlabo.mdnailtool.Editor {
 					Undo.RegisterCreatedObjectUndo(marker, "Nail Setup Marker");
 				}
 
-				// ---- MA Mesh Settings (バウンディングボックスによるカリング防止) ----
-				if (nailPrefabObject.GetComponent<ModularAvatarMeshSettings>() == null)
+				// ---- MA Mesh Settings (probe anchor only) ----
+				// Bounds/RootBone をここで指定すると、MA が結合SMRの rootBone を上書きして
+				// Direct/BakeBS と違う位置に見えることがある。Bounds は各SMRに直接設定する。
+				ModularAvatarMeshSettings meshSettings = nailPrefabObject.GetComponent<ModularAvatarMeshSettings>();
+				if (meshSettings == null)
 				{
-					ModularAvatarMeshSettings meshSettings = nailPrefabObject.AddComponent<ModularAvatarMeshSettings>();
-					meshSettings.InheritProbeAnchor = ModularAvatarMeshSettings.InheritMode.SetOrInherit;
-					meshSettings.InheritBounds = ModularAvatarMeshSettings.InheritMode.SetOrInherit;
+					meshSettings = nailPrefabObject.AddComponent<ModularAvatarMeshSettings>();
+				}
+				meshSettings.InheritProbeAnchor = ModularAvatarMeshSettings.InheritMode.SetOrInherit;
+				meshSettings.InheritBounds = ModularAvatarMeshSettings.InheritMode.DontSet;
+				meshSettings.RootBone = null;
 
-					Animator? animator = this.Avatar.GetComponent<Animator>();
-					if (animator != null)
-					{
-						Transform? chest = animator.GetBoneTransform(HumanBodyBones.Chest);
-						if (chest != null)
-							meshSettings.ProbeAnchor = CreateAvatarRef(chest.gameObject);
-
-						Transform? hips = animator.GetBoneTransform(HumanBodyBones.Hips);
-						if (hips != null)
-							meshSettings.RootBone = CreateAvatarRef(hips.gameObject);
-					}
-
-					meshSettings.Bounds = new Bounds(Vector3.zero, Vector3.one * 2);
+				Animator? animator = this.Avatar.GetComponent<Animator>();
+				if (animator != null)
+				{
+					Transform? chest = animator.GetBoneTransform(HumanBodyBones.Chest);
+					if (chest != null)
+						meshSettings.ProbeAnchor = CreateAvatarRef(chest.gameObject);
 				}
 
 				// avatar-levelブレンドシェイプバリアントのBlendShapeSync設定 (nailPrefabObjectがアバター階層下に配置された後に実行する)

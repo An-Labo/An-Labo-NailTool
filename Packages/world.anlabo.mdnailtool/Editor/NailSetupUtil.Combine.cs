@@ -384,6 +384,7 @@ namespace world.anlabo.mdnailtool.Editor
 			combinedSmr.rootBone        = boneTransforms[0];
 			combinedSmr.sharedMaterials = materialList.ToArray();
 			combinedSmr.sharedMesh      = combinedMesh;
+			combinedSmr.localBounds     = new Bounds(combinedMesh.bounds.center, Vector3.Max(combinedMesh.bounds.size, Vector3.one * 2f));
 
 			for (int bsIdx = 0; bsIdx < combinedMesh.blendShapeCount; bsIdx++)
 			{
