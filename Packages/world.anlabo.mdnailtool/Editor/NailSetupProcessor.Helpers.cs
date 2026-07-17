@@ -194,8 +194,9 @@ namespace world.anlabo.mdnailtool.Editor {
 
 					Vector3 correctedWorldPos = actualBone.TransformPoint(localPos);
 					Quaternion correctedWorldRot = actualBone.rotation * localRot;
+					Vector3 desiredLossyScale = ScaleByBoneRatio(nail.lossyScale, actualBone.lossyScale, tempBone.lossyScale);
 
-					result[nail] = (correctedWorldPos, correctedWorldRot, nail.lossyScale);
+					result[nail] = (correctedWorldPos, correctedWorldRot, desiredLossyScale);
 				}
 			}
 			finally
@@ -204,6 +205,19 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			return result;
+		}
+
+		private static Vector3 ScaleByBoneRatio(Vector3 sourceLossyScale, Vector3 actualBoneScale, Vector3 referenceBoneScale)
+		{
+			return new Vector3(
+				sourceLossyScale.x * SafeScaleRatio(actualBoneScale.x, referenceBoneScale.x),
+				sourceLossyScale.y * SafeScaleRatio(actualBoneScale.y, referenceBoneScale.y),
+				sourceLossyScale.z * SafeScaleRatio(actualBoneScale.z, referenceBoneScale.z));
+		}
+
+		private static float SafeScaleRatio(float actual, float reference)
+		{
+			return Mathf.Abs(reference) > 1e-6f ? actual / reference : 1f;
 		}
 
 		// サイズを目標値に揃える

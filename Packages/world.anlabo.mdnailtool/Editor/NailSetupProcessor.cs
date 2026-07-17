@@ -228,35 +228,19 @@ namespace world.anlabo.mdnailtool.Editor {
 				ApplyNailBoundsGuard(rightFootNailObjects);
 			}
 
-			// scale退避→配置→復元。歪み防止 (Save/Compute も try 内に置き、途中例外でも finally で必ず Restore する)
-			Dictionary<Transform, Vector3> savedBoneScales = new();
+			// Armature の現在の実ボーン変換を使って補正する。
+			// ここでボーン scale を 1 に戻すと、極端に縮小された腕などで指先からのオフセットだけが縮小されず残る。
 			Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>? corrections = null;
-			try
-			{
-				corrections =
-					ComputeArmatureScaleCorrections(handsNailObjects, leftFootNailObjects, rightFootNailObjects, targetBoneDictionary, ref savedBoneScales);
+			corrections =
+				ComputeArmatureScaleCorrections(handsNailObjects, leftFootNailObjects, rightFootNailObjects, targetBoneDictionary);
 
-				// 補正値はFBX素体基準で計算するが、実際の着用/BakeBSはユーザーが編集したArmatureスケール上で行う。
-				// NeutralizeしたままSkinnedMeshRendererのbindposeを作ると、MA+BakeBSだけDirectと見た目がズレる。
-				if (savedBoneScales.Count > 0)
-				{
-					RestoreBoneScales(savedBoneScales);
-					savedBoneScales.Clear();
-				}
-
-				if (this.ForModularAvatar) {
-					SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
-						leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
-				} else {
-					SetupDirect(nailPrefabObject, targetBoneDictionary, handsNailObjects,
-						leftFootNailObjects, rightFootNailObjects, corrections);
-				}
+			if (this.ForModularAvatar) {
+				SetupForModularAvatar(nailPrefabObject, targetBoneDictionary, handsNailObjects,
+					leftFootNailObjects, rightFootNailObjects, resolvedSourceSmrs, corrections);
+			} else {
+				SetupDirect(nailPrefabObject, targetBoneDictionary, handsNailObjects,
+					leftFootNailObjects, rightFootNailObjects, corrections);
 			}
-			finally
-			{
-				RestoreBoneScales(savedBoneScales);
-			}
-
 
 			CleanupOrphanedNailPrefabsInScene();
 
@@ -405,17 +389,13 @@ namespace world.anlabo.mdnailtool.Editor {
 			return nailPrefabObject;
 		}
 
-		// ArmatureScaleCompensation=true の時に Bone Scale を退避し、ネイル位置補正テーブルを生成する.
-		// 退避 scale は呼び出し側 finally で必ず Restore する必要があるため ref で外に渡す.
+		// ArmatureScaleCompensation=true の時に、現在の Armature 形状に合わせたネイル位置補正テーブルを生成する.
 		private Dictionary<Transform, (Vector3 position, Quaternion rotation, Vector3 desiredLossyScale)>?
 			ComputeArmatureScaleCorrections(
 				Transform?[] handsNailObjects, Transform?[] leftFootNailObjects, Transform?[] rightFootNailObjects,
-				Dictionary<string, Transform?> targetBoneDictionary,
-				ref Dictionary<Transform, Vector3> savedBoneScales)
+				Dictionary<string, Transform?> targetBoneDictionary)
 		{
 			if (!this.ArmatureScaleCompensation) return null;
-
-			SaveAndNeutralizeBoneScales(this.Avatar, savedBoneScales);
 
 			var allNails = new List<Transform?>();
 			var allBoneIndices = new List<int>();
