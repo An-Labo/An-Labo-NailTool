@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,13 +49,13 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				throw new NailToolResourceException("NailDesign", $"Shader not found: {shaderName}");
 
 			var mat = new Material(shader);
-			ApplyDefaults(mat, this._nailDesign.MatCapDefault);
-			ApplyDelta(mat, delta);
+			ApplyDefaults(mat, this._nailDesign.MatCapDefault, this.DesignName);
+			ApplyDelta(mat, delta, this.DesignName, materialName, nailShapeName);
 			return mat;
 		}
 
 		// global + per-design default を delta 適用前に当てる. delta の個別値が後で上書き.
-		private static void ApplyDefaults(Material mat, string? matCapDefaultGuid) {
+		private static void ApplyDefaults(Material mat, string? matCapDefaultGuid, string designName) {
 			foreach (var kv in GlobalFloatDefaults) {
 				if (mat.HasProperty(kv.Key)) mat.SetFloat(kv.Key, kv.Value);
 			}
@@ -65,8 +66,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				}
 			}
 			if (!string.IsNullOrEmpty(matCapDefaultGuid) && mat.HasProperty("_MatCapTex")) {
-				string path = AssetDatabase.GUIDToAssetPath(matCapDefaultGuid);
-				Texture? tex = MDNailToolAssetLoader.LoadAssetSafe<Texture>(path);
+				Texture? tex = LoadTextureWithFallback(matCapDefaultGuid, "_MatCapTex", designName);
 				if (tex != null) mat.SetTexture("_MatCapTex", tex);
 			}
 		}
@@ -206,11 +206,35 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				&& colorKey.IndexOf(normalizedMaterial, System.StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
-		private static void ApplyDelta(Material mat, NailMaterialDelta delta) {
+		private static Texture? LoadTextureWithFallback(string? guid, string propertyName, string designName, string? materialName = null, string? nailShapeName = null) {
+			if (string.IsNullOrEmpty(guid)) return null;
+
+			string path = AssetDatabase.GUIDToAssetPath(guid);
+			Texture? tex = MDNailToolAssetLoader.LoadAssetSafe<Texture>(path);
+			if (tex != null) return tex;
+
+			if (!string.Equals(propertyName, "_MatCapTex", StringComparison.Ordinal)) return null;
+
+			tex = LoadKnownMatCapFallback(guid);
+			if (tex != null) return tex;
+
+			return null;
+		}
+
+		private static Texture? LoadKnownMatCapFallback(string guid) {
+			string? fallbackPath = guid switch {
+				"81aa5acab4400e54486f930dda82be43" => MDNailToolDefines.LEGACY_DESIGN_PATH + "[CommonData]/[matcap][Nail].png",
+				"1856b75e28b11f740bf4b6b0201c1f9a" => MDNailToolDefines.LEGACY_DESIGN_PATH + "[CommonData]/[matcap][MatNail].png",
+				"9673a195c8412fa40970e1ae03d7b7dd" => MDNailToolDefines.LEGACY_DESIGN_PATH + "[CommonData]/[matcap][BlightNail].png",
+				_ => null,
+			};
+			return string.IsNullOrEmpty(fallbackPath) ? null : MDNailToolAssetLoader.LoadAssetSafe<Texture>(fallbackPath);
+		}
+
+		private static void ApplyDelta(Material mat, NailMaterialDelta delta, string designName, string materialName, string nailShapeName) {
 			if (delta.Textures != null) {
 				foreach (var kv in delta.Textures) {
-					string texPath = AssetDatabase.GUIDToAssetPath(kv.Value);
-					Texture? tex = MDNailToolAssetLoader.LoadAssetSafe<Texture>(texPath);
+					Texture? tex = LoadTextureWithFallback(kv.Value, kv.Key, designName, materialName, nailShapeName);
 					if (tex != null) mat.SetTexture(kv.Key, tex);
 				}
 			}
