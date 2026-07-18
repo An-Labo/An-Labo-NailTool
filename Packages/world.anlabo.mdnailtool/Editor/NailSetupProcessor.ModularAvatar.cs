@@ -484,6 +484,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 					ModularAvatarBoneProxy boneProxy = proxyObject.AddComponent<ModularAvatarBoneProxy>();
 					boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildAtRoot;
+					boneProxy.matchScale = true;
 					boneProxy.target = targetBone;
 
 					nailObject.SetParent(proxyObject.transform, false);
