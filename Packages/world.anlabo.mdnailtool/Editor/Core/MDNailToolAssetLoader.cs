@@ -246,6 +246,11 @@ namespace world.anlabo.mdnailtool.Editor
 			_warnedPaths.Clear();
 		}
 
+		internal static void ClearGuidPathHints()
+		{
+			_guidPathHints.Clear();
+		}
+
 		/// <summary>
 		/// ファイル未検出時の診断情報を生成する。親ディレクトリの有無・ファイル総数・サンプル(最大5件)を含む。
 		/// </summary>

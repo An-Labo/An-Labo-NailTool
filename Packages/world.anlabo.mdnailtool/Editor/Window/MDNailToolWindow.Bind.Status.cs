@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -258,6 +259,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			sb.AppendLine($"Avatar: {avatar?.gameObject?.name ?? "(null)"}");
 			sb.AppendLine($"Avatar Root Scale: {avatar?.transform?.localScale.ToString() ?? "(null)"}");
+			AppendArmatureScaleInfo(sb, avatar);
 			sb.AppendLine($"AvatarName: {this._avatarDropDowns?.GetAvatarName() ?? "(未設定)"}");
 			sb.AppendLine($"Variation: {this._avatarDropDowns?.GetSelectedAvatarVariation()?.VariationName ?? "(null)"}");
 			sb.AppendLine($"NailShape: {this._nailShapeDropDown?.value ?? "(null)"}");
@@ -327,6 +329,232 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return sb.ToString();
 		}
 
+		private void AppendArmatureScaleInfo(System.Text.StringBuilder sb, VRCAvatarDescriptor? avatar)
+		{
+			if (avatar == null)
+			{
+				sb.AppendLine("A:null");
+				return;
+			}
+
+			Transform? armature = FindArmatureRoot(avatar);
+			if (armature == null)
+			{
+				sb.AppendLine("A:not found");
+				return;
+			}
+
+			sb.AppendLine($"A:{GetRelativePath(avatar.transform, armature)} p={FormatVector3(armature.localPosition)} r={FormatVector3(armature.localEulerAngles)} s={FormatVector3(armature.localScale)}");
+			AppendArmatureCompensationPoints(sb, avatar);
+		}
+
+		private void AppendArmatureCompensationPoints(System.Text.StringBuilder sb, VRCAvatarDescriptor avatar)
+		{
+			try
+			{
+				Dictionary<string, Transform?> targetBones = NailSetupProcessor.GetTargetBoneDictionary(
+					avatar,
+					this._avatarDropDowns?.GetSelectedAvatarVariation()?.BoneMappingOverride);
+				Dictionary<string, Vector3> referenceScales = GetReferenceBoneScalesByActualName(avatar);
+
+				var treeRoot = new TransformDiagnosticTreeNode();
+				AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, 0, 10);
+				if (this._tglFootActive?.value == true)
+				{
+					AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, 12, 5);
+					AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, 17, 5);
+				}
+
+				sb.AppendLine("ACP:");
+				if (treeRoot.Children.Count == 0)
+				{
+					sb.AppendLine("  none");
+					return;
+				}
+				AppendDiagnosticTreeLines(sb, treeRoot, 1);
+			}
+			catch (Exception ex)
+			{
+				sb.AppendLine($"ACP:err {ex.Message}");
+			}
+		}
+
+		private static void AppendTargetBoneDiagnostics(
+			TransformDiagnosticTreeNode treeRoot,
+			Transform avatarRoot,
+			IReadOnlyDictionary<string, Transform?> targetBones,
+			IReadOnlyDictionary<string, Vector3> referenceScales,
+			int startIndex,
+			int count)
+		{
+			for (int i = startIndex; i < startIndex + count && i < MDNailToolDefines.TARGET_BONE_NAME_LIST.Count; i++)
+			{
+				string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[i];
+				if (!targetBones.TryGetValue(boneName, out Transform? targetBone) || targetBone == null) continue;
+
+				TransformDiagnosticTreeNode node = AddTransformPath(treeRoot, avatarRoot, targetBone);
+				Vector3 referenceScale = referenceScales.TryGetValue(targetBone.name, out Vector3 foundReferenceScale)
+					? foundReferenceScale
+					: Vector3.one;
+				Vector3 ratio = ScaleRatio(targetBone.lossyScale, referenceScale);
+				node.Entries.Add($"[{TargetAlias(i)}] k={FormatVector3(ratio)} ref={FormatVector3(referenceScale)}");
+			}
+		}
+
+		private static Dictionary<string, Vector3> GetReferenceBoneScalesByActualName(VRCAvatarDescriptor avatar)
+		{
+			var result = new Dictionary<string, Vector3>();
+			Animator? animator = avatar.GetComponent<Animator>();
+			if (animator == null || animator.avatar == null) return result;
+
+			string modelPath = AssetDatabase.GetAssetPath(animator.avatar);
+			if (string.IsNullOrEmpty(modelPath)) return result;
+
+			GameObject? referenceAsset = MDNailToolAssetLoader.LoadPrefabSafe(modelPath);
+			if (referenceAsset == null) return result;
+
+			GameObject tempInstance = Object.Instantiate(referenceAsset);
+			try
+			{
+				tempInstance.transform.SetPositionAndRotation(avatar.transform.position, avatar.transform.rotation);
+				tempInstance.transform.localScale = avatar.transform.lossyScale;
+				foreach (Transform t in tempInstance.GetComponentsInChildren<Transform>(true))
+				{
+					if (!result.ContainsKey(t.name)) result[t.name] = t.lossyScale;
+				}
+			}
+			finally
+			{
+				Object.DestroyImmediate(tempInstance);
+			}
+
+			return result;
+		}
+
+		private static TransformDiagnosticTreeNode AddTransformPath(TransformDiagnosticTreeNode root, Transform avatarRoot, Transform target)
+		{
+			var chain = new Stack<Transform>();
+			Transform? current = target;
+			while (current != null && current != avatarRoot)
+			{
+				chain.Push(current);
+				current = current.parent;
+			}
+
+			TransformDiagnosticTreeNode node = root;
+			foreach (Transform transform in chain)
+			{
+				if (!node.Children.TryGetValue(transform.name, out TransformDiagnosticTreeNode child))
+				{
+					child = new TransformDiagnosticTreeNode();
+					node.Children[transform.name] = child;
+				}
+				child.Transform = transform;
+				node = child;
+			}
+			return node;
+		}
+
+		private static void AppendDiagnosticTreeLines(System.Text.StringBuilder sb, TransformDiagnosticTreeNode node, int depth)
+		{
+			string indent = new string(' ', depth * 2);
+			foreach (KeyValuePair<string, TransformDiagnosticTreeNode> childPair in node.Children)
+			{
+				TransformDiagnosticTreeNode child = childPair.Value;
+				string suffix = child.Transform != null ? $" p={FormatVector3(child.Transform.localPosition)} r={FormatVector3(child.Transform.localEulerAngles)} s={FormatVector3(child.Transform.localScale)}" : "/";
+				if (child.Entries.Count > 0) suffix += " " + string.Join(" ", child.Entries);
+				sb.AppendLine($"{indent}{childPair.Key}{suffix}");
+				AppendDiagnosticTreeLines(sb, child, depth + 1);
+			}
+		}
+
+		private sealed class TransformDiagnosticTreeNode
+		{
+			public SortedDictionary<string, TransformDiagnosticTreeNode> Children { get; } = new(StringComparer.Ordinal);
+			public Transform? Transform { get; set; }
+			public List<string> Entries { get; } = new();
+		}
+
+		private static Vector3 ScaleRatio(Vector3 actual, Vector3 reference)
+		{
+			return new Vector3(SafeScaleRatio(actual.x, reference.x), SafeScaleRatio(actual.y, reference.y), SafeScaleRatio(actual.z, reference.z));
+		}
+
+		private static float SafeScaleRatio(float actual, float reference)
+		{
+			return Mathf.Abs(reference) > 1e-6f ? actual / reference : 1f;
+		}
+
+		private static string TargetAlias(int index)
+		{
+			return index switch
+			{
+				0 => "LTh",
+				1 => "LIn",
+				2 => "LMi",
+				3 => "LRi",
+				4 => "LLi",
+				5 => "RTh",
+				6 => "RIn",
+				7 => "RMi",
+				8 => "RRi",
+				9 => "RLi",
+				12 => "LFTh",
+				13 => "LFIn",
+				14 => "LFMi",
+				15 => "LFRi",
+				16 => "LFLi",
+				17 => "RFTh",
+				18 => "RFIn",
+				19 => "RFMi",
+				20 => "RFRi",
+				21 => "RFLi",
+				_ => index.ToString(CultureInfo.InvariantCulture)
+			};
+		}
+
+		private static Transform? FindArmatureRoot(VRCAvatarDescriptor avatar)
+		{
+			Transform avatarTransform = avatar.transform;
+			foreach (Transform child in avatarTransform)
+			{
+				if (child.name == "Armature") return child;
+			}
+
+			Transform? namedArmature = avatar.GetComponentsInChildren<Transform>(true)
+				.FirstOrDefault(t => t.name == "Armature");
+			if (namedArmature != null) return namedArmature;
+
+			Animator? animator = avatar.GetComponent<Animator>();
+			Transform? hips = animator != null && animator.isHuman
+				? animator.GetBoneTransform(HumanBodyBones.Hips)
+				: null;
+			if (hips == null) return null;
+
+			Transform current = hips;
+			while (current.parent != null && current.parent != avatarTransform)
+			{
+				current = current.parent;
+			}
+			return current.parent == avatarTransform ? current : null;
+		}
+
+		private static string FormatVector3(Vector3 value)
+		{
+			return string.Format(CultureInfo.InvariantCulture, "({0:0.####},{1:0.####},{2:0.####})", value.x, value.y, value.z);
+		}
+
+		private static string GetRelativePath(Transform root, Transform target)
+		{
+			var names = new Stack<string>();
+			Transform? current = target;
+			while (current != null && current != root)
+			{
+				names.Push(current.name);
+				current = current.parent;
+			}
+			return names.Count == 0 ? target.name : string.Join("/", names);
+		}
 		private static void AppendUnityConsoleMessages(System.Text.StringBuilder sb)
 		{
 			sb.AppendLine("--- Unity Console Errors/Warnings (newest first) ---");

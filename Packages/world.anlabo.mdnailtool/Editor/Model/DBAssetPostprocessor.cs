@@ -3,7 +3,11 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
+using world.anlabo.mdnailtool.Editor.Core;
+using world.anlabo.mdnailtool.Editor.Language;
 using world.anlabo.mdnailtool.Editor.NailDesigns;
+using world.anlabo.mdnailtool.Editor.VisualElements;
+using world.anlabo.mdnailtool.Editor.Window;
 
 namespace world.anlabo.mdnailtool.Editor.Model {
 	// DB json 変更を検知して該当キャッシュをクリアする。
@@ -55,6 +59,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 		internal static void ForceRefreshDbAssetsAndCaches() {
 			ReimportDbAssets();
 			ClearAllCaches();
+			RefreshOpenWindows();
 			RememberCurrentPackageVersion();
 		}
 
@@ -81,6 +86,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			ReimportDbAssets();
 			ClearAllCaches();
 			EditorPrefs.SetString(prefKey, currentVersion);
+			RefreshOpenWindows();
 			Debug.Log($"[MDNailTool] DB cache refreshed for package version {currentVersion}.");
 		}
 
@@ -106,6 +112,15 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			INailProcessor.ClearPreviewMaterialCash();
 			MDNailToolDefines.ClearResourcePathCache();
 			MDNailToolAssetLoader.ClearCaseResolveCache();
+			MDNailToolAssetLoader.ClearGuidPathHints();
+			LanguageManager.ClearCache();
+			ShaderPresetScanner.InvalidateCache();
+			UpdateNoticeBanner.ClearCache();
+			MDNailToolWindow.InvalidateCachedPackageState();
+		}
+
+		private static void RefreshOpenWindows() {
+			MDNailToolWindow.RebuildOpenWindows();
 		}
 
 		private static bool IsDbAssetPath(string path) {

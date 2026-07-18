@@ -14,6 +14,16 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 	internal static class LanguageManager {
 
 		private static List<LanguageData>? _languageDataList;
+
+		internal static void ClearCache() {
+			if (_languageDataList != null) {
+				foreach (var lang in _languageDataList) {
+					lang.ClearCache();
+				}
+			}
+			_languageDataList = null;
+			_hasRetried = false;
+		}
 		/// <summary>
 		/// 読み込まれてる言語データリスト
 		/// </summary>
@@ -46,12 +56,7 @@ namespace world.anlabo.mdnailtool.Editor.Language {
 		/// 言語データのキャッシュをクリアし、開いているNailToolウィンドウを再描画します。
 		/// </summary>
 		internal static void ReloadLanguages() {
-			if (_languageDataList != null) {
-				foreach (var lang in _languageDataList) {
-					lang.ClearCache();
-				}
-			}
-			_languageDataList = null;
+			ClearCache();
 
 			AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 

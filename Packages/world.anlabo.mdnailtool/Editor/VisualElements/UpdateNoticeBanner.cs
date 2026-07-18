@@ -19,6 +19,15 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements
 		private static bool _checked;
 		private static string? _latestVersion;
 		private static bool _hasUpdate;
+		private static int _cacheGeneration;
+
+		internal static void ClearCache()
+		{
+			_cacheGeneration++;
+			_checked = false;
+			_latestVersion = null;
+			_hasUpdate = false;
+		}
 
 		public UpdateNoticeBanner()
 		{
@@ -45,11 +54,18 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements
 			request.timeout = 10;
 			UnityWebRequestAsyncOperation operation = request.SendWebRequest();
 			double startedAt = EditorApplication.timeSinceStartup;
+			int generation = _cacheGeneration;
 
 			void Poll()
 			{
 				if (!operation.isDone && EditorApplication.timeSinceStartup - startedAt < 15d) return;
 				EditorApplication.update -= Poll;
+
+				if (generation != _cacheGeneration)
+				{
+					request.Dispose();
+					return;
+				}
 
 				try
 				{

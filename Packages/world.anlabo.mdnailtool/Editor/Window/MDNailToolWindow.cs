@@ -170,6 +170,22 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			_cachedMDollVersion = null;
 		}
 
+		internal static void InvalidateCachedPackageState()
+		{
+			InvalidateChipVersionCache();
+		}
+
+		internal static void RebuildOpenWindows()
+		{
+			foreach (MDNailToolWindow window in UnityEngine.Resources.FindObjectsOfTypeAll<MDNailToolWindow>())
+			{
+				if (window == null) continue;
+				window.rootVisualElement.Clear();
+				window.CreateGUI();
+				window.Repaint();
+			}
+		}
+
 		private static void EnsureChipCacheInvalidationHook()
 		{
 			if (_chipCacheInvalidationSubscribed) return;
