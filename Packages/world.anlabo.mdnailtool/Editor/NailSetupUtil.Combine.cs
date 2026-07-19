@@ -272,7 +272,7 @@ namespace world.anlabo.mdnailtool.Editor
 
 				foreach (var (shapeName2, fullDv2, fullDn2, fullDt2, leftName, rightName, hasAnyDelta2) in collectedDeltas)
 				{
-					if (!string.IsNullOrEmpty(leftName) && !string.IsNullOrEmpty(rightName) && validPairsIsLeft != null)
+					if ((!string.IsNullOrEmpty(leftName) || !string.IsNullOrEmpty(rightName)) && validPairsIsLeft != null)
 					{
 						var leftDv = new Vector3[totalVertCount];
 						var leftDn = new Vector3[totalVertCount];
@@ -293,8 +293,9 @@ namespace world.anlabo.mdnailtool.Editor
 							System.Array.Copy(fullDt2, off, targetDt, off, siVerts);
 						}
 
-						combinedMesh.AddBlendShapeFrame(leftName, 100f, leftDv, leftDn, leftDt);
-						combinedMesh.AddBlendShapeFrame(rightName, 100f, rightDv, rightDn, rightDt);
+						if (combinedMesh.GetBlendShapeIndex(shapeName2) < 0) combinedMesh.AddBlendShapeFrame(shapeName2, 100f, fullDv2, fullDn2, fullDt2);
+						if (!string.IsNullOrEmpty(leftName) && combinedMesh.GetBlendShapeIndex(leftName) < 0) combinedMesh.AddBlendShapeFrame(leftName, 100f, leftDv, leftDn, leftDt);
+						if (!string.IsNullOrEmpty(rightName) && combinedMesh.GetBlendShapeIndex(rightName) < 0) combinedMesh.AddBlendShapeFrame(rightName, 100f, rightDv, rightDn, rightDt);
 						if (!hasAnyDelta2)
 						{
 							ToolConsole.Log($"BakeAndCombine: variant='{shapeName2}' L/R分割 デルタなし -> ゼロデルタで生成");
@@ -302,7 +303,7 @@ namespace world.anlabo.mdnailtool.Editor
 					}
 					else
 					{
-						combinedMesh.AddBlendShapeFrame(shapeName2, 100f, fullDv2, fullDn2, fullDt2);
+						if (combinedMesh.GetBlendShapeIndex(shapeName2) < 0) combinedMesh.AddBlendShapeFrame(shapeName2, 100f, fullDv2, fullDn2, fullDt2);
 						if (!hasAnyDelta2)
 						{
 							ToolConsole.Log($"BakeAndCombine: variant='{shapeName2}' デルタなし -> ゼロデルタで生成");

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -153,6 +154,44 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (evt.target is DropdownField { name: "NailDesignDropDowns-DesignDropDown" }) this.UpdateNailShapeFilter();
 			this.UpdatePreview();
 			this.RequestScenePreviewUpdate();
+		}
+
+		private void OpenSelectedNailInBrowser()
+		{
+			string? designName = this.GetPrimarySelectedDesignName();
+			string url = string.IsNullOrEmpty(designName)
+				? (S("link.catalog") ?? MDNailToolDefines.ANLABO_NAILLAB_URL)
+				: BuildNailLabUrl(designName!);
+			Application.OpenURL(url);
+		}
+
+		private string? GetPrimarySelectedDesignName()
+		{
+			if (this._nailDesignDropDowns == null) return null;
+			foreach (NailDesignDropDowns dropdowns in this._nailDesignDropDowns)
+			{
+				string designName = dropdowns.GetSelectedDesignName();
+				if (!string.IsNullOrEmpty(designName)) return designName;
+			}
+			return null;
+		}
+
+		private static string BuildNailLabUrl(string designName)
+		{
+			string slug = BuildNailLabSlug(designName);
+			if (string.IsNullOrEmpty(slug)) return MDNailToolDefines.ANLABO_NAILLAB_URL;
+			return $"https://anlabo.world/nail-lab/{slug}/";
+		}
+
+		private static string BuildNailLabSlug(string designName)
+		{
+			StringBuilder sb = new();
+			foreach (char c in designName)
+			{
+				if (char.IsLetterOrDigit(c)) sb.Append(char.ToLowerInvariant(c));
+				else if ((c == ' ' || c == '-' || c == '_') && sb.Length > 0 && sb[sb.Length - 1] != '-') sb.Append('-');
+			}
+			return sb.ToString().Trim('-');
 		}
 
 		private void UpdateNailShapeFilter(INailProcessor? processor = null)

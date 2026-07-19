@@ -693,6 +693,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var headerContact = this.rootVisualElement.Q<Label>("link-contact-header");
 			headerContact?.RegisterCallback<ClickEvent>(_ => FAQWindow.ShowWindow(this));
 
+			this._largePreviewLink = this.rootVisualElement.Q<Label>("link-large-preview");
+			if (this._largePreviewLink != null) {
+				this._largePreviewLink.text = S("window.preview_browser_large") ?? "View larger in browser";
+				this._largePreviewLink.tooltip = S("tooltip.preview_browser_large") ?? "Open the selected nail in your browser.";
+				this._largePreviewLink.RegisterCallback<ClickEvent>(_ => this.OpenSelectedNailInBrowser());
+			}
+
 			// 着用統計リンク
 			var usageStatsLink = this.rootVisualElement.Q<Label>("link-usage-stats");
 			if (usageStatsLink != null)

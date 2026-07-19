@@ -219,12 +219,35 @@
 }
 
 /* ---- Nail Preview ---- */
+.mdn-preview-area {
+    position: relative;
+}
+
 .mdn-nail-preview {
     height: 170px;
     margin-bottom: 8px;
     border-radius: 4px;
     overflow: hidden;
     background-color: #446c7e;
+}
+
+.mdn-large-preview-link {
+    position: absolute;
+    right: 12px;
+    bottom: 20px;
+    padding: 5px 10px;
+    background-color: rgba(32, 32, 32, 0.78);
+    border-color: #5c8fd6;
+    border-width: 1px;
+    border-radius: 4px;
+    color: #9fc2ff;
+    cursor: link;
+    unity-font-style: bold;
+}
+
+.mdn-large-preview-link:hover {
+    background-color: rgba(48, 64, 84, 0.9);
+    color: #d7e7ff;
 }
 
 /* ---- Style row (Shape / Material / Color / Additional Material) ---- */

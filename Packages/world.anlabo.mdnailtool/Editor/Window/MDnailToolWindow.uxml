@@ -147,11 +147,12 @@
                 </ui:VisualElement>
 
                 <!-- プレビューエリア（name="nail-preview-area" でC#から表示/非表示を制御） -->
-                <ui:VisualElement name="nail-preview-area">
+                <ui:VisualElement name="nail-preview-area" class="mdn-preview-area">
                     <world.anlabo.mdnailtool.Editor.VisualElements.NailPreview
                         name="nail-preview"
                         background-color="#446c7e"
                         class="mdn-nail-preview" />
+                    <ui:Label name="link-large-preview" class="mdn-large-preview-link" />
                 </ui:VisualElement>
 
                 <!-- ===== HAND NAIL ===== -->

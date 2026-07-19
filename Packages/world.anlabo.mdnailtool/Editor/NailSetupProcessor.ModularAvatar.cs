@@ -698,12 +698,14 @@ namespace world.anlabo.mdnailtool.Editor {
 							}
 							if (srcSmrTransform == null) { ToolConsole.Warn("NailSetup", string.Format(LanguageManager.S("warn.blendshape_sync_source_missing") ?? "BlendShape sync source mesh '{0}' not found on avatar", variant.SyncSourceSmrName) + BuildDiagnosticInfo()); continue; }
 
-							if (!string.IsNullOrEmpty(variant.LeftBlendShapeName) && !string.IsNullOrEmpty(variant.RightBlendShapeName))
+							if (!string.IsNullOrEmpty(variant.LeftBlendShapeName) || !string.IsNullOrEmpty(variant.RightBlendShapeName))
 							{
 								// L/R分割モード: 結合メッシュ上のL/R Blendshapeをそれぞれアバターのものとバインド
 								AvatarObjectReference aoRef = CreateAvatarRef(srcSmrTransform.gameObject);
-								foreach (string lrName in new[] { variant.LeftBlendShapeName!, variant.RightBlendShapeName! })
+								foreach (string? lrNameOrNull in new[] { variant.Name, variant.LeftBlendShapeName, variant.RightBlendShapeName })
 								{
+									if (string.IsNullOrEmpty(lrNameOrNull)) continue;
+									string lrName = lrNameOrNull!;
 									string actualLRName = lrName;
 									string normalizedLRName = lrName.Replace(" ", "").Replace("　", "");
 									for (int shi = 0; shi < bsSmr.sharedMesh.blendShapeCount; shi++)

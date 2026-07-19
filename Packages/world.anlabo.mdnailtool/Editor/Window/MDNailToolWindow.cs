@@ -92,6 +92,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private Label? _manualLink;
 		private LocalizedLabel? _contactLink;
+		private Label? _largePreviewLink;
 
 		// ---- Hand/Foot section headers (for error highlight) ----
 		private VisualElement? _handSectionHeader;
