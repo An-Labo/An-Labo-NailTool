@@ -414,7 +414,9 @@
       "gray",
       "purple",
       "red",
-      "teal"
+      "teal",
+      "green",
+      "pink"
     ],
     "tag": [
       "Cool",
@@ -521,13 +523,22 @@
         ]
       },
       "[DreamingPink]": {
-        "colorName": "[DreamingPink]"
+        "colorName": "[DreamingPink]",
+        "tagColor": [
+          "pink"
+        ]
       },
       "[DreamingGreen]": {
-        "colorName": "[DreamingGreen]"
+        "colorName": "[DreamingGreen]",
+        "tagColor": [
+          "green"
+        ]
       },
       "[DreamingBlue]": {
-        "colorName": "[DreamingBlue]"
+        "colorName": "[DreamingBlue]",
+        "tagColor": [
+          "blue"
+        ]
       }
     },
     "additionalMaterialGUIDs": [
@@ -60432,7 +60443,10 @@
     "tagColor": [
       "blue",
       "purple",
-      "pink"
+      "pink",
+      "gray",
+      "lavender",
+      "white"
     ],
     "subTags": [
       "ajisai",
@@ -60611,7 +60625,13 @@
         }
       }
     },
-    "_matCapDefault": "81aa5acab4400e54486f930dda82be43"
+    "_matCapDefault": "81aa5acab4400e54486f930dda82be43",
+    "tag": [
+      "Sweet",
+      "Nuance",
+      "Rich",
+      "Light"
+    ]
   },
   "SchoolCheckNail": {
     "id": 192,
@@ -61587,25 +61607,48 @@
       "blue",
       "gray",
       "purple",
-      "sea",
-      "teal"
+      "teal",
+      "cyan",
+      "white"
     ],
     "url": "https://van-labo.booth.pm/items/8573124",
     "colorVariation": {
       "Blue": {
-        "colorName": "Blue"
+        "colorName": "Blue",
+        "tagColor": [
+          "blue",
+          "white"
+        ]
       },
       "Gray": {
-        "colorName": "Gray"
+        "colorName": "Gray",
+        "tagColor": [
+          "gray",
+          "white"
+        ]
       },
       "Purple": {
-        "colorName": "Purple"
+        "colorName": "Purple",
+        "tagColor": [
+          "purple",
+          "white"
+        ]
       },
       "Sea": {
-        "colorName": "Sea"
+        "colorName": "Sea",
+        "tagColor": [
+          "cyan",
+          "blue",
+          "white"
+        ]
       },
       "Teal": {
-        "colorName": "Teal"
+        "colorName": "Teal",
+        "tagColor": [
+          "teal",
+          "cyan",
+          "white"
+        ]
       }
     },
     "materialData": {
@@ -61726,7 +61769,27 @@
         }
       }
     },
-    "_matCapDefault": "81aa5acab4400e54486f930dda82be43"
+    "_matCapDefault": "81aa5acab4400e54486f930dda82be43",
+    "tag": [
+      "Cool",
+      "Nuance",
+      "Bare",
+      "Light"
+    ],
+    "subTags": [
+      "frosted glass",
+      "glass",
+      "translucent",
+      "gradient",
+      "ice",
+      "water",
+      "すりガラス",
+      "ガラス",
+      "半透明",
+      "グラデーション",
+      "氷",
+      "水"
+    ]
   },
   "HibiscusNail": {
     "id": 196,
@@ -61943,7 +62006,12 @@
       "gray",
       "pink"
     ],
-    "tag": [],
+    "tag": [
+      "Sweet",
+      "Nuance",
+      "Rich",
+      "Light"
+    ],
     "materialVariation": {},
     "colorVariation": {
       "Sunset": {
@@ -61979,6 +62047,342 @@
         ]
       }
     },
-    "url": "https://van-labo.booth.pm/items/8620958"
+    "url": "https://van-labo.booth.pm/items/8620958",
+    "materialData": {
+      "[mat][SeashellNail][lil-toon]natural": {
+        "textures": {
+          "_BumpMap": "87888b4aef63d764084b42c1ebace0c0"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.87,
+          "_Reflectance": 1,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][SeashellNail][lil-toon]natural"
+      },
+      "[mat][SeashellNail][lil-toon]oval": {
+        "textures": {
+          "_BumpMap": "8eb7f26e7ef74864ba68a01fc91c26bd"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.87,
+          "_Reflectance": 1,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][SeashellNail][lil-toon]oval"
+      },
+      "[mat][SeashellNail][lil-toon]point": {
+        "textures": {
+          "_BumpMap": "8a3abb8bc6976914aaeb567109cb0b9c"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.87,
+          "_Reflectance": 1,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][SeashellNail][lil-toon]point"
+      },
+      "[mat][SeashellNail][lil-toon]square": {
+        "textures": {
+          "_BumpMap": "29dc4e563202e6b49ba50badea045887"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.87,
+          "_Reflectance": 1,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][SeashellNail][lil-toon]square"
+      }
+    },
+    "colorTextures": {
+      "Natural": {
+        "[mat][SeashellNail][lil-toon]natural": {
+          "Lagoon": "0d8afe14c2c34bf4580d271b8e6a0ee3",
+          "Ocean": "789c4a53e8eb23e419a002f8e43d6ebf",
+          "Sunset": "f5f85447abe203749b7a60912089821c",
+          "Twilight": "32109af49b2acee45b5296935236572d"
+        }
+      },
+      "Oval": {
+        "[mat][SeashellNail][lil-toon]oval": {
+          "Lagoon": "547da4ad1194c99439bfeae39c3bce82",
+          "Ocean": "65a93d6ccc773014ab9e9313fa9d89fb",
+          "Sunset": "16199d69e8a20da439ca57b646aaf3ff",
+          "Twilight": "269d8c0c9dd78544aac4c6627bd8a4b1"
+        }
+      },
+      "Point": {
+        "[mat][SeashellNail][lil-toon]point": {
+          "Lagoon": "f54649ab2f66c9a42abb446b0399f585",
+          "Ocean": "5d652d912833b244abd45bdffb281acc",
+          "Sunset": "8295a0830115e97409641834c8984589",
+          "Twilight": "13681cc4c289da54291f244293c08cf9"
+        }
+      },
+      "Square": {
+        "[mat][SeashellNail][lil-toon]square": {
+          "Lagoon": "506210f00f281b24bb5f02a83a6674b6",
+          "Ocean": "917a67fe21d86fd4fac5743321805f22",
+          "Sunset": "a8494939db9aeab4198bf208e59a9432",
+          "Twilight": "83e0a8df688ed314b97de9c43ab2af37"
+        }
+      }
+    },
+    "_matCapDefault": "81aa5acab4400e54486f930dda82be43",
+    "thumbnailGUID": "662d6950d2e691c4597079adc2fb9e4d",
+    "subTags": [
+      "seashell",
+      "shell",
+      "pearl",
+      "ocean",
+      "beach",
+      "summer",
+      "貝殻",
+      "シェル",
+      "パール",
+      "海",
+      "ビーチ",
+      "夏"
+    ]
+  },
+  "JellyfishNail": {
+    "id": 199,
+    "designName": "JellyfishNail",
+    "tagColor": [
+      "black",
+      "white",
+      "gray",
+      "cyan",
+      "blue",
+      "purple"
+    ],
+    "tag": [
+      "Cool",
+      "Nuance",
+      "Rich",
+      "Dark"
+    ],
+    "materialVariation": {},
+    "colorVariation": {
+      "DeepBlue": {
+        "colorName": "DeepBlue",
+        "tagColor": [
+          "white",
+          "black"
+        ]
+      },
+      "Purple": {
+        "colorName": "Purple",
+        "tagColor": [
+          "purple",
+          "white",
+          "gray"
+        ]
+      },
+      "Blue": {
+        "colorName": "Blue",
+        "tagColor": [
+          "blue",
+          "white",
+          "purple"
+        ]
+      },
+      "Black": {
+        "colorName": "Black",
+        "tagColor": [
+          "black",
+          "white"
+        ]
+      },
+      "Cyan": {
+        "colorName": "Cyan",
+        "tagColor": [
+          "cyan",
+          "purple",
+          "white"
+        ]
+      }
+    },
+    "url": "https://van-labo.booth.pm/items/8632696",
+    "materialData": {
+      "[mat][JellyfishNail][lil-toon]natural": {
+        "textures": {
+          "_BumpMap": "87888b4aef63d764084b42c1ebace0c0",
+          "_BaseMap": "af63951573dbc094490162374b0e1d44",
+          "_BaseColorMap": "af63951573dbc094490162374b0e1d44"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.87,
+          "_Reflectance": 1,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][JellyfishNail][lil-toon]natural"
+      },
+      "[mat][JellyfishNail][lil-toon]oval": {
+        "textures": {
+          "_BumpMap": "8eb7f26e7ef74864ba68a01fc91c26bd",
+          "_BaseMap": "0943eb21060f0e1498567ece13f50400",
+          "_BaseColorMap": "0943eb21060f0e1498567ece13f50400"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.87,
+          "_Reflectance": 1,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][JellyfishNail][lil-toon]oval"
+      },
+      "[mat][JellyfishNail][lil-toon]point": {
+        "textures": {
+          "_BumpMap": "8a3abb8bc6976914aaeb567109cb0b9c",
+          "_BaseMap": "3ca14b438d41bfb4d87e94ea8d61fc7b",
+          "_BaseColorMap": "3ca14b438d41bfb4d87e94ea8d61fc7b"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.87,
+          "_Reflectance": 1,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][JellyfishNail][lil-toon]point"
+      },
+      "[mat][JellyfishNail][lil-toon]square": {
+        "textures": {
+          "_BumpMap": "29dc4e563202e6b49ba50badea045887",
+          "_BaseMap": "1952b17146749e14bb15e5cf6ddd1188",
+          "_BaseColorMap": "1952b17146749e14bb15e5cf6ddd1188"
+        },
+        "floats": {
+          "_BumpScale": 0.34,
+          "_Smoothness": 0.87,
+          "_Reflectance": 1,
+          "_MatCapLod": 5
+        },
+        "colors": {
+          "_MatCapColor": [
+            1,
+            1,
+            1,
+            0.9
+          ]
+        },
+        "materialName": "[mat][JellyfishNail][lil-toon]square"
+      }
+    },
+    "colorTextures": {
+      "Natural": {
+        "[mat][JellyfishNail][lil-toon]natural": {
+          "Black": "af63951573dbc094490162374b0e1d44",
+          "Blue": "e5ae7f7d7479d7947b4da57fc6bd0f53",
+          "Cyan": "78d5c7b896d91c64c99355b945ff4e34",
+          "Deepblue": "68a5834449b980044b3be08876ebb939",
+          "Purple": "43df72d382017c24d953b590ef82d450"
+        }
+      },
+      "Oval": {
+        "[mat][JellyfishNail][lil-toon]oval": {
+          "Black": "0943eb21060f0e1498567ece13f50400",
+          "Blue": "e6a0898c49a3176418523f2c383bcfdf",
+          "Cyan": "18675942567c7f845b14e62b272e1ef9",
+          "Deepblue": "b1981c762615ab447bc418cdf341d9f3",
+          "Purple": "e07693ea53a01ff4d91e2f74af8e3557"
+        }
+      },
+      "Point": {
+        "[mat][JellyfishNail][lil-toon]point": {
+          "Black": "3ca14b438d41bfb4d87e94ea8d61fc7b",
+          "Blue": "9de242b7660e3954fbc1df4d28ad495a",
+          "Cyan": "89c575794ef338e4191dafffcfbb1c99",
+          "Deepblue": "6cd44065366da9a4abd78d341e9fffbd",
+          "Purple": "c07132c15ceda174eb2406a0fa878100"
+        }
+      },
+      "Square": {
+        "[mat][JellyfishNail][lil-toon]square": {
+          "Black": "1952b17146749e14bb15e5cf6ddd1188",
+          "Blue": "47f95b621c9f7e04881ac1fa43d39178",
+          "Cyan": "925ea5de3da325245af402ba5ca278a7",
+          "Deepblue": "af034e71df59eee47bd40796a18f174e",
+          "Purple": "5f67c7bb4434c3241b90010af08180a1"
+        }
+      }
+    },
+    "_matCapDefault": "81aa5acab4400e54486f930dda82be43",
+    "thumbnailGUID": "d62cc5597bb04294aac932ab55cfe0f3",
+    "subTags": [
+      "jellyfish",
+      "ocean",
+      "underwater",
+      "glow",
+      "transparent",
+      "gradient",
+      "クラゲ",
+      "海",
+      "水中",
+      "発光",
+      "透明感",
+      "グラデーション"
+    ]
   }
 }
