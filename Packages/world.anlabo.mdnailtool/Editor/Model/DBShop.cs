@@ -62,6 +62,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 					foreach (AvatarVariation variation in avatar.AvatarVariations.Values) {
 						if (variation == null || string.IsNullOrEmpty(variation.SharedBodyId)) continue;
 						if (!pool.TryGetValue(variation.SharedBodyId!, out SharedBody? sb) || sb == null) continue;
+						variation.BoneMappingOverride = MergeBoneMappingOverrides(sb.BoneMappingOverride, variation.BoneMappingOverride);
 						variation.NailNodes = CloneNodes(sb.NailNodes);
 						variation.FootNailNodes = CloneNodes(sb.FootNailNodes);
 						ApplySharedBodyScale(variation.NailNodes, variation.SharedBodyScale);
@@ -73,6 +74,17 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 		}
 
 
+		private static IReadOnlyDictionary<string, string>? MergeBoneMappingOverrides(
+			IReadOnlyDictionary<string, string>? shared,
+			IReadOnlyDictionary<string, string>? variation) {
+			if (shared == null || shared.Count == 0) return variation;
+			Dictionary<string, string> merged = new();
+			foreach (KeyValuePair<string, string> pair in shared) merged[pair.Key] = pair.Value;
+			if (variation != null) {
+				foreach (KeyValuePair<string, string> pair in variation) merged[pair.Key] = pair.Value;
+			}
+			return merged;
+		}
 		private static void ApplySharedBodyScale(NailPrefabNodeData[]? nodes, float[]? scale) {
 			if (nodes == null || nodes.Length == 0 || !HasSharedBodyScale(scale)) return;
 			for (int i = 0; i < nodes.Length; i++) ApplyRootScale(nodes[i], scale!);

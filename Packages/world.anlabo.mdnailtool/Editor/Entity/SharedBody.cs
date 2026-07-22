@@ -1,11 +1,14 @@
 #nullable enable
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace world.anlabo.mdnailtool.Editor.Entity {
 	// shop.json ルートの sharedBodies プール 1 件分. Loader が variation.SharedBodyId から expand する.
 	[JsonObject("sharedBody")]
 	public class SharedBody {
+		[JsonProperty("boneMappingOverride")]
+		public IReadOnlyDictionary<string, string>? BoneMappingOverride { get; set; }
 		[JsonProperty("nailNodes")]
 		public NailPrefabNodeData[]? NailNodes { get; set; }
 
