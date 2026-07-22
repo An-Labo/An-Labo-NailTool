@@ -266,6 +266,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				GameObject? diagPrefab = this._avatarDropDowns?.GetSelectedPrefab();
 				sb.AppendLine($"NailPrefab: {diagPrefab?.name ?? "(null)"}");
+				AppendNailMeshDiagnostics(sb, diagPrefab);
 				if (diagPrefab != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(diagPrefab)))
 				{
 					Object.DestroyImmediate(diagPrefab);
@@ -392,11 +393,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				string boneName = MDNailToolDefines.TARGET_BONE_NAME_LIST[i];
 				if (!targetBones.TryGetValue(boneName, out Transform? targetBone) || targetBone == null) continue;
 
-				TransformDiagnosticTreeNode node = AddTransformPath(treeRoot, avatarRoot, targetBone);
 				Vector3 referenceScale = referenceScales.TryGetValue(targetBone.name, out Vector3 foundReferenceScale)
 					? foundReferenceScale
 					: Vector3.one;
 				Vector3 ratio = ScaleRatio(targetBone.lossyScale, referenceScale);
+				if (!HasMeaningfulScaleCompensation(ratio)) continue;
+
+				TransformDiagnosticTreeNode node = AddTransformPath(treeRoot, avatarRoot, targetBone);
 				node.Entries.Add($"[{TargetAlias(i)}] k={FormatVector3(ratio)} ref={FormatVector3(referenceScale)}");
 			}
 		}
@@ -485,6 +488,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return Mathf.Abs(reference) > 1e-6f ? actual / reference : 1f;
 		}
 
+		private static bool HasMeaningfulScaleCompensation(Vector3 ratio)
+		{
+			const float epsilon = 0.0001f;
+			return Mathf.Abs(ratio.x - 1f) > epsilon
+				|| Mathf.Abs(ratio.y - 1f) > epsilon
+				|| Mathf.Abs(ratio.z - 1f) > epsilon;
+		}
+
 		private static string TargetAlias(int index)
 		{
 			return index switch
@@ -554,6 +565,28 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				current = current.parent;
 			}
 			return names.Count == 0 ? target.name : string.Join("/", names);
+		}
+		private static void AppendNailMeshDiagnostics(System.Text.StringBuilder sb, GameObject? prefab)
+		{
+			if (prefab == null)
+			{
+				sb.AppendLine("NailMesh: prefab unavailable");
+				return;
+			}
+
+			Transform[] transforms = prefab.GetComponentsInChildren<Transform>(true);
+			var missing = new List<string>();
+			int foundHand = 0;
+			foreach (string name in MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST)
+			{
+				Transform? nail = transforms.FirstOrDefault(t => t.name == name);
+				if (nail == null) continue;
+				SkinnedMeshRenderer? smr = nail.GetComponentInChildren<SkinnedMeshRenderer>(true);
+				if (smr != null && smr.sharedMesh != null) foundHand++;
+				else missing.Add(name);
+			}
+
+			sb.AppendLine($"NailMesh: hand={foundHand}/{MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST.Count} missing={(missing.Count == 0 ? "none" : string.Join(",", missing))}");
 		}
 		private static void AppendUnityConsoleMessages(System.Text.StringBuilder sb)
 		{

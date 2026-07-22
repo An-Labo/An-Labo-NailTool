@@ -135,6 +135,8 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 			}
 
+			ValidateSelectedNailMeshes(handsNailObjects, leftFootNailObjects, rightFootNailObjects, this.UseFootNail);
+
 			if (this.RemoveCurrentNail) {
 				RemoveNail(this.Avatar, targetBoneDictionary);
 			}
@@ -247,6 +249,37 @@ namespace world.anlabo.mdnailtool.Editor {
 			SchedulePostSetupRefresh(nailPrefabObject);
 		}
 
+		private static void ValidateSelectedNailMeshes(
+			Transform?[] handsNailObjects,
+			Transform?[] leftFootNailObjects,
+			Transform?[] rightFootNailObjects,
+			bool useFootNail)
+		{
+			var missing = new List<string>();
+
+			void Check(IEnumerable<Transform?> nailObjects)
+			{
+				foreach (Transform? nailObject in nailObjects)
+				{
+					if (nailObject == null) continue;
+					SkinnedMeshRenderer? smr = nailObject.GetComponentInChildren<SkinnedMeshRenderer>(true);
+					if (smr == null || smr.sharedMesh == null) missing.Add(nailObject.name);
+				}
+			}
+
+			Check(handsNailObjects);
+			if (useFootNail)
+			{
+				Check(leftFootNailObjects);
+				Check(rightFootNailObjects);
+			}
+
+			if (missing.Count == 0) return;
+
+			string template = LanguageManager.S("error.execute.nail_mesh_missing")
+				?? "Nail mesh resources are missing: {0}. Please reinstall the [An-Labo.Virtual] resources.";
+			ToolConsole.Error("NailSetup", string.Format(template, string.Join(", ", missing.Distinct())));
+		}
 		// Scene root に取り残された NailPrefabBuilder.BuildFromNodes 出力 (parent=null, SMR が Default-Material のみ) を一掃する.
 		private static void CleanupOrphanedNailPrefabsInScene() {
 			UnityEngine.SceneManagement.Scene scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
