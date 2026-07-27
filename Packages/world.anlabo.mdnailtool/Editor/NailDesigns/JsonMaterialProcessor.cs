@@ -234,6 +234,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		private static void ApplyDelta(Material mat, NailMaterialDelta delta, string designName, string materialName, string nailShapeName) {
 			if (delta.Textures != null) {
 				foreach (var kv in delta.Textures) {
+					if (kv.Key == "_BaseMap" || kv.Key == "_BaseColorMap") continue;
 					Texture? tex = LoadTextureWithFallback(kv.Value, kv.Key, designName, materialName, nailShapeName);
 					if (tex != null) mat.SetTexture(kv.Key, tex);
 				}
