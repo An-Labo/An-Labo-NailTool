@@ -368,10 +368,13 @@ namespace world.anlabo.mdnailtool.Editor.Window {
         private void UpdateFilter() {
             _pageIndex = 0;
             _filteredDesigns = _allDesigns.Where(d => {
-                if (!string.IsNullOrEmpty(_searchText)) {
-                    bool match = d.DisplayNames.Values.Any(n => n.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                string query = _searchText.Trim();
+                if (!string.IsNullOrEmpty(query)) {
+                    bool match = d.DesignName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (!match && d.DisplayNames != null)
+                        match = d.DisplayNames.Values.Any(n => n.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0);
                     if (!match && d.SubTags != null)
-                        match = d.SubTags.Any(t => t.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                        match = d.SubTags.Any(t => t.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0);
                     if (!match) return false;
                 }
                 bool isInstalled = INailProcessor.IsInstalledDesign(d.DesignName);

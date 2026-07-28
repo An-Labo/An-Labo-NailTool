@@ -8,7 +8,7 @@ namespace world.anlabo.mdnailtool.Editor.Core
 {
 	public static class ShaderPresetApplier
 	{
-		// 値転送許可リスト. テクスチャは型動的判定なので列挙不要. LilToPoiMap キーは IsValueTransferAllowed で自動通過.
+		// 値転送許可リスト. テクスチャは型動的判定なので列挙不要.
 		private static readonly HashSet<string> NonTextureWhitelist = new() {
 			"_Color",
 			"_MainTexHSVG",
@@ -26,9 +26,14 @@ namespace world.anlabo.mdnailtool.Editor.Core
 			"_MatCap2ndLod",
 
 			"_Metallic",
-
+			"_UseEmission",
 			"_EmissionColor",
+			"_EmissionMainStrength",
 			"_EmissionBlend",
+
+			"_UseEmission2nd",
+			"_Emission2ndColor",
+			"_Emission2ndMainStrength",
 			"_Emission2ndBlend",
 
 			"_GlitterColor",
@@ -94,6 +99,13 @@ namespace world.anlabo.mdnailtool.Editor.Core
 		private static readonly string[] Matcap1stTextureProps = { "_MatCapTex", "_Matcap" };
 		private static readonly string[] Matcap2ndTextureProps = { "_MatCap2ndTex", "_Matcap2" };
 
+		// Poiyomi は一部の lilToon 同名プロパティも持つため、Emission は実際に使われる別名を優先する。
+		private static readonly HashSet<string> PresetAliasPriority = new() {
+			"_UseEmission", "_EmissionMainStrength", "_EmissionBlendMask",
+			"_UseEmission2nd", "_Emission2ndColor", "_Emission2ndMap",
+			"_Emission2ndMainStrength", "_Emission2ndBlendMask",
+		};
+
 		// lilToon → Poiyomi 別名解決. 同名 (_BumpMap/_Color/_Metallic/_EmissionColor/_RimColor/_ShadowColor 等) は同名経路で処理.
 		private static readonly Dictionary<string, string> LilToPoiMap = new() {
 			{ "_UseMatCap", "_MatcapEnable" },
@@ -122,12 +134,13 @@ namespace world.anlabo.mdnailtool.Editor.Core
 			{ "_Smoothness", "_Glossiness" },
 
 			{ "_UseEmission", "_EnableEmission" },
-			{ "_EmissionMainStrength", "_EmissionStrength" },
+			{ "_EmissionMainStrength", "_EmissionBaseColorAsMap" },
+			{ "_EmissionBlendMask", "_EmissionMask" },
 
 			{ "_UseEmission2nd", "_EnableEmission1" },
 			{ "_Emission2ndColor", "_EmissionColor1" },
 			{ "_Emission2ndMap", "_EmissionMap1" },
-			{ "_Emission2ndMainStrength", "_EmissionStrength1" },
+			{ "_Emission2ndMainStrength", "_EmissionBaseColorAsMap1" },
 			{ "_Emission2ndBlendMask", "_EmissionMask1" },
 
 			{ "_UseGlitter", "_GlitterEnable" },
@@ -159,7 +172,8 @@ namespace world.anlabo.mdnailtool.Editor.Core
 				if (presetIdx < 0) continue;
 
 				ShaderPropertyType presetType = presetShader.GetPropertyType(presetIdx);
-				if (nailType != presetType) continue;
+				if (nailType != presetType
+					&& !(IsNumericShaderProperty(nailType) && IsNumericShaderProperty(presetType))) continue;
 
 				switch (nailType) {
 					case ShaderPropertyType.Texture: {
@@ -172,13 +186,26 @@ namespace world.anlabo.mdnailtool.Editor.Core
 					}
 					case ShaderPropertyType.Float:
 					case ShaderPropertyType.Range:
+					case ShaderPropertyType.Int:
 						if (IsValueTransferAllowedForNail(nailProp, presetHasMatcap1st, presetHasMatcap2nd)) {
-							presetBase.SetFloat(presetProp, nailSource.GetFloat(nailProp));
+							float value = nailType == ShaderPropertyType.Int
+								? nailSource.GetInt(nailProp)
+								: nailSource.GetFloat(nailProp);
+							if (presetType == ShaderPropertyType.Int) presetBase.SetInt(presetProp, Mathf.RoundToInt(value));
+							else presetBase.SetFloat(presetProp, value);
 						}
 						break;
 					case ShaderPropertyType.Color:
 						if (IsValueTransferAllowedForNail(nailProp, presetHasMatcap1st, presetHasMatcap2nd)) {
-							presetBase.SetColor(presetProp, nailSource.GetColor(nailProp));
+							Color value = nailSource.GetColor(nailProp);
+							presetBase.SetColor(presetProp, value);
+							// Poiyomi uses the lilToon emission color alpha as emission intensity.
+							if (nailProp == "_EmissionColor" && presetBase.HasProperty("_EmissionStrength")) {
+								presetBase.SetFloat("_EmissionStrength", value.a);
+							}
+							else if (nailProp == "_Emission2ndColor" && presetBase.HasProperty("_EmissionStrength1")) {
+								presetBase.SetFloat("_EmissionStrength1", value.a);
+							}
 						}
 						break;
 					case ShaderPropertyType.Vector:
@@ -200,6 +227,9 @@ namespace world.anlabo.mdnailtool.Editor.Core
 			return false;
 		}
 
+		private static bool IsNumericShaderProperty(ShaderPropertyType type) =>
+			type == ShaderPropertyType.Float || type == ShaderPropertyType.Range || type == ShaderPropertyType.Int;
+
 		private static bool IsValueTransferAllowedForNail(string nailProp, bool presetHasMatcap1st, bool presetHasMatcap2nd)
 		{
 			if (Matcap1stRelatedProperties.Contains(nailProp)) return !presetHasMatcap1st;
@@ -219,6 +249,11 @@ namespace world.anlabo.mdnailtool.Editor.Core
 
 		private static string? ResolvePresetProperty(Shader presetShader, string nailProp)
 		{
+			if (PresetAliasPriority.Contains(nailProp)
+				&& LilToPoiMap.TryGetValue(nailProp, out string? preferredAlias)
+				&& presetShader.FindPropertyIndex(preferredAlias) >= 0) {
+				return preferredAlias;
+			}
 			if (presetShader.FindPropertyIndex(nailProp) >= 0) return nailProp;
 			if (LilToPoiMap.TryGetValue(nailProp, out string? poiName)
 				&& presetShader.FindPropertyIndex(poiName) >= 0) {

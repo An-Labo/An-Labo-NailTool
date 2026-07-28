@@ -844,6 +844,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void ApplyResetNailSettings()
 		{
+			GlobalSetting.SelectedShaderPreset = null;
+			if (this._shaderPresetSelect != null) this._shaderPresetSelect.SetValueWithoutNotify(SHADER_PRESET_NONE_LABEL);
+			INailProcessor.ClearCreatedMaterialCash();
+			INailProcessor.ClearPreviewMaterialCash();
+
 			if (this._tglHandActive != null) this._tglHandActive.value = true;
 			if (this._tglFootActive != null) this._tglFootActive.value = true;
 			if (this._tglHandDetail != null) this._tglHandDetail.value = false;
@@ -853,6 +858,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (this._bulkRightHand != null) this._bulkRightHand.value = true;
 			if (this._bulkLeftFoot != null) this._bulkLeftFoot.value = true;
 			if (this._bulkRightFoot != null) this._bulkRightFoot.value = true;
+			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
 			// 追加マテリアル / 追加オブジェクトは現在の選択を維持 (ネイルに設定されてる値を尊重).
 		}
 
