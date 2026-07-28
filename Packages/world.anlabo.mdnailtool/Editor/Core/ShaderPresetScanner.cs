@@ -72,6 +72,7 @@ namespace world.anlabo.mdnailtool.Editor.Core
 
 			foreach (Material mat in ScanFolder(MDNailToolDefines.SHADER_PRESET_BUILTIN_PATH))
 			{
+				if (!HasAvailableShader(mat)) continue;
 				if (_cachedNameToMat.ContainsKey(mat.name)) continue;
 				_cachedNames.Add(mat.name);
 				_cachedNameToMat[mat.name] = mat;
@@ -83,6 +84,13 @@ namespace world.anlabo.mdnailtool.Editor.Core
 				_cachedNames.Add(key);
 				_cachedNameToMat[key] = mat;
 			}
+		}
+
+		private static bool HasAvailableShader(Material mat)
+		{
+			SerializedObject serializedMaterial = new(mat);
+			SerializedProperty? shaderProperty = serializedMaterial.FindProperty("m_Shader");
+			return shaderProperty?.objectReferenceValue is Shader;
 		}
 
 		private static IEnumerable<Material> ScanFolder(string folderPath)

@@ -16,6 +16,8 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		private readonly NailDesign _nailDesign;
 
+		private readonly Dictionary<string, string?> _compatibleTexturePathCache = new(StringComparer.Ordinal);
+
 		public JsonMaterialProcessor(string designName, NailDesign nailDesign, DesignData? designData = null)
 			: base(designName, designData) {
 			this._nailDesign = nailDesign;
@@ -80,23 +82,103 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			}
 
 			// フォールバック: ColorTextures GUID 解決失敗 (.meta 再生成等) or 未登録なら disk のファイル名規約で探す.
-			// 試行: [1] color 軸型 (SpookyMagnet 等) / [2] material 軸型 (DailyNail 等)
+			// 試行: [1] color 軸型 / [2] material 軸型 / [3] color + material 複合型
 			if (tex == null) {
 				string shapeLower = nailShapeName.ToLowerInvariant();
 				string normalizedColor = colorName.Trim('[', ']');
 				string designRoot = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]/[{nailShapeName}]";
 				string fileNamePrefix = $"[tex][{this.DesignName}][{shapeLower}]";
+				string materialDirectory = $"{designRoot}/{materialName}";
+				string compositeStem = $"{fileNamePrefix}[{normalizedColor}]{materialName}";
 				string[] candidates = {
 					$"{designRoot}/{fileNamePrefix}{normalizedColor}.png",
-					$"{designRoot}/{materialName}/{fileNamePrefix}{materialName}.png",
+					$"{materialDirectory}/{fileNamePrefix}{materialName}.png",
+					$"{materialDirectory}/{compositeStem}.png",
 				};
 				foreach (string path in candidates) {
 					tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(path);
 					if (tex != null) break;
 				}
+
+				// 完全一致しない旧資産は、表記だけを正規化して一意に一致する場合に限り採用する。
+				// 全半角・大小文字・空白と、末尾のローカライズ補助名の差だけを許容する。
+				if (tex == null && System.IO.Directory.Exists(materialDirectory)) {
+					string expectedVariantKey = NormalizeTextureVariantKey($"[{normalizedColor}]{materialName}");
+					string? assetPath = FindCompatibleTexturePath(materialDirectory, fileNamePrefix, expectedVariantKey);
+					if (!string.IsNullOrEmpty(assetPath)) {
+						tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(assetPath);
+					}
+				}
 			}
 
 			if (tex != null) targetMaterial.SetTexture(MainTex, tex);
+		}
+
+		private string? FindCompatibleTexturePath(string materialDirectory, string fileNamePrefix, string expectedVariantKey) {
+			try {
+				// import後にdirectory timestampが変われば、negative cacheを含め自動的に再評価する。
+				long directoryVersion = System.IO.Directory.GetLastWriteTimeUtc(materialDirectory).Ticks;
+				string cacheKey = $"{materialDirectory}\n{directoryVersion}\n{fileNamePrefix}\n{expectedVariantKey}";
+				if (this._compatibleTexturePathCache.TryGetValue(cacheKey, out string? cachedPath)) return cachedPath;
+
+				string? result = null;
+				string[] compatiblePaths = System.IO.Directory
+					.EnumerateFiles(materialDirectory, "*", System.IO.SearchOption.TopDirectoryOnly)
+					.Where(path => string.Equals(System.IO.Path.GetExtension(path), ".png", StringComparison.OrdinalIgnoreCase))
+					.Where(path => IsCompatibleTextureFileName(
+						System.IO.Path.GetFileNameWithoutExtension(path),
+						fileNamePrefix,
+						expectedVariantKey))
+					.Take(2)
+					.ToArray();
+				if (compatiblePaths.Length == 1) result = compatiblePaths[0].Replace('\\', '/');
+				this._compatibleTexturePathCache[cacheKey] = result;
+				return result;
+			}
+			catch (System.IO.IOException) {
+				// Asset import中などの一時エラーはcacheせず、次回再試行する。
+			}
+			catch (UnauthorizedAccessException) {
+				// 読み取れない場所から曖昧な代替を選ばない。
+			}
+
+			return null;
+		}
+
+		internal static bool IsCompatibleTextureFileName(string actualStem, string requiredPrefix, string expectedVariantKey) {
+			if (!actualStem.StartsWith(requiredPrefix, StringComparison.OrdinalIgnoreCase)) return false;
+			string actualVariant = actualStem.Substring(requiredPrefix.Length);
+			return string.Equals(
+				NormalizeTextureVariantKey(actualVariant),
+				expectedVariantKey,
+				StringComparison.Ordinal);
+		}
+
+		internal static string NormalizeTextureVariantKey(string value) {
+			string normalized = value.Normalize(NormalizationForm.FormKC).Trim();
+			normalized = RemoveTrailingLocalizedLabel(normalized);
+			var builder = new StringBuilder(normalized.Length);
+			foreach (char character in normalized) {
+				if (char.IsWhiteSpace(character)) continue;
+				builder.Append(char.ToLowerInvariant(character));
+			}
+			return builder.ToString();
+		}
+
+		private static string RemoveTrailingLocalizedLabel(string value) {
+			if (value.Length < 3) return value;
+			char closing = value[value.Length - 1];
+			char opening = closing == ')' ? '(' : closing == '）' ? '（' : '\0';
+			if (opening == '\0') return value;
+			int openingIndex = value.LastIndexOf(opening);
+			if (openingIndex <= 0 || openingIndex >= value.Length - 2) return value;
+
+			string label = value.Substring(openingIndex + 1, value.Length - openingIndex - 2);
+			bool hasLocalizedLetterOrDigit = label.Any(character =>
+				character > '\u007f' && char.IsLetterOrDigit(character));
+			return hasLocalizedLetterOrDigit
+				? value.Substring(0, openingIndex).TrimEnd()
+				: value;
 		}
 
 		public override bool IsInstalledMaterialVariation(string materialName) {

@@ -114,6 +114,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._shaderPresetSelect.choices = choices;
 
 			string? saved = GlobalSetting.SelectedShaderPreset;
+			if (!string.IsNullOrEmpty(saved) && ShaderPresetScanner.FindPresetByName(saved!) == null) {
+				GlobalSetting.SelectedShaderPreset = null;
+				saved = null;
+			}
 			string toSelect = (string.IsNullOrEmpty(saved) || !choices.Contains(saved!)) ? SHADER_PRESET_NONE_LABEL : saved!;
 			this._shaderPresetSelect.SetValueWithoutNotify(toSelect);
 		}
