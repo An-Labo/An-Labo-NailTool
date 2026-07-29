@@ -259,6 +259,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			sb.AppendLine($"Avatar: {avatar?.gameObject?.name ?? "(null)"}");
 			sb.AppendLine($"Avatar Root Scale: {avatar?.transform?.localScale.ToString() ?? "(null)"}");
+			AppendAvatarFbxInfo(sb, avatar);
 			AppendArmatureScaleInfo(sb, avatar);
 			sb.AppendLine($"AvatarName: {this._avatarDropDowns?.GetAvatarName() ?? "(未設定)"}");
 			sb.AppendLine($"Variation: {this._avatarDropDowns?.GetSelectedAvatarVariation()?.VariationName ?? "(null)"}");
@@ -328,6 +329,35 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 
 			return sb.ToString();
+		}
+
+		private static void AppendAvatarFbxInfo(System.Text.StringBuilder sb, VRCAvatarDescriptor? avatar)
+		{
+			if (avatar == null) return;
+
+			var assets = avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+				.Select(smr => smr.sharedMesh)
+				.Where(mesh => mesh != null)
+				.Select(mesh => AssetDatabase.GetAssetPath(mesh))
+				.Where(path => !string.IsNullOrEmpty(path))
+				.Where(path => AssetImporter.GetAtPath(path) is ModelImporter)
+				.Distinct()
+				.Select(path => new
+				{
+					Name = System.IO.Path.GetFileNameWithoutExtension(path),
+					Guid = AssetDatabase.AssetPathToGUID(path)
+				})
+				.Where(asset => !string.IsNullOrEmpty(asset.Guid))
+				.OrderBy(asset => asset.Name)
+				.ThenBy(asset => asset.Guid)
+				.ToArray();
+
+			if (assets.Length == 0) return;
+			sb.AppendLine("--- Avatar FBX ---");
+			foreach (var asset in assets)
+			{
+				sb.AppendLine($"{asset.Name} — GUID: {asset.Guid}");
+			}
 		}
 
 		private void AppendArmatureScaleInfo(System.Text.StringBuilder sb, VRCAvatarDescriptor? avatar)

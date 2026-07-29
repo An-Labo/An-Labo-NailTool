@@ -57,10 +57,10 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 
 				foreach ((string? targetName, string? _, ShopAndAvatarAndVariation variation) in prefabs) {
-					if (string.IsNullOrEmpty(targetName)) continue;
+					if (!IsSafeNameFallback(targetName)) continue;
 					if (avatarPrefabs
 					    .Select(avatarPrefab => avatarPrefab.name)
-					    .Any(prefabName => prefabName.Contains(targetName))) {
+					    .Any(prefabName => prefabName.Contains(targetName!))) {
 						return (variation.Shop, variation.Avatar, variation.Variation);
 					}
 				}
@@ -150,11 +150,21 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			// 名前一致
 			foreach (var (targetName, _, variation) in fbxEntries) {
-				if (string.IsNullOrEmpty(targetName)) continue;
-				if (fbxName.Contains(targetName)) return variation;
+				if (!IsSafeNameFallback(targetName)) continue;
+				if (fbxName.Contains(targetName!)) return variation;
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// GUID がない場合の部分一致に使ってよい識別名かを判定する。
+		/// "01" のような短い数字名は無関係な FBX に容易に一致するため対象外とする。
+		/// </summary>
+		internal static bool IsSafeNameFallback(string? targetName) {
+			if (string.IsNullOrWhiteSpace(targetName)) return false;
+			string name = Path.GetFileNameWithoutExtension(targetName.Trim());
+			return !name.All(char.IsDigit);
 		}
 
 		/// <summary>
