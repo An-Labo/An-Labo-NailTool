@@ -15,5 +15,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		// shape 非依存の足ネイル node. name は prefix なし (Loader が各 [Shape] root の children に再注入).
 		[JsonProperty("footNailNodes")]
 		public NailPrefabNodeData[]? FootNailNodes { get; set; }
+
+		// 同一素体で共有する BlendShape variant. variation 側の同名定義は個別 override として優先される.
+		[JsonProperty("blendShapeVariants")]
+		public AvatarBlendShapeVariant[]? BlendShapeVariants { get; set; }
 	}
 }

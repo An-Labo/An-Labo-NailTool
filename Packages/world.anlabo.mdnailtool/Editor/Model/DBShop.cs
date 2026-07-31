@@ -65,6 +65,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 						variation.BoneMappingOverride = MergeBoneMappingOverrides(sb.BoneMappingOverride, variation.BoneMappingOverride);
 						variation.NailNodes = CloneNodes(sb.NailNodes);
 						variation.FootNailNodes = CloneNodes(sb.FootNailNodes);
+						variation.BlendShapeVariants = MergeBlendShapeVariants(sb.BlendShapeVariants, variation.BlendShapeVariants);
 						ApplySharedBodyScale(variation.NailNodes, variation.SharedBodyScale);
 						ApplySharedBodyScaleAsChildren(variation.FootNailNodes, variation.SharedBodyScale);
 						ApplySharedBodyScale(variation.BlendShapeVariants, variation.SharedBodyScale);
@@ -74,6 +75,46 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 		}
 
 
+		private static AvatarBlendShapeVariant[]? MergeBlendShapeVariants(
+			AvatarBlendShapeVariant[]? shared,
+			AvatarBlendShapeVariant[]? variation) {
+			if (shared == null || shared.Length == 0) return CloneVariants(variation);
+			if (variation == null || variation.Length == 0) return CloneVariants(shared);
+
+			List<AvatarBlendShapeVariant> merged = new(shared.Length + variation.Length);
+			Dictionary<string, int> indices = new(System.StringComparer.Ordinal);
+			foreach (AvatarBlendShapeVariant variant in shared) {
+				indices[variant.Name] = merged.Count;
+				merged.Add(CloneVariant(variant));
+			}
+			foreach (AvatarBlendShapeVariant variant in variation) {
+				AvatarBlendShapeVariant copy = CloneVariant(variant);
+				if (indices.TryGetValue(variant.Name, out int index)) merged[index] = copy;
+				else {
+					indices[variant.Name] = merged.Count;
+					merged.Add(copy);
+				}
+			}
+			return merged.ToArray();
+		}
+
+		private static AvatarBlendShapeVariant[]? CloneVariants(AvatarBlendShapeVariant[]? src) {
+			if (src == null) return null;
+			AvatarBlendShapeVariant[] copy = new AvatarBlendShapeVariant[src.Length];
+			for (int i = 0; i < src.Length; i++) copy[i] = CloneVariant(src[i]);
+			return copy;
+		}
+
+		private static AvatarBlendShapeVariant CloneVariant(AvatarBlendShapeVariant src) {
+			return new AvatarBlendShapeVariant {
+				Name = src.Name,
+				NailPrefabGUID = src.NailPrefabGUID,
+				SyncSourceSmrName = src.SyncSourceSmrName,
+				LeftBlendShapeName = src.LeftBlendShapeName,
+				RightBlendShapeName = src.RightBlendShapeName,
+				NailNodes = CloneNodes(src.NailNodes),
+			};
+		}
 		private static IReadOnlyDictionary<string, string>? MergeBoneMappingOverrides(
 			IReadOnlyDictionary<string, string>? shared,
 			IReadOnlyDictionary<string, string>? variation) {
