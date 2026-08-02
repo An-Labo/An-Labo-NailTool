@@ -316,7 +316,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 					}
 
-					// 破綻防止: 体めり込み補正用のボディSMRを探す
+					// 既存の複数BlendShape同時適用時のめり込み補正用Body。ウェイト転送フラグとは独立して解決する。
 					SkinnedMeshRenderer? bodySmrForPushOut = null;
 					if (this.EnablePenetrationCorrection && activeVariants != null && activeVariants.Length > 1)
 					{
@@ -329,7 +329,7 @@ namespace world.anlabo.mdnailtool.Editor {
 								.FirstOrDefault(t => t.name == syncSmrName);
 							if (bodyTransform == null)
 								bodyTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
-									.FirstOrDefault(t => string.Equals(t.name, syncSmrName, System.StringComparison.OrdinalIgnoreCase));
+									.FirstOrDefault(t => string.Equals(t.name, syncSmrName, StringComparison.OrdinalIgnoreCase));
 							if (bodyTransform != null)
 								bodySmrForPushOut = bodyTransform.GetComponent<SkinnedMeshRenderer>();
 						}
@@ -341,9 +341,36 @@ namespace world.anlabo.mdnailtool.Editor {
 								.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
 								.FirstOrDefault();
 						}
-
 					}
-
+					// 結合後の爪へ、最寄りの体表面三角形から補間したウェイトを転送する。
+					// 手足それぞれで対象ボーンを最も多く共有するSMRを転送元として選ぶ。
+					SkinnedMeshRenderer? ResolveWeightSource(IEnumerable<Transform?> nailObjects, bool isHand)
+					{
+						var targetBones = nailObjects
+							.Where(t => t != null && t.parent != null)
+							.Select(t => t!.parent)
+							.ToHashSet();
+						return this.Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+							.Where(smr => smr.sharedMesh != null
+								&& smr.bones.Length > 0
+								&& smr.sharedMesh.boneWeights.Length == smr.sharedMesh.vertexCount)
+							.Select(smr => new { Smr = smr, MatchingBones = smr.bones.Count(targetBones.Contains) })
+							.Where(x => x.MatchingBones > 0)
+							.OrderByDescending(x => x.MatchingBones)
+							.ThenByDescending(x => isHand
+								? x.Smr.name.IndexOf("hand", StringComparison.OrdinalIgnoreCase) >= 0
+								: x.Smr.name.IndexOf("foot", StringComparison.OrdinalIgnoreCase) >= 0)
+							.ThenByDescending(x => x.Smr.sharedMesh!.vertexCount)
+							.Select(x => x.Smr)
+							.FirstOrDefault();
+					}
+					SkinnedMeshRenderer? handWeightSource = this.AvatarVariationData.WeightTransferMode == 1
+						? ResolveWeightSource(handsNailObjects, true)
+						: null;
+					SkinnedMeshRenderer? footWeightSource = this.AvatarVariationData.WeightTransferMode == 1
+						? ResolveWeightSource(leftFootNailObjects.Concat(rightFootNailObjects), false)
+						: null;
+					ToolConsole.Log($"  Body weight transfer: mode={this.AvatarVariationData.WeightTransferMode} handSource={(handWeightSource == null ? "(none)" : handWeightSource.name)} footSource={(footWeightSource == null ? "(none)" : footWeightSource.name)}");
 					// メッシュ統合
 					ToolConsole.Log($"  BakeBS: handVariants.Count={handVariants.Count} footVariants.Count={footVariants.Count}");
 					bool[] handsIsLeft = handsNailObjects.Select((_, i) => i < 5).ToArray();
@@ -376,8 +403,10 @@ namespace world.anlabo.mdnailtool.Editor {
 						handsNailObjects, nailPrefabObject, handWrapperName, bsPath,
 						handVariants.Count > 0 ? handVariants.ToArray() : null,
 						handsIsLeft,
-						bodySmrForPushOut,
-						handShrinkBS.Count > 0 ? handShrinkBS.ToArray() : null);
+						handWeightSource,
+						handShrinkBS.Count > 0 ? handShrinkBS.ToArray() : null,
+						this.EnablePenetrationCorrection,
+						bodySmrForPushOut);
 					ToolConsole.Log($"  BakeBS hand result: {(handCombinedGo == null ? "(null)" : handCombinedGo.name)} BS frames={(handCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 
 					if (this.UseFootNail)
@@ -389,8 +418,10 @@ namespace world.anlabo.mdnailtool.Editor {
 							nailPrefabObject, footWrapperName, bsPath,
 							footVariants.Count > 0 ? footVariants.ToArray() : null,
 							feetIsLeft,
-							bodySmrForPushOut,
-							footShrinkBS.Count > 0 ? footShrinkBS.ToArray() : null);
+							footWeightSource,
+							footShrinkBS.Count > 0 ? footShrinkBS.ToArray() : null,
+							this.EnablePenetrationCorrection,
+						bodySmrForPushOut);
 						ToolConsole.Log($"  BakeBS foot result: {(footCombinedGo == null ? "(null)" : footCombinedGo.name)} BS frames={(footCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 					}
 

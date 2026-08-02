@@ -89,7 +89,9 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				string designRoot = $"{MDNailToolDefines.LEGACY_DESIGN_PATH}【{this.DesignName}】/[Data]/[Texture]/[{nailShapeName}]";
 				string fileNamePrefix = $"[tex][{this.DesignName}][{shapeLower}]";
 				string materialDirectory = $"{designRoot}/{materialName}";
-				string compositeStem = $"{fileNamePrefix}[{normalizedColor}]{materialName}";
+				// 複合型の実ファイル名は colorName + materialName の単純連結。
+				// 角括弧は構文ではなく各名称の一部 (例: Horo は色名側、SimpleNailSet は素材名側)。
+				string compositeStem = $"{fileNamePrefix}{colorName}{materialName}";
 				string[] candidates = {
 					$"{designRoot}/{fileNamePrefix}{normalizedColor}.png",
 					$"{materialDirectory}/{fileNamePrefix}{materialName}.png",
@@ -103,7 +105,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				// 完全一致しない旧資産は、表記だけを正規化して一意に一致する場合に限り採用する。
 				// 全半角・大小文字・空白と、末尾のローカライズ補助名の差だけを許容する。
 				if (tex == null && System.IO.Directory.Exists(materialDirectory)) {
-					string expectedVariantKey = NormalizeTextureVariantKey($"[{normalizedColor}]{materialName}");
+					string expectedVariantKey = NormalizeTextureVariantKey($"{colorName}{materialName}");
 					string? assetPath = FindCompatibleTexturePath(materialDirectory, fileNamePrefix, expectedVariantKey);
 					if (!string.IsNullOrEmpty(assetPath)) {
 						tex = MDNailToolAssetLoader.LoadAssetSafe<Texture2D>(assetPath);

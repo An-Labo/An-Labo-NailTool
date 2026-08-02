@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,10 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 
 		[JsonProperty("boneMappingOverride")]
 		public IReadOnlyDictionary<string, string>? BoneMappingOverride { get; set; }
+		// 0/未指定: 従来処理、1: bind姿勢基準のBody表面ウェイト転送。
+		// UI設定ではなく、対応が必要なvariationだけshop.jsonで指定する。
+		[JsonProperty("weightTransferMode")]
+		public int WeightTransferMode { get; set; }
 
 		[JsonProperty("blendShapeSyncSources")]
 		public string[]? BlendShapeSyncSources { get; set; }

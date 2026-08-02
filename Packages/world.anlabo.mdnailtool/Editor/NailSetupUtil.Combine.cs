@@ -19,7 +19,9 @@ namespace world.anlabo.mdnailtool.Editor
 			(string Name, Transform?[] VariantNails, string? LeftName, string? RightName)[]? variants = null,
 			bool[]? isLeftSide = null,
 			SkinnedMeshRenderer? bodySmr = null,
-			(string BSName, ShrinkBSScope Scope)[]? shrinkBSDefinitions = null)
+			(string BSName, ShrinkBSScope Scope)[]? shrinkBSDefinitions = null,
+			bool enablePenetrationCorrection = false,
+			SkinnedMeshRenderer? penetrationCorrectionBodySmr = null)
 		{
 			var indexedNails = nailObjects
 				.Select((t, i) => (t, originalIndex: i))
@@ -43,11 +45,18 @@ namespace world.anlabo.mdnailtool.Editor
 			combinedGo.transform.localRotation = Quaternion.identity;
 			combinedGo.transform.localScale    = Vector3.one;
 
-			var boneTransforms = new Transform[validPairs.Length];
+			var rigidBoneTransforms = new Transform[validPairs.Length];
 			for (int i = 0; i < validPairs.Length; i++)
 			{
-				boneTransforms[i] = validPairs[i].transform.parent;
+				rigidBoneTransforms[i] = validPairs[i].transform.parent;
 			}
+
+			bool transferBodyWeights = bodySmr != null
+				&& bodySmr.sharedMesh != null
+				&& bodySmr.sharedMesh.boneWeights.Length == bodySmr.sharedMesh.vertexCount
+				&& bodySmr.bones.Length > 0
+				&& rigidBoneTransforms.All(b => Array.IndexOf(bodySmr.bones, b) >= 0);
+			Transform[] boneTransforms = rigidBoneTransforms;
 
 			var combinedMesh = new Mesh();
 			combinedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
@@ -70,13 +79,24 @@ namespace world.anlabo.mdnailtool.Editor
 				Mesh mesh = validPairs[si].smr.sharedMesh;
 				cachedMeshes[si] = mesh;
 
-				Mesh bakedMesh = new Mesh();
-				validPairs[si].smr.BakeMesh(bakedMesh);
-
 				Matrix4x4 toLocal = combinedGoW2L * validPairs[si].transform.localToWorldMatrix;
 
-				Vector3[] srcVerts   = bakedMesh.vertices;
-				Vector3[] srcNormals = bakedMesh.normals;
+				Vector3[] srcVerts;
+				Vector3[] srcNormals;
+				if (transferBodyWeights)
+				{
+					// mode=1のみ、骨変形とTransform Scaleの二重適用を避ける。
+					GetLocalBlendShapeDeformedData(validPairs[si].smr, out srcVerts, out srcNormals);
+				}
+				else
+				{
+					// mode=0/未指定は既存アバターの従来経路を維持する。
+					Mesh bakedMesh = new Mesh();
+					validPairs[si].smr.BakeMesh(bakedMesh);
+					srcVerts = bakedMesh.vertices;
+					srcNormals = bakedMesh.normals;
+					UnityEngine.Object.DestroyImmediate(bakedMesh);
+				}
 				Vector4[] tangents   = mesh.tangents;
 				for (int vi = 0; vi < mesh.vertexCount; vi++)
 				{
@@ -97,7 +117,6 @@ namespace world.anlabo.mdnailtool.Editor
 
 				vertexOffset += mesh.vertexCount;
 
-				UnityEngine.Object.DestroyImmediate(bakedMesh);
 			}
 
 			combinedMesh.vertices    = allVerts.ToArray();
@@ -222,19 +241,31 @@ namespace world.anlabo.mdnailtool.Editor
 							{
 								hasAnyDelta = true;
 
-								Mesh bakedBaseMesh = new Mesh();
-								validPairs[si].smr.BakeMesh(bakedBaseMesh);
-
-								Mesh bakedVarMesh = new Mesh();
-								varSmr.BakeMesh(bakedVarMesh);
+								Vector3[] baseVerts2;
+								Vector3[] baseNormals2;
+								Vector3[] varVerts2;
+								Vector3[] varNormals2;
+								if (transferBodyWeights)
+								{
+									GetLocalBlendShapeDeformedData(validPairs[si].smr, out baseVerts2, out baseNormals2);
+									GetLocalBlendShapeDeformedData(varSmr, out varVerts2, out varNormals2);
+								}
+								else
+								{
+									Mesh bakedBaseMesh = new Mesh();
+									validPairs[si].smr.BakeMesh(bakedBaseMesh);
+									baseVerts2 = bakedBaseMesh.vertices;
+									baseNormals2 = bakedBaseMesh.normals;
+									Mesh bakedVarMesh = new Mesh();
+									varSmr.BakeMesh(bakedVarMesh);
+									varVerts2 = bakedVarMesh.vertices;
+									varNormals2 = bakedVarMesh.normals;
+									UnityEngine.Object.DestroyImmediate(bakedBaseMesh);
+									UnityEngine.Object.DestroyImmediate(bakedVarMesh);
+								}
 
 								Matrix4x4 variantToLocal = combinedGoW2L * variantNail.localToWorldMatrix;
 								Matrix4x4 baseToLocal = combinedGoW2L * baseNail.localToWorldMatrix;
-
-								Vector3[] varVerts2 = bakedVarMesh.vertices;
-								Vector3[] baseVerts2 = bakedBaseMesh.vertices;
-								Vector3[] varNormals2 = bakedVarMesh.normals;
-								Vector3[] baseNormals2 = bakedBaseMesh.normals;
 
 								for (int vi = 0; vi < siVertCount; vi++)
 								{
@@ -251,8 +282,6 @@ namespace world.anlabo.mdnailtool.Editor
 									fullDt[vOff + vi] = Vector3.zero;
 								}
 
-								UnityEngine.Object.DestroyImmediate(bakedBaseMesh);
-								UnityEngine.Object.DestroyImmediate(bakedVarMesh);
 							}
 						}
 
@@ -264,10 +293,10 @@ namespace world.anlabo.mdnailtool.Editor
 				}
 
 				// 複数バリアント同時適用時の体めり込み補正
-				if (bodySmr != null && collectedDeltas.Count > 1)
+				if (enablePenetrationCorrection && penetrationCorrectionBodySmr != null && collectedDeltas.Count > 1)
 				{
 					Vector3[] basePositions = combinedMesh.vertices;
-					CorrectDeltasForBodyPenetration(basePositions, collectedDeltas, bodySmr, variants, combinedGoW2L, vertexOffsets, validPairs.Length);
+					CorrectDeltasForBodyPenetration(basePositions, collectedDeltas, penetrationCorrectionBodySmr, variants, combinedGoW2L, vertexOffsets, validPairs.Length);
 				}
 
 				foreach (var (shapeName2, fullDv2, fullDn2, fullDt2, leftName, rightName, hasAnyDelta2) in collectedDeltas)
@@ -387,6 +416,16 @@ namespace world.anlabo.mdnailtool.Editor
 			combinedSmr.sharedMesh      = combinedMesh;
 			combinedSmr.localBounds     = new Bounds(combinedMesh.bounds.center, Vector3.Max(combinedMesh.bounds.size, Vector3.one * 2f));
 
+			// 結合済みSMRをBakeしてからBody表面のウェイトを転写する。頂点とTransformは変更しない。
+			if (transferBodyWeights)
+			{
+				ApplySurfaceWeightTransfer(combinedSmr, bodySmr!);
+				combinedSmr.sharedMesh = null;
+				combinedSmr.sharedMesh = combinedMesh;
+				EditorUtility.SetDirty(combinedMesh);
+				AssetDatabase.SaveAssets();
+			}
+
 			for (int bsIdx = 0; bsIdx < combinedMesh.blendShapeCount; bsIdx++)
 			{
 				combinedSmr.SetBlendShapeWeight(bsIdx, 0f);
@@ -398,6 +437,225 @@ namespace world.anlabo.mdnailtool.Editor
 			return combinedGo;
 		}
 
+		private static void GetLocalBlendShapeDeformedData(SkinnedMeshRenderer smr, out Vector3[] vertices, out Vector3[] normals)
+		{
+			Mesh mesh = smr.sharedMesh;
+			vertices = (Vector3[])mesh.vertices.Clone();
+			normals = mesh.normals.Length == mesh.vertexCount
+				? (Vector3[])mesh.normals.Clone()
+				: Enumerable.Repeat(Vector3.up, mesh.vertexCount).ToArray();
+
+			for (int shape = 0; shape < mesh.blendShapeCount; shape++)
+			{
+				float requestedWeight = smr.GetBlendShapeWeight(shape);
+				if (Mathf.Abs(requestedWeight) <= 1e-6f) continue;
+				int frameCount = mesh.GetBlendShapeFrameCount(shape);
+				if (frameCount == 0) continue;
+
+				int lower = -1;
+				int upper = 0;
+				for (int frame = 0; frame < frameCount; frame++)
+				{
+					float frameWeight = mesh.GetBlendShapeFrameWeight(shape, frame);
+					if (frameWeight < requestedWeight) { lower = frame; upper = Mathf.Min(frame + 1, frameCount - 1); }
+					else { upper = frame; break; }
+				}
+
+				var upperDv = new Vector3[mesh.vertexCount];
+				var upperDn = new Vector3[mesh.vertexCount];
+				var upperDt = new Vector3[mesh.vertexCount];
+				mesh.GetBlendShapeFrameVertices(shape, upper, upperDv, upperDn, upperDt);
+				float upperWeight = mesh.GetBlendShapeFrameWeight(shape, upper);
+
+				Vector3[] lowerDv;
+				Vector3[] lowerDn;
+				float lowerWeight;
+				if (lower >= 0 && lower != upper)
+				{
+					lowerDv = new Vector3[mesh.vertexCount];
+					lowerDn = new Vector3[mesh.vertexCount];
+					var lowerDt = new Vector3[mesh.vertexCount];
+					mesh.GetBlendShapeFrameVertices(shape, lower, lowerDv, lowerDn, lowerDt);
+					lowerWeight = mesh.GetBlendShapeFrameWeight(shape, lower);
+				}
+				else
+				{
+					lowerDv = new Vector3[mesh.vertexCount];
+					lowerDn = new Vector3[mesh.vertexCount];
+					lowerWeight = 0f;
+				}
+
+				float denominator = upperWeight - lowerWeight;
+				float t = Mathf.Abs(denominator) > 1e-6f ? (requestedWeight - lowerWeight) / denominator : 1f;
+				for (int i = 0; i < mesh.vertexCount; i++)
+				{
+					vertices[i] += Vector3.LerpUnclamped(lowerDv[i], upperDv[i], t);
+					normals[i] = (normals[i] + Vector3.LerpUnclamped(lowerDn[i], upperDn[i], t)).normalized;
+				}
+			}
+		}
+		private static void ApplySurfaceWeightTransfer(SkinnedMeshRenderer nails, SkinnedMeshRenderer body)
+		{
+			Mesh nailMesh = nails.sharedMesh;
+			Mesh bodyMesh = body.sharedMesh;
+			BoneWeight[] bodyWeights = bodyMesh.boneWeights;
+			int[] bodyTriangles = bodyMesh.triangles;
+			if (bodyWeights.Length != bodyMesh.vertexCount || bodyTriangles.Length < 3) return;
+			if (bodyMesh.bindposes.Length != body.bones.Length) return;
+
+			BoneWeight[] rigidWeights = nailMesh.boneWeights;
+			Transform[] rigidBones = nails.bones;
+			Vector3[] currentVertices = nailMesh.vertices;
+			Vector3[] bindVertices = new Vector3[currentVertices.Length];
+			Matrix4x4[] currentToBind = new Matrix4x4[currentVertices.Length];
+			var output = new BoneWeight[currentVertices.Length];
+			Vector3[] bodyBindVertices = bodyMesh.vertices;
+			Matrix4x4 nailsToWorld = nails.transform.localToWorldMatrix;
+			Matrix4x4 worldToNails = nails.transform.worldToLocalMatrix;
+			Matrix4x4 bodyToWorld = body.transform.localToWorldMatrix;
+			Matrix4x4 worldToBody = body.transform.worldToLocalMatrix;
+
+			for (int vi = 0; vi < currentVertices.Length; vi++)
+			{
+				BoneWeight rigid = rigidWeights[vi];
+				int rigidIndex = rigid.boneIndex0;
+				if (rigidIndex < 0 || rigidIndex >= rigidBones.Length) return;
+				Transform rigidBone = rigidBones[rigidIndex];
+				int bodyBoneIndex = Array.IndexOf(body.bones, rigidBone);
+				if (bodyBoneIndex < 0) return;
+
+				// 現在のDistal骨上へ配置された点を、同じ骨のBody bind姿勢へ戻す。
+				Matrix4x4 toBind = worldToNails * bodyToWorld
+					* bodyMesh.bindposes[bodyBoneIndex].inverse
+					* rigidBone.worldToLocalMatrix * nailsToWorld;
+				currentToBind[vi] = toBind;
+				bindVertices[vi] = toBind.MultiplyPoint3x4(currentVertices[vi]);
+				Vector3 bindPointBody = worldToBody.MultiplyPoint3x4(
+					nailsToWorld.MultiplyPoint3x4(bindVertices[vi]));
+
+				float nearestDistance = float.MaxValue;
+				int ia = 0, ib = 0, ic = 0;
+				Vector3 bary = new Vector3(1f, 0f, 0f);
+				for (int ti = 0; ti < bodyTriangles.Length; ti += 3)
+				{
+					int a = bodyTriangles[ti], b = bodyTriangles[ti + 1], c = bodyTriangles[ti + 2];
+					Vector3 closest = ClosestPointAndBarycentricOnTriangle(bindPointBody, bodyBindVertices[a], bodyBindVertices[b], bodyBindVertices[c], out Vector3 candidateBary);
+					float distance = (bindPointBody - closest).sqrMagnitude;
+					if (distance >= nearestDistance) continue;
+					nearestDistance = distance;
+					ia = a; ib = b; ic = c;
+					bary = candidateBary;
+				}
+
+				var accumulated = new Dictionary<int, float>();
+				AccumulateBoneWeight(accumulated, bodyWeights[ia], bary.x);
+				AccumulateBoneWeight(accumulated, bodyWeights[ib], bary.y);
+				AccumulateBoneWeight(accumulated, bodyWeights[ic], bary.z);
+				var strongest = accumulated.Where(x => x.Value > 0f).OrderByDescending(x => x.Value).Take(4).ToArray();
+				float total = strongest.Sum(x => x.Value);
+				BoneWeight weight = default;
+				if (total > 1e-8f)
+				{
+					for (int i = 0; i < strongest.Length; i++)
+					{
+						float normalized = strongest[i].Value / total;
+						if (i == 0) { weight.boneIndex0 = strongest[i].Key; weight.weight0 = normalized; }
+						else if (i == 1) { weight.boneIndex1 = strongest[i].Key; weight.weight1 = normalized; }
+						else if (i == 2) { weight.boneIndex2 = strongest[i].Key; weight.weight2 = normalized; }
+						else { weight.boneIndex3 = strongest[i].Key; weight.weight3 = normalized; }
+					}
+				}
+				output[vi] = weight;
+			}
+
+			TransformMeshToBindPose(nailMesh, bindVertices, currentToBind);
+			Matrix4x4 bodyToNails = worldToBody * nails.transform.localToWorldMatrix;
+			Matrix4x4[] nailBindposes = bodyMesh.bindposes.Select(bindpose => bindpose * bodyToNails).ToArray();
+			nailMesh.boneWeights = output;
+			nailMesh.bindposes = nailBindposes;
+			nails.bones = body.bones;
+			nails.rootBone = body.rootBone;
+			nails.sharedMesh = null;
+			nails.sharedMesh = nailMesh;		}
+
+		private static void TransformMeshToBindPose(Mesh mesh, Vector3[] bindVertices, Matrix4x4[] currentToBind)
+		{
+			Vector3[] sourceNormals = mesh.normals;
+			Vector4[] sourceTangents = mesh.tangents;
+			var bindNormals = new Vector3[bindVertices.Length];
+			var bindTangents = new Vector4[bindVertices.Length];
+			for (int i = 0; i < bindVertices.Length; i++)
+			{
+				Matrix4x4 normalMatrix = currentToBind[i].inverse.transpose;
+				Vector3 normal = sourceNormals.Length > i ? sourceNormals[i] : Vector3.up;
+				bindNormals[i] = normalMatrix.MultiplyVector(normal).normalized;
+				Vector4 tangent = sourceTangents.Length > i ? sourceTangents[i] : new Vector4(1f, 0f, 0f, 1f);
+				Vector3 tangent3 = currentToBind[i].MultiplyVector(new Vector3(tangent.x, tangent.y, tangent.z)).normalized;
+				bindTangents[i] = new Vector4(tangent3.x, tangent3.y, tangent3.z, tangent.w);
+			}
+
+			var frames = new List<(string name, float weight, Vector3[] dv, Vector3[] dn, Vector3[] dt)>();
+			for (int shape = 0; shape < mesh.blendShapeCount; shape++)
+			{
+				for (int frame = 0; frame < mesh.GetBlendShapeFrameCount(shape); frame++)
+				{
+					var dv = new Vector3[bindVertices.Length];
+					var dn = new Vector3[bindVertices.Length];
+					var dt = new Vector3[bindVertices.Length];
+					mesh.GetBlendShapeFrameVertices(shape, frame, dv, dn, dt);
+					for (int i = 0; i < bindVertices.Length; i++)
+					{
+						dv[i] = currentToBind[i].MultiplyVector(dv[i]);
+						dn[i] = currentToBind[i].inverse.transpose.MultiplyVector(dn[i]);
+						dt[i] = currentToBind[i].MultiplyVector(dt[i]);
+					}
+					frames.Add((mesh.GetBlendShapeName(shape), mesh.GetBlendShapeFrameWeight(shape, frame), dv, dn, dt));
+				}
+			}
+
+			mesh.vertices = bindVertices;
+			mesh.normals = bindNormals;
+			mesh.tangents = bindTangents;
+			mesh.ClearBlendShapes();
+			foreach (var frame in frames)
+				mesh.AddBlendShapeFrame(frame.name, frame.weight, frame.dv, frame.dn, frame.dt);
+			mesh.RecalculateBounds();
+		}
+		private static Vector3 ClosestPointAndBarycentricOnTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c, out Vector3 barycentric)
+		{
+			Vector3 ab = b - a, ac = c - a, ap = p - a;
+			float d1 = Vector3.Dot(ab, ap), d2 = Vector3.Dot(ac, ap);
+			if (d1 <= 0f && d2 <= 0f) { barycentric = new Vector3(1f, 0f, 0f); return a; }
+			Vector3 bp = p - b;
+			float d3 = Vector3.Dot(ab, bp), d4 = Vector3.Dot(ac, bp);
+			if (d3 >= 0f && d4 <= d3) { barycentric = new Vector3(0f, 1f, 0f); return b; }
+			float vc = d1 * d4 - d3 * d2;
+			if (vc <= 0f && d1 >= 0f && d3 <= 0f) { float v = d1 / (d1 - d3); barycentric = new Vector3(1f - v, v, 0f); return a + v * ab; }
+			Vector3 cp = p - c;
+			float d5 = Vector3.Dot(ab, cp), d6 = Vector3.Dot(ac, cp);
+			if (d6 >= 0f && d5 <= d6) { barycentric = new Vector3(0f, 0f, 1f); return c; }
+			float vb = d5 * d2 - d1 * d6;
+			if (vb <= 0f && d2 >= 0f && d6 <= 0f) { float w = d2 / (d2 - d6); barycentric = new Vector3(1f - w, 0f, w); return a + w * ac; }
+			float va = d3 * d6 - d5 * d4;
+			if (va <= 0f && d4 - d3 >= 0f && d5 - d6 >= 0f) { float w = (d4 - d3) / ((d4 - d3) + (d5 - d6)); barycentric = new Vector3(0f, 1f - w, w); return b + w * (c - b); }
+			float denominator = 1f / (va + vb + vc);
+			float insideV = vb * denominator, insideW = vc * denominator, insideU = 1f - insideV - insideW;
+			barycentric = new Vector3(insideU, insideV, insideW);
+			return insideU * a + insideV * b + insideW * c;
+		}
+
+		private static void AccumulateBoneWeight(Dictionary<int, float> result, BoneWeight weight, float scale)
+		{
+			Add(weight.boneIndex0, weight.weight0 * scale);
+			Add(weight.boneIndex1, weight.weight1 * scale);
+			Add(weight.boneIndex2, weight.weight2 * scale);
+			Add(weight.boneIndex3, weight.weight3 * scale);
+			void Add(int bone, float value)
+			{
+				if (value <= 0f) return;
+				result[bone] = result.TryGetValue(bone, out float current) ? current + value : value;
+			}
+		}
 		// src の全データを dst へ書き写す. asset の ID を保持したまま頂点数を変えるために使う (issue #495).
 		private static void CopyMeshContents(Mesh src, Mesh dst)
 		{
