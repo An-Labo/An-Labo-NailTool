@@ -65,7 +65,9 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 						variation.BoneMappingOverride = MergeBoneMappingOverrides(sb.BoneMappingOverride, variation.BoneMappingOverride);
 						variation.NailNodes = CloneNodes(sb.NailNodes);
 						variation.FootNailNodes = CloneNodes(sb.FootNailNodes);
-						variation.BlendShapeVariants = MergeBlendShapeVariants(sb.BlendShapeVariants, variation.BlendShapeVariants);
+						variation.BlendShapeVariants = variation.OverrideSharedBlendShapeVariants
+							? CloneVariants(variation.BlendShapeVariants)
+							: MergeBlendShapeVariants(sb.BlendShapeVariants, variation.BlendShapeVariants);
 						ApplySharedBodyScale(variation.NailNodes, variation.SharedBodyScale);
 						ApplySharedBodyScaleAsChildren(variation.FootNailNodes, variation.SharedBodyScale);
 						ApplySharedBodyScale(variation.BlendShapeVariants, variation.SharedBodyScale);

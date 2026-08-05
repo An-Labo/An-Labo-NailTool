@@ -34,6 +34,10 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("blendShapeVariants")]
 		public AvatarBlendShapeVariant[]? BlendShapeVariants { get; set; }
 
+		// true の場合、sharedBody の BlendShapeVariants を継承・mergeせず、この variation の配列で丸ごと置き換える。
+		[JsonProperty("overrideSharedBlendShapeVariants")]
+		public bool OverrideSharedBlendShapeVariants { get; set; }
+
 		[JsonProperty("avatarPrefabs")]
 		public AvatarPrefab[] AvatarPrefabs { get; set; } = Array.Empty<AvatarPrefab>();
 
