@@ -42,6 +42,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		private string NailShapeName { get; }
 		public Mesh?[]? OverrideMesh { get; set; }
 		public Material? OverrideMaterial { get; set; }
+		public bool[]? EnabledNailSlots { get; set; }
 		public string? AvatarName { get; set; }
 		public bool UseFootNail { get; set; }
 		public bool RemoveCurrentNail { get; set; }
@@ -72,6 +73,17 @@ namespace world.anlabo.mdnailtool.Editor {
 			this.NailPrefab = nailPrefab;
 			this.NailDesignAndVariationNames = nailDesignAndVariationNames;
 			this.NailShapeName = nailShapeName;
+		}
+
+		private bool ShouldRemoveNailSlot(int index) {
+			if (index < 0 || index >= this.NailDesignAndVariationNames.Length) return true;
+			if (this.NailDesignAndVariationNames[index].Item1 != null) return false;
+
+			// 外部マテリアル直接指定時は、An-Labo ネイルが未選択でもONの指を維持する。
+			return this.OverrideMaterial == null
+			       || this.EnabledNailSlots == null
+			       || index >= this.EnabledNailSlots.Length
+			       || !this.EnabledNailSlots[index];
 		}
 
 
@@ -115,21 +127,21 @@ namespace world.anlabo.mdnailtool.Editor {
 			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(nailPrefabObject);
 
 			for (int i = 0; i < 10 && i < handsNailObjects.Length; i++) {
-				if (i < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[i].Item1 == null && handsNailObjects[i] != null) {
+				if (i < this.NailDesignAndVariationNames.Length && this.ShouldRemoveNailSlot(i) && handsNailObjects[i] != null) {
 					UnityEngine.Object.DestroyImmediate(handsNailObjects[i]!.gameObject);
 					handsNailObjects[i] = null;
 				}
 			}
 			for (int i = 0; i < 5 && i < leftFootNailObjects.Length; i++) {
 				int designIdx = 10 + i;
-				if (designIdx < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[designIdx].Item1 == null && leftFootNailObjects[i] != null) {
+				if (designIdx < this.NailDesignAndVariationNames.Length && this.ShouldRemoveNailSlot(designIdx) && leftFootNailObjects[i] != null) {
 					UnityEngine.Object.DestroyImmediate(leftFootNailObjects[i]!.gameObject);
 					leftFootNailObjects[i] = null;
 				}
 			}
 			for (int i = 0; i < 5 && i < rightFootNailObjects.Length; i++) {
 				int designIdx = 15 + i;
-				if (designIdx < this.NailDesignAndVariationNames.Length && this.NailDesignAndVariationNames[designIdx].Item1 == null && rightFootNailObjects[i] != null) {
+				if (designIdx < this.NailDesignAndVariationNames.Length && this.ShouldRemoveNailSlot(designIdx) && rightFootNailObjects[i] != null) {
 					UnityEngine.Object.DestroyImmediate(rightFootNailObjects[i]!.gameObject);
 					rightFootNailObjects[i] = null;
 				}

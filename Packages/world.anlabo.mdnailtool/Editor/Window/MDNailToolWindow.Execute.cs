@@ -527,6 +527,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					Backup = this._backup!.value,
 					ForModularAvatar = this._forModularAvatar!.value,
 					OverrideMaterial = directMaterial,
+					EnabledNailSlots = this._nailDesignDropDowns?.Select((dropdown, index) =>
+						 dropdown.IsFingerEnabled && (index < 10 ? isHandActive : isFootActive)).ToArray(),
 					GenerateExpressionMenu = (this._forModularAvatar?.value == true)
 					                      && (this._generateExpressionMenu?.value == true),
 					SplitHandFoot = (this._forModularAvatar?.value == true)
