@@ -671,17 +671,16 @@ namespace world.anlabo.mdnailtool.Editor {
 					Undo.RegisterCreatedObjectUndo(marker, "Nail Setup Marker");
 				}
 
-				// ---- MA Mesh Settings (probe anchor only) ----
-				// Bounds/RootBone をここで指定すると、MA が結合SMRの rootBone を上書きして
-				// Direct/BakeBS と違う位置に見えることがある。Bounds は各SMRに直接設定する。
+				// ---- MA Mesh Settings ----
+				// ネイル階層だけに Hips 基準の安全 Bounds を上書きする。
+				// アバター本体の Renderer / Bounds は変更しない。
 				ModularAvatarMeshSettings meshSettings = nailPrefabObject.GetComponent<ModularAvatarMeshSettings>();
 				if (meshSettings == null)
 				{
 					meshSettings = nailPrefabObject.AddComponent<ModularAvatarMeshSettings>();
 				}
 				meshSettings.InheritProbeAnchor = ModularAvatarMeshSettings.InheritMode.SetOrInherit;
-				meshSettings.InheritBounds = ModularAvatarMeshSettings.InheritMode.DontSet;
-				meshSettings.RootBone = null;
+				meshSettings.InheritBounds = ModularAvatarMeshSettings.InheritMode.Set;
 
 				Animator? animator = this.Avatar.GetComponent<Animator>();
 				if (animator != null)
@@ -690,6 +689,24 @@ namespace world.anlabo.mdnailtool.Editor {
 					if (chest != null)
 						meshSettings.ProbeAnchor = CreateAvatarRef(chest.gameObject);
 				}
+
+				Transform boundsRoot = animator != null && animator.isHuman
+					? animator.GetBoneTransform(HumanBodyBones.Hips) ?? this.Avatar.transform
+					: this.Avatar.transform;
+				meshSettings.RootBone = CreateAvatarRef(boundsRoot.gameObject);
+				Matrix4x4 avatarToBoundsRoot = boundsRoot.worldToLocalMatrix * this.Avatar.transform.localToWorldMatrix;
+				Bounds maBounds = TransformBoundsForMeshSettings(
+					new Bounds(new Vector3(0f, 0.75f, 0f), Vector3.one * 2.5f),
+					avatarToBoundsRoot);
+				foreach (SkinnedMeshRenderer nailSmr in nailPrefabObject.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+				{
+					if (nailSmr.sharedMesh == null) continue;
+					Matrix4x4 meshToBoundsRoot = boundsRoot.worldToLocalMatrix * nailSmr.transform.localToWorldMatrix;
+					Bounds shapeBounds = TransformBoundsForMeshSettings(nailSmr.sharedMesh.bounds, meshToBoundsRoot);
+					maBounds.Encapsulate(shapeBounds.min);
+					maBounds.Encapsulate(shapeBounds.max);
+				}
+				meshSettings.Bounds = maBounds;
 
 				// avatar-levelブレンドシェイプバリアントのBlendShapeSync設定 (nailPrefabObjectがアバター階層下に配置された後に実行する)
 				AvatarBlendShapeVariant[]? syncVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
@@ -802,6 +819,18 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 #if MD_NAIL_FOR_MA
+		private static Bounds TransformBoundsForMeshSettings(Bounds source, Matrix4x4 matrix) {
+			Vector3 min = source.min;
+			Vector3 max = source.max;
+			Bounds transformed = new Bounds(matrix.MultiplyPoint3x4(min), Vector3.zero);
+			for (int x = 0; x < 2; x++)
+			for (int y = 0; y < 2; y++)
+			for (int z = 0; z < 2; z++) {
+				Vector3 corner = new Vector3(x == 0 ? min.x : max.x, y == 0 ? min.y : max.y, z == 0 ? min.z : max.z);
+				transformed.Encapsulate(matrix.MultiplyPoint3x4(corner));
+			}
+			return transformed;
+		}
 
 		private static AvatarObjectReference CreateAvatarRef(GameObject obj) {
 			// MAバージョン非依存. Set(GameObject)は全バージョンで存在し例外を投げない
@@ -894,9 +923,12 @@ namespace world.anlabo.mdnailtool.Editor {
 				SetMenuToggle(rootMenuItem, 1);
 				rootMenuItem.isSaved = true;
 				rootMenuItem.isSynced = true;
+				rootMenuItem.isDefault = true;
 				rootMenuItem.automaticValue = true;
 
 				ModularAvatarObjectToggle rootToggle = nailRoot.AddComponent<ModularAvatarObjectToggle>();
+				// メニューの ON を「着用中」とし、OFF 時だけネイルを非表示にする。
+				rootToggle.Inverted = true;
 				var toggleTargets = new System.Collections.Generic.List<ToggledObject>();
 				// HandNailラッパー内の各ネイルオブジェクトを個別に登録 (BakeBS で子無し時は wrapper 自身)
 				Transform? hw = nailRoot.transform.Find(handWrapperName);
@@ -931,7 +963,16 @@ namespace world.anlabo.mdnailtool.Editor {
 			if (this.SplitHandFoot) {
 				Transform? handWrapperT = nailRoot.transform.Find(handWrapperName);
 				if (handWrapperT != null) {
-					ModularAvatarObjectToggle handToggle = handWrapperT.gameObject.AddComponent<ModularAvatarObjectToggle>();
+					// BakeBS では wrapper 自身が統合済み SMR になり、子を持たない。
+					// MenuItem/ObjectToggle を wrapper 自身に付けて wrapper を対象にすると自己参照になり、
+					// MA の初期 Active 判定が循環するため、メニュー制御用 GO を兄弟として分離する。
+					GameObject handControl = new($"HandNailToggle_{variationName}");
+					handControl.transform.SetParent(nailRoot.transform, false);
+					handControl.hideFlags = HideFlags.HideInHierarchy;
+					ModularAvatarObjectToggle handToggle = handControl.AddComponent<ModularAvatarObjectToggle>();
+					// メニューの ON を「着用中」として見せる。ネイル本体は初期状態で有効なため、
+					// 反転条件にすると自動生成パラメータの初期値が ON になり、OFF 時だけ非表示になる。
+					handToggle.Inverted = true;
 					// BakeBS で wrapper 自身が SMR 統合 GO になり子なしのケース対応: 子があれば子を、無ければ wrapper 自身を target に.
 					List<ToggledObject> handToggleObjects = handWrapperT.Cast<Transform>()
 						.Select(t => new ToggledObject {
@@ -944,11 +985,12 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 					handToggle.Objects = handToggleObjects;
 
-					ModularAvatarMenuItem handMenuItem = handWrapperT.gameObject.AddComponent<ModularAvatarMenuItem>();
+					ModularAvatarMenuItem handMenuItem = handControl.AddComponent<ModularAvatarMenuItem>();
 					SetMenuToggle(handMenuItem, 1);
 					SetMenuIcon(handMenuItem, null);
 					handMenuItem.isSaved = true;
 					handMenuItem.isSynced = true;
+					handMenuItem.isDefault = true;
 					handMenuItem.automaticValue = true;
 					handMenuItem.label = $"HandNail - {variationName}";
 				}
@@ -956,7 +998,11 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (this.UseFootNail) {
 					Transform? footWrapperT = nailRoot.transform.Find(footWrapperName);
 					if (footWrapperT != null) {
-						ModularAvatarObjectToggle footToggle = footWrapperT.gameObject.AddComponent<ModularAvatarObjectToggle>();
+						GameObject footControl = new($"FootNailToggle_{variationName}");
+						footControl.transform.SetParent(nailRoot.transform, false);
+						footControl.hideFlags = HideFlags.HideInHierarchy;
+						ModularAvatarObjectToggle footToggle = footControl.AddComponent<ModularAvatarObjectToggle>();
+						footToggle.Inverted = true;
 						List<ToggledObject> footToggleObjects = footWrapperT.Cast<Transform>()
 							.Select(t => new ToggledObject {
 								Object = CreateAvatarRef(t.gameObject),
@@ -968,11 +1014,12 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 						footToggle.Objects = footToggleObjects;
 
-						ModularAvatarMenuItem footMenuItem = footWrapperT.gameObject.AddComponent<ModularAvatarMenuItem>();
+						ModularAvatarMenuItem footMenuItem = footControl.AddComponent<ModularAvatarMenuItem>();
 						SetMenuToggle(footMenuItem, 1);
 						SetMenuIcon(footMenuItem, null);
 						footMenuItem.isSaved = true;
 						footMenuItem.isSynced = true;
+						footMenuItem.isDefault = true;
 						footMenuItem.automaticValue = true;
 						footMenuItem.label = $"FootNail - {variationName}";
 					}

@@ -388,9 +388,12 @@ namespace world.anlabo.mdnailtool.Editor
 			if (!Directory.Exists(saveBasePath))
 				Directory.CreateDirectory(saveBasePath);
 
-			// blendshape 追加後の bind pose vertices から localBounds を再計算
-			// variants なしで作られた Combined SMR が frustum culling で消える問題の対策
-			combinedMesh.RecalculateBounds();
+			// 通常形状だけでなく Point 等の全 BlendShape 形状を含む Bounds を作る。
+			// 着用時に一度だけ計算し、実行中の追加負荷は発生させない。
+			// 着脱用 Shrink BS は頂点を原点へ潰すため、Bounds に含めない。
+			// Point 等の実際のネイル形状だけを包含する。
+			IEnumerable<string>? boundsExcludedBlendShapes = shrinkBSDefinitions?.Select(x => x.BSName);
+			combinedMesh.bounds = CalculateBlendShapeBounds(combinedMesh, 0.01f, boundsExcludedBlendShapes);
 
 			string assetPath = $"{saveBasePath}/{zoneName}.asset";
 			Mesh? existingMesh = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
@@ -411,10 +414,26 @@ namespace world.anlabo.mdnailtool.Editor
 
 			SkinnedMeshRenderer combinedSmr = combinedGo.AddComponent<SkinnedMeshRenderer>();
 			combinedSmr.bones           = boneTransforms;
-			combinedSmr.rootBone        = boneTransforms[0];
+			// 両手/両足を 1 Renderer にまとめるため、Bounds の基準は
+			// 指ボーンではなく安定した Hips (取得できない場合はアバタールート) にする。
+			Animator? animator = nailPrefabObject.GetComponentInParent<Animator>();
+			Transform avatarRoot = animator != null ? animator.transform : nailPrefabObject.transform;
+			Transform? hips = animator != null && animator.isHuman
+				? animator.GetBoneTransform(HumanBodyBones.Hips)
+				: null;
+			combinedSmr.rootBone = hips != null ? hips : avatarRoot;
 			combinedSmr.sharedMaterials = materialList.ToArray();
 			combinedSmr.sharedMesh      = combinedMesh;
-			combinedSmr.localBounds     = new Bounds(combinedMesh.bounds.center, Vector3.Max(combinedMesh.bounds.size, Vector3.one * 2f));
+			Matrix4x4 meshToBoundsRoot = combinedSmr.rootBone.worldToLocalMatrix * combinedGo.transform.localToWorldMatrix;
+			Bounds nailBounds = TransformBounds(combinedMesh.bounds, meshToBoundsRoot);
+			// アバター原点から高さ 2m を基本範囲とし、実ネイル形状が外へ出る場合だけ拡張する。
+			// 極端なしゃがみ・寝姿勢も考慮し、下方 0.5m まで余裕を持たせる。
+			Bounds avatarSafetyBounds = new Bounds(new Vector3(0f, 0.75f, 0f), Vector3.one * 2.5f);
+			Matrix4x4 avatarToBoundsRoot = combinedSmr.rootBone.worldToLocalMatrix * avatarRoot.localToWorldMatrix;
+			Bounds localBounds = TransformBounds(avatarSafetyBounds, avatarToBoundsRoot);
+			localBounds.Encapsulate(nailBounds.min);
+			localBounds.Encapsulate(nailBounds.max);
+			combinedSmr.localBounds = localBounds;
 
 			// 結合済みSMRをBakeしてからBody表面のウェイトを転写する。頂点とTransformは変更しない。
 			if (transferBodyWeights)
@@ -435,6 +454,51 @@ namespace world.anlabo.mdnailtool.Editor
 				UnityEngine.Object.DestroyImmediate(t.gameObject);
 
 			return combinedGo;
+		}
+
+		private static Bounds CalculateBlendShapeBounds(Mesh mesh, float padding, IEnumerable<string>? excludedBlendShapes = null)
+		{
+			Vector3[] baseVertices = mesh.vertices;
+			if (baseVertices.Length == 0) return new Bounds(Vector3.zero, Vector3.one * padding * 2f);
+			HashSet<string> excluded = excludedBlendShapes != null
+				? new HashSet<string>(excludedBlendShapes)
+				: new HashSet<string>();
+
+			Bounds bounds = new Bounds(baseVertices[0], Vector3.zero);
+			for (int i = 1; i < baseVertices.Length; i++) bounds.Encapsulate(baseVertices[i]);
+
+			var deltaVertices = new Vector3[baseVertices.Length];
+			var deltaNormals = new Vector3[baseVertices.Length];
+			var deltaTangents = new Vector3[baseVertices.Length];
+			for (int shape = 0; shape < mesh.blendShapeCount; shape++)
+			{
+				if (excluded.Contains(mesh.GetBlendShapeName(shape))) continue;
+				int frameCount = mesh.GetBlendShapeFrameCount(shape);
+				for (int frame = 0; frame < frameCount; frame++)
+				{
+					mesh.GetBlendShapeFrameVertices(shape, frame, deltaVertices, deltaNormals, deltaTangents);
+					for (int vertex = 0; vertex < baseVertices.Length; vertex++)
+						bounds.Encapsulate(baseVertices[vertex] + deltaVertices[vertex]);
+				}
+			}
+
+			bounds.Expand(padding * 2f);
+			return bounds;
+		}
+
+		private static Bounds TransformBounds(Bounds source, Matrix4x4 matrix)
+		{
+			Vector3 min = source.min;
+			Vector3 max = source.max;
+			Bounds transformed = new Bounds(matrix.MultiplyPoint3x4(min), Vector3.zero);
+			for (int x = 0; x < 2; x++)
+			for (int y = 0; y < 2; y++)
+			for (int z = 0; z < 2; z++)
+			{
+				Vector3 corner = new Vector3(x == 0 ? min.x : max.x, y == 0 ? min.y : max.y, z == 0 ? min.z : max.z);
+				transformed.Encapsulate(matrix.MultiplyPoint3x4(corner));
+			}
+			return transformed;
 		}
 
 		private static void GetLocalBlendShapeDeformedData(SkinnedMeshRenderer smr, out Vector3[] vertices, out Vector3[] normals)

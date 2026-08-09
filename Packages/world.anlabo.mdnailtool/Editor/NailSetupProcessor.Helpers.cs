@@ -57,6 +57,60 @@ namespace world.anlabo.mdnailtool.Editor {
 			return CloneNodes(nodes);
 		}
 
+		// Heel など shape root を持たない blendShapeVariants は完成 Prefab ではなく、
+		// ベースネイルに対する Transform / BlendShape の差分データとして保存されている。
+		// そのまま BuildFromNodes すると手ネイルが消え、shape を解決できない足ネイルも mesh 無しになるため、
+		// ベースの手足を維持したまま同名 node の差分だけを重ねる。
+		internal static NailPrefabNodeData[] ComposeVariantNodes(
+			NailPrefabNodeData[]? baseNodes,
+			NailPrefabNodeData[] variantNodes)
+		{
+			bool hasShapeRoot = variantNodes.Any(n =>
+				!string.IsNullOrEmpty(n.Name) && n.Name.StartsWith("[", StringComparison.Ordinal));
+			if (hasShapeRoot || baseNodes == null || baseNodes.Length == 0)
+				return CloneNodes(variantNodes);
+
+			NailPrefabNodeData[] composed = CloneNodes(baseNodes);
+			var baseByName = new Dictionary<string, NailPrefabNodeData>(StringComparer.Ordinal);
+			CollectNodesByName(composed, baseByName);
+			ApplyVariantOverrides(variantNodes, baseByName);
+			return composed;
+		}
+
+		private static void CollectNodesByName(
+			IEnumerable<NailPrefabNodeData> nodes,
+			Dictionary<string, NailPrefabNodeData> result)
+		{
+			foreach (NailPrefabNodeData node in nodes) {
+				if (!string.IsNullOrEmpty(node.Name)) result[GetVariantMatchName(node.Name)] = node;
+				if (node.Children != null) CollectNodesByName(node.Children, result);
+			}
+		}
+
+		private static string GetVariantMatchName(string name) {
+			if (!name.StartsWith("[", StringComparison.Ordinal)) return name;
+			int closingBracket = name.IndexOf(']');
+			return closingBracket >= 0 && closingBracket + 1 < name.Length
+				? name.Substring(closingBracket + 1)
+				: name;
+		}
+
+		private static void ApplyVariantOverrides(
+			IEnumerable<NailPrefabNodeData> nodes,
+			Dictionary<string, NailPrefabNodeData> baseByName)
+		{
+			foreach (NailPrefabNodeData variant in nodes) {
+				if (!string.IsNullOrEmpty(variant.Name)
+				    && baseByName.TryGetValue(GetVariantMatchName(variant.Name), out NailPrefabNodeData? target)) {
+					if (variant.LocalPosition != null) target.LocalPosition = CloneArray(variant.LocalPosition);
+					if (variant.LocalRotation != null) target.LocalRotation = CloneArray(variant.LocalRotation);
+					if (variant.LocalScale != null) target.LocalScale = CloneArray(variant.LocalScale);
+					if (variant.BlendShapeWeights != null) target.BlendShapeWeights = variant.BlendShapeWeights;
+				}
+				if (variant.Children != null) ApplyVariantOverrides(variant.Children, baseByName);
+			}
+		}
+
 		private static NailPrefabNodeData[] CloneNodes(NailPrefabNodeData[] src) {
 			NailPrefabNodeData[] copy = new NailPrefabNodeData[src.Length];
 			for (int i = 0; i < src.Length; i++) copy[i] = CloneNode(src[i]);

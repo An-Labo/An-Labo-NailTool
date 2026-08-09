@@ -348,10 +348,12 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			if (variant.NailNodes != null && variant.NailNodes.Length > 0)
 			{
-				NailPrefabNodeData[]? scaledVariantNodes = CloneVariantNodes(variant.NailNodes);
+				NailPrefabNodeData[] scaledVariantNodes = ComposeVariantNodes(
+					this.AvatarVariationData.NailNodes,
+					variant.NailNodes);
 				this.SelectedBlendShapeVariantNailNodes = scaledVariantNodes;
-				this.NailPrefab = NailPrefabBuilder.BuildFromNodes(scaledVariantNodes!, variant.Name);
-				ToolConsole.Log($"  → NailPrefab replaced from NailNodes: {variant.Name}");
+				this.NailPrefab = NailPrefabBuilder.BuildFromNodes(scaledVariantNodes, variant.Name);
+				ToolConsole.Log($"  → NailPrefab composed from base + variant NailNodes: {variant.Name}");
 				return;
 			}
 
