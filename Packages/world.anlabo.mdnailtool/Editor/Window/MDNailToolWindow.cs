@@ -132,6 +132,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private bool _shaderPresetSettingsOpen;
 		private const string SHADER_PRESET_NONE_LABEL = "Nail Default";
 
+		// ---- Settings Sidebar ----
+		private VisualElement? _settingsSidebar;
+		private VisualElement? _settingsSidebarBody;
+		private VisualElement? _settingsSidebarBackdrop;
+
 		#endregion
 
 		public void SetAvatar(Shop shop, Avatar? avatar, AvatarVariation? variation)
@@ -151,6 +156,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this.BindHandFootUI();
 			this.BindOptionsUI();
 			this.BindLinksUI();
+			this.SetupSettingsSidebar();
 			this.BindErrorBanner();
 			this.BindWarningBanner();
 			this.BindActions();

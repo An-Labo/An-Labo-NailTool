@@ -8,14 +8,23 @@
    =========================================================== */
 
 /* ---- Root / Scroll ---- */
+.mdn-window-root {
+    flex-grow: 1;
+    min-height: 0;
+    background-color: #2b2b2b;
+}
+
 .mdn-root {
     flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
     padding: 0;
-    background-color: #2b2b2b;
 }
 
 /* ---- Header ---- */
 .mdn-header {
+    flex-shrink: 0;
     background-color: #1e1e1e;
     padding: 8px 10px 4px 10px;
     border-bottom-width: 1px;
@@ -492,6 +501,7 @@
 /* ---- Action buttons ---- */
 .mdn-action-bar {
     flex-direction: row;
+    flex-shrink: 0;
     margin: 10px 8px 4px 8px;
     align-items: stretch;
 }
@@ -594,6 +604,7 @@
 /* ---- Footer ---- */
 .mdn-footer {
     flex-direction: row;
+    flex-shrink: 0;
     justify-content: space-between;
     align-items: center;
     padding: 6px 10px 8px 10px;
@@ -1468,6 +1479,7 @@
    ============================================================ */
 
 .mdn-tool-console-container {
+    flex-shrink: 0;
     margin-top: 6px;
     margin-left: 10px;
     margin-right: 10px;
@@ -1666,3 +1678,102 @@
     border-top-color: #bbb;
 }
 :root[data-unity-skin="light"] .mdn-shader-preset-hint > Label { color: #555; }
+
+/* ---- Left settings drawer ---- */
+.mdn-settings-menu-button {
+    width: 24px;
+    height: 22px;
+    margin-right: 7px;
+    padding: 0;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.mdn-settings-sidebar-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.mdn-settings-sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 400px;
+    background-color: #2c2c2c;
+    border-right-width: 1px;
+    border-right-color: #4a4a4a;
+}
+
+.mdn-settings-sidebar-header {
+    height: 38px;
+    min-height: 38px;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 10px;
+    padding-right: 5px;
+    background-color: #333333;
+    border-bottom-width: 1px;
+    border-bottom-color: #4a4a4a;
+}
+
+.mdn-settings-sidebar-title {
+    color: #ededed;
+    font-size: 13px;
+    -unity-font-style: bold;
+    flex-shrink: 0;
+}
+
+.mdn-settings-sidebar-toggle {
+    width: 26px;
+    height: 26px;
+    margin-left: 5px;
+    padding: 0;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.mdn-settings-sidebar-body {
+    flex-grow: 1;
+    overflow: scroll;
+    padding: 7px;
+}
+
+.mdn-settings-sidebar .mdn-option-label {
+    white-space: normal;
+}
+
+.mdn-settings-sidebar-group {
+    margin-bottom: 7px;
+    background-color: #333333;
+    border-width: 1px;
+    border-color: #474747;
+    border-radius: 6px;
+}
+
+.mdn-settings-sidebar-section {
+    margin: 0 0 7px 0;
+}
+
+.mdn-settings-sidebar-section .mdn-section-step {
+    display: none;
+}
+
+.mdn-settings-sidebar-advanced {
+    margin: 0 0 7px 0;
+}
+
+:root[data-unity-skin="light"] .mdn-settings-sidebar {
+    background-color: #e8e8e8;
+    border-left-color: #b8b8b8;
+}
+
+:root[data-unity-skin="light"] .mdn-settings-sidebar-header {
+    background-color: #dddddd;
+    border-bottom-color: #b8b8b8;
+}
+
+:root[data-unity-skin="light"] .mdn-settings-sidebar-title { color: #202020; }

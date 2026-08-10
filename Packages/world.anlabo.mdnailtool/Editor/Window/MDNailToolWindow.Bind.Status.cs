@@ -810,6 +810,93 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
+		private void SetupSettingsSidebar()
+		{
+			var shaderPanel = this.rootVisualElement.Q<VisualElement>("shader-preset-panel");
+			var modularAvatarSection = this.rootVisualElement.Q<VisualElement>("modular-avatar-section");
+			var advancedFoldout = this.rootVisualElement.Q<Foldout>(className: "mdn-advanced-foldout");
+			if (shaderPanel == null || modularAvatarSection == null || advancedFoldout == null) return;
+
+			var sidebar = new VisualElement { name = "settings-sidebar" };
+			sidebar.AddToClassList("mdn-settings-sidebar");
+			this._settingsSidebar = sidebar;
+
+			var titleBar = this.rootVisualElement.Q<VisualElement>(className: "mdn-title-bar");
+			if (titleBar != null)
+			{
+				var menuButton = new Button(ToggleSettingsSidebar) { text = "☰" };
+				menuButton.name = "settings-menu-button";
+				menuButton.tooltip = S("window.settings_sidebar") ?? "Settings";
+				menuButton.AddToClassList("mdn-settings-menu-button");
+				titleBar.Insert(0, menuButton);
+			}
+
+			var header = new VisualElement();
+			header.AddToClassList("mdn-settings-sidebar-header");
+			var title = new Label(S("window.settings_sidebar") ?? "Settings");
+			title.AddToClassList("mdn-settings-sidebar-title");
+			header.Add(title);
+
+			var spacer = new VisualElement();
+			spacer.AddToClassList("mdn-spacer");
+			header.Add(spacer);
+
+			var toggleButton = new Button(ToggleSettingsSidebar) { text = "×" };
+			toggleButton.name = "settings-sidebar-toggle";
+			toggleButton.AddToClassList("mdn-settings-sidebar-toggle");
+			header.Add(toggleButton);
+			sidebar.Add(header);
+
+			var body = new VisualElement();
+			body.AddToClassList("mdn-settings-sidebar-body");
+			this._settingsSidebarBody = body;
+
+			var shaderGroup = new VisualElement();
+			shaderGroup.AddToClassList("mdn-settings-sidebar-group");
+			shaderPanel.RemoveFromHierarchy();
+			shaderPanel.style.marginTop = 0;
+			shaderPanel.style.marginBottom = 0;
+			shaderGroup.Add(shaderPanel);
+			body.Add(shaderGroup);
+
+			modularAvatarSection.RemoveFromHierarchy();
+			modularAvatarSection.AddToClassList("mdn-settings-sidebar-section");
+			body.Add(modularAvatarSection);
+
+			advancedFoldout.RemoveFromHierarchy();
+			advancedFoldout.AddToClassList("mdn-settings-sidebar-advanced");
+			body.Add(advancedFoldout);
+			sidebar.Add(body);
+
+			var backdrop = new VisualElement { name = "settings-sidebar-backdrop" };
+			backdrop.AddToClassList("mdn-settings-sidebar-backdrop");
+			backdrop.RegisterCallback<PointerDownEvent>(_ => SetSettingsSidebarOpen(false, save: true));
+			this._settingsSidebarBackdrop = backdrop;
+			this.rootVisualElement.Add(backdrop);
+			this.rootVisualElement.Add(sidebar);
+
+			SetSettingsSidebarOpen(EditorPrefs.GetBool("MDNailTool.SettingsDrawerOpen", false), save: false);
+		}
+
+		private void ToggleSettingsSidebar()
+		{
+			bool open = this._settingsSidebar != null &&
+				!this._settingsSidebar.ClassListContains("mdn-settings-sidebar-closed");
+			SetSettingsSidebarOpen(!open, save: true);
+		}
+
+		private void SetSettingsSidebarOpen(bool open, bool save)
+		{
+			if (this._settingsSidebar == null || this._settingsSidebarBody == null) return;
+
+			this._settingsSidebar.EnableInClassList("mdn-settings-sidebar-closed", !open);
+			this._settingsSidebar.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
+			if (this._settingsSidebarBackdrop != null)
+				this._settingsSidebarBackdrop.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
+
+			if (save) EditorPrefs.SetBool("MDNailTool.SettingsDrawerOpen", open);
+		}
+
 		private Button CreateRecommendButton(System.Action onClick)
 		{
 			string label = S("window.recommend") ?? "Recommended";
