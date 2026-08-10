@@ -20,7 +20,8 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 
 		[JsonProperty("boneMappingOverride")]
 		public IReadOnlyDictionary<string, string>? BoneMappingOverride { get; set; }
-		// 0/未指定: 従来処理、1: bind姿勢基準のBody表面ウェイト転送。
+		// 0/未指定: 従来処理、1: 全爪をBody表面ウェイト転送、
+		// 2: 手の親指だけBody表面ウェイト転送（他の指はDistal 1.0を維持）。
 		// UI設定ではなく、対応が必要なvariationだけshop.jsonで指定する。
 		[JsonProperty("weightTransferMode")]
 		public int WeightTransferMode { get; set; }

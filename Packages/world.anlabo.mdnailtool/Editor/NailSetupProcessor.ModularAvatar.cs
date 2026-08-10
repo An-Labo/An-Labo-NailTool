@@ -364,13 +364,17 @@ namespace world.anlabo.mdnailtool.Editor {
 							.Select(x => x.Smr)
 							.FirstOrDefault();
 					}
-					SkinnedMeshRenderer? handWeightSource = this.AvatarVariationData.WeightTransferMode == 1
+					int weightTransferMode = this.AvatarVariationData.WeightTransferMode;
+					SkinnedMeshRenderer? handWeightSource = weightTransferMode == 1 || weightTransferMode == 2
 						? ResolveWeightSource(handsNailObjects, true)
 						: null;
-					SkinnedMeshRenderer? footWeightSource = this.AvatarVariationData.WeightTransferMode == 1
+					SkinnedMeshRenderer? footWeightSource = weightTransferMode == 1
 						? ResolveWeightSource(leftFootNailObjects.Concat(rightFootNailObjects), false)
 						: null;
-					ToolConsole.Log($"  Body weight transfer: mode={this.AvatarVariationData.WeightTransferMode} handSource={(handWeightSource == null ? "(none)" : handWeightSource.name)} footSource={(footWeightSource == null ? "(none)" : footWeightSource.name)}");
+					bool[]? handWeightTransferMask = weightTransferMode == 2
+						? handsNailObjects.Select((_, i) => i % 5 == 0).ToArray()
+						: null;
+					ToolConsole.Log($"  Body weight transfer: mode={weightTransferMode} handSource={(handWeightSource == null ? "(none)" : handWeightSource.name)} footSource={(footWeightSource == null ? "(none)" : footWeightSource.name)}");
 					// メッシュ統合
 					ToolConsole.Log($"  BakeBS: handVariants.Count={handVariants.Count} footVariants.Count={footVariants.Count}");
 					bool[] handsIsLeft = handsNailObjects.Select((_, i) => i < 5).ToArray();
@@ -406,7 +410,8 @@ namespace world.anlabo.mdnailtool.Editor {
 						handWeightSource,
 						handShrinkBS.Count > 0 ? handShrinkBS.ToArray() : null,
 						this.EnablePenetrationCorrection,
-						bodySmrForPushOut);
+						bodySmrForPushOut,
+						handWeightTransferMask);
 					ToolConsole.Log($"  BakeBS hand result: {(handCombinedGo == null ? "(null)" : handCombinedGo.name)} BS frames={(handCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 
 					if (this.UseFootNail)

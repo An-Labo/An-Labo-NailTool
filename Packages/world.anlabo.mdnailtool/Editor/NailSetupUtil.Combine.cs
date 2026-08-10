@@ -21,7 +21,8 @@ namespace world.anlabo.mdnailtool.Editor
 			SkinnedMeshRenderer? bodySmr = null,
 			(string BSName, ShrinkBSScope Scope)[]? shrinkBSDefinitions = null,
 			bool enablePenetrationCorrection = false,
-			SkinnedMeshRenderer? penetrationCorrectionBodySmr = null)
+			SkinnedMeshRenderer? penetrationCorrectionBodySmr = null,
+			bool[]? transferBodyWeightsByNail = null)
 		{
 			var indexedNails = nailObjects
 				.Select((t, i) => (t, originalIndex: i))
@@ -35,6 +36,9 @@ namespace world.anlabo.mdnailtool.Editor
 
 			bool[]? validPairsIsLeft = isLeftSide != null
 				? indexedNails.Select(x => x.originalIndex < isLeftSide.Length && isLeftSide[x.originalIndex]).ToArray()
+				: null;
+			bool[]? validPairsTransferBodyWeights = transferBodyWeightsByNail != null
+				? indexedNails.Select(x => x.originalIndex < transferBodyWeightsByNail.Length && transferBodyWeightsByNail[x.originalIndex]).ToArray()
 				: null;
 			if (validPairs.Length == 0) return null;
 
@@ -438,7 +442,18 @@ namespace world.anlabo.mdnailtool.Editor
 			// 結合済みSMRをBakeしてからBody表面のウェイトを転写する。頂点とTransformは変更しない。
 			if (transferBodyWeights)
 			{
-				ApplySurfaceWeightTransfer(combinedSmr, bodySmr!);
+				bool[]? transferVertexMask = null;
+				if (validPairsTransferBodyWeights != null)
+				{
+					transferVertexMask = new bool[combinedMesh.vertexCount];
+					for (int si = 0; si < validPairs.Length; si++)
+					{
+						bool shouldTransfer = si < validPairsTransferBodyWeights.Length && validPairsTransferBodyWeights[si];
+						for (int vi = 0; vi < cachedMeshes[si].vertexCount; vi++)
+							transferVertexMask[vertexOffsets[si] + vi] = shouldTransfer;
+					}
+				}
+				ApplySurfaceWeightTransfer(combinedSmr, bodySmr!, transferVertexMask);
 				combinedSmr.sharedMesh = null;
 				combinedSmr.sharedMesh = combinedMesh;
 				EditorUtility.SetDirty(combinedMesh);
@@ -558,7 +573,7 @@ namespace world.anlabo.mdnailtool.Editor
 				}
 			}
 		}
-		private static void ApplySurfaceWeightTransfer(SkinnedMeshRenderer nails, SkinnedMeshRenderer body)
+		private static void ApplySurfaceWeightTransfer(SkinnedMeshRenderer nails, SkinnedMeshRenderer body, bool[]? transferVertexMask = null)
 		{
 			Mesh nailMesh = nails.sharedMesh;
 			Mesh bodyMesh = body.sharedMesh;
@@ -611,16 +626,16 @@ namespace world.anlabo.mdnailtool.Editor
 					bary = candidateBary;
 				}
 
-				var accumulated = new Dictionary<int, float>();
-				AccumulateBoneWeight(accumulated, bodyWeights[ia], bary.x);
-				AccumulateBoneWeight(accumulated, bodyWeights[ib], bary.y);
-				AccumulateBoneWeight(accumulated, bodyWeights[ic], bary.z);
-				var strongest = accumulated.Where(x => x.Value > 0f).OrderByDescending(x => x.Value).Take(4).ToArray();
-				float total = strongest.Sum(x => x.Value);
 				BoneWeight weight = default;
-				if (total > 1e-8f)
+				if (transferVertexMask == null || (vi < transferVertexMask.Length && transferVertexMask[vi]))
 				{
-					for (int i = 0; i < strongest.Length; i++)
+					var accumulated = new Dictionary<int, float>();
+					AccumulateBoneWeight(accumulated, bodyWeights[ia], bary.x);
+					AccumulateBoneWeight(accumulated, bodyWeights[ib], bary.y);
+					AccumulateBoneWeight(accumulated, bodyWeights[ic], bary.z);
+					var strongest = accumulated.Where(x => x.Value > 0f).OrderByDescending(x => x.Value).Take(4).ToArray();
+					float total = strongest.Sum(x => x.Value);
+					for (int i = 0; total > 1e-8f && i < strongest.Length; i++)
 					{
 						float normalized = strongest[i].Value / total;
 						if (i == 0) { weight.boneIndex0 = strongest[i].Key; weight.weight0 = normalized; }
@@ -628,6 +643,12 @@ namespace world.anlabo.mdnailtool.Editor
 						else if (i == 2) { weight.boneIndex2 = strongest[i].Key; weight.weight2 = normalized; }
 						else { weight.boneIndex3 = strongest[i].Key; weight.weight3 = normalized; }
 					}
+				}
+				else
+				{
+					// 非対象の爪は元の親Distalボーンへ100%追従させる。
+					weight.boneIndex0 = bodyBoneIndex;
+					weight.weight0 = 1f;
 				}
 				output[vi] = weight;
 			}
