@@ -293,13 +293,13 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		private static Texture? LoadTextureWithFallback(string? guid, string propertyName, string designName, string? materialName = null, string? nailShapeName = null) {
 			if (string.IsNullOrEmpty(guid)) return null;
 
-			string path = AssetDatabase.GUIDToAssetPath(guid);
+			string path = AssetDatabase.GUIDToAssetPath(guid!);
 			Texture? tex = MDNailToolAssetLoader.LoadAssetSafe<Texture>(path);
 			if (tex != null) return tex;
 
 			if (!string.Equals(propertyName, "_MatCapTex", StringComparison.Ordinal)) return null;
 
-			tex = LoadKnownMatCapFallback(guid);
+			tex = LoadKnownMatCapFallback(guid!);
 			if (tex != null) return tex;
 
 			return null;

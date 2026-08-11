@@ -163,7 +163,7 @@ namespace world.anlabo.mdnailtool.Editor {
 		/// </summary>
 		internal static bool IsSafeNameFallback(string? targetName) {
 			if (string.IsNullOrWhiteSpace(targetName)) return false;
-			string name = Path.GetFileNameWithoutExtension(targetName.Trim());
+			string name = Path.GetFileNameWithoutExtension(targetName!.Trim());
 			return !name.All(char.IsDigit);
 		}
 

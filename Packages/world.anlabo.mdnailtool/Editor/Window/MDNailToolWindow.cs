@@ -104,6 +104,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Label? _errorDetailToggle;
 		private VisualElement? _errorDetailArea;
 		private Label? _errorDetailText;
+		private Button? _errorActionButton;
 		private bool _errorDetailExpanded = false;
 		private int _userErrorCount = 0;
 		private VisualElement? _contactLinksArea;

@@ -445,10 +445,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 
 			// Body表面ウェイト転送は、MAの結合SMRを生成する経路でのみ実行できる。
-			if (avatarVariationData.WeightTransferMode == 1
+			if ((avatarVariationData.WeightTransferMode == 1 || avatarVariationData.WeightTransferMode == 2)
 				&& (this._forModularAvatar?.value != true || this._bakeBlendShapes?.value != true))
 			{
-				this.ShowErrorBanner(S("error.execute.weight_transfer_requires_ma_combine"));
+				this.ShowErrorBanner(S("error.execute.weight_transfer_requires_ma_combine"), showRequiredSettingsAction: true);
 				return;
 			}
 

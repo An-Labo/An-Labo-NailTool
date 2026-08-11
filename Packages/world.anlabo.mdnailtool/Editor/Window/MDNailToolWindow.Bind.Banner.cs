@@ -32,6 +32,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._errorDetailToggle = this.rootVisualElement.Q<Label>("error-detail-toggle");
 			this._errorDetailArea = this.rootVisualElement.Q<VisualElement>("error-detail-area");
 			this._errorDetailText = this.rootVisualElement.Q<Label>("error-detail-text");
+			this._errorActionButton = this.rootVisualElement.Q<Button>("error-action");
+			if (this._errorActionButton != null)
+				this._errorActionButton.clicked += this.ApplyRequiredWeightTransferSettings;
 
 			this.rootVisualElement.Q<Button>("error-close")
 				?.RegisterCallback<ClickEvent>(_ => {
@@ -58,7 +61,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 		}
 
-		private void ShowErrorBanner(string? userMessage, Exception? ex = null)
+		private void ShowErrorBanner(string? userMessage, Exception? ex = null, bool showRequiredSettingsAction = false)
 		{
 			if (this._errorBanner == null) return;
 			this._errorBanner.style.display = DisplayStyle.Flex;
@@ -71,6 +74,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			// Only show the detail toggle when there's exception detail to show
 			if (this._errorDetailToggle != null)
 				this._errorDetailToggle.style.display = ex != null ? DisplayStyle.Flex : DisplayStyle.None;
+			if (this._errorActionButton != null)
+			{
+				this._errorActionButton.text = S("error.enable_required_settings") ?? "Enable required settings";
+				this._errorActionButton.style.display = showRequiredSettingsAction ? DisplayStyle.Flex : DisplayStyle.None;
+			}
 			// ScrollView内でエラーバナーが見えるようにスクロール
 			var scrollView = this.rootVisualElement.Q<ScrollView>("Root");
 			if (scrollView != null && this._errorBanner != null)
@@ -81,6 +89,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			if (this._errorBanner != null) this._errorBanner.style.display = DisplayStyle.None;
 			if (this._contactLinksArea != null) this._contactLinksArea.style.display = DisplayStyle.None;
+			if (this._errorActionButton != null) this._errorActionButton.style.display = DisplayStyle.None;
+		}
+
+		private void ApplyRequiredWeightTransferSettings()
+		{
+			if (this._forModularAvatar != null) this._forModularAvatar.value = true;
+			if (this._bakeBlendShapes != null) this._bakeBlendShapes.value = true;
+			this.HideErrorBanner();
 		}
 
 		private void ShowContactLinks(string errorText)

@@ -335,6 +335,7 @@
             <ui:VisualElement class="mdn-error-banner-top">
                 <ui:Label text="⚠" class="mdn-error-banner-icon" />
                 <ui:Label name="error-message" class="mdn-error-banner-message" />
+                <ui:Button name="error-action" class="mdn-error-action-btn" style="display: none;" />
                 <ui:VisualElement class="mdn-spacer" />
                 <ui:Button name="error-close" text="×" class="mdn-error-banner-close" />
             </ui:VisualElement>
