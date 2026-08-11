@@ -16,7 +16,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 		public event Action<string>? OnSelectNail;
 		public event Action? OnSearchButtonClicked;
-		public string? FirstDesignName { get; private set; }
+		public string? LatestInstalledDesignName { get; private set; }
 
 		private readonly ScrollView _scroll;
 		private readonly VisualElement _list;
@@ -69,6 +69,12 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				this._list.Remove(visualElement);
 			}
 			using DBNailDesign dbNailDesign = new();
+			this.LatestInstalledDesignName = dbNailDesign.collection
+				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
+				.Where(design => INailProcessor.IsInstalledDesign(design.DesignName))
+				.OrderByDescending(design => design.Id)
+				.Select(design => design.DesignName)
+				.FirstOrDefault();
 			Action<EventBase> selectNailAction = SelectNail;
 			IReadOnlyDictionary<string, DateTime> lastUsedTime = GlobalSetting.DesignLastUsedTimes;
 			IReadOnlyDictionary<string, int> useCounts = GlobalSetting.DesignUseCount;
@@ -134,7 +140,6 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				if (isInstalled) {
 					thumbnailButton.name = nailDesign.DesignName;
 					thumbnailButton.clickable.clickedWithEventInfo += selectNailAction;
-					this.FirstDesignName ??= nailDesign.DesignName;
 				} else {
 					thumbnailButton.SetEnabled(false);
 					thumbnailButton.style.borderTopWidth = 0;

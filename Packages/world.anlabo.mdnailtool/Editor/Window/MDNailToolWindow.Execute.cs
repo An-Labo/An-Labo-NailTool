@@ -37,9 +37,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void PostInitSelection()
 		{
 			var nailDesignSelect = this._nailDesignSelect;
-			if (nailDesignSelect != null && nailDesignSelect.FirstDesignName != null)
+			if (nailDesignSelect != null && nailDesignSelect.LatestInstalledDesignName != null)
 			{
-				this.OnSelectNail(nailDesignSelect.FirstDesignName);
+				this.OnSelectNail(nailDesignSelect.LatestInstalledDesignName);
 			}
 			else
 			{
