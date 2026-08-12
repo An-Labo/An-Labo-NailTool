@@ -52,6 +52,7 @@
     -unity-font-style: bold;
     color: #f0f0f0;
     letter-spacing: 0.5px;
+    flex-shrink: 0;
 }
 
 .mdn-title-version {
@@ -1689,12 +1690,21 @@
 
 /* ---- Left settings drawer ---- */
 .mdn-settings-menu-button {
-    width: 24px;
+    min-width: 60px;
     height: 22px;
     margin-right: 7px;
-    padding: 0;
-    font-size: 14px;
+    padding-left: 7px;
+    padding-right: 7px;
+    font-size: 12px;
     flex-shrink: 0;
+    border-width: 1px;
+    border-color: #484848;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.mdn-settings-menu-button:hover {
+    background-color: rgba(255, 255, 255, 0.12);
 }
 
 .mdn-settings-sidebar-backdrop {
@@ -1748,6 +1758,24 @@
     flex-grow: 1;
     overflow: scroll;
     padding: 7px;
+}
+
+.mdn-settings-language-group {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 7px;
+    padding: 8px;
+    background-color: #333333;
+    border-width: 1px;
+    border-color: #474747;
+    border-radius: 6px;
+}
+
+.mdn-settings-language-group .mdn-lang-dropdown {
+    width: 120px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .mdn-settings-sidebar .mdn-option-label {

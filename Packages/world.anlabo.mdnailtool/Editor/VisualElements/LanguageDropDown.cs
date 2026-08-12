@@ -20,17 +20,10 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			if (this.panel?.visualTree == null) return;
 			Queue<VisualElement> queue = new Queue<VisualElement>();
 			queue.Enqueue(this.panel.visualTree);
-
 			while (queue.Count > 0) {
 				VisualElement target = queue.Dequeue();
-
-				if (target is ILocalizedElement localizedElement) {
-					localizedElement.UpdateLanguage();
-				}
-				
-				foreach (VisualElement childElement in target.Children()) {
-					queue.Enqueue(childElement);
-				}
+				if (target is ILocalizedElement localizedElement) localizedElement.UpdateLanguage();
+				foreach (VisualElement childElement in target.Children()) queue.Enqueue(childElement);
 			}
 		}
 

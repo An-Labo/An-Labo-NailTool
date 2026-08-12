@@ -35,6 +35,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("blendShapeVariants")]
 		public AvatarBlendShapeVariant[]? BlendShapeVariants { get; set; }
 
+		[JsonProperty("shrinkBlendShapeVariants")]
+		public AvatarShrinkBlendShapeVariant[]? ShrinkBlendShapeVariants { get; set; }
+
 		// true の場合、sharedBody の BlendShapeVariants を継承・mergeせず、この variation の配列で丸ごと置き換える。
 		[JsonProperty("overrideSharedBlendShapeVariants")]
 		public bool OverrideSharedBlendShapeVariants { get; set; }

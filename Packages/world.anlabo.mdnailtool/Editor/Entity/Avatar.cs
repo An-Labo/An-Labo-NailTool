@@ -31,6 +31,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("blendShapeVariants")]
 		public AvatarBlendShapeVariant[]? BlendShapeVariants { get; set; }
 
+		[JsonProperty("shrinkBlendShapeVariants")]
+		public AvatarShrinkBlendShapeVariant[]? ShrinkBlendShapeVariants { get; set; }
+
 		public string GetDisplayName(string? language) {
 			if (language == "ja" && this.DisplayNames != null && this.DisplayNames.TryGetValue("ja", out string? ja) && !string.IsNullOrEmpty(ja)) {
 				return ja;

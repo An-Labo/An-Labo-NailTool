@@ -68,6 +68,8 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 						variation.BlendShapeVariants = variation.OverrideSharedBlendShapeVariants
 							? CloneVariants(variation.BlendShapeVariants)
 							: MergeBlendShapeVariants(sb.BlendShapeVariants, variation.BlendShapeVariants);
+						variation.ShrinkBlendShapeVariants = MergeShrinkBlendShapeVariants(
+							sb.ShrinkBlendShapeVariants, variation.ShrinkBlendShapeVariants);
 						ApplySharedBodyScale(variation.NailNodes, variation.SharedBodyScale);
 						ApplySharedBodyScaleAsChildren(variation.FootNailNodes, variation.SharedBodyScale);
 						ApplySharedBodyScale(variation.BlendShapeVariants, variation.SharedBodyScale);
@@ -115,6 +117,24 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 				LeftBlendShapeName = src.LeftBlendShapeName,
 				RightBlendShapeName = src.RightBlendShapeName,
 				NailNodes = CloneNodes(src.NailNodes),
+			};
+		}
+
+		private static AvatarShrinkBlendShapeVariant[]? MergeShrinkBlendShapeVariants(
+			AvatarShrinkBlendShapeVariant[]? shared,
+			AvatarShrinkBlendShapeVariant[]? variation) {
+			if ((shared == null || shared.Length == 0) && (variation == null || variation.Length == 0)) return null;
+			Dictionary<string, AvatarShrinkBlendShapeVariant> merged = new(System.StringComparer.Ordinal);
+			if (shared != null) foreach (AvatarShrinkBlendShapeVariant item in shared) merged[item.BlendShapeName] = CloneShrinkVariant(item);
+			if (variation != null) foreach (AvatarShrinkBlendShapeVariant item in variation) merged[item.BlendShapeName] = CloneShrinkVariant(item);
+			return new List<AvatarShrinkBlendShapeVariant>(merged.Values).ToArray();
+		}
+
+		private static AvatarShrinkBlendShapeVariant CloneShrinkVariant(AvatarShrinkBlendShapeVariant src) {
+			return new AvatarShrinkBlendShapeVariant {
+				BlendShapeName = src.BlendShapeName,
+				SyncSourceSmrName = src.SyncSourceSmrName,
+				Targets = src.Targets == null ? System.Array.Empty<string>() : (string[])src.Targets.Clone(),
 			};
 		}
 		private static IReadOnlyDictionary<string, string>? MergeBoneMappingOverrides(

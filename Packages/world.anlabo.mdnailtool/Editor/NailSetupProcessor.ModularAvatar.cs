@@ -379,26 +379,46 @@ namespace world.anlabo.mdnailtool.Editor {
 					ToolConsole.Log($"  BakeBS: handVariants.Count={handVariants.Count} footVariants.Count={footVariants.Count}");
 					bool[] handsIsLeft = handsNailObjects.Select((_, i) => i < 5).ToArray();
 					// Shrink_*BS抽出: アバター本体Shrink_* (nailPrefabGUID 空) を Hand/Foot に振り分け
-					var handShrinkBS = new List<(string BSName, NailSetupUtil.ShrinkBSScope Scope)>();
-					var footShrinkBS = new List<(string BSName, NailSetupUtil.ShrinkBSScope Scope)>();
+					var handShrinkBS = new List<(string BSName, bool[] NailMask)>();
+					var footShrinkBS = new List<(string BSName, bool[] NailMask)>();
+					AvatarShrinkBlendShapeVariant[]? explicitShrinkVariants =
+						this.AvatarVariationData.ShrinkBlendShapeVariants ?? this.AvatarEntity?.ShrinkBlendShapeVariants;
 					if (GlobalSetting.AutoLinkShrinkBS && activeVariants != null)
 					{
 						foreach (var v in activeVariants)
 						{
 							if (!string.IsNullOrEmpty(v.NailPrefabGUID)) continue;
 							if (string.IsNullOrEmpty(v.Name) || !v.Name.StartsWith("Shrink_", StringComparison.OrdinalIgnoreCase)) continue;
+							if (explicitShrinkVariants != null && explicitShrinkVariants.Any(x =>
+								string.Equals(x.BlendShapeName, v.Name, StringComparison.OrdinalIgnoreCase))) continue;
 
 							string lower = v.Name.ToLowerInvariant();
 							bool isHand = lower.Contains("hand") || lower.Contains("finger") || lower.Contains("glove");
 							bool isFoot = lower.Contains("foot") || lower.Contains("toe") || lower.Contains("lower_leg") || lower.Contains("socks") || lower.Contains("stocking");
 							if (!isHand && !isFoot) continue;
 
-							NailSetupUtil.ShrinkBSScope scope = NailSetupUtil.ShrinkBSScope.All;
-							if (v.Name.EndsWith("_L") || v.Name.EndsWith(".L")) scope = NailSetupUtil.ShrinkBSScope.LeftOnly;
-							else if (v.Name.EndsWith("_R") || v.Name.EndsWith(".R")) scope = NailSetupUtil.ShrinkBSScope.RightOnly;
+							bool leftOnly = v.Name.EndsWith("_L") || v.Name.EndsWith(".L");
+							bool rightOnly = v.Name.EndsWith("_R") || v.Name.EndsWith(".R");
+							if (isHand) handShrinkBS.Add((v.Name, BuildLegacySideMask(handsNailObjects.Length, leftOnly, rightOnly)));
+							if (isFoot) footShrinkBS.Add((v.Name, BuildLegacySideMask(leftFootNailObjects.Length + rightFootNailObjects.Length, leftOnly, rightOnly)));
+						}
+					}
 
-							if (isHand) handShrinkBS.Add((v.Name, scope));
-							if (isFoot) footShrinkBS.Add((v.Name, scope));
+					if (GlobalSetting.AutoLinkShrinkBS && explicitShrinkVariants != null)
+					{
+						foreach (AvatarShrinkBlendShapeVariant shrink in explicitShrinkVariants)
+						{
+							if (string.IsNullOrWhiteSpace(shrink.BlendShapeName) || shrink.Targets == null || shrink.Targets.Length == 0)
+							{
+								ToolConsole.Log($"[Warning] Shrink BS definition is invalid: '{shrink.BlendShapeName ?? "(null)"}' targets=0");
+								continue;
+							}
+							bool[] handMask = BuildShrinkTargetMask(shrink.Targets, true);
+							bool[] footMask = BuildShrinkTargetMask(shrink.Targets, false);
+							if (handMask.Any(x => x)) handShrinkBS.Add((shrink.BlendShapeName, handMask));
+							if (footMask.Any(x => x)) footShrinkBS.Add((shrink.BlendShapeName, footMask));
+							if (!handMask.Any(x => x) && !footMask.Any(x => x))
+								ToolConsole.Log($"[Warning] Shrink BS '{shrink.BlendShapeName}' has no valid targets: [{string.Join(", ", shrink.Targets)}]");
 						}
 					}
 					ToolConsole.Log($"  Shrink BS: hand={handShrinkBS.Count} foot={footShrinkBS.Count}");
@@ -715,7 +735,8 @@ namespace world.anlabo.mdnailtool.Editor {
 
 				// avatar-levelブレンドシェイプバリアントのBlendShapeSync設定 (nailPrefabObjectがアバター階層下に配置された後に実行する)
 				AvatarBlendShapeVariant[]? syncVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
-				if (this.SyncBlendShapesWithMA && syncVariants != null)
+				AvatarShrinkBlendShapeVariant[]? shrinkSyncVariants = this.AvatarVariationData.ShrinkBlendShapeVariants ?? this.AvatarEntity?.ShrinkBlendShapeVariants;
+				if (this.SyncBlendShapesWithMA && (syncVariants != null || shrinkSyncVariants != null))
 				{
 					// BakeAndCombineで生成されたCombined SMRを含む全子オブジェクトを対象
 					foreach (Transform child in nailPrefabObject.transform)
@@ -724,7 +745,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						if (bsSmr == null || bsSmr.sharedMesh == null) continue;
 						if (bsSmr.sharedMesh.blendShapeCount == 0) continue;
 						var variantBindings = new List<BlendshapeBinding>();
-						foreach (AvatarBlendShapeVariant variant in syncVariants)
+						foreach (AvatarBlendShapeVariant variant in syncVariants ?? Array.Empty<AvatarBlendShapeVariant>())
 						{
 							if (string.IsNullOrEmpty(variant.SyncSourceSmrName)) continue;
 							Transform? srcSmrTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
@@ -805,6 +826,25 @@ namespace world.anlabo.mdnailtool.Editor {
 									LocalBlendshape = actualShapeName
 								});
 							}
+							}
+						foreach (AvatarShrinkBlendShapeVariant shrink in shrinkSyncVariants ?? Array.Empty<AvatarShrinkBlendShapeVariant>())
+						{
+							if (string.IsNullOrEmpty(shrink.SyncSourceSmrName)
+								|| string.IsNullOrEmpty(shrink.BlendShapeName)
+								|| bsSmr.sharedMesh.GetBlendShapeIndex(shrink.BlendShapeName) < 0) continue;
+							Transform? source = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
+								.FirstOrDefault(t => string.Equals(t.name, shrink.SyncSourceSmrName, StringComparison.OrdinalIgnoreCase));
+							if (source == null || source.GetComponent<SkinnedMeshRenderer>() == null)
+							{
+								ToolConsole.Log($"[Warning] Shrink BS sync source '{shrink.SyncSourceSmrName}' not found for '{shrink.BlendShapeName}'");
+								continue;
+							}
+							variantBindings.Add(new BlendshapeBinding
+							{
+								ReferenceMesh = CreateAvatarRef(source.gameObject),
+								Blendshape = shrink.BlendShapeName,
+								LocalBlendshape = shrink.BlendShapeName
+							});
 						}
 						if (variantBindings.Count > 0)
 						{
@@ -835,6 +875,37 @@ namespace world.anlabo.mdnailtool.Editor {
 				transformed.Encapsulate(matrix.MultiplyPoint3x4(corner));
 			}
 			return transformed;
+		}
+
+		private static bool[] BuildLegacySideMask(int count, bool leftOnly, bool rightOnly) {
+			bool[] mask = new bool[count];
+			int leftCount = count / 2;
+			for (int i = 0; i < count; i++) {
+				bool isLeft = i < leftCount;
+				mask[i] = leftOnly ? isLeft : rightOnly ? !isLeft : true;
+			}
+			return mask;
+		}
+
+		private static bool[] BuildShrinkTargetMask(IEnumerable<string> targets, bool hand) {
+			string prefix = hand ? "Hand" : "Foot";
+			string[] fingers = { "Thumb", "Index", "Middle", "Ring", "Little" };
+			string[] nailKeys = Enumerable.Range(0, 10)
+				.Select(i => $"{prefix}{(i < 5 ? "L" : "R")}.{fingers[i % 5]}")
+				.ToArray();
+			bool[] mask = new bool[nailKeys.Length];
+			foreach (string rawTarget in targets.Where(x => !string.IsNullOrWhiteSpace(x))) {
+				string target = rawTarget.Trim();
+				for (int i = 0; i < nailKeys.Length; i++) {
+					string key = nailKeys[i];
+					bool exact = string.Equals(target, key, StringComparison.OrdinalIgnoreCase);
+					bool group = (string.Equals(target, prefix, StringComparison.OrdinalIgnoreCase)
+						|| string.Equals(target, prefix + "L", StringComparison.OrdinalIgnoreCase) && key.StartsWith(prefix + "L.", StringComparison.OrdinalIgnoreCase)
+						|| string.Equals(target, prefix + "R", StringComparison.OrdinalIgnoreCase) && key.StartsWith(prefix + "R.", StringComparison.OrdinalIgnoreCase));
+					if (exact || group) mask[i] = true;
+				}
+			}
+			return mask;
 		}
 
 		private static AvatarObjectReference CreateAvatarRef(GameObject obj) {

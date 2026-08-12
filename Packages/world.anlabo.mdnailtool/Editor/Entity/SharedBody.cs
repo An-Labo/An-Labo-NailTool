@@ -19,5 +19,8 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		// 同一素体で共有する BlendShape variant. variation 側の同名定義は個別 override として優先される.
 		[JsonProperty("blendShapeVariants")]
 		public AvatarBlendShapeVariant[]? BlendShapeVariants { get; set; }
+
+		[JsonProperty("shrinkBlendShapeVariants")]
+		public AvatarShrinkBlendShapeVariant[]? ShrinkBlendShapeVariants { get; set; }
 	}
 }

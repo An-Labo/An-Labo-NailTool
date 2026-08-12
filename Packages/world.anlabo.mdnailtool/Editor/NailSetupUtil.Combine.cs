@@ -19,7 +19,7 @@ namespace world.anlabo.mdnailtool.Editor
 			(string Name, Transform?[] VariantNails, string? LeftName, string? RightName)[]? variants = null,
 			bool[]? isLeftSide = null,
 			SkinnedMeshRenderer? bodySmr = null,
-			(string BSName, ShrinkBSScope Scope)[]? shrinkBSDefinitions = null,
+			(string BSName, bool[] NailMask)[]? shrinkBSDefinitions = null,
 			bool enablePenetrationCorrection = false,
 			SkinnedMeshRenderer? penetrationCorrectionBodySmr = null,
 			bool[]? transferBodyWeightsByNail = null)
@@ -352,7 +352,7 @@ namespace world.anlabo.mdnailtool.Editor
 				Vector3[] zeroNormals = new Vector3[totalVertCount];
 				Vector3[] zeroTangents = new Vector3[totalVertCount];
 
-				foreach (var (bsName, scope) in shrinkBSDefinitions)
+				foreach (var (bsName, nailMask) in shrinkBSDefinitions)
 				{
 					if (combinedMesh.GetBlendShapeIndex(bsName) >= 0)
 					{
@@ -366,15 +366,11 @@ namespace world.anlabo.mdnailtool.Editor
 						int siVerts = validPairs[si].smr.sharedMesh.vertexCount;
 						int off = vertexOffsets[si];
 
-						bool isLeft = validPairsIsLeft != null && si < validPairsIsLeft.Length && validPairsIsLeft[si];
-
-						bool shouldShrink = scope switch
-						{
-							ShrinkBSScope.All => true,
-							ShrinkBSScope.LeftOnly => isLeft,
-							ShrinkBSScope.RightOnly => !isLeft,
-							_ => false
-						};
+						int originalIndex = indexedNails[si].originalIndex;
+						bool shouldShrink = nailMask != null
+							&& originalIndex >= 0
+							&& originalIndex < nailMask.Length
+							&& nailMask[originalIndex];
 
 						if (!shouldShrink) continue;
 
@@ -385,7 +381,7 @@ namespace world.anlabo.mdnailtool.Editor
 					}
 
 					combinedMesh.AddBlendShapeFrame(bsName, 100f, dv, zeroNormals, zeroTangents);
-					ToolConsole.Log($"BakeAndCombine: Shrink BS '{bsName}' (scope={scope}) を注入");
+					ToolConsole.Log($"BakeAndCombine: Shrink BS '{bsName}' (targets={nailMask.Count(x => x)}) を注入");
 				}
 			}
 

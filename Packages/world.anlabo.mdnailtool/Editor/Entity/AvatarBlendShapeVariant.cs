@@ -25,4 +25,18 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("nailNodes")]
 		public NailPrefabNodeData[]? NailNodes { get; set; }
 	}
+
+	[JsonObject]
+	public class AvatarShrinkBlendShapeVariant {
+		[JsonRequired]
+		[JsonProperty("blendShapeName")]
+		public string BlendShapeName { get; set; } = null!;
+
+		[JsonProperty("syncSourceSmrName")]
+		public string? SyncSourceSmrName { get; set; }
+
+		// HandL.Index / FootR.Little。HandL 等のグループ指定も許可する。
+		[JsonProperty("targets")]
+		public string[] Targets { get; set; } = System.Array.Empty<string>();
+	}
 }

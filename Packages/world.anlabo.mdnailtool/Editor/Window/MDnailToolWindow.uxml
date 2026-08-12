@@ -7,11 +7,13 @@
                 <ui:Label text="An-Labo NailTool" class="mdn-title-text" />
                 <ui:Label name="version" class="mdn-title-version" />
                 <ui:VisualElement class="mdn-spacer" />
-                <!-- Language label + dropdown -->
-                <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
-                    text-id="window.language"
-                    class="mdn-lang-label" />
-                <world.anlabo.mdnailtool.Editor.VisualElements.LanguageDropDown focusable="true" class="mdn-lang-dropdown" />
+                <!-- SetupSettingsSidebarで設定サイドバー先頭へ移動 -->
+                <ui:VisualElement name="language-settings" class="mdn-settings-language-group">
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        text-id="window.language"
+                        class="mdn-lang-label" />
+                    <world.anlabo.mdnailtool.Editor.VisualElements.LanguageDropDown focusable="true" class="mdn-lang-dropdown" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
             <ui:VisualElement name="update-notice-container" />

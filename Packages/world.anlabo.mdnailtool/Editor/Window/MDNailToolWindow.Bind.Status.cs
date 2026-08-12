@@ -812,10 +812,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void SetupSettingsSidebar()
 		{
+			var languageSettings = this.rootVisualElement.Q<VisualElement>("language-settings");
 			var shaderPanel = this.rootVisualElement.Q<VisualElement>("shader-preset-panel");
 			var modularAvatarSection = this.rootVisualElement.Q<VisualElement>("modular-avatar-section");
 			var advancedFoldout = this.rootVisualElement.Q<Foldout>(className: "mdn-advanced-foldout");
-			if (shaderPanel == null || modularAvatarSection == null || advancedFoldout == null) return;
+			if (languageSettings == null || shaderPanel == null || modularAvatarSection == null || advancedFoldout == null) return;
 
 			var sidebar = new VisualElement { name = "settings-sidebar" };
 			sidebar.AddToClassList("mdn-settings-sidebar");
@@ -824,16 +825,17 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var titleBar = this.rootVisualElement.Q<VisualElement>(className: "mdn-title-bar");
 			if (titleBar != null)
 			{
-				var menuButton = new Button(ToggleSettingsSidebar) { text = "☰" };
+				var menuButton = new LocalizedButton { TextId = "window.settings_sidebar_button" };
 				menuButton.name = "settings-menu-button";
-				menuButton.tooltip = S("window.settings_sidebar") ?? "Settings";
+				menuButton.TooltipId = "window.settings_sidebar";
 				menuButton.AddToClassList("mdn-settings-menu-button");
+				menuButton.clicked += ToggleSettingsSidebar;
 				titleBar.Insert(0, menuButton);
 			}
 
 			var header = new VisualElement();
 			header.AddToClassList("mdn-settings-sidebar-header");
-			var title = new Label(S("window.settings_sidebar") ?? "Settings");
+			var title = new LocalizedLabel { TextId = "window.settings_sidebar" };
 			title.AddToClassList("mdn-settings-sidebar-title");
 			header.Add(title);
 
@@ -850,6 +852,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var body = new VisualElement();
 			body.AddToClassList("mdn-settings-sidebar-body");
 			this._settingsSidebarBody = body;
+
+			languageSettings.RemoveFromHierarchy();
+			body.Add(languageSettings);
 
 			var shaderGroup = new VisualElement();
 			shaderGroup.AddToClassList("mdn-settings-sidebar-group");
