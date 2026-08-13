@@ -161,7 +161,11 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 
 		private static void ApplySharedBodyScale(AvatarBlendShapeVariant[]? variants, float[]? scale) {
 			if (variants == null || variants.Length == 0 || !HasSharedBodyScale(scale)) return;
-			foreach (AvatarBlendShapeVariant variant in variants) ApplySharedBodyScale(variant.NailNodes, scale);
+			// BlendShape variant nodes are absolute nail transforms in the same coordinate
+			// space as FootNailNodes. Scale their positions as well as their leaf scales so
+			// BS0 and BS100 keep the same shared-body basis.
+			foreach (AvatarBlendShapeVariant variant in variants)
+				ApplySharedBodyScaleAsChildren(variant.NailNodes, scale);
 		}
 
 		private static bool HasSharedBodyScale(float[]? scale) {
