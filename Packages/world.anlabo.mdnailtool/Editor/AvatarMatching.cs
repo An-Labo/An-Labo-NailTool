@@ -39,29 +39,30 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 				}
 
-				avatarPrefabs.Reverse();
-
 				IEnumerable<(string? prefabName, string? prefabGuid, ShopAndAvatarAndVariation variation)> prefabs = dbShop.collection
 					.SelectMany(shop => shop.Avatars.Select(pair => new ShopAndAvatar { Shop = shop, Avatar = pair.Value }))
 					.SelectMany(avatar => avatar.Avatar.AvatarVariations.Select(pair => new ShopAndAvatarAndVariation { Shop = avatar.Shop, Avatar = avatar.Avatar, Variation = pair.Value }))
 					.SelectMany(variation => variation.Variation.AvatarPrefabs.Select(prefab => (prefab.PrefabName, prefab.PrefabGUID, variation)))
 					.ToArray();
 
-				foreach ((string? _, string? targetGuid, ShopAndAvatarAndVariation variation) in prefabs) {
-					if (string.IsNullOrEmpty(targetGuid)) continue;
-					if (avatarPrefabs
-					    .Select(avatarPrefab => AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(avatarPrefab)).ToString())
-					    .Any(prefabGuid => prefabGuid == targetGuid)) {
-						return (variation.Shop, variation.Avatar, variation.Variation);
+				// 選択中のPrefabからベースPrefabへ順に照合する。
+				// DB登録順を先にすると、同じFBXを使う派生Prefabでも先に登録された
+				// ベースVariationが選ばれるため、Prefabチェーン側の具体性を優先する。
+				foreach (GameObject avatarPrefab in avatarPrefabs) {
+					string prefabGuid = AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(avatarPrefab)).ToString();
+					if (string.IsNullOrEmpty(prefabGuid)) continue;
+					foreach ((string? _, string? targetGuid, ShopAndAvatarAndVariation variation) in prefabs) {
+						if (string.IsNullOrEmpty(targetGuid)) continue;
+						if (prefabGuid == targetGuid)
+							return (variation.Shop, variation.Avatar, variation.Variation);
 					}
 				}
 
-				foreach ((string? targetName, string? _, ShopAndAvatarAndVariation variation) in prefabs) {
-					if (!IsSafeNameFallback(targetName)) continue;
-					if (avatarPrefabs
-					    .Select(avatarPrefab => avatarPrefab.name)
-					    .Any(prefabName => prefabName.Contains(targetName!))) {
-						return (variation.Shop, variation.Avatar, variation.Variation);
+				foreach (GameObject avatarPrefab in avatarPrefabs) {
+					foreach ((string? targetName, string? _, ShopAndAvatarAndVariation variation) in prefabs) {
+						if (!IsSafeNameFallback(targetName)) continue;
+						if (avatarPrefab.name.Contains(targetName!))
+							return (variation.Shop, variation.Avatar, variation.Variation);
 					}
 				}
 

@@ -14,7 +14,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 	// VCC 更新では DB json 個別ではなく package.json / package 全体の更新として通知されることがあるため、
 	// package version 差分でも DB json の再 import と静的キャッシュ破棄を行う。
 	[InitializeOnLoad]
-	internal class DBAssetPostprocessor : AssetPostprocessor {
+	public class DBAssetPostprocessor : AssetPostprocessor {
 		private const string PackageJsonPath = MDNailToolDefines.ROOT_PACKAGE_PATH + "package.json";
 		private const string VersionPrefKeyPrefix = "world.anlabo.mdnailtool.dbRefreshVersion.";
 
@@ -56,7 +56,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			}
 		}
 
-		internal static void ForceRefreshDbAssetsAndCaches() {
+		public static void ForceRefreshDbAssetsAndCaches() {
 			ReimportDbAssets();
 			ClearAllCaches();
 			RefreshOpenWindows();
