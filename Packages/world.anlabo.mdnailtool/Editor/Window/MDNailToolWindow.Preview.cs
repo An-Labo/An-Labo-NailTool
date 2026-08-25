@@ -28,10 +28,17 @@ namespace world.anlabo.mdnailtool.Editor.Window
 	{
 		private void OnSelectNail(string designName)
 		{
-			ResourceAutoExtractor.EnsureDesignExtracted(designName);
 			using DBNailDesign dbNailDesign = new();
 			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(designName);
 			if (design?.DesignName == null) return;
+			if (!INailProcessor.IsInstalledDesign(design.DesignName))
+			{
+				design = dbNailDesign.FindChildVariants(design.DesignName)
+					.FirstOrDefault(child => INailProcessor.IsInstalledDesign(child.DesignName));
+				if (design?.DesignName == null) return;
+				designName = design.DesignName;
+			}
+			ResourceAutoExtractor.EnsureDesignExtracted(designName);
 			INailProcessor nailProcessor = INailProcessor.CreateNailDesign(design.DesignName);
 
 			List<string> materialPopupElements = design.MaterialVariation != null ?
@@ -72,7 +79,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 				// 親
 				NailDesign? parentDesign = dbNailDesign.FindNailDesignByDesignName(parentDesignName);
-				if (parentDesign != null)
+				if (parentDesign != null && INailProcessor.IsInstalledDesign(parentDesign.DesignName))
 				{
 					string pDisplay = parentDesign.DisplayNames?.GetValueOrDefault(langKey, parentDesign.DesignName) ?? parentDesign.DesignName;
 					this._variantDisplayNames[parentDesignName] = pDisplay;
@@ -82,6 +89,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				// 子
 				foreach (NailDesign child in variantChildren)
 				{
+					if (!INailProcessor.IsInstalledDesign(child.DesignName)) continue;
 					string cDisplay = child.DisplayNames?.GetValueOrDefault(langKey, child.DesignName) ?? child.DesignName;
 					this._variantDisplayNames[child.DesignName] = cDisplay;
 					variantChoices.Add(child.DesignName);

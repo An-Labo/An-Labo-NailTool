@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using world.anlabo.mdnailtool.Editor.Entity;
+using world.anlabo.mdnailtool.Editor.NailDesigns;
 
 #nullable enable
 
@@ -32,6 +33,13 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 		public bool HasChildVariants(string designName) {
 			return this._data.Values.Any(d =>
 				string.Equals(d.ParentVariant, designName, System.StringComparison.OrdinalIgnoreCase));
+		}
+
+		/// <summary>親デザイン自身、またはいずれかの子バリアントがインストール済みなら true</summary>
+		public bool IsInstalledDesignGroup(NailDesign design) {
+			if (INailProcessor.IsInstalledDesign(design.DesignName)) return true;
+			return this.FindChildVariants(design.DesignName)
+				.Any(child => INailProcessor.IsInstalledDesign(child.DesignName));
 		}
 	}
 }

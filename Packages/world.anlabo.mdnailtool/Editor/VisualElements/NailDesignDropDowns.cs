@@ -334,12 +334,14 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		private void Init() {
 			using DBNailDesign dbNailDesign = new();
 			this._designPopupElements = dbNailDesign.collection
-				.Where(design => INailProcessor.IsInstalledDesign(design.DesignName))
+				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
+				.Where(dbNailDesign.IsInstalledDesignGroup)
 				.OrderBy(nailDesign => nailDesign.Id)
 				.Select(design => design.DesignName)
 				.ToList();
 			this._designDisplayNameDictionary = dbNailDesign.collection
-				.Where(design => INailProcessor.IsInstalledDesign(design.DesignName))
+				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
+				.Where(dbNailDesign.IsInstalledDesignGroup)
 				.ToDictionary(
 					nailDesign => nailDesign.DesignName,
 					nailDesign => nailDesign.DisplayNames == null
@@ -453,7 +455,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			// 親
 			NailDesign? parentDesign = dbNailDesign.FindNailDesignByDesignName(parentDesignName);
-			if (parentDesign != null) {
+			if (parentDesign != null && INailProcessor.IsInstalledDesign(parentDesign.DesignName)) {
 				string pDisplay = parentDesign.DisplayNames?.GetValueOrDefault(langKey, parentDesignName) ?? parentDesignName;
 				this._variantDisplayToDesign[parentDesignName] = pDisplay;
 				variantChoices.Add(parentDesignName);
@@ -648,7 +650,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		public void UpdateLanguage() {
 			using DBNailDesign dbNailDesign = new();
 			this._designDisplayNameDictionary = dbNailDesign.collection
-				.Where(design => INailProcessor.IsInstalledDesign(design.DesignName))
+				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
+				.Where(dbNailDesign.IsInstalledDesignGroup)
 				.ToDictionary(
 					nailDesign => nailDesign.DesignName,
 					nailDesign => nailDesign.DisplayNames == null

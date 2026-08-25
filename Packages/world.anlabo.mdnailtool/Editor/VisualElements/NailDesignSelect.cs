@@ -71,7 +71,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			using DBNailDesign dbNailDesign = new();
 			this.LatestInstalledDesignName = dbNailDesign.collection
 				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
-				.Where(design => INailProcessor.IsInstalledDesign(design.DesignName))
+				.Where(dbNailDesign.IsInstalledDesignGroup)
 				.OrderByDescending(design => design.Id)
 				.Select(design => design.DesignName)
 				.FirstOrDefault();
@@ -83,7 +83,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			IOrderedEnumerable<NailDesign> ordered = dbNailDesign.collection
 				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
-				.OrderByDescending(design => INailProcessor.IsInstalledDesign(design.DesignName));
+				.OrderByDescending(dbNailDesign.IsInstalledDesignGroup);
 			ordered = sortByNewest
 				? ordered.ThenByDescending(d => d.Id)
 				         .ThenByDescending(d => useCounts.GetValueOrDefault(d.DesignName, 0))
@@ -135,7 +135,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				nailElement.Add(nailTitle);
 
 				this._list.Add(nailElement);
-				bool isInstalled = INailProcessor.IsInstalledDesign(nailDesign.DesignName);
+				bool isInstalled = dbNailDesign.IsInstalledDesignGroup(nailDesign);
 
 				if (isInstalled) {
 					thumbnailButton.name = nailDesign.DesignName;

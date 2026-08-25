@@ -28,6 +28,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
 
         private List<NailDesign> _allDesigns = new();
         private List<NailDesign> _filteredDesigns = new();
+        private HashSet<string> _installedDesignGroups = new(StringComparer.OrdinalIgnoreCase);
 
         private string _searchText = "";
         private bool _favPriority = false;
@@ -362,6 +363,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
                 .Where(d => string.IsNullOrEmpty(d.ParentVariant))
                 .OrderByDescending(d => d.Id)
                 .ToList();
+            _installedDesignGroups = _allDesigns
+                .Where(db.IsInstalledDesignGroup)
+                .Select(d => d.DesignName)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
             UpdateFilter();
         }
 
@@ -377,7 +382,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
                         match = d.SubTags.Any(t => t.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0);
                     if (!match) return false;
                 }
-                bool isInstalled = INailProcessor.IsInstalledDesign(d.DesignName);
+                bool isInstalled = _installedDesignGroups.Contains(d.DesignName);
                 if (!_showImported && isInstalled) return false;
                 if (!_showNotImported && !isInstalled) return false;
                 if (_activeTags.Count > 0) {
@@ -432,7 +437,7 @@ namespace world.anlabo.mdnailtool.Editor.Window {
         }
 
         private VisualElement CreateCard(NailDesign design) {
-            bool isInstalled = INailProcessor.IsInstalledDesign(design.DesignName);
+            bool isInstalled = _installedDesignGroups.Contains(design.DesignName);
 
             var card = new VisualElement();
             card.AddToClassList("mdn-nail-card");

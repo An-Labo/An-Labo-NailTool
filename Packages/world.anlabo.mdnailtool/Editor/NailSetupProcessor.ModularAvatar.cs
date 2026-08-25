@@ -413,10 +413,11 @@ namespace world.anlabo.mdnailtool.Editor {
 								ToolConsole.Log($"[Warning] Shrink BS definition is invalid: '{shrink.BlendShapeName ?? "(null)"}' targets=0");
 								continue;
 							}
+							string blendShapeName = shrink.BlendShapeName!;
 							bool[] handMask = BuildShrinkTargetMask(shrink.Targets, true);
 							bool[] footMask = BuildShrinkTargetMask(shrink.Targets, false);
-							if (handMask.Any(x => x)) handShrinkBS.Add((shrink.BlendShapeName, handMask));
-							if (footMask.Any(x => x)) footShrinkBS.Add((shrink.BlendShapeName, footMask));
+							if (handMask.Any(x => x)) handShrinkBS.Add((blendShapeName, handMask));
+							if (footMask.Any(x => x)) footShrinkBS.Add((blendShapeName, footMask));
 							if (!handMask.Any(x => x) && !footMask.Any(x => x))
 								ToolConsole.Log($"[Warning] Shrink BS '{shrink.BlendShapeName}' has no valid targets: [{string.Join(", ", shrink.Targets)}]");
 						}
