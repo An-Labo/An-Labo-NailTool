@@ -146,6 +146,71 @@ namespace world.anlabo.mdnailtool.Editor {
 			return copy;
 		}
 
+		// shop.json shape contract: Natural is complete; later roots may contain only changed fingers.
+		// Walk in shape order and overlay each root so legacy complete roots and compact delta roots both work.
+		internal static NailPrefabNodeData[]? ComposeShapeNodes(
+			NailPrefabNodeData[]? allNodes,
+			string targetShape)
+		{
+			if (allNodes == null || allNodes.Length == 0) return null;
+			NailPrefabNodeData[]? effective = null;
+			using DBNailShape db = new();
+			foreach (NailShape shape in db.collection) {
+				string prefix = $"[{shape.ShapeName}]";
+				NailPrefabNodeData[] found = Array.FindAll(allNodes,
+					n => !string.IsNullOrEmpty(n.Name) && n.Name.StartsWith(prefix, StringComparison.Ordinal));
+				if (found.Length > 0) {
+					if (effective == null) effective = CloneNodes(found);
+					else effective = OverlayShapeRoots(effective, found);
+				}
+				if (shape.ShapeName == targetShape) break;
+			}
+			if (effective == null) return null;
+			foreach (NailPrefabNodeData root in effective) RenameShapePrefixRecursive(root, targetShape);
+			return effective;
+		}
+
+		private static NailPrefabNodeData[] OverlayShapeRoots(
+			NailPrefabNodeData[] previous,
+			NailPrefabNodeData[] overlays)
+		{
+			var result = CloneNodes(previous).ToList();
+			foreach (NailPrefabNodeData overlay in overlays) {
+				string rootKey = GetVariantMatchName(overlay.Name);
+				int rootIndex = result.FindIndex(n => GetVariantMatchName(n.Name) == rootKey);
+				if (rootIndex < 0) {
+					result.Add(CloneNode(overlay));
+					continue;
+				}
+				NailPrefabNodeData target = result[rootIndex];
+				ApplyNodeValues(overlay, target);
+				var children = (target.Children ?? Array.Empty<NailPrefabNodeData>()).ToList();
+				foreach (NailPrefabNodeData changedChild in overlay.Children ?? Array.Empty<NailPrefabNodeData>()) {
+					string childKey = GetVariantMatchName(changedChild.Name);
+					int childIndex = children.FindIndex(n => GetVariantMatchName(n.Name) == childKey);
+					if (childIndex >= 0) children[childIndex] = CloneNode(changedChild);
+					else children.Add(CloneNode(changedChild));
+				}
+				target.Children = children.ToArray();
+			}
+			return result.ToArray();
+		}
+
+		private static void ApplyNodeValues(NailPrefabNodeData src, NailPrefabNodeData target) {
+			if (src.LocalPosition != null) target.LocalPosition = CloneArray(src.LocalPosition);
+			if (src.LocalRotation != null) target.LocalRotation = CloneArray(src.LocalRotation);
+			if (src.LocalScale != null) target.LocalScale = CloneArray(src.LocalScale);
+			if (src.BlendShapeWeights != null) target.BlendShapeWeights = new Dictionary<string, float>(src.BlendShapeWeights);
+			if (src.BoundsCenter != null) target.BoundsCenter = CloneArray(src.BoundsCenter);
+			if (src.BoundsExtent != null) target.BoundsExtent = CloneArray(src.BoundsExtent);
+		}
+
+		private static void RenameShapePrefixRecursive(NailPrefabNodeData node, string shape) {
+			node.Name = $"[{shape}]{GetVariantMatchName(node.Name)}";
+			foreach (NailPrefabNodeData child in node.Children ?? Array.Empty<NailPrefabNodeData>())
+				RenameShapePrefixRecursive(child, shape);
+		}
+
 		internal static GameObject ResolveShapePrefab(GameObject basePrefab, string targetShape, NailPrefabNodeData[]? nailNodes = null) {
 			string prefabPath = AssetDatabase.GetAssetPath(basePrefab);
 
@@ -153,14 +218,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			// fallback 無しだと Process は Point で組み直すのに Preview は Natural のまま残り「scene 試着と着用結果で sizing がズレる」事故になる.
 			if (string.IsNullOrEmpty(prefabPath)) {
 				if (nailNodes != null && nailNodes.Length > 0) {
-					NailPrefabNodeData[]? currentShapeNodes = null;
-					using DBNailShape dbFb = new();
-					foreach (NailShape ns in dbFb.collection) {
-						string p = $"[{ns.ShapeName}]";
-						NailPrefabNodeData[] found = Array.FindAll(nailNodes, n => n.Name != null && n.Name.StartsWith(p));
-						if (found.Length > 0) currentShapeNodes = found;
-						if (ns.ShapeName == targetShape) break;
-					}
+					NailPrefabNodeData[]? currentShapeNodes = ComposeShapeNodes(nailNodes, targetShape);
 					if (currentShapeNodes != null) {
 						return NailDesigns.NailPrefabBuilder.BuildFromNodes(currentShapeNodes, basePrefab.name);
 					}

@@ -380,14 +380,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			if (string.IsNullOrEmpty(prefabPath)) {
 				NailPrefabNodeData[]? allNodes = this.SelectedBlendShapeVariantNailNodes ?? this.AvatarVariationData?.NailNodes;
 				if (allNodes != null && allNodes.Length > 0) {
-					NailPrefabNodeData[]? currentShapeNodes = null;
-					using DBNailShape dbNailShapeFb = new();
-					foreach (NailShape ns in dbNailShapeFb.collection) {
-						string p = $"[{ns.ShapeName}]";
-						NailPrefabNodeData[] found = System.Array.FindAll(allNodes, n => n.Name != null && n.Name.StartsWith(p));
-						if (found.Length > 0) currentShapeNodes = found;
-						if (ns.ShapeName == this.NailShapeName) break;
-					}
+					NailPrefabNodeData[]? currentShapeNodes = ComposeShapeNodes(allNodes, this.NailShapeName);
 					if (currentShapeNodes != null) {
 						Object.DestroyImmediate(this.NailPrefab);
 						this.NailPrefab = NailPrefabBuilder.BuildFromNodes(currentShapeNodes, this.SelectedBlendShapeVariantName ?? this.AvatarVariationData!.VariationName);
