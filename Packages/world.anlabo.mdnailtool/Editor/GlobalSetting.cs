@@ -64,6 +64,22 @@ namespace world.anlabo.mdnailtool.Editor
 		}
 
 		private const string GENERATE_MATERIAL_KEY = "world.anlabo.mdnailtool.generate_material";
+		private const string DIRECT_MATERIAL_ENABLED_KEY = "world.anlabo.mdnailtool.direct_material_enabled";
+		private const string CUSTOM_NAIL_TEXTURE_PATH_KEY = "world.anlabo.mdnailtool.custom_nail_texture_path";
+
+		internal static bool HasDirectMaterialPreference => EditorPrefs.HasKey(DIRECT_MATERIAL_ENABLED_KEY);
+
+		internal static bool DirectMaterialEnabled
+		{
+			get => EditorPrefs.GetBool(DIRECT_MATERIAL_ENABLED_KEY, false);
+			set => EditorPrefs.SetBool(DIRECT_MATERIAL_ENABLED_KEY, value);
+		}
+
+		internal static string CustomNailTexturePath
+		{
+			get => EditorPrefs.GetString(CUSTOM_NAIL_TEXTURE_PATH_KEY, string.Empty);
+			set => EditorPrefs.SetString(CUSTOM_NAIL_TEXTURE_PATH_KEY, value ?? string.Empty);
+		}
 
 		internal static bool GenerateMaterial
 		{
@@ -179,13 +195,6 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetBool(BAKE_BLENDSHAPES_KEY, value);
 		}
 
-		private const string SYNC_BLENDSHAPES_WITH_MA_KEY = "world.anlabo.mdnailtool.sync_blendshapes_with_ma";
-		internal static bool SyncBlendShapesWithMA
-		{
-			get => true;
-			set { }
-		}
-
 		private const string AUTO_LINK_SHRINK_BS_KEY = "world.anlabo.mdnailtool.auto_link_shrink_bs";
 		internal static bool AutoLinkShrinkBS
 		{
@@ -205,15 +214,18 @@ namespace world.anlabo.mdnailtool.Editor
 			set => EditorPrefs.SetInt(NAIL_DESIGN_SORT_MODE_KEY, (int)value);
 		}
 
-		private const string ENABLE_PENETRATION_CORRECTION_KEY = "world.anlabo.mdnailtool.enable_penetration_correction";
-		internal static bool EnablePenetrationCorrection
+		private const string ENABLE_BETA_FEATURES_KEY = "world.anlabo.mdnailtool.enable_beta_features";
+		internal static bool EnableBetaFeatures
 		{
-			get
-			{
-				if (!EditorPrefs.HasKey(ENABLE_PENETRATION_CORRECTION_KEY)) return false;
-				return EditorPrefs.GetBool(ENABLE_PENETRATION_CORRECTION_KEY);
-			}
-			set => EditorPrefs.SetBool(ENABLE_PENETRATION_CORRECTION_KEY, value);
+			get => EditorPrefs.GetBool(ENABLE_BETA_FEATURES_KEY, false);
+			set => EditorPrefs.SetBool(ENABLE_BETA_FEATURES_KEY, value);
+		}
+
+		private const string SHOW_TERM_HELP_KEY = "world.anlabo.mdnailtool.show_term_help";
+		internal static bool ShowTermHelp
+		{
+			get => EditorPrefs.GetBool(SHOW_TERM_HELP_KEY, true);
+			set => EditorPrefs.SetBool(SHOW_TERM_HELP_KEY, value);
 		}
 
 		private const string ENABLE_ADDITIONAL_MATERIALS_KEY = "world.anlabo.mdnailtool.enable_additional_materials";

@@ -49,7 +49,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._mergeAnLaboExpressionMenu?.SetEnabled(useMA && this._generateExpressionMenu.value);
 			}
 			this._bakeBlendShapes?.SetEnabled(useMA);
-			this._syncBlendShapesWithMA?.SetEnabled(useMA && (this._bakeBlendShapes?.value == true));
 			if (this._autoLinkShrinkBS != null) {
 				bool en = useMA && (this._bakeBlendShapes?.value == true);
 				this._autoLinkShrinkBS.SetEnabled(en);
@@ -147,9 +146,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			EnsureShaderPresetUserFolder();
 			string folderPath = MDNailToolDefines.SHADER_PRESET_USER_PATH.TrimEnd('/');
-			UnityEngine.Object? folder = MDNailToolAssetLoader.LoadAssetSafe<UnityEngine.Object>(folderPath);
+			AssetDatabase.ImportAsset(folderPath, ImportAssetOptions.ForceSynchronousImport);
+			DefaultAsset? folder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(folderPath);
 			if (folder != null)
 			{
+				EditorUtility.FocusProjectWindow();
 				Selection.activeObject = folder;
 				EditorGUIUtility.PingObject(folder);
 			}

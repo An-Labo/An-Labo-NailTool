@@ -13,6 +13,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 {
 	internal sealed class FAQWindow : EditorWindow
 	{
+		private const string AvatarRequestUrl = "https://anlabo.world/manual/#avatar-request";
+		private const string TermsUrl = "https://anlabo.world/manual/#terms";
 		private const float Width = 620f;
 		private const float Height = 560f;
 
@@ -51,20 +53,24 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			StyleSheet? uss = MDNailToolAssetLoader.LoadByGuid<StyleSheet>(MDNailToolGuids.WindowUss, MDNailToolGuids.WindowUssPath);
 			if (uss != null) rootVisualElement.styleSheets.Add(uss);
+			BuildContent(rootVisualElement);
+		}
 
-			rootVisualElement.AddToClassList("mdn-faq-root");
+		internal static void BuildContent(VisualElement root)
+		{
+			root.AddToClassList("mdn-faq-root");
 
 			Label title = new(LanguageManager.S("window.faq_title") ?? "FAQ");
 			title.AddToClassList("mdn-faq-title");
-			rootVisualElement.Add(title);
+			root.Add(title);
 
 			Label lead = new(LanguageManager.S("window.faq_lead") ?? "Please check these items first.");
 			lead.AddToClassList("mdn-faq-lead");
-			rootVisualElement.Add(lead);
+			root.Add(lead);
 
 			ScrollView scroll = new(ScrollViewMode.Vertical);
 			scroll.AddToClassList("mdn-faq-scroll");
-			rootVisualElement.Add(scroll);
+			root.Add(scroll);
 
 			List<FAQEntry> entries = LoadEntries();
 			if (entries.Count == 0)
@@ -81,38 +87,55 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					Foldout item = new() { text = GetLocalized(entry.title, lang, entry.id), value = false };
 					item.AddToClassList("mdn-faq-item");
 					item.AddToClassList("mdn-faq-foldout");
+					VisualElement answerPanel = new();
+					answerPanel.AddToClassList("mdn-faq-answer-panel");
 
 					Label a = new(GetLocalized(entry.body, lang, string.Empty));
 					a.AddToClassList("mdn-faq-answer");
-					item.Add(a);
+					answerPanel.Add(a);
+
+					string url = GetLocalized(entry.link, lang, string.Empty);
+					if (!string.IsNullOrWhiteSpace(url))
+					{
+						Label link = new(GetLocalized(entry.linkLabel, lang, url));
+						link.AddToClassList("mdn-faq-link");
+						link.RegisterCallback<ClickEvent>(_ => Application.OpenURL(url));
+						answerPanel.Add(link);
+					}
+					item.Add(answerPanel);
 
 					scroll.Add(item);
 				}
-			}
 
-			AddMoreFaqItem(scroll);
+				AddExternalGuidance(scroll);
+			}
 		}
 
-		private static void AddMoreFaqItem(VisualElement parent)
+		private static void AddExternalGuidance(VisualElement parent)
 		{
-			VisualElement item = new();
-			item.AddToClassList("mdn-faq-item");
-			item.AddToClassList("mdn-faq-more-item");
+			VisualElement card = new();
+			card.AddToClassList("mdn-faq-external-card");
 
-			Label title = new(LanguageManager.S("window.faq_more_title") ?? "Check other FAQs");
-			title.AddToClassList("mdn-faq-question");
-			item.Add(title);
+			Label description = new(LanguageManager.S("window.faq_external_description")
+			                        ?? "For avatar support requests and terms of use, please check the website.");
+			description.AddToClassList("mdn-faq-external-description");
+			card.Add(description);
 
-			Label body = new(LanguageManager.S("window.faq_more_body") ?? "Open the web FAQ for additional questions and the latest information.");
-			body.AddToClassList("mdn-faq-answer");
-			item.Add(body);
+			VisualElement links = new();
+			links.AddToClassList("mdn-faq-external-links");
+			links.Add(CreateExternalLink(LanguageManager.S("window.faq_avatar_request_link") ?? "Avatar support requests", AvatarRequestUrl));
+			links.Add(CreateExternalLink(LanguageManager.S("window.faq_terms_link") ?? "Terms of use", TermsUrl));
+			card.Add(links);
+			parent.Add(card);
+		}
 
-			Label link = new(LanguageManager.S("window.faq_more_link") ?? "Open FAQ page");
+		private static Label CreateExternalLink(string text, string url)
+		{
+			Label link = new(text);
 			link.AddToClassList("mdn-faq-link");
-			link.RegisterCallback<ClickEvent>(_ => Application.OpenURL(LanguageManager.S("link.contact")));
-			item.Add(link);
-
-			parent.Add(item);
+			link.AddToClassList("mdn-faq-external-link");
+			link.RegisterCallback<ClickEvent>(_ => Application.OpenURL(url));
+			return link;
 		}
 
 		private static List<FAQEntry> LoadEntries()
@@ -148,6 +171,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			public bool includeInTool;
 			public Dictionary<string, string>? title;
 			public Dictionary<string, string>? body;
+			public Dictionary<string, string>? link;
+			public Dictionary<string, string>? linkLabel;
 		}
 	}
 }

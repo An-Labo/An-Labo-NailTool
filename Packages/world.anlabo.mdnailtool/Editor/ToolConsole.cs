@@ -14,11 +14,15 @@ namespace world.anlabo.mdnailtool.Editor
 	internal static class ToolConsole
 	{
 		private static readonly List<string> Buffer = new();
+		private static readonly List<string> History = new();
+		private static string? LatestSupportInfoSnapshot;
 		internal static Action<string>? OnLog;
 
 		internal static void Log(string message)
 		{
 			string line = $"[{DateTime.Now:HH:mm:ss}] {message}";
+			History.Add(line);
+			if (History.Count > 500) History.RemoveAt(0);
 
 			// Unity Console には Error/Warning のみ出力 (通常 Log は UI Console のみ).
 			// 行頭 prefix で判定する (e.Message に [Error] が含まれる等の誤判定を回避).
@@ -46,6 +50,22 @@ namespace world.anlabo.mdnailtool.Editor
 		internal static void Clear()
 		{
 			Buffer.Clear();
+			History.Clear();
+		}
+
+		internal static string[] GetHistory()
+		{
+			return History.ToArray();
+		}
+
+		internal static void SetSupportInfoSnapshot(string supportInfo)
+		{
+			if (!string.IsNullOrWhiteSpace(supportInfo)) LatestSupportInfoSnapshot = supportInfo;
+		}
+
+		internal static string? GetSupportInfoSnapshot()
+		{
+			return LatestSupportInfoSnapshot;
 		}
 
 		internal static void Error(string subsystem, string message, Exception? cause = null,

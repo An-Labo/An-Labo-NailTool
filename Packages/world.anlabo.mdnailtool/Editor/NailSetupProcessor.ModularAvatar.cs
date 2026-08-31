@@ -316,32 +316,6 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 					}
 
-					// 既存の複数BlendShape同時適用時のめり込み補正用Body。ウェイト転送フラグとは独立して解決する。
-					SkinnedMeshRenderer? bodySmrForPushOut = null;
-					if (this.EnablePenetrationCorrection && activeVariants != null && activeVariants.Length > 1)
-					{
-						string? syncSmrName = activeVariants
-							.Select(v => v.SyncSourceSmrName)
-							.FirstOrDefault(n => !string.IsNullOrEmpty(n));
-						if (!string.IsNullOrEmpty(syncSmrName))
-						{
-							Transform? bodyTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
-								.FirstOrDefault(t => t.name == syncSmrName);
-							if (bodyTransform == null)
-								bodyTransform = this.Avatar.transform.GetComponentsInChildren<Transform>(true)
-									.FirstOrDefault(t => string.Equals(t.name, syncSmrName, StringComparison.OrdinalIgnoreCase));
-							if (bodyTransform != null)
-								bodySmrForPushOut = bodyTransform.GetComponent<SkinnedMeshRenderer>();
-						}
-						if (bodySmrForPushOut == null)
-						{
-							SkinnedMeshRenderer? visemeSmr = this.Avatar.VisemeSkinnedMesh;
-							bodySmrForPushOut = this.Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
-								.Where(smr => smr != visemeSmr && smr.sharedMesh != null && smr.sharedMesh.blendShapeCount > 0)
-								.OrderByDescending(smr => smr.sharedMesh!.blendShapeCount)
-								.FirstOrDefault();
-						}
-					}
 					// 結合後の爪へ、最寄りの体表面三角形から補間したウェイトを転送する。
 					// 手足それぞれで対象ボーンを最も多く共有するSMRを転送元として選ぶ。
 					SkinnedMeshRenderer? ResolveWeightSource(IEnumerable<Transform?> nailObjects, bool isHand)
@@ -430,8 +404,6 @@ namespace world.anlabo.mdnailtool.Editor {
 						handsIsLeft,
 						handWeightSource,
 						handShrinkBS.Count > 0 ? handShrinkBS.ToArray() : null,
-						this.EnablePenetrationCorrection,
-						bodySmrForPushOut,
 						handWeightTransferMask);
 					ToolConsole.Log($"  BakeBS hand result: {(handCombinedGo == null ? "(null)" : handCombinedGo.name)} BS frames={(handCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 
@@ -445,9 +417,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							footVariants.Count > 0 ? footVariants.ToArray() : null,
 							feetIsLeft,
 							footWeightSource,
-							footShrinkBS.Count > 0 ? footShrinkBS.ToArray() : null,
-							this.EnablePenetrationCorrection,
-						bodySmrForPushOut);
+							footShrinkBS.Count > 0 ? footShrinkBS.ToArray() : null);
 						ToolConsole.Log($"  BakeBS foot result: {(footCombinedGo == null ? "(null)" : footCombinedGo.name)} BS frames={(footCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 					}
 
@@ -737,7 +707,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				// avatar-levelブレンドシェイプバリアントのBlendShapeSync設定 (nailPrefabObjectがアバター階層下に配置された後に実行する)
 				AvatarBlendShapeVariant[]? syncVariants = this.AvatarVariationData.BlendShapeVariants ?? this.AvatarEntity?.BlendShapeVariants;
 				AvatarShrinkBlendShapeVariant[]? shrinkSyncVariants = this.AvatarVariationData.ShrinkBlendShapeVariants ?? this.AvatarEntity?.ShrinkBlendShapeVariants;
-				if (this.SyncBlendShapesWithMA && (syncVariants != null || shrinkSyncVariants != null))
+				if (syncVariants != null || shrinkSyncVariants != null)
 				{
 					// BakeAndCombineで生成されたCombined SMRを含む全子オブジェクトを対象
 					foreach (Transform child in nailPrefabObject.transform)

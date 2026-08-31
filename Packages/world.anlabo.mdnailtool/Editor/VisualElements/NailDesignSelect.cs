@@ -15,6 +15,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 	public class NailDesignSelect : VisualElement, ILocalizedElement {
 
 		public event Action<string>? OnSelectNail;
+		public event Action? OnSelectExternalNail;
 		public event Action? OnSearchButtonClicked;
 		public string? LatestInstalledDesignName { get; private set; }
 
@@ -80,6 +81,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			IReadOnlyDictionary<string, int> useCounts = GlobalSetting.DesignUseCount;
 			string langKey = LanguageManager.CurrentLanguageData.language;
 			bool sortByNewest = GlobalSetting.NailDesignSort == GlobalSetting.NailDesignSortMode.Newest;
+
+			if (GlobalSetting.EnableBetaFeatures) this.AddExternalNailCard();
 
 			IOrderedEnumerable<NailDesign> ordered = dbNailDesign.collection
 				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
@@ -166,6 +169,19 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 					});
 				}
 			}
+		}
+
+		private void AddExternalNailCard()
+		{
+			VisualElement card = new();
+			card.AddToClassList("mdn-external-nail-card");
+			Button button = new(() => this.OnSelectExternalNail?.Invoke()) { text = "+" };
+			button.AddToClassList("mdn-external-nail-card-button");
+			card.Add(button);
+			Label title = new(LanguageManager.S("window.external_nail_card") ?? "Set Manually");
+			title.AddToClassList("main-window-nail-design-name");
+			card.Add(title);
+			this._list.Add(card);
 		}
 
 		private void SelectNail(EventBase evt) {

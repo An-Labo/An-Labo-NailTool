@@ -34,7 +34,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			sb.AppendLine($"NailPrefab: {nailPrefabName}");
 			sb.AppendLine($"ForModularAvatar: {this.ForModularAvatar}");
 			sb.AppendLine($"BakeBlendShapes: {this.BakeBlendShapes}");
-			sb.AppendLine($"SyncBlendShapesWithMA: {this.SyncBlendShapesWithMA}");
 			sb.AppendLine($"ArmatureScaleCompensation: {this.ArmatureScaleCompensation}");
 			sb.AppendLine($"UseFootNail: {this.UseFootNail}");
 			sb.AppendLine($"GenerateMaterial: {this.GenerateMaterial}");

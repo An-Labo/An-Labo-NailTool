@@ -7,5 +7,10 @@ namespace world.anlabo.mdnailtool.Editor {
 		private static void ShowMDNailToolWindow() {
 			MDNailToolWindow.ShowWindow();
 		}
+
+		[MenuItem("An-Labo/困ったとき (Help)", false, 20)]
+		private static void ShowSupportWindow() {
+			SupportWindow.ShowWindow();
+		}
 	}
 }

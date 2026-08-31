@@ -62,6 +62,9 @@ namespace world.anlabo.mdnailtool.Editor
 		// ⑨未購入案内用: ネイルラボ (コレクションサイト)
 		public const string ANLABO_NAILLAB_URL = "https://anlabo.world/nail-lab/";
 		public static string GENERATED_ASSET_PATH => ROOT_ASSET_PATH + "Generated/";
+		public static string CUSTOM_NAIL_ROOT_PATH => ROOT_ASSET_PATH + "CustomNails/";
+		public static string CUSTOM_NAIL_TEXTURE_PATH => CUSTOM_NAIL_ROOT_PATH + "Texture/";
+		public static string CUSTOM_NAIL_GENERATED_PATH => CUSTOM_NAIL_ROOT_PATH + "Shader/";
 		public static string BACKUP_PATH => ROOT_ASSET_PATH + "Backup/";
 		public static string REPORT_PATH => ROOT_ASSET_PATH + "Report/";
 

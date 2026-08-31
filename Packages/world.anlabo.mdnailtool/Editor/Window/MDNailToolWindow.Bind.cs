@@ -27,13 +27,44 @@ namespace world.anlabo.mdnailtool.Editor.Window
 	{
 		private void BindCoreFields()
 		{
-			this._enableDirectMaterial = this.rootVisualElement.Q<Toggle>("enable-direct-material");
+			Toggle? showTermHelp = this.rootVisualElement.Q<Toggle>("show-term-help");
+			if (showTermHelp != null)
+			{
+				showTermHelp.SetValueWithoutNotify(GlobalSetting.ShowTermHelp);
+				showTermHelp.RegisterValueChangedCallback(evt =>
+				{
+					GlobalSetting.ShowTermHelp = evt.newValue;
+					this.UpdateTermHelpVisibility();
+				});
+				this.rootVisualElement.Q<LocalizedLabel>("label-show-term-help")?.RegisterCallback<ClickEvent>(_ =>
+					showTermHelp.value = !showTermHelp.value);
+			}
+			this.InstallTermHelpButtons();
 
-			// ObjectField を C# 側で生成してトグル行に追加
-			var directMaterialRow = this.rootVisualElement.Q<VisualElement>("direct-material-row");
+			this._enableBetaFeatures = this.rootVisualElement.Q<Toggle>("enable-beta-features");
+			this._betaFeaturesArea = this.rootVisualElement.Q<VisualElement>("beta-features-area");
+			if (this._enableBetaFeatures != null)
+			{
+				this._enableBetaFeatures.SetValueWithoutNotify(GlobalSetting.EnableBetaFeatures);
+				this._enableBetaFeatures.RegisterValueChangedCallback(evt =>
+				{
+					GlobalSetting.EnableBetaFeatures = evt.newValue;
+					this.UpdateBetaFeaturesVisibility();
+				});
+				var betaLabel = this.rootVisualElement.Q<LocalizedLabel>("label-enable-beta-features");
+				betaLabel?.RegisterCallback<ClickEvent>(_ =>
+					this._enableBetaFeatures.value = !this._enableBetaFeatures.value);
+			}
+			this.UpdateBetaFeaturesVisibility();
+
+			this._enableDirectMaterial = this.rootVisualElement.Q<Toggle>("enable-direct-material");
+			this._directMaterialToggleRow = this.rootVisualElement.Q<VisualElement>("direct-material-row");
+
+			// ObjectField を C# 側で生成してトグル直下の行に追加
+			this._directMaterialFieldRow = this.rootVisualElement.Q<VisualElement>("direct-material-field-row");
 			this._materialObjectField = new ObjectField {
 				name = "material-object",
-				label = "",
+				label = S("window.direct_material_field") ?? "Material",
 				objectType = typeof(Material),
 				style = {
 					flexGrow = 1,
@@ -41,12 +72,51 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				}
 			};
 			this._materialObjectField.RegisterValueChangedCallback(this.OnChangeMaterial);
-			directMaterialRow?.Add(this._materialObjectField);
+			this._directMaterialFieldRow?.Add(this._materialObjectField);
+
+			this._customNailTextureRow = this.rootVisualElement.Q<VisualElement>("custom-nail-texture-row");
+			this._customNailTextureSelect = new DropdownField { label = S("window.custom_nail_texture") ?? "Custom nail texture" };
+			this._customNailTextureSelect.AddToClassList("mdn-custom-nail-texture-select");
+			this._customNailTextureSelect.RegisterValueChangedCallback(this.OnChangeCustomNailTexture);
+			this._customNailTextureRow?.Add(this._customNailTextureSelect);
+			Button refreshCustomNails = new(this.RebuildCustomNailTextures) { text = "↻" };
+			refreshCustomNails.AddToClassList("mdn-shader-preset-btn");
+			refreshCustomNails.tooltip = S("window.custom_nail_refresh") ?? "Reload textures";
+			this._customNailTextureRow?.Add(refreshCustomNails);
+			Button pingCustomNailFolder = new(() =>
+			{
+				CustomNailTextureService.EnsureFolder();
+				UnityEngine.Object? folder = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(MDNailToolDefines.CUSTOM_NAIL_TEXTURE_PATH.TrimEnd('/'));
+				if (folder == null) return;
+				Selection.activeObject = folder;
+				EditorGUIUtility.PingObject(folder);
+			});
+			pingCustomNailFolder.AddToClassList("mdn-shader-preset-btn");
+			pingCustomNailFolder.AddToClassList("mdn-shader-preset-btn-folder");
+			pingCustomNailFolder.tooltip = S("window.custom_nail_ping_folder") ?? "Show folder in Project";
+			this._customNailTextureRow?.Add(pingCustomNailFolder);
+			Button openCustomNailFolder = new(() =>
+			{
+				CustomNailTextureService.EnsureFolder();
+				EditorUtility.RevealInFinder(MDNailToolDefines.CUSTOM_NAIL_TEXTURE_PATH);
+			}) { text = "…" };
+			openCustomNailFolder.AddToClassList("mdn-shader-preset-btn");
+			openCustomNailFolder.tooltip = S("window.custom_nail_open_folder") ?? "Open folder";
+			this._customNailTextureRow?.Add(openCustomNailFolder);
+			this.RebuildCustomNailTextures();
 
 			if (this._enableDirectMaterial != null)
 			{
-				this._enableDirectMaterial.SetValueWithoutNotify(false);
-				this._materialObjectField.style.display = DisplayStyle.None;
+				using DBNailDesign nailDesignDb = new();
+				bool hasInstalledAnLaboNail = nailDesignDb.collection.Any(nailDesignDb.IsInstalledDesignGroup);
+				bool directMaterialEnabled = GlobalSetting.HasDirectMaterialPreference
+					? GlobalSetting.DirectMaterialEnabled
+					: !hasInstalledAnLaboNail;
+				this._enableDirectMaterial.SetValueWithoutNotify(directMaterialEnabled);
+				if (this._directMaterialFieldRow != null)
+					this._directMaterialFieldRow.style.display = directMaterialEnabled ? DisplayStyle.Flex : DisplayStyle.None;
+				if (this._customNailTextureRow != null)
+					this._customNailTextureRow.style.display = directMaterialEnabled && GlobalSetting.EnableBetaFeatures ? DisplayStyle.Flex : DisplayStyle.None;
 				this._enableDirectMaterial.RegisterValueChangedCallback(this.OnChangeEnableDirectMaterial);
 				var lblEnableDirectMat = this.rootVisualElement.Q<LocalizedLabel>("label-enable-direct-material");
 				lblEnableDirectMat?.RegisterCallback<ClickEvent>(_ => {
@@ -56,6 +126,46 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			this._avatarObjectField = this.rootVisualElement.Q<LocalizedObjectField>("avatar-object");
 			this._avatarObjectField.RegisterValueChangedCallback(this.OnChangeAvatar);
+		}
+
+		private void InstallTermHelpButtons()
+		{
+			(string buttonName, string helpId)[] terms =
+			{
+				("term-help-shader-preset", "term_help.shader_preset"),
+				("term-help-modular-avatar", "term_help.modular_avatar"),
+				("term-help-expression-menu", "term_help.expression_menu"),
+				("term-help-bake-blendshapes", "term_help.blendshape"),
+				("term-help-shrink-blendshape", "term_help.blendshape"),
+			};
+
+			foreach ((string buttonName, string helpId) in terms)
+			{
+				Button? helpButton = this.rootVisualElement.Q<Button>(buttonName);
+				if (helpButton != null) helpButton.tooltip = S(helpId) ?? "";
+			}
+
+			this.UpdateTermHelpVisibility();
+		}
+
+		private void UpdateTermHelpVisibility()
+		{
+			this.rootVisualElement.Query<Button>(className: "mdn-term-help-button").ForEach(button =>
+				button.style.display = GlobalSetting.ShowTermHelp ? DisplayStyle.Flex : DisplayStyle.None);
+		}
+
+		private void UpdateBetaFeaturesVisibility()
+		{
+			bool betaEnabled = this._enableBetaFeatures?.value == true;
+			if (this._betaFeaturesArea != null)
+				this._betaFeaturesArea.style.display =
+					betaEnabled ? DisplayStyle.Flex : DisplayStyle.None;
+			if (this._directMaterialToggleRow != null)
+				this._directMaterialToggleRow.style.display = betaEnabled ? DisplayStyle.None : DisplayStyle.Flex;
+			this._nailDesignSelect?.Init();
+			if (this._customNailTextureRow != null)
+				this._customNailTextureRow.style.display = betaEnabled && this._enableDirectMaterial?.value == true
+					? DisplayStyle.Flex : DisplayStyle.None;
 		}
 		private void BindAvatarUI()
 		{
@@ -85,7 +195,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			this._nailDesignSelect = this.rootVisualElement.Q<NailDesignSelect>("nail-select");
 			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
+			this._nailDesignSelect.OnSelectExternalNail += this.OnSelectExternalNail;
 			this._nailDesignSelect.OnSearchButtonClicked += this.ShowNailSearchWindow;
+			// UXML生成時より後に復元されたベータ設定を反映し、再起動時も先頭カードを再構築する。
+			this.UpdateBetaFeaturesVisibility();
 
 			this._nailPreview = this.rootVisualElement.Q<NailPreview>("nail-preview");
 			this._nailPreviewController = new NailPreviewController(this._nailPreview);
@@ -236,20 +349,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._armatureScaleCompensation.parent.style.display = DisplayStyle.None;
 			}
 
-			this._penetrationCorrection = this.rootVisualElement.Q<Toggle>("enable-penetration-correction");
-			if (this._penetrationCorrection != null)
-			{
-				this._penetrationCorrection.SetValueWithoutNotify(GlobalSetting.EnablePenetrationCorrection);
-				this._penetrationCorrection.RegisterValueChangedCallback(evt => {
-					GlobalSetting.EnablePenetrationCorrection = evt.newValue;
-				});
-				var lblPenetration = this.rootVisualElement.Q<LocalizedLabel>("label-penetration-correction");
-				lblPenetration?.RegisterCallback<ClickEvent>(_ => {
-					if (this._penetrationCorrection != null && this._penetrationCorrection.enabledSelf)
-						this._penetrationCorrection.value = !this._penetrationCorrection.value;
-				});
-			}
-
 			this._bakeBlendShapeGeneratedList = this.rootVisualElement.Q<Label>("bake-blendshape-generated-list");
 
 			this._bakeBlendShapes = this.rootVisualElement.Q<Toggle>("bake-blendshapes");
@@ -287,14 +386,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					if (this._autoLinkShrinkBS != null && this._autoLinkShrinkBS.enabledSelf)
 						this._autoLinkShrinkBS.value = !this._autoLinkShrinkBS.value;
 				});
-			}
-
-			// MA BlendShape Sync（常時ON、トグル非表示）
-			this._syncBlendShapesWithMA = this.rootVisualElement.Q<Toggle>("sync-blendshapes-with-ma");
-			if (this._syncBlendShapesWithMA != null)
-			{
-				this._syncBlendShapesWithMA.SetValueWithoutNotify(true);
-				this._syncBlendShapesWithMA.parent.style.display = DisplayStyle.None;
 			}
 
 			this.UpdateMASubOptionsVisibility(GlobalSetting.UseModularAvatar);
@@ -376,13 +467,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (copyBtn != null) copyBtn.text = S("window.debug_copy") ?? "Copy Support Info";
 			copyBtn?.RegisterCallback<ClickEvent>(_ =>
 			{
-				string text = this.BuildConsoleDiagnosticInfo();
-				string toolLog = this.BuildToolConsoleLog();
-				if (!string.IsNullOrWhiteSpace(toolLog))
-				{
-					text += toolLog;
-				}
-				EditorGUIUtility.systemCopyBuffer = text;
+				EditorGUIUtility.systemCopyBuffer = this.BuildSupportInfo();
 			});
 
 

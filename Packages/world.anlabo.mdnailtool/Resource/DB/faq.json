@@ -8,21 +8,8 @@
       "en": "New nails do not appear in the list"
     },
     "body": {
-      "ja": "まず、An-Labo NailToolを最新版に更新してください。\n新しいネイルは、古いバージョンのツールでは一覧に表示されない場合があります。\n\nVCCまたはALCOMでご利用中のプロジェクトを開き、An-Labo NailToolに更新がないか確認してください。\n更新後、ネイルツールを起動しても表示されない場合、Unityを再起動してもう一度お試しください。\n\nそれでも表示されない場合は、購入した商品のzip内にあるunitypackageがすべてインポートされているか確認してください。\n商品によっては複数のunitypackageが含まれている場合があります。",
-      "en": "First, update An-Labo NailTool to the latest version.\nNew nails may not appear in older versions of the tool.\n\nOpen your project in VCC or ALCOM and check whether An-Labo NailTool has an update available.\nIf the nails still do not appear after updating, restart Unity and try again.\n\nIf the issue persists, check that all unitypackage files included in the purchased product zip have been imported. Some products include multiple unitypackage files."
-    }
-  },
-  {
-    "id": "copy-support-info",
-    "priority": 20,
-    "includeInTool": true,
-    "title": {
-      "ja": "お問い合わせ時に必要な情報",
-      "en": "Information needed when contacting support"
-    },
-    "body": {
-      "ja": "Unity上で問題が起きている場合は、ネイルツール内の「詳細設定 > トラブルシューティング > サポート情報をコピー」で取得した情報を添えてお問い合わせください。\n\nサポート情報には、NailToolのバージョン、Unityのバージョン、選択中のアバター、設定内容、Unity Consoleのエラー/警告などが含まれます。",
-      "en": "If the issue occurs in Unity, include the information copied from Detailed Settings > Troubleshooting > Copy Support Info in NailTool when contacting support.\n\nThe support info includes the NailTool version, Unity version, selected avatar, option values, and Unity Console errors/warnings."
+      "ja": "まず、An-Labo NailToolを最新版に更新してください。\n新しいネイルは、古いバージョンのツールでは一覧に表示されない場合があります。\n\nVCCでご利用中のプロジェクトを開き、An-Labo NailToolに更新がないか確認してください。\n更新後、ネイルツールを起動しても表示されない場合、Unityを再起動してもう一度お試しください。\n\nそれでも表示されない場合は、購入した商品のzip内にあるunitypackageがすべてインポートされているか確認してください。\n商品によっては複数のunitypackageが含まれている場合があります。",
+      "en": "First, update An-Labo NailTool to the latest version.\nNew nails may not appear in older versions of the tool.\n\nOpen your project in VCC and check whether An-Labo NailTool has an update available.\nIf the nails still do not appear after updating, restart Unity and try again.\n\nIf the issue persists, check that all unitypackage files included in the purchased product zip have been imported. Some products include multiple unitypackage files."
     }
   },
   {
@@ -47,8 +34,102 @@
       "en": "Make nails follow BlendShapes"
     },
     "body": {
-      "ja": "ModularAvatarを使用する場合は、「ネイルを結合し、BlendShapesに自動で追従する」をONにすると、対応しているBlendShape用のネイルが生成されます。\n\n生成されるBlendShape名は、設定欄の下に表示されます。\nShrink系BlendShapeにも追従させたい場合は、「ShrinkのBlendShapeにも追従する」をONにしてください。",
-      "en": "When using ModularAvatar, enable Merge nails and auto-follow body BlendShapes to generate nails for supported BlendShapes.\n\nThe generated BlendShape names are shown below the option.\nTo also follow Shrink BlendShapes, enable Auto-follow Shrink BlendShapes."
+      "ja": "NailTool左上の「☰ 設定」を開き、設定欄の「ModularAvatarを使用して着用」を確認してください。\n\n「ModularAvatarを使用して着用」をONにし、その下の「ネイルを結合し、BlendShapeに自動で追従する」をONにすると、対応しているBlendShape用のネイルが生成されます。生成されるBlendShape名は、この設定の下に表示されます。Shrink系BlendShapeにも追従させたい場合は、さらに下の「ShrinkのBlendShapeにも追従する」をONにしてください。",
+      "en": "Open ☰ Settings in the upper-left of NailTool and find Wear with ModularAvatar.\n\nEnable Wear with ModularAvatar, then enable Merge nails and auto-follow body BlendShapes below it to generate nails for supported BlendShapes. The generated BlendShape names are shown below this setting. To also follow Shrink BlendShapes, enable Auto-follow Shrink BlendShapes further down in the same section."
+    }
+  },
+  {
+    "id": "avatar-not-selectable",
+    "priority": 30,
+    "includeInTool": true,
+    "title": {
+      "ja": "アバターを選択できない",
+      "en": "The avatar cannot be selected"
+    },
+    "body": {
+      "ja": "Hierarchy上のアバター本体を選択してください。選択対象にはVRC Avatar Descriptorが必要です。\n\nPrefabファイルやアバター内のArmature、Bodyだけを選んでも着用先として認識されません。選択欄が赤いままの場合は、アバター本体を選び直してください。",
+      "en": "Select the avatar root in the Hierarchy. The selected object must have a VRC Avatar Descriptor.\n\nA prefab asset, Armature, or Body object is not recognized as the target avatar. If the selection area remains red, select the avatar root again."
+    }
+  },
+  {
+    "id": "attach-or-remove-failed",
+    "priority": 35,
+    "includeInTool": true,
+    "title": {
+      "ja": "ネイルをつけられない、または外せない",
+      "en": "Nails cannot be attached or removed"
+    },
+    "body": {
+      "ja": "赤く表示されている必須項目を確認し、着用したいアバター、基準アバター、ネイルデザインを選択してください。\n\n外す場合は、着用時と同じアバターを選択してから「ネイルを外す」を押してください。エラーが表示された場合は、エラー内の案内を確認してください。",
+      "en": "Check every required field shown in red, then select the target avatar, base avatar, and nail design.\n\nTo remove nails, select the same avatar used when attaching them, then select Remove nails. If an error appears, follow the guidance shown with the error."
+    }
+  },
+  {
+    "id": "error-shown",
+    "priority": 60,
+    "includeInTool": true,
+    "title": {
+      "ja": "エラーが表示された",
+      "en": "An error is displayed"
+    },
+    "body": {
+      "ja": "エラー内に表示される原因と案内を確認してください。選択不足の場合は、該当する設定欄も赤く表示されます。\n\n案内どおりに直しても解決しない場合は、この画面上部の「問い合わせ情報をコピー」を押し、取得した情報を添えてお問い合わせください。",
+      "en": "Check the cause and guidance shown with the error. When a required selection is missing, the relevant field is also shown in red.\n\nIf the issue remains after following the guidance, select Copy support information at the top of this window and include it with your inquiry."
+    }
+  },
+  {
+    "id": "update-nailtool",
+    "priority": 70,
+    "includeInTool": true,
+    "title": {
+      "ja": "NailToolを更新したい",
+      "en": "Update NailTool"
+    },
+    "body": {
+      "ja": "VCCで使用中のUnityプロジェクトを開き、An-Labo NailToolの更新を実行してください。Unity内で古いファイルへ上書きする操作は不要です。\n\n更新後も表示が変わらない場合は、Unityを再起動してください。",
+      "en": "Open the Unity project in VCC and update An-Labo NailTool there. You do not need to overwrite old files from inside Unity.\n\nIf the displayed version does not change after updating, restart Unity."
+    }
+  },
+  {
+    "id": "find-nails",
+    "priority": 80,
+    "includeInTool": true,
+    "title": {
+      "ja": "ネイルを探したい",
+      "en": "Find nail designs"
+    },
+    "body": {
+      "ja": "ネイルラボでは、デザインや色、対応アバターなどからネイルを探せます。",
+      "en": "Use the Nail Catalog to find nail designs by style, color, supported avatar, and more."
+    },
+    "link": {
+      "ja": "https://anlabo.world/nail-lab/",
+      "en": "https://anlabo.world/nail-lab/"
+    },
+    "linkLabel": {
+      "ja": "ネイルラボを開く",
+      "en": "Open Nail Catalog"
+    }
+  },
+  {
+    "id": "contact-support",
+    "priority": 100,
+    "includeInTool": true,
+    "title": {
+      "ja": "解決しないため問い合わせたい",
+      "en": "Contact support"
+    },
+    "body": {
+      "ja": "症状が分かる説明と、画面上部のお問い合わせ用情報をお送りください。BOOTH以外では「問い合わせ情報をコピー」で取得した文字をお送りください。BOOTHでのお問い合わせは文字数制限があるため、「BOOTH用画像を保存」から画像を保存し、添付してください。",
+      "en": "Send a description of the issue together with the support information shown at the top of this window. For inquiries outside BOOTH, use Copy support information and send the copied text. BOOTH has a message length limit, so save the support information as an image and attach it instead."
+    },
+    "link": {
+      "ja": "https://accounts.booth.pm/conversations/5331544/messages",
+      "en": "https://accounts.booth.pm/conversations/5331544/messages"
+    },
+    "linkLabel": {
+      "ja": "BOOTHのお問い合わせを開く",
+      "en": "Open BOOTH Support"
     }
   }
 ]

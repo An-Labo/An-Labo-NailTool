@@ -387,11 +387,24 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this.CleanupScenePreview();
 				this.UpdatePreview();
 				this.RequestScenePreviewUpdate();
+				this.UpdateStepSectionStates();
+			}
+			else
+			{
+				this.UpdateStepSectionStates();
 			}
 		}
 
 		private void OnDestroy()
 		{
+			try
+			{
+				ToolConsole.SetSupportInfoSnapshot(this.BuildConsoleDiagnosticInfo());
+			}
+			catch (Exception ex)
+			{
+				ToolConsole.Warn("NailTool", $"問い合わせ情報の保持に失敗: {ex.Message}");
+			}
 			FAQWindow.CloseAll();
 			INailProcessor.ClearPreviewMaterialCash();
 			this.CleanupScenePreview();
@@ -540,11 +553,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					ArmatureScaleCompensation = (this._armatureScaleCompensation?.value == true),
 					BakeBlendShapes = (this._forModularAvatar?.value == true)
 					               && (this._bakeBlendShapes?.value == true),
-					SyncBlendShapesWithMA = (this._forModularAvatar?.value == true)
-					                     && (this._bakeBlendShapes?.value == true)
-					                     && (this._syncBlendShapesWithMA?.value ?? true),
 					SelectedBlendShapeVariantName = (!(this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == true) && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
-					EnablePenetrationCorrection = (this._penetrationCorrection?.value == true),
 					EnableAdditionalMaterials = true,
 					PerFingerAdditionalMaterials = this.BuildPerFingerAdditionalMaterials(false),
 					PerFingerAdditionalObjects = this.BuildPerFingerAdditionalObjects(false),

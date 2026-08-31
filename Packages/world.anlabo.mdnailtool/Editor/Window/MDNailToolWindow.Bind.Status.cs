@@ -217,7 +217,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			});
 		}
 
-		private string BuildToolConsoleLog()
+		internal string BuildToolConsoleLog()
 		{
 			if (this._toolConsoleScroll == null) return string.Empty;
 			var lines = this._toolConsoleScroll.Children()
@@ -237,7 +237,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return sb.ToString();
 		}
 
-		private string BuildConsoleDiagnosticInfo()
+		internal string BuildSupportInfo()
+		{
+			string text = BuildConsoleDiagnosticInfo();
+			string toolLog = BuildToolConsoleLog();
+			return string.IsNullOrWhiteSpace(toolLog) ? text : text + toolLog;
+		}
+
+		internal string BuildConsoleDiagnosticInfo()
 		{
 			var sb = new System.Text.StringBuilder();
 			sb.AppendLine("--- An-Labo NailTool Support Info ---");
@@ -257,12 +264,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			catch (Exception ex) { sb.AppendLine($"ModularAvatar: (取得失敗: {ex.Message})"); }
 
 			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
-			sb.AppendLine($"Avatar: {avatar?.gameObject?.name ?? "(null)"}");
-			sb.AppendLine($"Avatar Root Scale: {avatar?.transform?.localScale.ToString() ?? "(null)"}");
+			sb.AppendLine($"Avatar: {avatar?.gameObject?.name ?? "(not selected)"}");
+			sb.AppendLine($"Avatar Root Scale: {avatar?.transform?.localScale.ToString() ?? "(not available)"}");
 			AppendAvatarFbxInfo(sb, avatar);
 			AppendArmatureScaleInfo(sb, avatar);
-			sb.AppendLine($"AvatarName: {this._avatarDropDowns?.GetAvatarName() ?? "(未設定)"}");
-			sb.AppendLine($"Variation: {this._avatarDropDowns?.GetSelectedAvatarVariation()?.VariationName ?? "(null)"}");
+			sb.AppendLine($"BaseAvatar: {this._avatarDropDowns?.GetAvatarName() ?? "(not selected)"}");
+			string variationName = this._avatarDropDowns?.GetSelectedAvatarVariation()?.VariationName ?? "(not selected)";
+			sb.AppendLine($"Variation: {variationName.Replace("Valiation", "Variation")}");
 			sb.AppendLine($"NailShape: {this._nailShapeDropDown?.value ?? "(null)"}");
 			{
 				GameObject? diagPrefab = this._avatarDropDowns?.GetSelectedPrefab();
@@ -273,14 +281,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					Object.DestroyImmediate(diagPrefab);
 				}
 			}
-			sb.AppendLine($"ForModularAvatar: {this._forModularAvatar?.value}");
-			sb.AppendLine($"BakeBlendShapes: {this._bakeBlendShapes?.value}");
-			sb.AppendLine($"SyncBlendShapesWithMA: {this._syncBlendShapesWithMA?.value}");
-			sb.AppendLine($"ArmatureScaleCompensation: {this._armatureScaleCompensation?.value}");
-			sb.AppendLine($"UseFootNail: {this._tglFootActive?.value}");
-			sb.AppendLine($"HandActive: {this._tglHandActive?.value}");
-			sb.AppendLine($"HandDetail: {this._tglHandDetail?.value}");
-			sb.AppendLine($"FootDetail: {this._tglFootDetail?.value}");
+			sb.AppendLine($"ForModularAvatar: {FormatNullableBool(this._forModularAvatar?.value)}");
+			sb.AppendLine($"BakeBlendShapes: {FormatNullableBool(this._bakeBlendShapes?.value)}");
+			sb.AppendLine($"ArmatureScaleCompensation: {FormatNullableBool(this._armatureScaleCompensation?.value)}");
+			sb.AppendLine($"UseFootNail: {FormatNullableBool(this._tglFootActive?.value)}");
+			sb.AppendLine($"HandActive: {FormatNullableBool(this._tglHandActive?.value)}");
+			sb.AppendLine($"HandDetail: {FormatNullableBool(this._tglHandDetail?.value)}");
+			sb.AppendLine($"FootDetail: {FormatNullableBool(this._tglFootDetail?.value)}");
 			sb.AppendLine($"AdditionalObjectSource: {this._additionalObjectSourceDropdown?.value ?? "(null)"}");
 			sb.AppendLine($"AdditionalMaterialSource: {this._additionalMaterialSourceDropdown?.value ?? "(null)"}");
 
@@ -331,6 +338,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return sb.ToString();
 		}
 
+		private static string FormatNullableBool(bool? value)
+		{
+			return value.HasValue ? value.Value.ToString() : "(not available)";
+		}
+
 		private static void AppendAvatarFbxInfo(System.Text.StringBuilder sb, VRCAvatarDescriptor? avatar)
 		{
 			if (avatar == null) return;
@@ -364,18 +376,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			if (avatar == null)
 			{
-				sb.AppendLine("A:null");
+				sb.AppendLine("Armature: (not available; avatar not selected)");
 				return;
 			}
 
 			Transform? armature = FindArmatureRoot(avatar);
 			if (armature == null)
 			{
-				sb.AppendLine("A:not found");
+				sb.AppendLine("Armature: (not found)");
 				return;
 			}
 
-			sb.AppendLine($"A:{GetRelativePath(avatar.transform, armature)} p={FormatVector3(armature.localPosition)} r={FormatVector3(armature.localEulerAngles)} s={FormatVector3(armature.localScale)}");
+			sb.AppendLine($"Armature: {GetRelativePath(avatar.transform, armature)} p={FormatVector3(armature.localPosition)} r={FormatVector3(armature.localEulerAngles)} s={FormatVector3(armature.localScale)}");
 			AppendArmatureCompensationPoints(sb, avatar);
 		}
 
@@ -609,8 +621,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			int foundHand = 0;
 			foreach (string name in MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST)
 			{
-				Transform? nail = transforms.FirstOrDefault(t => t.name == name);
-				if (nail == null) continue;
+				Transform? nail = transforms.FirstOrDefault(t =>
+					t.name.EndsWith(name, StringComparison.Ordinal));
+				if (nail == null)
+				{
+					missing.Add(name);
+					continue;
+				}
 				SkinnedMeshRenderer? smr = nail.GetComponentInChildren<SkinnedMeshRenderer>(true);
 				if (smr != null && smr.sharedMesh != null) foundHand++;
 				else missing.Add(name);
@@ -745,13 +762,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this._manualLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
 			}
 
-			// ヘッダーのカタログリンク
-			var catalogLink = this.rootVisualElement.Q<Label>("link-catalog");
-			if (catalogLink != null) {
-				catalogLink.text = $"[{S("link.catalog.label") ?? "Catalog"}]";
-				catalogLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.catalog")));
-			}
-
 			// ヘッダーのFAQリンク
 			var headerContact = this.rootVisualElement.Q<Label>("link-contact-header");
 			headerContact?.RegisterCallback<ClickEvent>(_ => FAQWindow.ShowWindow(this));
@@ -770,6 +780,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				usageStatsLink.text = $"[{S("usage_stats.link_label") ?? "Usage Stats"}]";
 				usageStatsLink.RegisterCallback<ClickEvent>(_ => UsageStatsWindow.ShowWindow());
 			}
+
+			// フッターの困ったときリンク
+			var supportLink = this.rootVisualElement.Q<LocalizedLabel>("link-support");
+			supportLink?.RegisterCallback<ClickEvent>(_ => SupportWindow.ShowWindow(this));
 
 			// フッターのコンタクトリンク
 			this._contactLink = this.rootVisualElement.Q<LocalizedLabel>("link-contact");
@@ -797,26 +811,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			// ネイル設定 (section index 2) ヘッダ: デフォルト設定に戻す
 			AddHeaderButton("mdn-section-header", 2, S("window.reset_to_default") ?? "Reset", null, ApplyResetNailSettings);
 
-			// 詳細設定Foldoutの開閉状態を記憶する
-			const string advancedFoldoutPrefKey = "MDNailTool.AdvancedFoldoutOpen";
+			// 設定はサイドバー内にあるため、詳細設定は常時展開する。
 			var advancedFoldout = this.rootVisualElement.Q<Foldout>(className: "mdn-advanced-foldout");
 			if (advancedFoldout != null)
 			{
-				advancedFoldout.SetValueWithoutNotify(EditorPrefs.GetBool(advancedFoldoutPrefKey, false));
-				advancedFoldout.RegisterValueChangedCallback(evt =>
-				{
-					EditorPrefs.SetBool(advancedFoldoutPrefKey, evt.newValue);
-				});
+				advancedFoldout.value = true;
 			}
 		}
 
 		private void SetupSettingsSidebar()
 		{
-			var languageSettings = this.rootVisualElement.Q<VisualElement>("language-settings");
 			var shaderPanel = this.rootVisualElement.Q<VisualElement>("shader-preset-panel");
 			var modularAvatarSection = this.rootVisualElement.Q<VisualElement>("modular-avatar-section");
 			var advancedFoldout = this.rootVisualElement.Q<Foldout>(className: "mdn-advanced-foldout");
-			if (languageSettings == null || shaderPanel == null || modularAvatarSection == null || advancedFoldout == null) return;
+			if (shaderPanel == null || modularAvatarSection == null || advancedFoldout == null) return;
 
 			var sidebar = new VisualElement { name = "settings-sidebar" };
 			sidebar.AddToClassList("mdn-settings-sidebar");
@@ -853,9 +861,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			body.AddToClassList("mdn-settings-sidebar-body");
 			this._settingsSidebarBody = body;
 
-			languageSettings.RemoveFromHierarchy();
-			body.Add(languageSettings);
-
 			var shaderGroup = new VisualElement();
 			shaderGroup.AddToClassList("mdn-settings-sidebar-group");
 			shaderPanel.RemoveFromHierarchy();
@@ -871,6 +876,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			advancedFoldout.RemoveFromHierarchy();
 			advancedFoldout.AddToClassList("mdn-settings-sidebar-advanced");
 			body.Add(advancedFoldout);
+
+			var usageStatsLink = this.rootVisualElement.Q<Label>("link-usage-stats");
+			if (usageStatsLink != null)
+			{
+				usageStatsLink.RemoveFromHierarchy();
+				usageStatsLink.text = S("usage_stats.link_label") ?? "Usage Stats";
+				usageStatsLink.RemoveFromClassList("mdn-helplink-item");
+				usageStatsLink.AddToClassList("mdn-settings-sidebar-utility-link");
+				body.Add(usageStatsLink);
+			}
 			sidebar.Add(body);
 
 			var backdrop = new VisualElement { name = "settings-sidebar-backdrop" };
@@ -1019,7 +1034,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (this._splitHandFootExpressionMenu != null) this._splitHandFootExpressionMenu.value = true;
 			if (this._mergeAnLaboExpressionMenu != null) this._mergeAnLaboExpressionMenu.value = true;
 			if (this._bakeBlendShapes != null) this._bakeBlendShapes.value = true;
-			if (this._syncBlendShapesWithMA != null) this._syncBlendShapesWithMA.value = true;
 		}
 
 		private void ApplyRecommendAdvanced()
@@ -1031,7 +1045,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			// OFF
 			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = false;
-			if (this._penetrationCorrection != null) this._penetrationCorrection.value = false;
 
 			// 試着トグルはOFF固定 (毎回OFF運用)
 			this._tryoutActive = false;

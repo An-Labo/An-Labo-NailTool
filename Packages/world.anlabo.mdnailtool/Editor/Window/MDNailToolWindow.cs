@@ -37,7 +37,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private const string SCENE_PREVIEW_NAME = "[MDNailTool_Preview]";
 
 		private Toggle? _enableDirectMaterial;
+		private VisualElement? _directMaterialToggleRow;
+		private VisualElement? _directMaterialFieldRow;
+		private Toggle? _enableBetaFeatures;
+		private VisualElement? _betaFeaturesArea;
 		private ObjectField? _materialObjectField;
+		private VisualElement? _customNailTextureRow;
+		private DropdownField? _customNailTextureSelect;
+		private readonly List<string> _customNailTexturePaths = new();
 		private LocalizedObjectField? _avatarObjectField;
 		private AvatarDropDowns? _avatarDropDowns;
 		private NailDesignSelect? _nailDesignSelect;
@@ -68,9 +75,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Toggle? _splitHandFootExpressionMenu;
 		private Toggle? _mergeAnLaboExpressionMenu;
 		private Toggle? _armatureScaleCompensation;
-		private Toggle? _penetrationCorrection;
 		private Toggle? _bakeBlendShapes;
-		private Toggle? _syncBlendShapesWithMA;
 		private Toggle? _autoLinkShrinkBS;
 		private Label? _bakeBlendShapeGeneratedList;
 		private Toggle? _closeWindowOnExecute;
@@ -97,6 +102,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		// ---- Hand/Foot section headers (for error highlight) ----
 		private VisualElement? _handSectionHeader;
 		private VisualElement? _footSectionHeader;
+		private VisualElement? _avatarStepSection;
+		private VisualElement? _nailStepSection;
+		private VisualElement? _styleStepSection;
 
 		// ---- Error Banner ----
 		private VisualElement? _errorBanner;
@@ -163,6 +171,35 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this.BindActions();
 			this.CheckNailChipV2Update();
 			this.PostInitSelection();
+			this.InitializeStepSectionStates();
+			this.UpdateStepSectionStates();
+		}
+
+		private void InitializeStepSectionStates()
+		{
+			var sections = this.rootVisualElement.Query<VisualElement>(className: "mdn-section").ToList();
+			this._avatarStepSection = sections.ElementAtOrDefault(0);
+			this._nailStepSection = sections.ElementAtOrDefault(1);
+			this._styleStepSection = sections.ElementAtOrDefault(2);
+		}
+
+		private void UpdateStepSectionStates()
+		{
+			bool hasAvatar = this._avatarObjectField?.value is VRCAvatarDescriptor;
+			bool hasNail = !string.IsNullOrEmpty(this.GetPrimarySelectedDesignName()) ||
+				(this._enableDirectMaterial?.value == true && this._materialObjectField?.value != null);
+			bool hasStyle = hasNail && !string.IsNullOrEmpty(this._nailShapeDropDown?.value);
+
+			SetStepSectionState(this._avatarStepSection, hasAvatar);
+			SetStepSectionState(this._nailStepSection, hasNail);
+			SetStepSectionState(this._styleStepSection, hasStyle);
+		}
+
+		private static void SetStepSectionState(VisualElement? section, bool complete)
+		{
+			if (section == null) return;
+			section.EnableInClassList("mdn-step-complete", complete);
+			section.EnableInClassList("mdn-step-pending", !complete);
 		}
 
 		private enum ChipVersion { NotInstalled, V1, V2 }

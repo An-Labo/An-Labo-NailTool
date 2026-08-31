@@ -54,11 +54,9 @@ namespace world.anlabo.mdnailtool.Editor {
 	public bool MergeAnLabo { get; set; }
 		public bool ArmatureScaleCompensation { get; set; }
 		public bool BakeBlendShapes { get; set; }
-		public bool SyncBlendShapesWithMA { get; set; }
 		public string? SelectedBlendShapeVariantName { get; set; }
 		private NailPrefabNodeData[]? SelectedBlendShapeVariantNailNodes { get; set; }
 		public Entity.Avatar? AvatarEntity { get; set; }
-		public bool EnablePenetrationCorrection { get; set; }
 		public bool EnableAdditionalMaterials { get; set; } = true;
 		public IEnumerable<Material>?[]? PerFingerAdditionalMaterials { get; set; }
 		public IEnumerable<Transform>?[]? PerFingerAdditionalObjects { get; set; }

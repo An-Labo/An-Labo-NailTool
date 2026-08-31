@@ -28,6 +28,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 	{
 		private void OnSelectNail(string designName)
 		{
+			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = false;
 			using DBNailDesign dbNailDesign = new();
 			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(designName);
 			if (design?.DesignName == null) return;
@@ -116,6 +117,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					this._nailVariantDropDown.style.display = DisplayStyle.None;
 				}
 			}
+			this.UpdateStepSectionStates();
 		}
 
 		private void OnChangeNailVariantDropDown(ChangeEvent<string> evt)
@@ -126,13 +128,63 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnChangeEnableDirectMaterial(ChangeEvent<bool> evt)
 		{
-			if (this._materialObjectField != null)
+			GlobalSetting.DirectMaterialEnabled = evt.newValue;
+			if (this._directMaterialFieldRow != null)
 			{
-				this._materialObjectField.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
+				this._directMaterialFieldRow.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
 			}
+			if (this._customNailTextureRow != null)
+				this._customNailTextureRow.style.display = evt.newValue && GlobalSetting.EnableBetaFeatures ? DisplayStyle.Flex : DisplayStyle.None;
 			this.UpdateNailShapeFilter();
 			this.UpdatePreview();
 			this.RequestScenePreviewUpdate();
+			this.UpdateStepSectionStates();
+		}
+
+		private void OnSelectExternalNail()
+		{
+			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = true;
+			this.RebuildCustomNailTextures();
+		}
+
+		private void RebuildCustomNailTextures()
+		{
+			if (this._customNailTextureSelect == null) return;
+			this._customNailTexturePaths.Clear();
+			this._customNailTexturePaths.AddRange(CustomNailTextureService.FindTexturePaths());
+			List<string> names = this._customNailTexturePaths.Select(System.IO.Path.GetFileNameWithoutExtension).ToList();
+			string prompt = S("window.custom_nail_texture_prompt") ?? "Select a texture";
+			List<string> choices = new() { prompt };
+			choices.AddRange(names);
+			this._customNailTextureSelect.choices = choices;
+			string savedPath = GlobalSetting.CustomNailTexturePath;
+			int savedIndex = this._customNailTexturePaths.IndexOf(savedPath);
+			if (savedIndex < 0 && this._customNailTexturePaths.Count == 1) savedIndex = 0;
+			this._customNailTextureSelect.SetValueWithoutNotify(savedIndex >= 0 ? names[savedIndex] : prompt);
+			if (savedIndex >= 0 && this._materialObjectField?.value == null)
+				this.ApplyCustomNailTexture(savedIndex);
+		}
+
+		private void OnChangeCustomNailTexture(ChangeEvent<string> evt)
+		{
+			if (this._customNailTextureSelect == null || string.IsNullOrEmpty(evt.newValue)) return;
+			int index = this._customNailTextureSelect.choices.IndexOf(evt.newValue) - 1;
+			if (index < 0 || index >= this._customNailTexturePaths.Count) return;
+			this.ApplyCustomNailTexture(index);
+		}
+
+		private void ApplyCustomNailTexture(int index)
+		{
+			if (index < 0 || index >= this._customNailTexturePaths.Count) return;
+			string texturePath = this._customNailTexturePaths[index];
+			Material? material = CustomNailTextureService.BuildMaterial(texturePath);
+			if (material == null) return;
+			GlobalSetting.CustomNailTexturePath = texturePath;
+			if (this._materialObjectField == null) return;
+			if (this._nailDesignDropDowns == null)
+				this._materialObjectField.SetValueWithoutNotify(material);
+			else
+				this._materialObjectField.value = material;
 		}
 
 		private Material? GetDirectMaterial()
@@ -141,14 +193,15 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return this._materialObjectField?.value as Material;
 		}
 
-		private void OnChangeMaterial(ChangeEvent<Object?> evt) { this.UpdateNailShapeFilter(); this.UpdatePreview(); this.RequestScenePreviewUpdate(); }
-		private void OnChangeShapeDropDown(ChangeEvent<string> evt) { GlobalSetting.LastUseShapeName = evt.newValue; this.UpdatePreview(); this.RequestScenePreviewUpdate(); }
+		private void OnChangeMaterial(ChangeEvent<Object?> evt) { this.UpdateNailShapeFilter(); this.UpdatePreview(); this.RequestScenePreviewUpdate(); this.UpdateStepSectionStates(); }
+		private void OnChangeShapeDropDown(ChangeEvent<string> evt) { GlobalSetting.LastUseShapeName = evt.newValue; this.UpdatePreview(); this.RequestScenePreviewUpdate(); this.UpdateStepSectionStates(); }
 		private void OnChangeNailMaterialDropDown(ChangeEvent<string?> evt)
 		{
 			if (evt.newValue == null) return;
 			foreach (var dd in this._nailDesignDropDowns!) dd.SetMaterialValue(evt.newValue);
 			this.UpdatePreview();
 			this.RequestScenePreviewUpdate();
+			this.UpdateStepSectionStates();
 		}
 		private void OnChangeNailColorDropDown(ChangeEvent<string?> evt)
 		{
@@ -156,6 +209,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			foreach (var dd in this._nailDesignDropDowns!) dd.SetColorValue(evt.newValue);
 			this.UpdatePreview();
 			this.RequestScenePreviewUpdate();
+			this.UpdateStepSectionStates();
 		}
 		private void OnChangeNailDesign(ChangeEvent<string?> evt)
 		{
