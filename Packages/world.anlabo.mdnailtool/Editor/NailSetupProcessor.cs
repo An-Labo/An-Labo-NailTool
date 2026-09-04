@@ -346,11 +346,13 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			if (variant.NailNodes != null && variant.NailNodes.Length > 0)
 			{
+				NailPrefabNodeData[] baseNodes = (this.AvatarVariationData.NailNodes ?? Array.Empty<NailPrefabNodeData>())
+					.Concat(this.AvatarVariationData.FootNailNodes ?? Array.Empty<NailPrefabNodeData>()).ToArray();
 				NailPrefabNodeData[] scaledVariantNodes = ComposeVariantNodes(
-					this.AvatarVariationData.NailNodes,
+					baseNodes,
 					variant.NailNodes);
 				this.SelectedBlendShapeVariantNailNodes = scaledVariantNodes;
-				this.NailPrefab = NailPrefabBuilder.BuildFromNodes(scaledVariantNodes, variant.Name);
+				this.NailPrefab = NailPrefabBuilder.BuildFromNodes(scaledVariantNodes, variant.Name, this.NailShapeName);
 				ToolConsole.Log($"  → NailPrefab composed from base + variant NailNodes: {variant.Name}");
 				return;
 			}
@@ -381,7 +383,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					NailPrefabNodeData[]? currentShapeNodes = ComposeShapeNodes(allNodes, this.NailShapeName);
 					if (currentShapeNodes != null) {
 						Object.DestroyImmediate(this.NailPrefab);
-						this.NailPrefab = NailPrefabBuilder.BuildFromNodes(currentShapeNodes, this.SelectedBlendShapeVariantName ?? this.AvatarVariationData!.VariationName);
+						this.NailPrefab = NailPrefabBuilder.BuildFromNodes(currentShapeNodes, this.SelectedBlendShapeVariantName ?? this.AvatarVariationData!.VariationName, this.NailShapeName);
 					}
 				}
 				return;

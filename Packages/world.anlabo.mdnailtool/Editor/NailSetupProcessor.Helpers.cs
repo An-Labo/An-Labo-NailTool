@@ -65,9 +65,11 @@ namespace world.anlabo.mdnailtool.Editor {
 			NailPrefabNodeData[]? baseNodes,
 			NailPrefabNodeData[] variantNodes)
 		{
-			bool hasShapeRoot = variantNodes.Any(n =>
-				!string.IsNullOrEmpty(n.Name) && n.Name.StartsWith("[", StringComparison.Ordinal));
-			if (hasShapeRoot || baseNodes == null || baseNodes.Length == 0)
+			bool hasHandNodes = variantNodes.Any(n =>
+				GetVariantMatchName(n.Name ?? "").StartsWith("Hand", StringComparison.Ordinal));
+			bool hasFootNodes = variantNodes.Any(n =>
+				GetVariantMatchName(n.Name ?? "").StartsWith("Foot", StringComparison.Ordinal));
+			if ((hasHandNodes && !hasFootNodes) || baseNodes == null || baseNodes.Length == 0)
 				return CloneNodes(variantNodes);
 
 			NailPrefabNodeData[] composed = CloneNodes(baseNodes);
@@ -167,7 +169,9 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 			if (effective == null) return null;
 			foreach (NailPrefabNodeData root in effective) RenameShapePrefixRecursive(root, targetShape);
-			return effective;
+			NailPrefabNodeData[] independent = Array.FindAll(allNodes,
+				n => string.IsNullOrEmpty(n.Name) || !n.Name.StartsWith("[", StringComparison.Ordinal));
+			return independent.Length == 0 ? effective : effective.Concat(CloneNodes(independent)).ToArray();
 		}
 
 		private static NailPrefabNodeData[] OverlayShapeRoots(
@@ -220,7 +224,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (nailNodes != null && nailNodes.Length > 0) {
 					NailPrefabNodeData[]? currentShapeNodes = ComposeShapeNodes(nailNodes, targetShape);
 					if (currentShapeNodes != null) {
-						return NailDesigns.NailPrefabBuilder.BuildFromNodes(currentShapeNodes, basePrefab.name);
+						return NailDesigns.NailPrefabBuilder.BuildFromNodes(currentShapeNodes, basePrefab.name, targetShape);
 					}
 					return NailDesigns.NailPrefabBuilder.BuildFromNodes(nailNodes, basePrefab.name, targetShape);
 				}

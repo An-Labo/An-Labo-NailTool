@@ -27,6 +27,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 
 		private static bool _refreshScheduled;
 		private static bool _forceRefreshScheduled;
+		private static bool _refreshingDbAssets;
 
 		static DBAssetPostprocessor() {
 			SchedulePackageRefresh(force: false);
@@ -40,7 +41,10 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 					continue;
 				}
 
-				ClearCacheForDbAsset(p);
+				if (IsDbAssetPath(p)) {
+					if (_refreshingDbAssets) ClearCacheForDbAsset(p);
+					else SchedulePackageRefresh(force: true);
+				}
 			}
 
 			foreach (string p in deleted) {
@@ -57,8 +61,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 		}
 
 		public static void ForceRefreshDbAssetsAndCaches() {
-			ReimportDbAssets();
-			ClearAllCaches();
+			RefreshDbAssetsAndCaches();
 			RefreshOpenWindows();
 			RememberCurrentPackageVersion();
 		}
@@ -83,8 +86,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			string lastVersion = EditorPrefs.GetString(prefKey, string.Empty);
 			if (!force && string.Equals(lastVersion, currentVersion, StringComparison.Ordinal)) return;
 
-			ReimportDbAssets();
-			ClearAllCaches();
+			RefreshDbAssetsAndCaches();
 			EditorPrefs.SetString(prefKey, currentVersion);
 			RefreshOpenWindows();
 			Debug.Log($"[MDNailTool] DB cache refreshed for package version {currentVersion}.");
@@ -94,6 +96,23 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			foreach (string path in DbAssetPaths) {
 				AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
 			}
+		}
+
+		private static void RefreshDbAssetsAndCaches() {
+			if (_refreshingDbAssets) return;
+
+			_refreshingDbAssets = true;
+			try {
+				RefreshAssetDatabase();
+				ReimportDbAssets();
+				ClearAllCaches();
+			} finally {
+				_refreshingDbAssets = false;
+			}
+		}
+
+		private static void RefreshAssetDatabase() {
+			AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
 		}
 
 		private static void ClearCacheForDbAsset(string path) {

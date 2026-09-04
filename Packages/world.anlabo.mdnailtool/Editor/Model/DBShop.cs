@@ -206,7 +206,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 				node.LocalScale = new[] { x, y, z };
 			}
 		}
-		// footNailNodes (prefix なし) を各 [Shape] root の children に prefix 付きで再注入する. consumer は従来通り NailNodes だけで完結する.
+		// footNailNodes は shape 非依存。flat NailNodes の末尾へ prefix なしで一度だけ追加する。
 		private static void MergeFootNailNodesIntoShapeRoots(Dictionary<string, Shop> shops) {
 			foreach (Shop shop in shops.Values) {
 				if (shop.Avatars == null) continue;
@@ -225,34 +225,7 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			NailPrefabNodeData[]? nailNodes = variation.NailNodes;
 			if (foot == null || foot.Length == 0 || nailNodes == null || nailNodes.Length == 0) return;
 
-			foreach (NailPrefabNodeData shapeRoot in nailNodes) {
-				string shapePrefix = ExtractShapePrefix(shapeRoot.Name);
-				if (string.IsNullOrEmpty(shapePrefix)) continue;
-				NailPrefabNodeData[] prefixedFoot = new NailPrefabNodeData[foot.Length];
-				for (int i = 0; i < foot.Length; i++) {
-					prefixedFoot[i] = ClonePrefixed(foot[i], shapePrefix);
-				}
-				shapeRoot.Children = ConcatChildren(shapeRoot.Children, prefixedFoot);
-			}
-		}
-
-		private static string ExtractShapePrefix(string? name) {
-			if (string.IsNullOrEmpty(name) || name![0] != '[') return string.Empty;
-			int end = name.IndexOf(']');
-			return end < 0 ? string.Empty : name.Substring(0, end + 1);
-		}
-
-		private static NailPrefabNodeData ClonePrefixed(NailPrefabNodeData src, string shapePrefix) {
-			NailPrefabNodeData copy = CloneNode(src);
-			copy.Name = shapePrefix + (src.Name ?? string.Empty);
-			if (src.Children != null) {
-				NailPrefabNodeData[] prefixedChildren = new NailPrefabNodeData[src.Children.Length];
-				for (int i = 0; i < src.Children.Length; i++) {
-					prefixedChildren[i] = ClonePrefixed(src.Children[i], shapePrefix);
-				}
-				copy.Children = prefixedChildren;
-			}
-			return copy;
+			variation.NailNodes = ConcatChildren(nailNodes, CloneNodes(foot)!);
 		}
 
 		private static NailPrefabNodeData[]? CloneNodes(NailPrefabNodeData[]? src) {

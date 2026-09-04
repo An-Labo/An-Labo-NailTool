@@ -27,7 +27,15 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				return BuildSubtree(rootNodes[0], null, rootShape);
 			}
 
-			GameObject root = new GameObject(fallbackName);
+			// Flat shop.json stores one nail per root. Recreate the old prefab container name so
+			// NailSetupProcessor can read the shape prefix and strip it from child nail names.
+			bool forcedShape = !string.IsNullOrEmpty(shapeOverride);
+			string commonShape = forcedShape ? shapeOverride! : ExtractShape(rootNodes[0].Name);
+			bool sameShape = !string.IsNullOrEmpty(commonShape);
+			for (int i = 1; i < rootNodes.Length && sameShape && !forcedShape; i++)
+				sameShape = ExtractShape(rootNodes[i].Name) == commonShape;
+			string rootName = sameShape ? $"[{commonShape}]{ShapePrefixRegex.Replace(fallbackName ?? "", "")}" : fallbackName;
+			GameObject root = new GameObject(rootName);
 			foreach (NailPrefabNodeData node in rootNodes) {
 				string shape = !string.IsNullOrEmpty(shapeOverride) ? shapeOverride! : ExtractShape(node.Name);
 				BuildSubtree(node, root.transform, shape);

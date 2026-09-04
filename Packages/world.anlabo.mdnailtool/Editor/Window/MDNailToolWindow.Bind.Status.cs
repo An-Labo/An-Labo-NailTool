@@ -398,14 +398,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				Dictionary<string, Transform?> targetBones = NailSetupProcessor.GetTargetBoneDictionary(
 					avatar,
 					this._avatarDropDowns?.GetSelectedAvatarVariation()?.BoneMappingOverride);
-				Dictionary<string, Vector3> referenceScales = GetReferenceBoneScalesByActualName(avatar);
+				Dictionary<string, Vector3> referenceScales = GetReferenceBoneScalesByActualName(avatar, out var referenceTransforms);
 
 				var treeRoot = new TransformDiagnosticTreeNode();
-				AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, 0, 10);
+				AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, referenceTransforms, 0, 10);
 				if (this._tglFootActive?.value == true)
 				{
-					AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, 12, 5);
-					AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, 17, 5);
+					AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, referenceTransforms, 12, 5);
+					AppendTargetBoneDiagnostics(treeRoot, avatar.transform, targetBones, referenceScales, referenceTransforms, 17, 5);
 				}
 
 				sb.AppendLine("ACP:");
@@ -427,6 +427,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			Transform avatarRoot,
 			IReadOnlyDictionary<string, Transform?> targetBones,
 			IReadOnlyDictionary<string, Vector3> referenceScales,
+			IReadOnlyDictionary<string, (Vector3 position, Quaternion rotation, Vector3 scale)> referenceTransforms,
 			int startIndex,
 			int count)
 		{
@@ -439,15 +440,36 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					? foundReferenceScale
 					: Vector3.one;
 				Vector3 ratio = ScaleRatio(targetBone.lossyScale, referenceScale);
-				if (!HasMeaningfulScaleCompensation(ratio)) continue;
+				if (!HasMeaningfulScaleCompensation(ratio) &&
+					!HasModifiedTransformPath(avatarRoot, targetBone, referenceTransforms)) continue;
 
 				TransformDiagnosticTreeNode node = AddTransformPath(treeRoot, avatarRoot, targetBone);
 				node.Entries.Add($"[{TargetAlias(i)}] k={FormatVector3(ratio)} ref={FormatVector3(referenceScale)}");
 			}
 		}
 
-		private static Dictionary<string, Vector3> GetReferenceBoneScalesByActualName(VRCAvatarDescriptor avatar)
+		// Compare local transforms along the entire chain: a parent-only edit must
+		// be captured even when the target finger's own local transform is unchanged.
+		private static bool HasModifiedTransformPath(
+			Transform avatarRoot, Transform target,
+			IReadOnlyDictionary<string, (Vector3 position, Quaternion rotation, Vector3 scale)> referenceTransforms)
 		{
+			for (Transform? current = target; current != null && current != avatarRoot; current = current.parent)
+			{
+				if (!referenceTransforms.TryGetValue(GetRelativePath(avatarRoot, current), out var reference))
+					return true; // Unknown/reparented paths must not silently disappear from diagnostics.
+				if ((current.localPosition - reference.position).sqrMagnitude > 1e-10f ||
+					Quaternion.Angle(current.localRotation, reference.rotation) > 0.01f ||
+					HasMeaningfulScaleCompensation(Vector3.one + current.localScale - reference.scale))
+					return true;
+			}
+			return false;
+		}
+
+		private static Dictionary<string, Vector3> GetReferenceBoneScalesByActualName(VRCAvatarDescriptor avatar,
+			out Dictionary<string, (Vector3 position, Quaternion rotation, Vector3 scale)> referenceTransforms)
+		{
+			referenceTransforms = new Dictionary<string, (Vector3, Quaternion, Vector3)>();
 			var result = new Dictionary<string, Vector3>();
 			Animator? animator = avatar.GetComponent<Animator>();
 			if (animator == null || animator.avatar == null) return result;
@@ -466,6 +488,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				foreach (Transform t in tempInstance.GetComponentsInChildren<Transform>(true))
 				{
 					if (!result.ContainsKey(t.name)) result[t.name] = t.lossyScale;
+					referenceTransforms[GetRelativePath(tempInstance.transform, t)] =
+						(t.localPosition, t.localRotation, t.localScale);
 				}
 			}
 			finally
@@ -506,11 +530,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			foreach (KeyValuePair<string, TransformDiagnosticTreeNode> childPair in node.Children)
 			{
 				TransformDiagnosticTreeNode child = childPair.Value;
-				string suffix = child.Transform != null ? $" p={FormatVector3(child.Transform.localPosition)} r={FormatVector3(child.Transform.localEulerAngles)} s={FormatVector3(child.Transform.localScale)}" : "/";
+				string suffix = child.Transform != null ? $" p={FormatTransformVector3(child.Transform.localPosition)} r={FormatTransformVector3(child.Transform.localEulerAngles)} s={FormatTransformVector3(child.Transform.localScale)}" : "/";
 				if (child.Entries.Count > 0) suffix += " " + string.Join(" ", child.Entries);
 				sb.AppendLine($"{indent}{childPair.Key}{suffix}");
 				AppendDiagnosticTreeLines(sb, child, depth + 1);
 			}
+		}
+
+		private static string FormatTransformVector3(Vector3 value)
+		{
+			return string.Format(CultureInfo.InvariantCulture, "({0:R},{1:R},{2:R})", value.x, value.y, value.z);
 		}
 
 		private sealed class TransformDiagnosticTreeNode
