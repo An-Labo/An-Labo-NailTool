@@ -56,7 +56,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			BuildContent(rootVisualElement);
 		}
 
-		internal static void BuildContent(VisualElement root)
+		internal static void BuildContent(VisualElement root, string? expandedEntryId = null)
 		{
 			root.AddToClassList("mdn-faq-root");
 
@@ -84,7 +84,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				string lang = LanguageManager.CurrentLanguageData.language.StartsWith("ja", StringComparison.OrdinalIgnoreCase) ? "ja" : "en";
 				foreach (FAQEntry entry in entries.OrderBy(e => e.priority))
 				{
-					Foldout item = new() { text = GetLocalized(entry.title, lang, entry.id), value = false };
+					Foldout item = new()
+					{
+						text = GetLocalized(entry.title, lang, entry.id),
+						value = string.Equals(entry.id, expandedEntryId, StringComparison.OrdinalIgnoreCase)
+					};
 					item.AddToClassList("mdn-faq-item");
 					item.AddToClassList("mdn-faq-foldout");
 					VisualElement answerPanel = new();
@@ -94,14 +98,16 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					a.AddToClassList("mdn-faq-answer");
 					answerPanel.Add(a);
 
+					foreach (FAQLink entryLink in entry.links ?? new List<FAQLink>())
+					{
+						string entryUrl = GetLocalized(entryLink.url, lang, string.Empty);
+						if (!string.IsNullOrWhiteSpace(entryUrl))
+							answerPanel.Add(CreateFaqLink(GetLocalized(entryLink.label, lang, entryUrl), entryUrl));
+					}
+
 					string url = GetLocalized(entry.link, lang, string.Empty);
 					if (!string.IsNullOrWhiteSpace(url))
-					{
-						Label link = new(GetLocalized(entry.linkLabel, lang, url));
-						link.AddToClassList("mdn-faq-link");
-						link.RegisterCallback<ClickEvent>(_ => Application.OpenURL(url));
-						answerPanel.Add(link);
-					}
+						answerPanel.Add(CreateFaqLink(GetLocalized(entry.linkLabel, lang, url), url));
 					item.Add(answerPanel);
 
 					scroll.Add(item);
@@ -131,9 +137,15 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private static Label CreateExternalLink(string text, string url)
 		{
+			Label link = CreateFaqLink(text, url);
+			link.AddToClassList("mdn-faq-external-link");
+			return link;
+		}
+
+		private static Label CreateFaqLink(string text, string url)
+		{
 			Label link = new(text);
 			link.AddToClassList("mdn-faq-link");
-			link.AddToClassList("mdn-faq-external-link");
 			link.RegisterCallback<ClickEvent>(_ => Application.OpenURL(url));
 			return link;
 		}
@@ -173,6 +185,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			public Dictionary<string, string>? body;
 			public Dictionary<string, string>? link;
 			public Dictionary<string, string>? linkLabel;
+			public List<FAQLink>? links;
+		}
+
+		[Serializable]
+		private sealed class FAQLink
+		{
+			public Dictionary<string, string>? url;
+			public Dictionary<string, string>? label;
 		}
 	}
 }

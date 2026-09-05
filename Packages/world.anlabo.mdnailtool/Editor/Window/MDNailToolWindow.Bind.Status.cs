@@ -814,6 +814,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var supportLink = this.rootVisualElement.Q<LocalizedLabel>("link-support");
 			supportLink?.RegisterCallback<ClickEvent>(_ => SupportWindow.ShowWindow(this));
 
+			var nailFitFeedbackLink = this.rootVisualElement.Q<LocalizedLabel>("link-nail-fit-feedback");
+			nailFitFeedbackLink?.RegisterCallback<ClickEvent>(_ => SupportWindow.ShowWindow(this, "nail-position-off"));
+
 			// フッターのコンタクトリンク
 			this._contactLink = this.rootVisualElement.Q<LocalizedLabel>("link-contact");
 			this._contactLink?.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.contact")));

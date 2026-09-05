@@ -12,10 +12,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 	internal sealed class SupportWindow : EditorWindow
 	{
 		private static MDNailToolWindow? _sourceWindow;
+		private static string? _expandedFaqId;
 
-		internal static void ShowWindow(MDNailToolWindow? sourceWindow = null)
+		internal static void ShowWindow(MDNailToolWindow? sourceWindow = null, string? expandedFaqId = null)
 		{
 			_sourceWindow = sourceWindow ?? Resources.FindObjectsOfTypeAll<MDNailToolWindow>().FirstOrDefault();
+			_expandedFaqId = expandedFaqId;
+			foreach (SupportWindow existing in Resources.FindObjectsOfTypeAll<SupportWindow>())
+				existing.Close();
 			SupportWindow window = GetWindow<SupportWindow>();
 			window.titleContent = new GUIContent(LanguageManager.S("window.support_title") ?? "Help");
 			window.minSize = new Vector2(620f, 700f);
@@ -52,7 +56,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var faq = new VisualElement();
 			faq.AddToClassList("mdn-support-faq");
 			rootVisualElement.Add(faq);
-			FAQWindow.BuildContent(faq);
+			FAQWindow.BuildContent(faq, _expandedFaqId);
 
 		}
 
