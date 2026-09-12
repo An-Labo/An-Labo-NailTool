@@ -5892,7 +5892,7 @@
 						0.00506
 					],
 					"localRotation": [
-						-0.506411,
+						-0.50641099999999994,
 						0.48092,
 						0.47649,
 						0.534061
@@ -6002,7 +6002,7 @@
 						0.00506
 					],
 					"localRotation": [
-						-0.506411,
+						-0.50641099999999994,
 						-0.48092,
 						-0.47649,
 						0.534061
@@ -9318,10 +9318,10 @@
 								0.125115
 							],
 							"localRotation": [
-								0.0,
+								0,
 								0.537789,
 								0.84308,
-								0.0
+								0
 							],
 							"localScale": [
 								0.92532,
@@ -9428,10 +9428,10 @@
 								0.125115
 							],
 							"localRotation": [
-								0.0,
+								0,
 								0.537789,
 								0.84308,
-								0.0
+								0
 							],
 							"localScale": [
 								0.92532,
@@ -15151,7 +15151,7 @@
 					"localRotation": [
 						-0.515262,
 						0.495482,
-						0.504052,
+						0.50405199999999994,
 						0.484701
 					],
 					"localScale": [
@@ -15261,7 +15261,7 @@
 					"localRotation": [
 						0.515262,
 						0.495482,
-						0.504052,
+						0.50405199999999994,
 						-0.484701
 					],
 					"localScale": [
@@ -18259,7 +18259,7 @@
 								0.079368
 							],
 							"localRotation": [
-								0.046594,
+								0.046593999999999997,
 								0.506981,
 								0.860577,
 								-0.014388
@@ -18466,248 +18466,238 @@
 		"Renard": {
 			"nailNodes": [
 				{
-					"name": "[Natural]Renard",
-					"localScale": [
-						1.05263,
-						1.05263,
-						1.05263
+					"name": "[Natural]HandL.Index",
+					"localPosition": [
+						-0.56751489639282227,
+						1.021966814994812,
+						0.0058842017315328121
 					],
-					"children": [
-						{
-							"name": "[Natural]HandL.Index",
-							"localPosition": [
-								-0.53914,
-								0.97087,
-								0.00559
-							],
-							"localRotation": [
-								-0.556098,
-								0.443999,
-								0.544748,
-								0.443699
-							],
-							"localScale": [
-								1.07479,
-								1.07479,
-								1.07479
-							],
-							"blendShapeWeights": {
-								"curl": 31.9,
-								"curl_front": 32.4
-							}
-						},
-						{
-							"name": "[Natural]HandL.Little",
-							"localPosition": [
-								-0.5256,
-								0.97064,
-								-0.0286
-							],
-							"localRotation": [
-								-0.51468,
-								0.47379,
-								0.60316,
-								0.38318
-							],
-							"localScale": [
-								0.94495,
-								1.16381,
-								0.94494
-							],
-							"blendShapeWeights": {
-								"curl": 4.3,
-								"curl_front": 37.5
-							}
-						},
-						{
-							"name": "[Natural]HandL.Middle",
-							"localPosition": [
-								-0.54706,
-								0.97472,
-								-0.00587
-							],
-							"localRotation": [
-								-0.484762,
-								0.501613,
-								0.495822,
-								0.517253
-							],
-							"localScale": [
-								0.91531,
-								0.91531,
-								0.91531
-							],
-							"blendShapeWeights": {
-								"curl": 49.8,
-								"ver1_1_____________": 21.5,
-								"curl_front": 21.5,
-								"curl_back": 28.9
-							}
-						},
-						{
-							"name": "[Natural]HandL.Ring",
-							"localPosition": [
-								-0.54234,
-								0.97217,
-								-0.01784
-							],
-							"localRotation": [
-								-0.521911,
-								0.434291,
-								0.560071,
-								0.474681
-							],
-							"localScale": [
-								0.9067,
-								0.9067,
-								0.9067
-							],
-							"blendShapeWeights": {
-								"curl": 24.9,
-								"curl_front": 21.4
-							}
-						},
-						{
-							"name": "[Natural]HandL.Thumb",
-							"localPosition": [
-								-0.48225,
-								0.96308,
-								0.03505
-							],
-							"localRotation": [
-								0.17396,
-								0.21596,
-								0.709419,
-								0.647939
-							],
-							"localScale": [
-								1.10879,
-								1.45877,
-								1.10879
-							],
-							"blendShapeWeights": {
-								"flat": 37,
-								"curl_front": 55.3
-							}
-						},
-						{
-							"name": "[Natural]HandR.Index",
-							"localPosition": [
-								0.53914,
-								0.97087,
-								0.00559
-							],
-							"localRotation": [
-								-0.556098,
-								-0.443999,
-								-0.544748,
-								0.443699
-							],
-							"localScale": [
-								1.07479,
-								1.07479,
-								1.07479
-							],
-							"blendShapeWeights": {
-								"curl": 31.9,
-								"curl_front": 32.4
-							}
-						},
-						{
-							"name": "[Natural]HandR.Little",
-							"localPosition": [
-								0.5256,
-								0.97064,
-								-0.0286
-							],
-							"localRotation": [
-								-0.51468,
-								-0.47379,
-								-0.60316,
-								0.38318
-							],
-							"localScale": [
-								0.94495,
-								1.16381,
-								0.94494
-							],
-							"blendShapeWeights": {
-								"curl": 4.3,
-								"curl_front": 37.5
-							}
-						},
-						{
-							"name": "[Natural]HandR.Middle",
-							"localPosition": [
-								0.54706,
-								0.97472,
-								-0.00587
-							],
-							"localRotation": [
-								-0.484762,
-								-0.501613,
-								-0.495822,
-								0.517253
-							],
-							"localScale": [
-								0.91531,
-								0.91531,
-								0.91531
-							],
-							"blendShapeWeights": {
-								"curl": 49.8,
-								"ver1_1_____________": 21.5,
-								"curl_front": 21.5,
-								"curl_back": 28.9
-							}
-						},
-						{
-							"name": "[Natural]HandR.Ring",
-							"localPosition": [
-								0.54234,
-								0.97217,
-								-0.01784
-							],
-							"localRotation": [
-								-0.521911,
-								-0.434291,
-								-0.560071,
-								0.474681
-							],
-							"localScale": [
-								0.9067,
-								0.9067,
-								0.9067
-							],
-							"blendShapeWeights": {
-								"curl": 24.9,
-								"curl_front": 21.4
-							}
-						},
-						{
-							"name": "[Natural]HandR.Thumb",
-							"localPosition": [
-								0.48225,
-								0.96308,
-								0.03505
-							],
-							"localRotation": [
-								0.17396,
-								-0.21596,
-								-0.709419,
-								0.647939
-							],
-							"localScale": [
-								1.10879,
-								1.45877,
-								1.10879
-							],
-							"blendShapeWeights": {
-								"flat": 37,
-								"curl_front": 55.3
-							}
-						}
-					]
+					"localRotation": [
+						-0.556098,
+						0.443999,
+						0.544748,
+						0.443699
+					],
+					"localScale": [
+						1.1313561201095581,
+						1.1313561201095581,
+						1.1313561201095581
+					],
+					"blendShapeWeights": {
+						"curl": 31.9,
+						"curl_front": 32.4
+					}
+				},
+				{
+					"name": "[Natural]HandL.Little",
+					"localPosition": [
+						-0.55326229333877563,
+						1.0217247009277344,
+						-0.030105216428637505
+					],
+					"localRotation": [
+						-0.51468,
+						0.47379,
+						0.60316,
+						0.38318
+					],
+					"localScale": [
+						0.9946826696395874,
+						1.225061297416687,
+						0.99467211961746216
+					],
+					"blendShapeWeights": {
+						"curl": 4.3,
+						"curl_front": 37.5
+					}
+				},
+				{
+					"name": "[Natural]HandL.Middle",
+					"localPosition": [
+						-0.57585173845291138,
+						1.0260194540023804,
+						-0.00617893785238266
+					],
+					"localRotation": [
+						-0.484762,
+						0.501613,
+						0.495822,
+						0.517253
+					],
+					"localScale": [
+						0.96348273754119873,
+						0.96348273754119873,
+						0.96348273754119873
+					],
+					"blendShapeWeights": {
+						"curl": 49.8,
+						"ver1_1_____________": 21.5,
+						"curl_front": 21.5,
+						"curl_back": 28.9
+					}
+				},
+				{
+					"name": "[Natural]HandL.Ring",
+					"localPosition": [
+						-0.57088333368301392,
+						1.0233352184295654,
+						-0.01877891831099987
+					],
+					"localRotation": [
+						-0.521911,
+						0.434291,
+						0.560071,
+						0.474681
+					],
+					"localScale": [
+						0.95441961288452148,
+						0.95441961288452148,
+						0.95441961288452148
+					],
+					"blendShapeWeights": {
+						"curl": 24.9,
+						"curl_front": 21.4
+					}
+				},
+				{
+					"name": "[Natural]HandL.Thumb",
+					"localPosition": [
+						-0.50763082504272461,
+						1.013766884803772,
+						0.036894679069519043
+					],
+					"localRotation": [
+						0.17396,
+						0.21596,
+						0.709419,
+						0.647939
+					],
+					"localScale": [
+						1.1671456098556519,
+						1.5355449914932251,
+						1.1671456098556519
+					],
+					"blendShapeWeights": {
+						"flat": 37,
+						"curl_front": 55.3
+					}
+				},
+				{
+					"name": "[Natural]HandR.Index",
+					"localPosition": [
+						0.56751489639282227,
+						1.021966814994812,
+						0.0058842017315328121
+					],
+					"localRotation": [
+						-0.556098,
+						-0.443999,
+						-0.544748,
+						0.443699
+					],
+					"localScale": [
+						1.1313561201095581,
+						1.1313561201095581,
+						1.1313561201095581
+					],
+					"blendShapeWeights": {
+						"curl": 31.9,
+						"curl_front": 32.4
+					}
+				},
+				{
+					"name": "[Natural]HandR.Little",
+					"localPosition": [
+						0.55326229333877563,
+						1.0217247009277344,
+						-0.030105216428637505
+					],
+					"localRotation": [
+						-0.51468,
+						-0.47379,
+						-0.60316,
+						0.38318
+					],
+					"localScale": [
+						0.9946826696395874,
+						1.225061297416687,
+						0.99467211961746216
+					],
+					"blendShapeWeights": {
+						"curl": 4.3,
+						"curl_front": 37.5
+					}
+				},
+				{
+					"name": "[Natural]HandR.Middle",
+					"localPosition": [
+						0.57585173845291138,
+						1.0260194540023804,
+						-0.00617893785238266
+					],
+					"localRotation": [
+						-0.484762,
+						-0.501613,
+						-0.495822,
+						0.517253
+					],
+					"localScale": [
+						0.96348273754119873,
+						0.96348273754119873,
+						0.96348273754119873
+					],
+					"blendShapeWeights": {
+						"curl": 49.8,
+						"ver1_1_____________": 21.5,
+						"curl_front": 21.5,
+						"curl_back": 28.9
+					}
+				},
+				{
+					"name": "[Natural]HandR.Ring",
+					"localPosition": [
+						0.57088333368301392,
+						1.0233352184295654,
+						-0.01877891831099987
+					],
+					"localRotation": [
+						-0.521911,
+						-0.434291,
+						-0.560071,
+						0.474681
+					],
+					"localScale": [
+						0.95441961288452148,
+						0.95441961288452148,
+						0.95441961288452148
+					],
+					"blendShapeWeights": {
+						"curl": 24.9,
+						"curl_front": 21.4
+					}
+				},
+				{
+					"name": "[Natural]HandR.Thumb",
+					"localPosition": [
+						0.50763082504272461,
+						1.013766884803772,
+						0.036894679069519043
+					],
+					"localRotation": [
+						0.17396,
+						-0.21596,
+						-0.709419,
+						0.647939
+					],
+					"localScale": [
+						1.1671456098556519,
+						1.5355449914932251,
+						1.1671456098556519
+					],
+					"blendShapeWeights": {
+						"flat": 37,
+						"curl_front": 55.3
+					}
 				}
 			],
 			"footNailNodes": [
@@ -18942,234 +18932,224 @@
 		"Renard RemovedNail": {
 			"nailNodes": [
 				{
-					"name": "[Natural]Renard RemovedNail",
-					"localScale": [
-						1.05263,
-						1.05263,
-						1.05263
+					"name": "[Natural]HandL.Index",
+					"localPosition": [
+						-0.56745177507400513,
+						1.021693229675293,
+						0.0059052538126707077
 					],
-					"children": [
-						{
-							"name": "[Natural]HandL.Index",
-							"localPosition": [
-								-0.53908,
-								0.97061,
-								0.00561
-							],
-							"localRotation": [
-								-0.516969,
-								0.482009,
-								0.508309,
-								0.491969
-							],
-							"localScale": [
-								0.82513,
-								0.82513,
-								0.82513
-							],
-							"blendShapeWeights": {
-								"curl": 50.1
-							}
-						},
-						{
-							"name": "[Natural]HandL.Little",
-							"localPosition": [
-								-0.52523,
-								0.9703,
-								-0.02899
-							],
-							"localRotation": [
-								-0.477361,
-								0.516011,
-								0.576731,
-								0.416221
-							],
-							"localScale": [
-								0.94495,
-								0.94494,
-								0.94494
-							],
-							"blendShapeWeights": {
-								"curl": 13
-							}
-						},
-						{
-							"name": "[Natural]HandL.Middle",
-							"localPosition": [
-								-0.54673,
-								0.97465,
-								-0.00582
-							],
-							"localRotation": [
-								-0.507579,
-								0.483709,
-								0.496509,
-								0.511729
-							],
-							"localScale": [
-								0.91531,
-								0.91531,
-								0.91531
-							],
-							"blendShapeWeights": {
-								"curl": 40.3
-							}
-						},
-						{
-							"name": "[Natural]HandL.Ring",
-							"localPosition": [
-								-0.54214,
-								0.97216,
-								-0.01788
-							],
-							"localRotation": [
-								-0.497528,
-								0.459868,
-								0.543688,
-								0.495368
-							],
-							"localScale": [
-								0.9067,
-								0.9067,
-								0.9067
-							],
-							"blendShapeWeights": {
-								"curl": 38.3
-							}
-						},
-						{
-							"name": "[Natural]HandL.Thumb",
-							"localPosition": [
-								-0.48148,
-								0.96337,
-								0.03488
-							],
-							"localRotation": [
-								0.24682,
-								0.28891,
-								0.689851,
-								0.616211
-							],
-							"localScale": [
-								1.03038,
-								1.47418,
-								1.03038
-							],
-							"blendShapeWeights": {
-								"curl": 10.6
-							}
-						},
-						{
-							"name": "[Natural]HandR.Index",
-							"localPosition": [
-								0.53908,
-								0.97061,
-								0.00561
-							],
-							"localRotation": [
-								-0.516969,
-								-0.482009,
-								-0.508309,
-								0.491969
-							],
-							"localScale": [
-								0.82513,
-								0.82513,
-								0.82513
-							],
-							"blendShapeWeights": {
-								"curl": 50.1
-							}
-						},
-						{
-							"name": "[Natural]HandR.Little",
-							"localPosition": [
-								0.52523,
-								0.9703,
-								-0.02899
-							],
-							"localRotation": [
-								-0.477361,
-								-0.516011,
-								-0.576731,
-								0.416221
-							],
-							"localScale": [
-								0.94495,
-								0.94494,
-								0.94494
-							],
-							"blendShapeWeights": {
-								"curl": 13
-							}
-						},
-						{
-							"name": "[Natural]HandR.Middle",
-							"localPosition": [
-								0.54673,
-								0.97465,
-								-0.00582
-							],
-							"localRotation": [
-								-0.507579,
-								-0.483709,
-								-0.496509,
-								0.511729
-							],
-							"localScale": [
-								0.91531,
-								0.91531,
-								0.91531
-							],
-							"blendShapeWeights": {
-								"curl": 40.3
-							}
-						},
-						{
-							"name": "[Natural]HandR.Ring",
-							"localPosition": [
-								0.54214,
-								0.97216,
-								-0.01788
-							],
-							"localRotation": [
-								-0.497528,
-								-0.459868,
-								-0.543688,
-								0.495368
-							],
-							"localScale": [
-								0.9067,
-								0.9067,
-								0.9067
-							],
-							"blendShapeWeights": {
-								"curl": 38.3
-							}
-						},
-						{
-							"name": "[Natural]HandR.Thumb",
-							"localPosition": [
-								0.48148,
-								0.96337,
-								0.03488
-							],
-							"localRotation": [
-								0.24682,
-								-0.28891,
-								-0.689851,
-								0.616211
-							],
-							"localScale": [
-								1.03039,
-								1.47418,
-								1.03038
-							],
-							"blendShapeWeights": {
-								"curl": 10.6
-							}
-						}
-					]
+					"localRotation": [
+						-0.516969,
+						0.482009,
+						0.508309,
+						0.491969
+					],
+					"localScale": [
+						0.868556559085846,
+						0.868556559085846,
+						0.868556559085846
+					],
+					"blendShapeWeights": {
+						"curl": 50.1
+					}
+				},
+				{
+					"name": "[Natural]HandL.Little",
+					"localPosition": [
+						-0.55287283658981323,
+						1.0213668346405029,
+						-0.030515743419528008
+					],
+					"localRotation": [
+						-0.477361,
+						0.516011,
+						0.576731,
+						0.416221
+					],
+					"localScale": [
+						0.9946826696395874,
+						0.99467211961746216,
+						0.99467211961746216
+					],
+					"blendShapeWeights": {
+						"curl": 13
+					}
+				},
+				{
+					"name": "[Natural]HandL.Middle",
+					"localPosition": [
+						-0.5755043625831604,
+						1.025945782661438,
+						-0.0061263064853847027
+					],
+					"localRotation": [
+						-0.507579,
+						0.483709,
+						0.496509,
+						0.511729
+					],
+					"localScale": [
+						0.96348273754119873,
+						0.96348273754119873,
+						0.96348273754119873
+					],
+					"blendShapeWeights": {
+						"curl": 40.3
+					}
+				},
+				{
+					"name": "[Natural]HandL.Ring",
+					"localPosition": [
+						-0.57067281007766724,
+						1.023324728012085,
+						-0.018821023404598236
+					],
+					"localRotation": [
+						-0.497528,
+						0.459868,
+						0.543688,
+						0.495368
+					],
+					"localScale": [
+						0.95441961288452148,
+						0.95441961288452148,
+						0.95441961288452148
+					],
+					"blendShapeWeights": {
+						"curl": 38.3
+					}
+				},
+				{
+					"name": "[Natural]HandL.Thumb",
+					"localPosition": [
+						-0.50682026147842407,
+						1.0140721797943115,
+						0.036715734750032425
+					],
+					"localRotation": [
+						0.24682,
+						0.28891,
+						0.689851,
+						0.616211
+					],
+					"localScale": [
+						1.0846089124679565,
+						1.551766037940979,
+						1.0846089124679565
+					],
+					"blendShapeWeights": {
+						"curl": 10.6
+					}
+				},
+				{
+					"name": "[Natural]HandR.Index",
+					"localPosition": [
+						0.56745177507400513,
+						1.021693229675293,
+						0.0059052538126707077
+					],
+					"localRotation": [
+						-0.516969,
+						-0.482009,
+						-0.508309,
+						0.491969
+					],
+					"localScale": [
+						0.868556559085846,
+						0.868556559085846,
+						0.868556559085846
+					],
+					"blendShapeWeights": {
+						"curl": 50.1
+					}
+				},
+				{
+					"name": "[Natural]HandR.Little",
+					"localPosition": [
+						0.55287283658981323,
+						1.0213668346405029,
+						-0.030515743419528008
+					],
+					"localRotation": [
+						-0.477361,
+						-0.516011,
+						-0.576731,
+						0.416221
+					],
+					"localScale": [
+						0.9946826696395874,
+						0.99467211961746216,
+						0.99467211961746216
+					],
+					"blendShapeWeights": {
+						"curl": 13
+					}
+				},
+				{
+					"name": "[Natural]HandR.Middle",
+					"localPosition": [
+						0.5755043625831604,
+						1.025945782661438,
+						-0.0061263064853847027
+					],
+					"localRotation": [
+						-0.507579,
+						-0.483709,
+						-0.496509,
+						0.511729
+					],
+					"localScale": [
+						0.96348273754119873,
+						0.96348273754119873,
+						0.96348273754119873
+					],
+					"blendShapeWeights": {
+						"curl": 40.3
+					}
+				},
+				{
+					"name": "[Natural]HandR.Ring",
+					"localPosition": [
+						0.57067281007766724,
+						1.023324728012085,
+						-0.018821023404598236
+					],
+					"localRotation": [
+						-0.497528,
+						-0.459868,
+						-0.543688,
+						0.495368
+					],
+					"localScale": [
+						0.95441961288452148,
+						0.95441961288452148,
+						0.95441961288452148
+					],
+					"blendShapeWeights": {
+						"curl": 38.3
+					}
+				},
+				{
+					"name": "[Natural]HandR.Thumb",
+					"localPosition": [
+						0.50682026147842407,
+						1.0140721797943115,
+						0.036715734750032425
+					],
+					"localRotation": [
+						0.24682,
+						-0.28891,
+						-0.689851,
+						0.616211
+					],
+					"localScale": [
+						1.084619402885437,
+						1.551766037940979,
+						1.0846089124679565
+					],
+					"blendShapeWeights": {
+						"curl": 10.6
+					}
 				}
 			],
 			"footNailNodes": [
@@ -22154,10 +22134,10 @@
 		"avatars": {
 			"SiuSiu": {
 				"avatarName": "SiuSiu",
-				"customerNotice": "手のみ（Hand Only）",
 				"avatarUrl": "https://adpx.booth.pm/items/8426340",
 				"supportedVersion": "0.10.62",
 				"reading": "しうしう",
+				"customerNotice": "手のみ（Hand Only）",
 				"displayNames": {
 					"ja": "シウシウ"
 				},
@@ -29405,7 +29385,7 @@
 									0.02567
 								],
 								"localRotation": [
-									0.100834,
+									0.10083399999999999,
 									0.239344,
 									0.768463,
 									0.584817
@@ -29515,7 +29495,7 @@
 									0.02567
 								],
 								"localRotation": [
-									-0.100834,
+									-0.10083399999999999,
 									0.239344,
 									0.768463,
 									-0.584817
@@ -34942,234 +34922,224 @@
 						],
 						"nailNodes": [
 							{
-								"name": "[Natural]ファルリア",
-								"localScale": [
-									1.19048,
-									1.19048,
-									1.19048
+								"name": "[Natural]HandL.Index",
+								"localPosition": [
+									-0.54793030023574829,
+									1.0539319515228271,
+									0.032607246190309525
 								],
-								"children": [
-									{
-										"name": "[Natural]HandL.Index",
-										"localPosition": [
-											-0.46026,
-											0.8853,
-											0.02739
-										],
-										"localRotation": [
-											-0.524641,
-											0.47408,
-											0.524641,
-											0.47408
-										],
-										"localScale": [
-											0.63024,
-											0.71949,
-											0.63024
-										],
-										"blendShapeWeights": {
-											"flat": 4.8
-										}
-									},
-									{
-										"name": "[Natural]HandL.Little",
-										"localPosition": [
-											-0.45057,
-											0.88441,
-											-0.00273
-										],
-										"localRotation": [
-											-0.523651,
-											0.460901,
-											0.537831,
-											0.473391
-										],
-										"localScale": [
-											0.77715,
-											0.77715,
-											0.77715
-										],
-										"blendShapeWeights": {
-											"flat": 33.9
-										}
-									},
-									{
-										"name": "[Natural]HandL.Middle",
-										"localPosition": [
-											-0.4691,
-											0.88636,
-											0.01703
-										],
-										"localRotation": [
-											-0.524067,
-											0.477117,
-											0.521677,
-											0.474937
-										],
-										"localScale": [
-											0.65162,
-											0.65162,
-											0.65162
-										],
-										"blendShapeWeights": {
-											"curl": 10.8
-										}
-									},
-									{
-										"name": "[Natural]HandL.Ring",
-										"localPosition": [
-											-0.46221,
-											0.88656,
-											0.00733
-										],
-										"localRotation": [
-											-0.534308,
-											0.463158,
-											0.534308,
-											0.463158
-										],
-										"localScale": [
-											0.61891,
-											0.74677,
-											0.61891
-										],
-										"blendShapeWeights": {
-											"flat": 2.1
-										}
-									},
-									{
-										"name": "[Natural]HandL.Thumb",
-										"localPosition": [
-											-0.4255,
-											0.87314,
-											0.0522
-										],
-										"localRotation": [
-											0.16747,
-											0.29277,
-											0.751461,
-											0.56705
-										],
-										"localScale": [
-											0.58973,
-											0.72568,
-											0.58973
-										],
-										"blendShapeWeights": {
-											"flat": 34.8
-										}
-									},
-									{
-										"name": "[Natural]HandR.Index",
-										"localPosition": [
-											0.46026,
-											0.8853,
-											0.02739
-										],
-										"localRotation": [
-											-0.524641,
-											-0.47408,
-											-0.524641,
-											0.47408
-										],
-										"localScale": [
-											0.63024,
-											0.71949,
-											0.63024
-										],
-										"blendShapeWeights": {
-											"flat": 4.8
-										}
-									},
-									{
-										"name": "[Natural]HandR.Little",
-										"localPosition": [
-											0.45057,
-											0.88441,
-											-0.00273
-										],
-										"localRotation": [
-											-0.523651,
-											-0.460901,
-											-0.537831,
-											0.473391
-										],
-										"localScale": [
-											0.77715,
-											0.77715,
-											0.77715
-										],
-										"blendShapeWeights": {
-											"flat": 33.9
-										}
-									},
-									{
-										"name": "[Natural]HandR.Middle",
-										"localPosition": [
-											0.4691,
-											0.88636,
-											0.01703
-										],
-										"localRotation": [
-											-0.524067,
-											-0.477117,
-											-0.521677,
-											0.474937
-										],
-										"localScale": [
-											0.65162,
-											0.65162,
-											0.65162
-										],
-										"blendShapeWeights": {
-											"curl": 10.8
-										}
-									},
-									{
-										"name": "[Natural]HandR.Ring",
-										"localPosition": [
-											0.46221,
-											0.88656,
-											0.00733
-										],
-										"localRotation": [
-											-0.534308,
-											-0.463158,
-											-0.534308,
-											0.463158
-										],
-										"localScale": [
-											0.61891,
-											0.74677,
-											0.61891
-										],
-										"blendShapeWeights": {
-											"flat": 2.1
-										}
-									},
-									{
-										"name": "[Natural]HandR.Thumb",
-										"localPosition": [
-											0.4255,
-											0.87314,
-											0.0522
-										],
-										"localRotation": [
-											0.16747,
-											-0.29277,
-											-0.751461,
-											0.56705
-										],
-										"localScale": [
-											0.58973,
-											0.72568,
-											0.58973
-										],
-										"blendShapeWeights": {
-											"flat": 34.8
-										}
-									}
-								]
+								"localRotation": [
+									-0.524641,
+									0.47408,
+									0.524641,
+									0.47408
+								],
+								"localScale": [
+									0.75028812885284424,
+									0.85653841495513916,
+									0.75028812885284424
+								],
+								"blendShapeWeights": {
+									"flat": 4.8
+								}
+							},
+							{
+								"name": "[Natural]HandL.Little",
+								"localPosition": [
+									-0.53639453649520874,
+									1.0528724193572998,
+									-0.00325001054443419
+								],
+								"localRotation": [
+									-0.523651,
+									0.460901,
+									0.537831,
+									0.473391
+								],
+								"localScale": [
+									0.92518150806427,
+									0.92518150806427,
+									0.92518150806427
+								],
+								"blendShapeWeights": {
+									"flat": 33.9
+								}
+							},
+							{
+								"name": "[Natural]HandL.Middle",
+								"localPosition": [
+									-0.558454155921936,
+									1.0551937818527222,
+									0.020273875445127487
+								],
+								"localRotation": [
+									-0.524067,
+									0.477117,
+									0.521677,
+									0.474937
+								],
+								"localScale": [
+									0.77574056386947632,
+									0.77574056386947632,
+									0.77574056386947632
+								],
+								"blendShapeWeights": {
+									"curl": 10.8
+								}
+							},
+							{
+								"name": "[Natural]HandL.Ring",
+								"localPosition": [
+									-0.55025178194046021,
+									1.0554319620132446,
+									0.0087262187153100967
+								],
+								"localRotation": [
+									-0.534308,
+									0.463158,
+									0.534308,
+									0.463158
+								],
+								"localScale": [
+									0.73680001497268677,
+									0.88901478052139282,
+									0.73680001497268677
+								],
+								"blendShapeWeights": {
+									"flat": 2.1
+								}
+							},
+							{
+								"name": "[Natural]HandL.Thumb",
+								"localPosition": [
+									-0.50654923915863037,
+									1.0394556522369385,
+									0.062143057584762573
+								],
+								"localRotation": [
+									0.16747,
+									0.29277,
+									0.751461,
+									0.56705
+								],
+								"localScale": [
+									0.70206177234649658,
+									0.863907516002655,
+									0.70206177234649658
+								],
+								"blendShapeWeights": {
+									"flat": 34.8
+								}
+							},
+							{
+								"name": "[Natural]HandR.Index",
+								"localPosition": [
+									0.54793030023574829,
+									1.0539319515228271,
+									0.032607246190309525
+								],
+								"localRotation": [
+									-0.524641,
+									-0.47408,
+									-0.524641,
+									0.47408
+								],
+								"localScale": [
+									0.75028812885284424,
+									0.85653841495513916,
+									0.75028812885284424
+								],
+								"blendShapeWeights": {
+									"flat": 4.8
+								}
+							},
+							{
+								"name": "[Natural]HandR.Little",
+								"localPosition": [
+									0.53639453649520874,
+									1.0528724193572998,
+									-0.00325001054443419
+								],
+								"localRotation": [
+									-0.523651,
+									-0.460901,
+									-0.537831,
+									0.473391
+								],
+								"localScale": [
+									0.92518150806427,
+									0.92518150806427,
+									0.92518150806427
+								],
+								"blendShapeWeights": {
+									"flat": 33.9
+								}
+							},
+							{
+								"name": "[Natural]HandR.Middle",
+								"localPosition": [
+									0.558454155921936,
+									1.0551937818527222,
+									0.020273875445127487
+								],
+								"localRotation": [
+									-0.524067,
+									-0.477117,
+									-0.521677,
+									0.474937
+								],
+								"localScale": [
+									0.77574056386947632,
+									0.77574056386947632,
+									0.77574056386947632
+								],
+								"blendShapeWeights": {
+									"curl": 10.8
+								}
+							},
+							{
+								"name": "[Natural]HandR.Ring",
+								"localPosition": [
+									0.55025178194046021,
+									1.0554319620132446,
+									0.0087262187153100967
+								],
+								"localRotation": [
+									-0.534308,
+									-0.463158,
+									-0.534308,
+									0.463158
+								],
+								"localScale": [
+									0.73680001497268677,
+									0.88901478052139282,
+									0.73680001497268677
+								],
+								"blendShapeWeights": {
+									"flat": 2.1
+								}
+							},
+							{
+								"name": "[Natural]HandR.Thumb",
+								"localPosition": [
+									0.50654923915863037,
+									1.0394556522369385,
+									0.062143057584762573
+								],
+								"localRotation": [
+									0.16747,
+									-0.29277,
+									-0.751461,
+									0.56705
+								],
+								"localScale": [
+									0.70206177234649658,
+									0.863907516002655,
+									0.70206177234649658
+								],
+								"blendShapeWeights": {
+									"flat": 34.8
+								}
 							},
 							{
 								"name": "[Oval]HandL.Index",
@@ -49826,7 +49796,7 @@
 								"localRotation": [
 									0.123059,
 									0.460379,
-									0.876693,
+									0.87669299999999994,
 									0.065709
 								],
 								"localScale": [
@@ -49892,7 +49862,7 @@
 								"localRotation": [
 									-0.123059,
 									0.460379,
-									0.876693,
+									0.87669299999999994,
 									-0.065709
 								],
 								"localScale": [
@@ -53186,234 +53156,224 @@
 						],
 						"nailNodes": [
 							{
-								"name": "[Natural]Lazuli",
-								"localScale": [
-									1.36309,
-									1.36309,
-									1.36309
+								"name": "[Natural]HandL.Index",
+								"localPosition": [
+									-0.58760088682174683,
+									1.1372123956680298,
+									0.006910866592079401
 								],
-								"children": [
-									{
-										"name": "[Natural]HandL.Index",
-										"localPosition": [
-											-0.43108,
-											0.83429,
-											0.00507
-										],
-										"localRotation": [
-											-0.463671,
-											0.473581,
-											0.524491,
-											0.534451
-										],
-										"localScale": [
-											0.63024,
-											0.63024,
-											0.63024
-										],
-										"blendShapeWeights": {
-											"curl": 11.1
-										}
-									},
-									{
-										"name": "[Natural]HandL.Little",
-										"localPosition": [
-											-0.42099,
-											0.83111,
-											-0.02235
-										],
-										"localRotation": [
-											-0.550584,
-											0.583524,
-											0.441423,
-											0.401873
-										],
-										"localScale": [
-											0.73282,
-											0.73282,
-											0.73282
-										],
-										"blendShapeWeights": {
-											"flat": 21.5
-										}
-									},
-									{
-										"name": "[Natural]HandL.Middle",
-										"localPosition": [
-											-0.43641,
-											0.83618,
-											-0.00326
-										],
-										"localRotation": [
-											-0.502761,
-											0.491881,
-											0.513221,
-											0.491821
-										],
-										"localScale": [
-											0.65162,
-											0.65162,
-											0.65162
-										],
-										"blendShapeWeights": {
-											"curl": 4.6
-										}
-									},
-									{
-										"name": "[Natural]HandL.Ring",
-										"localPosition": [
-											-0.43119,
-											0.83461,
-											-0.01368
-										],
-										"localRotation": [
-											-0.54365,
-											0.52865,
-											0.4665,
-											0.45536
-										],
-										"localScale": [
-											0.61891,
-											0.61891,
-											0.61891
-										],
-										"blendShapeWeights": {
-											"curl": 27.7
-										}
-									},
-									{
-										"name": "[Natural]HandL.Thumb",
-										"localPosition": [
-											-0.39479,
-											0.82326,
-											0.02906
-										],
-										"localRotation": [
-											0.12804,
-											0.1919,
-											0.747721,
-											0.622651
-										],
-										"localScale": [
-											0.66559,
-											0.77275,
-											0.66559
-										],
-										"blendShapeWeights": {
-											"curl": 3.1
-										}
-									},
-									{
-										"name": "[Natural]HandR.Index",
-										"localPosition": [
-											0.43108,
-											0.83429,
-											0.00507
-										],
-										"localRotation": [
-											-0.463671,
-											-0.473581,
-											-0.524491,
-											0.534451
-										],
-										"localScale": [
-											0.63024,
-											0.63024,
-											0.63024
-										],
-										"blendShapeWeights": {
-											"curl": 11.1
-										}
-									},
-									{
-										"name": "[Natural]HandR.Little",
-										"localPosition": [
-											0.42099,
-											0.83111,
-											-0.02235
-										],
-										"localRotation": [
-											-0.550584,
-											-0.583524,
-											-0.441423,
-											0.401873
-										],
-										"localScale": [
-											0.73282,
-											0.73282,
-											0.73282
-										],
-										"blendShapeWeights": {
-											"flat": 21.5
-										}
-									},
-									{
-										"name": "[Natural]HandR.Middle",
-										"localPosition": [
-											0.43641,
-											0.83618,
-											-0.00326
-										],
-										"localRotation": [
-											-0.502761,
-											-0.491881,
-											-0.513221,
-											0.491821
-										],
-										"localScale": [
-											0.65162,
-											0.65162,
-											0.65162
-										],
-										"blendShapeWeights": {
-											"curl": 4.6
-										}
-									},
-									{
-										"name": "[Natural]HandR.Ring",
-										"localPosition": [
-											0.43119,
-											0.83461,
-											-0.01368
-										],
-										"localRotation": [
-											-0.54365,
-											-0.52865,
-											-0.4665,
-											0.45536
-										],
-										"localScale": [
-											0.61891,
-											0.61891,
-											0.61891
-										],
-										"blendShapeWeights": {
-											"curl": 27.7
-										}
-									},
-									{
-										"name": "[Natural]HandR.Thumb",
-										"localPosition": [
-											0.39479,
-											0.82326,
-											0.02906
-										],
-										"localRotation": [
-											0.12804,
-											-0.1919,
-											-0.747721,
-											0.622651
-										],
-										"localScale": [
-											0.66559,
-											0.77275,
-											0.66559
-										],
-										"blendShapeWeights": {
-											"curl": 3.1
-										}
-									}
-								]
+								"localRotation": [
+									-0.463671,
+									0.473581,
+									0.524491,
+									0.534451
+								],
+								"localScale": [
+									0.85907387733459473,
+									0.85907387733459473,
+									0.85907387733459473
+								],
+								"blendShapeWeights": {
+									"curl": 11.1
+								}
+							},
+							{
+								"name": "[Natural]HandL.Little",
+								"localPosition": [
+									-0.573847234249115,
+									1.1328777074813843,
+									-0.030465062707662582
+								],
+								"localRotation": [
+									-0.550584,
+									0.583524,
+									0.441423,
+									0.401873
+								],
+								"localScale": [
+									0.99889957904815674,
+									0.99889957904815674,
+									0.99889957904815674
+								],
+								"blendShapeWeights": {
+									"flat": 21.5
+								}
+							},
+							{
+								"name": "[Natural]HandL.Middle",
+								"localPosition": [
+									-0.594866156578064,
+									1.1397886276245117,
+									-0.00444367341697216
+								],
+								"localRotation": [
+									-0.502761,
+									0.491881,
+									0.513221,
+									0.491821
+								],
+								"localScale": [
+									0.88821667432785034,
+									0.88821667432785034,
+									0.88821667432785034
+								],
+								"blendShapeWeights": {
+									"curl": 4.6
+								}
+							},
+							{
+								"name": "[Natural]HandL.Ring",
+								"localPosition": [
+									-0.58775079250335693,
+									1.1376485824584961,
+									-0.018647070974111557
+								],
+								"localRotation": [
+									-0.54365,
+									0.52865,
+									0.4665,
+									0.45536
+								],
+								"localScale": [
+									0.84363007545471191,
+									0.84363007545471191,
+									0.84363007545471191
+								],
+								"blendShapeWeights": {
+									"curl": 27.7
+								}
+							},
+							{
+								"name": "[Natural]HandL.Thumb",
+								"localPosition": [
+									-0.53813433647155762,
+									1.1221774816513062,
+									0.039611395448446274
+								],
+								"localRotation": [
+									0.12804,
+									0.1919,
+									0.747721,
+									0.622651
+								],
+								"localScale": [
+									0.90725910663604736,
+									1.0533277988433838,
+									0.90725910663604736
+								],
+								"blendShapeWeights": {
+									"curl": 3.1
+								}
+							},
+							{
+								"name": "[Natural]HandR.Index",
+								"localPosition": [
+									0.58760088682174683,
+									1.1372123956680298,
+									0.006910866592079401
+								],
+								"localRotation": [
+									-0.463671,
+									-0.473581,
+									-0.524491,
+									0.534451
+								],
+								"localScale": [
+									0.85907387733459473,
+									0.85907387733459473,
+									0.85907387733459473
+								],
+								"blendShapeWeights": {
+									"curl": 11.1
+								}
+							},
+							{
+								"name": "[Natural]HandR.Little",
+								"localPosition": [
+									0.573847234249115,
+									1.1328777074813843,
+									-0.030465062707662582
+								],
+								"localRotation": [
+									-0.550584,
+									-0.583524,
+									-0.441423,
+									0.401873
+								],
+								"localScale": [
+									0.99889957904815674,
+									0.99889957904815674,
+									0.99889957904815674
+								],
+								"blendShapeWeights": {
+									"flat": 21.5
+								}
+							},
+							{
+								"name": "[Natural]HandR.Middle",
+								"localPosition": [
+									0.594866156578064,
+									1.1397886276245117,
+									-0.00444367341697216
+								],
+								"localRotation": [
+									-0.502761,
+									-0.491881,
+									-0.513221,
+									0.491821
+								],
+								"localScale": [
+									0.88821667432785034,
+									0.88821667432785034,
+									0.88821667432785034
+								],
+								"blendShapeWeights": {
+									"curl": 4.6
+								}
+							},
+							{
+								"name": "[Natural]HandR.Ring",
+								"localPosition": [
+									0.58775079250335693,
+									1.1376485824584961,
+									-0.018647070974111557
+								],
+								"localRotation": [
+									-0.54365,
+									-0.52865,
+									-0.4665,
+									0.45536
+								],
+								"localScale": [
+									0.84363007545471191,
+									0.84363007545471191,
+									0.84363007545471191
+								],
+								"blendShapeWeights": {
+									"curl": 27.7
+								}
+							},
+							{
+								"name": "[Natural]HandR.Thumb",
+								"localPosition": [
+									0.53813433647155762,
+									1.1221774816513062,
+									0.039611395448446274
+								],
+								"localRotation": [
+									0.12804,
+									-0.1919,
+									-0.747721,
+									0.622651
+								],
+								"localScale": [
+									0.90725910663604736,
+									1.0533277988433838,
+									0.90725910663604736
+								],
+								"blendShapeWeights": {
+									"curl": 3.1
+								}
 							},
 							{
 								"name": "[Oval]HandL.Little",
@@ -53845,234 +53805,224 @@
 						],
 						"nailNodes": [
 							{
-								"name": "[Natural]Flare",
-								"localScale": [
-									1.19048,
-									1.19048,
-									1.19048
+								"name": "[Natural]HandL.Index",
+								"localPosition": [
+									-0.51319211721420288,
+									0.99320560693740845,
+									0.0060357335023581982
 								],
-								"children": [
-									{
-										"name": "[Natural]HandL.Index",
-										"localPosition": [
-											-0.43108,
-											0.83429,
-											0.00507
-										],
-										"localRotation": [
-											-0.463671,
-											0.473581,
-											0.524491,
-											0.534451
-										],
-										"localScale": [
-											0.63024,
-											0.63024,
-											0.63024
-										],
-										"blendShapeWeights": {
-											"curl": 11.1
-										}
-									},
-									{
-										"name": "[Natural]HandL.Little",
-										"localPosition": [
-											-0.42099,
-											0.83111,
-											-0.02235
-										],
-										"localRotation": [
-											-0.550584,
-											0.583524,
-											0.441423,
-											0.401873
-										],
-										"localScale": [
-											0.73282,
-											0.73282,
-											0.73282
-										],
-										"blendShapeWeights": {
-											"flat": 21.5
-										}
-									},
-									{
-										"name": "[Natural]HandL.Middle",
-										"localPosition": [
-											-0.43641,
-											0.83618,
-											-0.00326
-										],
-										"localRotation": [
-											-0.502761,
-											0.491881,
-											0.513221,
-											0.491821
-										],
-										"localScale": [
-											0.65162,
-											0.65162,
-											0.65162
-										],
-										"blendShapeWeights": {
-											"curl": 4.6
-										}
-									},
-									{
-										"name": "[Natural]HandL.Ring",
-										"localPosition": [
-											-0.43119,
-											0.83461,
-											-0.01368
-										],
-										"localRotation": [
-											-0.54365,
-											0.52865,
-											0.4665,
-											0.45536
-										],
-										"localScale": [
-											0.61891,
-											0.61891,
-											0.61891
-										],
-										"blendShapeWeights": {
-											"curl": 27.7
-										}
-									},
-									{
-										"name": "[Natural]HandL.Thumb",
-										"localPosition": [
-											-0.39479,
-											0.82326,
-											0.02906
-										],
-										"localRotation": [
-											0.12804,
-											0.1919,
-											0.747721,
-											0.622651
-										],
-										"localScale": [
-											0.66559,
-											0.77275,
-											0.66559
-										],
-										"blendShapeWeights": {
-											"curl": 3.1
-										}
-									},
-									{
-										"name": "[Natural]HandR.Index",
-										"localPosition": [
-											0.43108,
-											0.83429,
-											0.00507
-										],
-										"localRotation": [
-											-0.463671,
-											-0.473581,
-											-0.524491,
-											0.534451
-										],
-										"localScale": [
-											0.63024,
-											0.63024,
-											0.63024
-										],
-										"blendShapeWeights": {
-											"curl": 11.1
-										}
-									},
-									{
-										"name": "[Natural]HandR.Little",
-										"localPosition": [
-											0.42099,
-											0.83111,
-											-0.02235
-										],
-										"localRotation": [
-											-0.550584,
-											-0.583524,
-											-0.441423,
-											0.401873
-										],
-										"localScale": [
-											0.73282,
-											0.73282,
-											0.73282
-										],
-										"blendShapeWeights": {
-											"flat": 21.5
-										}
-									},
-									{
-										"name": "[Natural]HandR.Middle",
-										"localPosition": [
-											0.43641,
-											0.83618,
-											-0.00326
-										],
-										"localRotation": [
-											-0.502761,
-											-0.491881,
-											-0.513221,
-											0.491821
-										],
-										"localScale": [
-											0.65162,
-											0.65162,
-											0.65162
-										],
-										"blendShapeWeights": {
-											"curl": 4.6
-										}
-									},
-									{
-										"name": "[Natural]HandR.Ring",
-										"localPosition": [
-											0.43119,
-											0.83461,
-											-0.01368
-										],
-										"localRotation": [
-											-0.54365,
-											-0.52865,
-											-0.4665,
-											0.45536
-										],
-										"localScale": [
-											0.61891,
-											0.61891,
-											0.61891
-										],
-										"blendShapeWeights": {
-											"curl": 27.7
-										}
-									},
-									{
-										"name": "[Natural]HandR.Thumb",
-										"localPosition": [
-											0.39479,
-											0.82326,
-											0.02906
-										],
-										"localRotation": [
-											0.12804,
-											-0.1919,
-											-0.747721,
-											0.622651
-										],
-										"localScale": [
-											0.66559,
-											0.77275,
-											0.66559
-										],
-										"blendShapeWeights": {
-											"curl": 3.1
-										}
-									}
-								]
+								"localRotation": [
+									-0.463671,
+									0.473581,
+									0.524491,
+									0.534451
+								],
+								"localScale": [
+									0.75028812885284424,
+									0.75028812885284424,
+									0.75028812885284424
+								],
+								"blendShapeWeights": {
+									"curl": 11.1
+								}
+							},
+							{
+								"name": "[Natural]HandL.Little",
+								"localPosition": [
+									-0.50118017196655273,
+									0.98941981792449951,
+									-0.026607228443026543
+								],
+								"localRotation": [
+									-0.550584,
+									0.583524,
+									0.441423,
+									0.401873
+								],
+								"localScale": [
+									0.87240749597549438,
+									0.87240749597549438,
+									0.87240749597549438
+								],
+								"blendShapeWeights": {
+									"flat": 21.5
+								}
+							},
+							{
+								"name": "[Natural]HandL.Middle",
+								"localPosition": [
+									-0.51953738927841187,
+									0.99545550346374512,
+									-0.0038809645920991898
+								],
+								"localRotation": [
+									-0.502761,
+									0.491881,
+									0.513221,
+									0.491821
+								],
+								"localScale": [
+									0.77574056386947632,
+									0.77574056386947632,
+									0.77574056386947632
+								],
+								"blendShapeWeights": {
+									"curl": 4.6
+								}
+							},
+							{
+								"name": "[Natural]HandL.Ring",
+								"localPosition": [
+									-0.51332306861877441,
+									0.99358648061752319,
+									-0.016285765916109085
+								],
+								"localRotation": [
+									-0.54365,
+									0.52865,
+									0.4665,
+									0.45536
+								],
+								"localScale": [
+									0.73680001497268677,
+									0.73680001497268677,
+									0.73680001497268677
+								],
+								"blendShapeWeights": {
+									"curl": 27.7
+								}
+							},
+							{
+								"name": "[Natural]HandL.Thumb",
+								"localPosition": [
+									-0.4699895977973938,
+									0.98007458448410034,
+									0.034595347940921783
+								],
+								"localRotation": [
+									0.12804,
+									0.1919,
+									0.747721,
+									0.622651
+								],
+								"localScale": [
+									0.79237157106399536,
+									0.91994345188140869,
+									0.79237157106399536
+								],
+								"blendShapeWeights": {
+									"curl": 3.1
+								}
+							},
+							{
+								"name": "[Natural]HandR.Index",
+								"localPosition": [
+									0.51319211721420288,
+									0.99320560693740845,
+									0.0060357335023581982
+								],
+								"localRotation": [
+									-0.463671,
+									-0.473581,
+									-0.524491,
+									0.534451
+								],
+								"localScale": [
+									0.75028812885284424,
+									0.75028812885284424,
+									0.75028812885284424
+								],
+								"blendShapeWeights": {
+									"curl": 11.1
+								}
+							},
+							{
+								"name": "[Natural]HandR.Little",
+								"localPosition": [
+									0.50118017196655273,
+									0.98941981792449951,
+									-0.026607228443026543
+								],
+								"localRotation": [
+									-0.550584,
+									-0.583524,
+									-0.441423,
+									0.401873
+								],
+								"localScale": [
+									0.87240749597549438,
+									0.87240749597549438,
+									0.87240749597549438
+								],
+								"blendShapeWeights": {
+									"flat": 21.5
+								}
+							},
+							{
+								"name": "[Natural]HandR.Middle",
+								"localPosition": [
+									0.51953738927841187,
+									0.99545550346374512,
+									-0.0038809645920991898
+								],
+								"localRotation": [
+									-0.502761,
+									-0.491881,
+									-0.513221,
+									0.491821
+								],
+								"localScale": [
+									0.77574056386947632,
+									0.77574056386947632,
+									0.77574056386947632
+								],
+								"blendShapeWeights": {
+									"curl": 4.6
+								}
+							},
+							{
+								"name": "[Natural]HandR.Ring",
+								"localPosition": [
+									0.51332306861877441,
+									0.99358648061752319,
+									-0.016285765916109085
+								],
+								"localRotation": [
+									-0.54365,
+									-0.52865,
+									-0.4665,
+									0.45536
+								],
+								"localScale": [
+									0.73680001497268677,
+									0.73680001497268677,
+									0.73680001497268677
+								],
+								"blendShapeWeights": {
+									"curl": 27.7
+								}
+							},
+							{
+								"name": "[Natural]HandR.Thumb",
+								"localPosition": [
+									0.4699895977973938,
+									0.98007458448410034,
+									0.034595347940921783
+								],
+								"localRotation": [
+									0.12804,
+									-0.1919,
+									-0.747721,
+									0.622651
+								],
+								"localScale": [
+									0.79237157106399536,
+									0.91994345188140869,
+									0.79237157106399536
+								],
+								"blendShapeWeights": {
+									"curl": 3.1
+								}
 							},
 							{
 								"name": "[Oval]HandL.Little",
@@ -65476,7 +65426,7 @@
 											0.03131,
 											0.67309,
 											0.73867,
-											-0.01852
+											-0.018519999999999998
 										],
 										"localScale": [
 											0.97398,
@@ -65586,7 +65536,7 @@
 											0.03131,
 											-0.67309,
 											-0.73867,
-											-0.01852
+											-0.018519999999999998
 										],
 										"localScale": [
 											0.97398,
@@ -70719,10 +70669,10 @@
 			},
 			"Biscuit": {
 				"avatarName": "Biscuit",
-				"customerNotice": "手のみ（Hand Only）",
 				"avatarUrl": "https://inugoyamart.booth.pm/items/5377257",
 				"supportedVersion": "0.9.432",
 				"reading": "びすきゅいらんぐどしゃ",
+				"customerNotice": "手のみ（Hand Only）",
 				"displayNames": {
 					"ja": "ビスキュイ・ラングドシャ"
 				},
@@ -111118,7 +111068,7 @@
 							{
 								"name": "FootL.Ring",
 								"localPosition": [
-									-0.07408,
+									-0.074079999999999993,
 									0.01933,
 									0.0563
 								],
@@ -111228,7 +111178,7 @@
 							{
 								"name": "FootR.Ring",
 								"localPosition": [
-									0.07408,
+									0.074079999999999993,
 									0.01933,
 									0.0563
 								],
@@ -112038,7 +111988,7 @@
 							{
 								"name": "FootL.Ring",
 								"localPosition": [
-									-0.07408,
+									-0.074079999999999993,
 									0.01933,
 									0.0563
 								],
@@ -112148,7 +112098,7 @@
 							{
 								"name": "FootR.Ring",
 								"localPosition": [
-									0.07408,
+									0.074079999999999993,
 									0.01933,
 									0.0563
 								],
@@ -115440,7 +115390,7 @@
 								"localPosition": [
 									-0.05608,
 									0.01717,
-									0.09409
+									0.094089999999999993
 								],
 								"localRotation": [
 									-0.03482,
@@ -115550,7 +115500,7 @@
 								"localPosition": [
 									0.05608,
 									0.01717,
-									0.09409
+									0.094089999999999993
 								],
 								"localRotation": [
 									0.03482,
@@ -119923,7 +119873,7 @@
 								],
 								"localRotation": [
 									0.05391,
-									-7e-05,
+									-7E-05,
 									0.725543,
 									0.686062
 								],
@@ -120033,7 +119983,7 @@
 								],
 								"localRotation": [
 									-0.05391,
-									-7e-05,
+									-7E-05,
 									0.725543,
 									-0.686062
 								],
@@ -120055,7 +120005,7 @@
 								],
 								"localRotation": [
 									0.05391,
-									-7e-05,
+									-7E-05,
 									0.725543,
 									0.686062
 								],
@@ -120077,7 +120027,7 @@
 								],
 								"localRotation": [
 									-0.05391,
-									-7e-05,
+									-7E-05,
 									0.725543,
 									-0.686062
 								],
@@ -123833,7 +123783,7 @@
 								"localPosition": [
 									-0.44201,
 									0.83508,
-									6e-05
+									6E-05
 								],
 								"localRotation": [
 									-0.45647,
@@ -123940,7 +123890,7 @@
 								"localPosition": [
 									0.44201,
 									0.83508,
-									6e-05
+									6E-05
 								],
 								"localRotation": [
 									0.45647,
@@ -127350,7 +127300,7 @@
 									-0.04523,
 									0.61797,
 									0.7849,
-									1e-05
+									1E-05
 								],
 								"localScale": [
 									1.46643,
@@ -127454,7 +127404,7 @@
 									-0.04523,
 									-0.61797,
 									-0.7849,
-									1e-05
+									1E-05
 								],
 								"localScale": [
 									1.46643,
@@ -129964,7 +129914,7 @@
 								"localRotation": [
 									-0.05247,
 									0.664321,
-									0.744172,
+									0.74417199999999994,
 									0.04618
 								],
 								"localScale": [
@@ -130074,7 +130024,7 @@
 								"localRotation": [
 									-0.05247,
 									-0.664321,
-									-0.744172,
+									-0.74417199999999994,
 									0.04618
 								],
 								"localScale": [
@@ -136471,7 +136421,7 @@
 										],
 										"localScale": [
 											1.02257,
-											1.24778,
+											1.2477799999999999,
 											1.02257
 										],
 										"blendShapeWeights": {
@@ -136581,7 +136531,7 @@
 										],
 										"localScale": [
 											1.02257,
-											1.24778,
+											1.2477799999999999,
 											1.02257
 										],
 										"blendShapeWeights": {
@@ -137192,7 +137142,7 @@
 										],
 										"localScale": [
 											1.02257,
-											1.24778,
+											1.2477799999999999,
 											1.02257
 										],
 										"blendShapeWeights": {
@@ -137302,7 +137252,7 @@
 										],
 										"localScale": [
 											1.02257,
-											1.24778,
+											1.2477799999999999,
 											1.02257
 										],
 										"blendShapeWeights": {
@@ -144495,7 +144445,7 @@
 											0.05131
 										],
 										"localScale": [
-											0.7900200000000001,
+											0.79002000000000006,
 											1.03454,
 											0.78344
 										],
@@ -144605,7 +144555,7 @@
 											-0.05131
 										],
 										"localScale": [
-											0.7900200000000001,
+											0.79002000000000006,
 											1.03454,
 											0.78344
 										],
@@ -155936,7 +155886,7 @@
 											0.10533
 										],
 										"localRotation": [
-											-0.084196,
+											-0.084195999999999993,
 											0.533057,
 											0.837761,
 											-0.083175
@@ -156134,7 +156084,7 @@
 											0.10533
 										],
 										"localRotation": [
-											-0.084196,
+											-0.084195999999999993,
 											-0.533056,
 											-0.837761,
 											-0.083175
@@ -178881,7 +178831,7 @@
 											-0.00442,
 											0.581771,
 											0.813341,
-											8e-05
+											8E-05
 										],
 										"localScale": [
 											0.90027,
@@ -178993,7 +178943,7 @@
 											0.00442,
 											0.581771,
 											0.813341,
-											-8e-05
+											-8E-05
 										],
 										"localScale": [
 											0.90027,
@@ -179551,7 +179501,7 @@
 									-0.00442,
 									0.57483,
 									0.818261,
-									4e-05
+									4E-05
 								],
 								"localScale": [
 									0.90027,
@@ -179663,7 +179613,7 @@
 									0.00442,
 									0.57483,
 									0.818261,
-									-4e-05
+									-4E-05
 								],
 								"localScale": [
 									0.90027,
@@ -185142,7 +185092,7 @@
 											0.17664
 										],
 										"localRotation": [
-											-4e-05,
+											-4E-05,
 											0.61476,
 											0.77516,
 											-0.14559
@@ -185252,7 +185202,7 @@
 											0.17664
 										],
 										"localRotation": [
-											4e-05,
+											4E-05,
 											0.61476,
 											0.77516,
 											0.14559
@@ -193098,7 +193048,7 @@
 								"localPosition": [
 									-0.61504,
 									1.23669,
-									-6e-05
+									-6E-05
 								],
 								"localRotation": [
 									-0.489858,
@@ -193208,7 +193158,7 @@
 								"localPosition": [
 									0.61504,
 									1.23669,
-									-6e-05
+									-6E-05
 								],
 								"localRotation": [
 									-0.489861,
@@ -193574,7 +193524,7 @@
 								"localPosition": [
 									-0.61532,
 									1.22959,
-									-7e-05
+									-7E-05
 								],
 								"localRotation": [
 									-0.489858,
@@ -193684,7 +193634,7 @@
 								"localPosition": [
 									0.61532,
 									1.22959,
-									-7e-05
+									-7E-05
 								],
 								"localRotation": [
 									-0.489861,
@@ -211512,10 +211462,10 @@
 											0.14739
 										],
 										"localRotation": [
-											2.3e-05,
+											2.3E-05,
 											0.598145,
 											0.801388,
-											1.8e-05
+											1.8E-05
 										],
 										"localScale": [
 											1.73449,
@@ -211666,10 +211616,10 @@
 											0.13645
 										],
 										"localRotation": [
-											-2.3e-05,
+											-2.3E-05,
 											0.598145,
 											0.801388,
-											-1.9e-05
+											-1.9E-05
 										],
 										"localScale": [
 											1.73449,
@@ -212470,6 +212420,11 @@
 					},
 					"SubArm(位置のみ)": {
 						"variationName": "SubArm(位置のみ)",
+						"customerNotice": "位置合わせのみ",
+						"displayNames": {
+							"ja": "SubArm(位置のみ)",
+							"en": "SubArm(Position Only)"
+						},
 						"boneMappingOverride": {
 							"Left Thumb Distal": "SubArm/Armature_SubArm/Hips/Spine/Chest/UpperChest/SubShoulder_L/SubUpperArm_L/SubLowerArm_L/SubHand_L/SubThumbProximal_L/SubThumbIntermediate_L/SubThumbDistal_L",
 							"Left Index Distal": "SubArm/Armature_SubArm/Hips/Spine/Chest/UpperChest/SubShoulder_L/SubUpperArm_L/SubLowerArm_L/SubHand_L/SubIndexProximal_L/SubIndexIntermediate_L/SubIndexDistal_L",
@@ -212481,11 +212436,6 @@
 							"Right Middle Distal": "SubArm/Armature_SubArm/Hips/Spine/Chest/UpperChest/SubShoulder_R/SubUpperArm_R/SubLowerArm_R/SubHand_R/SubMiddleProximal_R/SubMiddleIntermediate_R/SubMiddleDistal_R",
 							"Right Ring Distal": "SubArm/Armature_SubArm/Hips/Spine/Chest/UpperChest/SubShoulder_R/SubUpperArm_R/SubLowerArm_R/SubHand_R/SubRingProximal_R/SubRingIntermediate_R/SubRingDistal_R",
 							"Right Little Distal": "SubArm/Armature_SubArm/Hips/Spine/Chest/UpperChest/SubShoulder_R/SubUpperArm_R/SubLowerArm_R/SubHand_R/SubLittleProximal_R/SubLittleIntermediate_R/SubLittleDistal_R"
-						},
-						"customerNotice": "位置合わせのみ",
-						"displayNames": {
-							"ja": "SubArm(位置のみ)",
-							"en": "SubArm(Position Only)"
 						},
 						"avatarPrefabs": [
 							{
@@ -212766,7 +212716,7 @@
 									0.109019,
 									0.319988,
 									0.772736,
-									0.537217
+									0.53721699999999994
 								],
 								"localScale": [
 									1.229,
@@ -212810,7 +212760,7 @@
 									0.109019,
 									-0.319988,
 									-0.772736,
-									0.537217
+									0.53721699999999994
 								],
 								"localScale": [
 									1.229,
@@ -219121,10 +219071,10 @@
 		"avatars": {
 			"Miserum": {
 				"avatarName": "Miserum",
-				"customerNotice": "フットネイル非推奨",
 				"avatarUrl": "https://vervain-shop.booth.pm/items/7107765",
 				"supportedVersion": "0.9.14",
 				"reading": "みぜらむ",
+				"customerNotice": "フットネイル非推奨",
 				"displayNames": {
 					"ja": "ミゼラム"
 				},
@@ -226864,7 +226814,7 @@
 								"localRotation": [
 									-0.00958,
 									0.556743,
-									0.827015,
+									0.82701499999999994,
 									-0.07741
 								],
 								"localScale": [
@@ -226974,7 +226924,7 @@
 								"localRotation": [
 									-0.00958,
 									-0.556743,
-									-0.827015,
+									-0.82701499999999994,
 									-0.07741
 								],
 								"localScale": [
@@ -227885,9 +227835,9 @@
 									{
 										"name": "FootL.Index",
 										"localPosition": [
-											-0.0480581248,
-											0.07140602559999999,
-											0.114420656
+											-0.0480581261,
+											0.07140603,
+											0.114420652
 										],
 										"localRotation": [
 											-0.02912,
@@ -227896,9 +227846,9 @@
 											0.00405
 										],
 										"localScale": [
-											1.026851112,
-											1.1407355344,
-											1.026851112
+											1.026851,
+											1.14073551,
+											1.026851
 										],
 										"blendShapeWeights": {
 											"flat": 50.8
@@ -227907,8 +227857,8 @@
 									{
 										"name": "FootL.Little",
 										"localPosition": [
-											-0.0782031488,
-											0.06680456159999999,
+											-0.07820315,
+											0.06680456,
 											0.09673944
 										],
 										"localRotation": [
@@ -227918,9 +227868,9 @@
 											-0.0945
 										],
 										"localScale": [
-											1.0202279023999998,
-											1.4031711567999998,
-											1.0202279023999998
+											1.02022791,
+											1.40317118,
+											1.02022791
 										],
 										"blendShapeWeights": {
 											"flat": 34.3
@@ -227929,9 +227879,9 @@
 									{
 										"name": "FootL.Middle",
 										"localPosition": [
-											-0.058666854399999996,
-											0.0691451488,
-											0.11149311039999998
+											-0.0586668551,
+											0.06914515,
+											0.111493111
 										],
 										"localRotation": [
 											-0.03368,
@@ -227940,9 +227890,9 @@
 											-0.01608
 										],
 										"localScale": [
-											0.9573508895999999,
-											1.2641779584,
-											0.9573508895999999
+											0.9573509,
+											1.26417792,
+											0.9573509
 										],
 										"blendShapeWeights": {
 											"flat": 57
@@ -227951,9 +227901,9 @@
 									{
 										"name": "FootL.Ring",
 										"localPosition": [
-											-0.068949496,
-											0.0680002176,
-											0.1055872944
+											-0.0689495,
+											0.06800022,
+											0.105587296
 										],
 										"localRotation": [
 											-0.03374,
@@ -227962,9 +227912,9 @@
 											-0.00716
 										],
 										"localScale": [
-											0.999677112,
-											1.318011464,
-											0.999677112
+											0.9996771,
+											1.31801152,
+											0.9996771
 										],
 										"blendShapeWeights": {
 											"flat": 42
@@ -227973,9 +227923,9 @@
 									{
 										"name": "FootL.Thumb",
 										"localPosition": [
-											-0.033905905599999994,
-											0.0713987792,
-											0.1129496368
+											-0.0339059047,
+											0.07139878,
+											0.11294964
 										],
 										"localRotation": [
 											-0.07101,
@@ -227984,9 +227934,9 @@
 											0.05343
 										],
 										"localScale": [
-											1.0114307727999998,
-											1.2055400896,
-											1.0030032096
+											1.01143074,
+											1.20554006,
+											1.00300324
 										],
 										"blendShapeWeights": {
 											"flat": 61.1
@@ -227995,9 +227945,9 @@
 									{
 										"name": "FootR.Index",
 										"localPosition": [
-											0.0480581248,
-											0.07140602559999999,
-											0.114420656
+											0.0480581261,
+											0.07140603,
+											0.114420652
 										],
 										"localRotation": [
 											0.02912,
@@ -228006,9 +227956,9 @@
 											-0.00405
 										],
 										"localScale": [
-											1.026851112,
-											1.1407355344,
-											1.026851112
+											1.026851,
+											1.14073551,
+											1.026851
 										],
 										"blendShapeWeights": {
 											"flat": 50.8
@@ -228017,8 +227967,8 @@
 									{
 										"name": "FootR.Little",
 										"localPosition": [
-											0.0782031488,
-											0.06680456159999999,
+											0.07820315,
+											0.06680456,
 											0.09673944
 										],
 										"localRotation": [
@@ -228028,9 +227978,9 @@
 											0.0945
 										],
 										"localScale": [
-											1.0202279023999998,
-											1.4031711567999998,
-											1.0202279023999998
+											1.02022791,
+											1.40317118,
+											1.02022791
 										],
 										"blendShapeWeights": {
 											"flat": 34.3
@@ -228039,9 +227989,9 @@
 									{
 										"name": "FootR.Middle",
 										"localPosition": [
-											0.058666854399999996,
-											0.0691451488,
-											0.11149311039999998
+											0.0586668551,
+											0.06914515,
+											0.111493111
 										],
 										"localRotation": [
 											0.03368,
@@ -228050,9 +228000,9 @@
 											0.01608
 										],
 										"localScale": [
-											0.9573508895999999,
-											1.2641779584,
-											0.9573508895999999
+											0.9573509,
+											1.26417792,
+											0.9573509
 										],
 										"blendShapeWeights": {
 											"flat": 57
@@ -228061,9 +228011,9 @@
 									{
 										"name": "FootR.Ring",
 										"localPosition": [
-											0.068949496,
-											0.0680002176,
-											0.1055872944
+											0.0689495,
+											0.06800022,
+											0.105587296
 										],
 										"localRotation": [
 											0.03374,
@@ -228072,9 +228022,9 @@
 											0.00716
 										],
 										"localScale": [
-											0.999677112,
-											1.318011464,
-											0.999677112
+											0.9996771,
+											1.31801152,
+											0.9996771
 										],
 										"blendShapeWeights": {
 											"flat": 42
@@ -228083,9 +228033,9 @@
 									{
 										"name": "FootR.Thumb",
 										"localPosition": [
-											0.033905905599999994,
-											0.0713987792,
-											0.1129496368
+											0.0339059047,
+											0.07139878,
+											0.11294964
 										],
 										"localRotation": [
 											0.07101,
@@ -228094,9 +228044,9 @@
 											-0.05343
 										],
 										"localScale": [
-											1.0114307727999998,
-											1.2055400896,
-											1.0030032096
+											1.01143074,
+											1.20554006,
+											1.00300324
 										],
 										"blendShapeWeights": {
 											"flat": 61.1
@@ -228111,9 +228061,9 @@
 									{
 										"name": "FootL.Index",
 										"localPosition": [
-											-0.0480653712,
-											0.055521916799999994,
-											0.10265974879999999
+											-0.04806537,
+											0.0555219166,
+											0.102659747
 										],
 										"localRotation": [
 											-0.02912,
@@ -228122,9 +228072,9 @@
 											0.00405
 										],
 										"localScale": [
-											1.0697208143999999,
-											1.1883588752,
-											1.0697208143999999
+											1.06972086,
+											1.1883589,
+											1.06972086
 										],
 										"blendShapeWeights": {
 											"flat": 50.8
@@ -228133,9 +228083,9 @@
 									{
 										"name": "FootL.Little",
 										"localPosition": [
-											-0.0778770608,
-											0.051913209599999996,
-											0.084891576
+											-0.07787706,
+											0.05191321,
+											0.08489157
 										],
 										"localRotation": [
 											0.06612,
@@ -228144,9 +228094,9 @@
 											-0.0945
 										],
 										"localScale": [
-											1.0202279023999998,
-											1.4031711567999998,
-											1.0202279023999998
+											1.02022791,
+											1.40317118,
+											1.02022791
 										],
 										"blendShapeWeights": {
 											"flat": 34.3
@@ -228156,8 +228106,8 @@
 										"name": "FootL.Middle",
 										"localPosition": [
 											-0.05869584,
-											0.053565388799999995,
-											0.09980466719999999
+											0.05356539,
+											0.09980467
 										],
 										"localRotation": [
 											-0.03791,
@@ -228166,9 +228116,9 @@
 											-0.01971
 										],
 										"localScale": [
-											0.9573508895999999,
-											1.2641779584,
-											0.9573508895999999
+											0.9573509,
+											1.26417792,
+											0.9573509
 										],
 										"blendShapeWeights": {
 											"flat": 57
@@ -228177,9 +228127,9 @@
 									{
 										"name": "FootL.Ring",
 										"localPosition": [
-											-0.0686741328,
-											0.052761038399999995,
-											0.0936017488
+											-0.06867413,
+											0.0527610369,
+											0.09360175
 										],
 										"localRotation": [
 											-0.03788,
@@ -228188,9 +228138,9 @@
 											-0.01021
 										],
 										"localScale": [
-											0.999677112,
-											1.318011464,
-											0.999677112
+											0.9996771,
+											1.31801152,
+											0.9996771
 										],
 										"blendShapeWeights": {
 											"flat": 42
@@ -228199,9 +228149,9 @@
 									{
 										"name": "FootL.Thumb",
 										"localPosition": [
-											-0.034746488,
-											0.055521916799999994,
-											0.1012249616
+											-0.0347464867,
+											0.0555219166,
+											0.101224959
 										],
 										"localRotation": [
 											-0.0627,
@@ -228210,9 +228160,9 @@
 											0.05859
 										],
 										"localScale": [
-											1.0114307727999998,
-											1.2055400896,
-											1.0030032096
+											1.01143074,
+											1.20554006,
+											1.00300324
 										],
 										"blendShapeWeights": {
 											"flat": 61.1
@@ -228221,9 +228171,9 @@
 									{
 										"name": "FootR.Index",
 										"localPosition": [
-											0.0480653712,
-											0.055521916799999994,
-											0.10265974879999999
+											0.04806537,
+											0.0555219166,
+											0.102659747
 										],
 										"localRotation": [
 											0.02912,
@@ -228232,9 +228182,9 @@
 											-0.00405
 										],
 										"localScale": [
-											1.0697208143999999,
-											1.1883588752,
-											1.0697208143999999
+											1.06972086,
+											1.1883589,
+											1.06972086
 										],
 										"blendShapeWeights": {
 											"flat": 50.8
@@ -228243,9 +228193,9 @@
 									{
 										"name": "FootR.Little",
 										"localPosition": [
-											0.0778770608,
-											0.051913209599999996,
-											0.084891576
+											0.07787706,
+											0.05191321,
+											0.08489157
 										],
 										"localRotation": [
 											-0.06612,
@@ -228254,9 +228204,9 @@
 											0.0945
 										],
 										"localScale": [
-											1.0202279023999998,
-											1.4031711567999998,
-											1.0202279023999998
+											1.02022791,
+											1.40317118,
+											1.02022791
 										],
 										"blendShapeWeights": {
 											"flat": 34.3
@@ -228266,8 +228216,8 @@
 										"name": "FootR.Middle",
 										"localPosition": [
 											0.05869584,
-											0.053565388799999995,
-											0.09980466719999999
+											0.05356539,
+											0.09980467
 										],
 										"localRotation": [
 											0.03791,
@@ -228276,9 +228226,9 @@
 											0.01971
 										],
 										"localScale": [
-											0.9573508895999999,
-											1.2641779584,
-											0.9573508895999999
+											0.9573509,
+											1.26417792,
+											0.9573509
 										],
 										"blendShapeWeights": {
 											"flat": 57
@@ -228287,9 +228237,9 @@
 									{
 										"name": "FootR.Ring",
 										"localPosition": [
-											0.0686741328,
-											0.052761038399999995,
-											0.0936017488
+											0.06867413,
+											0.0527610369,
+											0.09360175
 										],
 										"localRotation": [
 											0.03788,
@@ -228298,9 +228248,9 @@
 											0.01021
 										],
 										"localScale": [
-											0.999677112,
-											1.318011464,
-											0.999677112
+											0.9996771,
+											1.31801152,
+											0.9996771
 										],
 										"blendShapeWeights": {
 											"flat": 42
@@ -228309,9 +228259,9 @@
 									{
 										"name": "FootR.Thumb",
 										"localPosition": [
-											0.034746488,
-											0.055521916799999994,
-											0.1012249616
+											0.0347464867,
+											0.0555219166,
+											0.101224959
 										],
 										"localRotation": [
 											0.0627,
@@ -228320,9 +228270,9 @@
 											-0.05859
 										],
 										"localScale": [
-											1.0114307727999998,
-											1.2055400896,
-											1.0030032096
+											1.01143074,
+											1.20554006,
+											1.00300324
 										],
 										"blendShapeWeights": {
 											"flat": 61.1
@@ -228351,236 +228301,226 @@
 						],
 						"nailNodes": [
 							{
-								"name": "[Natural]Beryl",
-								"localScale": [
-									0.72464,
-									0.72464,
-									0.72464
+								"name": "[Natural]HandL.Index",
+								"localPosition": [
+									-0.614567220211029,
+									1.1478877067565918,
+									0.0075362562201917171
 								],
-								"children": [
-									{
-										"name": "[Natural]HandL.Index",
-										"localPosition": [
-											-0.8481,
-											1.58408,
-											0.0104
-										],
-										"localRotation": [
-											-0.50664,
-											0.49451,
-											0.52481,
-											0.4726
-										],
-										"localScale": [
-											1.19625,
-											1.19625,
-											1.19625
-										],
-										"blendShapeWeights": {
-											"flat": 21.3
-										}
-									},
-									{
-										"name": "[Natural]HandL.Little",
-										"localPosition": [
-											-0.81917,
-											1.5725,
-											-0.06038
-										],
-										"localRotation": [
-											-0.595761,
-											0.484471,
-											0.43184,
-											0.473151
-										],
-										"localScale": [
-											1.15846,
-											1.27928,
-											1.15845
-										],
-										"blendShapeWeights": {
-											"flat": 49.4
-										}
-									},
-									{
-										"name": "[Natural]HandL.Middle",
-										"localPosition": [
-											-0.85383,
-											1.58448,
-											-0.01369
-										],
-										"localRotation": [
-											-0.534781,
-											0.496281,
-											0.502911,
-											0.463461
-										],
-										"localScale": [
-											1.15019,
-											1.15019,
-											1.15019
-										],
-										"blendShapeWeights": {
-											"flat": 32
-										}
-									},
-									{
-										"name": "[Natural]HandL.Ring",
-										"localPosition": [
-											-0.84559,
-											1.57839,
-											-0.03777
-										],
-										"localRotation": [
-											-0.57492,
-											0.494,
-											0.48636,
-											0.43461
-										],
-										"localScale": [
-											1.20464,
-											1.20464,
-											1.20464
-										],
-										"blendShapeWeights": {
-											"flat": 27.1
-										}
-									},
-									{
-										"name": "[Natural]HandL.Thumb",
-										"localPosition": [
-											-0.77629,
-											1.53809,
-											0.04671
-										],
-										"localRotation": [
-											-0.00608,
-											0.150081,
-											0.836334,
-											0.527242
-										],
-										"localScale": [
-											0.92053,
-											1.48582,
-											0.92053
-										],
-										"blendShapeWeights": {
-											"flat": 46.5,
-											"curl_back": 11.8
-										}
-									},
-									{
-										"name": "[Natural]HandR.Index",
-										"localPosition": [
-											0.8481,
-											1.58408,
-											0.0104
-										],
-										"localRotation": [
-											0.50664,
-											0.49451,
-											0.52481,
-											-0.4726
-										],
-										"localScale": [
-											1.19625,
-											1.19625,
-											1.19625
-										],
-										"blendShapeWeights": {
-											"flat": 21.3
-										}
-									},
-									{
-										"name": "[Natural]HandR.Little",
-										"localPosition": [
-											0.81917,
-											1.5725,
-											-0.06038
-										],
-										"localRotation": [
-											0.595761,
-											0.484471,
-											0.43184,
-											-0.473151
-										],
-										"localScale": [
-											1.15846,
-											1.27928,
-											1.15845
-										],
-										"blendShapeWeights": {
-											"flat": 49.4
-										}
-									},
-									{
-										"name": "[Natural]HandR.Middle",
-										"localPosition": [
-											0.85383,
-											1.58448,
-											-0.01369
-										],
-										"localRotation": [
-											0.534781,
-											0.496281,
-											0.502911,
-											-0.463461
-										],
-										"localScale": [
-											1.15019,
-											1.15019,
-											1.15019
-										],
-										"blendShapeWeights": {
-											"flat": 32
-										}
-									},
-									{
-										"name": "[Natural]HandR.Ring",
-										"localPosition": [
-											0.84559,
-											1.57839,
-											-0.03777
-										],
-										"localRotation": [
-											0.57492,
-											0.494,
-											0.48636,
-											-0.43461
-										],
-										"localScale": [
-											1.20464,
-											1.20464,
-											1.20464
-										],
-										"blendShapeWeights": {
-											"flat": 27.1
-										}
-									},
-									{
-										"name": "[Natural]HandR.Thumb",
-										"localPosition": [
-											0.77629,
-											1.53809,
-											0.04671
-										],
-										"localRotation": [
-											0.00608,
-											0.150081,
-											0.836334,
-											-0.527242
-										],
-										"localScale": [
-											0.92053,
-											1.48582,
-											0.92053
-										],
-										"blendShapeWeights": {
-											"flat": 46.5,
-											"curl_back": 11.8
-										}
-									}
-								]
+								"localRotation": [
+									-0.50664,
+									0.49451,
+									0.52481,
+									0.4726
+								],
+								"localScale": [
+									0.86685061454772949,
+									0.86685061454772949,
+									0.86685061454772949
+								],
+								"blendShapeWeights": {
+									"flat": 21.3
+								}
+							},
+							{
+								"name": "[Natural]HandL.Little",
+								"localPosition": [
+									-0.59360337257385254,
+									1.1394964456558228,
+									-0.043753765523433685
+								],
+								"localRotation": [
+									-0.595761,
+									0.484471,
+									0.43184,
+									0.473151
+								],
+								"localScale": [
+									0.83946651220321655,
+									0.9270174503326416,
+									0.839459240436554
+								],
+								"blendShapeWeights": {
+									"flat": 49.4
+								}
+							},
+							{
+								"name": "[Natural]HandL.Middle",
+								"localPosition": [
+									-0.61871933937072754,
+									1.1481776237487793,
+									-0.0099203223362565041
+								],
+								"localRotation": [
+									-0.534781,
+									0.496281,
+									0.502911,
+									0.463461
+								],
+								"localScale": [
+									0.83347368240356445,
+									0.83347368240356445,
+									0.83347368240356445
+								],
+								"blendShapeWeights": {
+									"flat": 32
+								}
+							},
+							{
+								"name": "[Natural]HandL.Ring",
+								"localPosition": [
+									-0.61274832487106323,
+									1.1437644958496094,
+									-0.027369651943445206
+								],
+								"localRotation": [
+									-0.57492,
+									0.494,
+									0.48636,
+									0.43461
+								],
+								"localScale": [
+									0.87293034791946411,
+									0.87293034791946411,
+									0.87293034791946411
+								],
+								"blendShapeWeights": {
+									"flat": 27.1
+								}
+							},
+							{
+								"name": "[Natural]HandL.Thumb",
+								"localPosition": [
+									-0.56253081560134888,
+									1.1145615577697754,
+									0.033847935497760773
+								],
+								"localRotation": [
+									-0.00608,
+									0.150081,
+									0.836334,
+									0.527242
+								],
+								"localScale": [
+									0.66705286502838135,
+									1.0766847133636475,
+									0.66705286502838135
+								],
+								"blendShapeWeights": {
+									"flat": 46.5,
+									"curl_back": 11.8
+								}
+							},
+							{
+								"name": "[Natural]HandR.Index",
+								"localPosition": [
+									0.614567220211029,
+									1.1478877067565918,
+									0.0075362562201917171
+								],
+								"localRotation": [
+									0.50664,
+									0.49451,
+									0.52481,
+									-0.4726
+								],
+								"localScale": [
+									0.86685061454772949,
+									0.86685061454772949,
+									0.86685061454772949
+								],
+								"blendShapeWeights": {
+									"flat": 21.3
+								}
+							},
+							{
+								"name": "[Natural]HandR.Little",
+								"localPosition": [
+									0.59360337257385254,
+									1.1394964456558228,
+									-0.043753765523433685
+								],
+								"localRotation": [
+									0.595761,
+									0.484471,
+									0.43184,
+									-0.473151
+								],
+								"localScale": [
+									0.83946651220321655,
+									0.9270174503326416,
+									0.839459240436554
+								],
+								"blendShapeWeights": {
+									"flat": 49.4
+								}
+							},
+							{
+								"name": "[Natural]HandR.Middle",
+								"localPosition": [
+									0.61871933937072754,
+									1.1481776237487793,
+									-0.0099203223362565041
+								],
+								"localRotation": [
+									0.534781,
+									0.496281,
+									0.502911,
+									-0.463461
+								],
+								"localScale": [
+									0.83347368240356445,
+									0.83347368240356445,
+									0.83347368240356445
+								],
+								"blendShapeWeights": {
+									"flat": 32
+								}
+							},
+							{
+								"name": "[Natural]HandR.Ring",
+								"localPosition": [
+									0.61274832487106323,
+									1.1437644958496094,
+									-0.027369651943445206
+								],
+								"localRotation": [
+									0.57492,
+									0.494,
+									0.48636,
+									-0.43461
+								],
+								"localScale": [
+									0.87293034791946411,
+									0.87293034791946411,
+									0.87293034791946411
+								],
+								"blendShapeWeights": {
+									"flat": 27.1
+								}
+							},
+							{
+								"name": "[Natural]HandR.Thumb",
+								"localPosition": [
+									0.56253081560134888,
+									1.1145615577697754,
+									0.033847935497760773
+								],
+								"localRotation": [
+									0.00608,
+									0.150081,
+									0.836334,
+									-0.527242
+								],
+								"localScale": [
+									0.66705286502838135,
+									1.0766847133636475,
+									0.66705286502838135
+								],
+								"blendShapeWeights": {
+									"flat": 46.5,
+									"curl_back": 11.8
+								}
 							},
 							{
 								"name": "[Oval]HandL.Little",
@@ -230196,10 +230136,10 @@
 		"avatars": {
 			"Zome": {
 				"avatarName": "Zome",
-				"customerNotice": "ネイルマスクを使用、または「Cloth A」を非表示",
 				"avatarUrl": "https://yorshkasencho.booth.pm/items/4118550",
 				"supportedVersion": "0.8.0",
 				"reading": "ぞめちゃん",
+				"customerNotice": "ネイルマスクを使用、または「Cloth A」を非表示",
 				"displayNames": {
 					"ja": "ゾメちゃん"
 				},
@@ -234727,7 +234667,7 @@
 								],
 								"localScale": [
 									0.81422,
-									1.06028,
+									1.0602799999999999,
 									0.81422
 								],
 								"blendShapeWeights": {
@@ -234834,7 +234774,7 @@
 								],
 								"localScale": [
 									0.81422,
-									1.06028,
+									1.0602799999999999,
 									0.81422
 								],
 								"blendShapeWeights": {
@@ -237525,230 +237465,1003 @@
 									"flat": 46.5
 								}
 							}
+						]
+					}
+				}
+			}
+		}
+	},
+	"FLASTORE": {
+		"shopName": "FLASTORE",
+		"shopUrl": "https://flastore.booth.pm/",
+		"displayNames": {
+			"ja": "FLASTORE",
+			"en": "NewShop"
+		},
+		"avatars": {
+			"Kogomi": {
+				"avatarName": "Kogomi",
+				"avatarUrl": "8779825",
+				"supportedVersion": "0.10.66",
+				"reading": "こごみ",
+				"displayNames": {
+					"ja": "こごみ"
+				},
+				"avatarVariations": {
+					"Default Variation": {
+						"variationName": "Default Variation",
+						"displayNames": {
+							"ja": "Default Variation",
+							"en": "Default Variation"
+						},
+						"avatarPrefabs": [
+							{
+								"prefabName": "Kogomi_Costume",
+								"prefabGUID": "c58ae6c714862bb43aa2938ae8e9abd0"
+							},
+							{
+								"prefabName": "Kogomi_Costume_Underwear",
+								"prefabGUID": "38b80265cf550e24dba758dfd1cc9654"
+							},
+							{
+								"prefabName": "Kogomi_Kisekae",
+								"prefabGUID": "485a53fdc111f2b4f874aeacf8fa1f79"
+							},
+							{
+								"prefabName": "Kogomi_Kisekae_Mono",
+								"prefabGUID": "1d4e5f737d2779548b1e4aaaeee1a26e"
+							},
+							{
+								"prefabName": "Kogomi_Kisekae_TPose",
+								"prefabGUID": "e48f5e2fa1eac5845814e41db400942b"
+							},
+							{
+								"prefabName": "Kogomi_Kisekae_TPose_Mono",
+								"prefabGUID": "dfa5684b838fd0e4996d8d67056493ba"
+							},
+							{
+								"prefabName": "Kogomi_TPose",
+								"prefabGUID": "c35ad01c29ce05d418ed2d013261c34e"
+							},
+							{
+								"prefabName": "Kogomi",
+								"prefabGUID": "50948a65194b70043a48adf9ba3ae8f2"
+							},
+							{
+								"prefabName": "Kogomi_MonoColor",
+								"prefabGUID": "4f4c5442eea76ee44bc7e656c1ed1a52"
+							}
+						],
+						"avatarFbxs": [
+							{
+								"fbxName": "Kogomi",
+								"fbxGUID": "1723e510e5d88934e8cfb732f2c67133",
+								"bodyName": "Body"
+							}
+						],
+						"footNailNodes": [
+							{
+								"name": "FootL.Index",
+								"localPosition": [
+									-0.04512,
+									0.01089,
+									0.09579
+								],
+								"localRotation": [
+									-0.037502,
+									0.674974,
+									0.736836,
+									-0.008668
+								],
+								"localScale": [
+									0.85611,
+									0.85611,
+									0.85611
+								],
+								"blendShapeWeights": {
+									"flat": 38.6
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootL.Little",
+								"localPosition": [
+									-0.07357,
+									0.01186,
+									0.08064
+								],
+								"localRotation": [
+									0.013326,
+									0.695338,
+									0.714746,
+									-0.07393
+								],
+								"localScale": [
+									0.80913,
+									0.80913,
+									0.80913
+								],
+								"blendShapeWeights": {
+									"flat": 30.0
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootL.Middle",
+								"localPosition": [
+									-0.0554,
+									0.01111,
+									0.09302
+								],
+								"localRotation": [
+									-0.047569,
+									0.669152,
+									0.741575,
+									0.006203
+								],
+								"localScale": [
+									0.86431,
+									0.86431,
+									0.86431
+								],
+								"blendShapeWeights": {
+									"flat": 53.3
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootL.Ring",
+								"localPosition": [
+									-0.06483,
+									0.01142,
+									0.08852
+								],
+								"localRotation": [
+									-0.006109,
+									0.679202,
+									0.733904,
+									-0.005654
+								],
+								"localScale": [
+									0.77992,
+									0.77992,
+									0.77992
+								],
+								"blendShapeWeights": {
+									"flat": 22.7
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootL.Thumb",
+								"localPosition": [
+									-0.03285,
+									0.01157,
+									0.09539
+								],
+								"localRotation": [
+									-0.06353,
+									0.668161,
+									0.739717,
+									0.048408
+								],
+								"localScale": [
+									0.67807,
+									0.67807,
+									0.67243
+								],
+								"blendShapeWeights": {
+									"flat": 52.3
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootR.Index",
+								"localPosition": [
+									0.04512,
+									0.01089,
+									0.09579
+								],
+								"localRotation": [
+									0.037502,
+									0.674974,
+									0.736836,
+									0.008668
+								],
+								"localScale": [
+									0.85611,
+									0.85611,
+									0.85611
+								],
+								"blendShapeWeights": {
+									"flat": 38.6
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootR.Little",
+								"localPosition": [
+									0.07357,
+									0.01186,
+									0.08064
+								],
+								"localRotation": [
+									-0.013326,
+									0.695338,
+									0.714746,
+									0.07393
+								],
+								"localScale": [
+									0.80913,
+									0.80913,
+									0.80913
+								],
+								"blendShapeWeights": {
+									"flat": 30.0
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootR.Middle",
+								"localPosition": [
+									0.0554,
+									0.01111,
+									0.09302
+								],
+								"localRotation": [
+									0.047569,
+									0.669152,
+									0.741575,
+									-0.006203
+								],
+								"localScale": [
+									0.86431,
+									0.86431,
+									0.86431
+								],
+								"blendShapeWeights": {
+									"flat": 53.3
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootR.Ring",
+								"localPosition": [
+									0.06483,
+									0.01142,
+									0.08852
+								],
+								"localRotation": [
+									0.006109,
+									0.679202,
+									0.733904,
+									0.005654
+								],
+								"localScale": [
+									0.77992,
+									0.77992,
+									0.77992
+								],
+								"blendShapeWeights": {
+									"flat": 22.7
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							},
+							{
+								"name": "FootR.Thumb",
+								"localPosition": [
+									0.03285,
+									0.01157,
+									0.09539
+								],
+								"localRotation": [
+									0.06353,
+									0.668161,
+									0.739717,
+									-0.048408
+								],
+								"localScale": [
+									0.67807,
+									0.67807,
+									0.67243
+								],
+								"blendShapeWeights": {
+									"flat": 52.3
+								},
+								"boundsCenter": null,
+								"boundsExtent": null,
+								"children": null
+							}
+						],
+						"nailNodes": [
+							{
+								"name": "[Natural]HandL.Index",
+								"localPosition": [
+									-0.43516,
+									0.65322,
+									0.00772
+								],
+								"localRotation": [
+									-0.61296,
+									0.298981,
+									0.665227,
+									0.303914
+								],
+								"localScale": [
+									0.77645,
+									0.77645,
+									0.77645
+								],
+								"blendShapeWeights": {
+									"curl": 8.2
+								}
+							},
+							{
+								"name": "[Natural]HandL.Little",
+								"localPosition": [
+									-0.4167,
+									0.66131,
+									-0.03129
+								],
+								"localRotation": [
+									-0.745757,
+									0.346818,
+									0.538,
+									0.184713
+								],
+								"localScale": [
+									0.92668,
+									0.92668,
+									0.92668
+								],
+								"blendShapeWeights": {
+									"flat": 14
+								}
+							},
+							{
+								"name": "[Natural]HandL.Middle",
+								"localPosition": [
+									-0.44258,
+									0.65315,
+									-0.00627
+								],
+								"localRotation": [
+									-0.642121,
+									0.300841,
+									0.64463,
+									0.285705
+								],
+								"localScale": [
+									0.81085,
+									0.81085,
+									0.81085
+								],
+								"blendShapeWeights": {
+									"curl": 21.5
+								}
+							},
+							{
+								"name": "[Natural]HandL.Ring",
+								"localPosition": [
+									-0.43571,
+									0.65577,
+									-0.01858
+								],
+								"localRotation": [
+									-0.685121,
+									0.300241,
+									0.614563,
+									0.250554
+								],
+								"localScale": [
+									0.84152,
+									0.84152,
+									0.84152
+								],
+								"blendShapeWeights": {
+									"curl": 27.5
+								}
+							},
+							{
+								"name": "[Natural]HandL.Thumb",
+								"localPosition": [
+									-0.39377,
+									0.66518,
+									0.02929
+								],
+								"localRotation": [
+									0.010009,
+									0.042195,
+									0.912347,
+									0.407114
+								],
+								"localScale": [
+									0.91994,
+									1.09989,
+									0.91994
+								],
+								"blendShapeWeights": {
+									"curl": 9
+								}
+							},
+							{
+								"name": "[Natural]HandR.Index",
+								"localPosition": [
+									0.43516,
+									0.65322,
+									0.00772
+								],
+								"localRotation": [
+									0.61296,
+									0.298981,
+									0.665227,
+									-0.303914
+								],
+								"localScale": [
+									0.77645,
+									0.77645,
+									0.77645
+								],
+								"blendShapeWeights": {
+									"curl": 8.2
+								}
+							},
+							{
+								"name": "[Natural]HandR.Little",
+								"localPosition": [
+									0.4167,
+									0.66131,
+									-0.03129
+								],
+								"localRotation": [
+									0.745757,
+									0.346818,
+									0.538,
+									-0.184713
+								],
+								"localScale": [
+									0.92668,
+									0.92668,
+									0.92668
+								],
+								"blendShapeWeights": {
+									"flat": 14
+								}
+							},
+							{
+								"name": "[Natural]HandR.Middle",
+								"localPosition": [
+									0.44258,
+									0.65315,
+									-0.00627
+								],
+								"localRotation": [
+									0.642121,
+									0.300841,
+									0.64463,
+									-0.285705
+								],
+								"localScale": [
+									0.81085,
+									0.81085,
+									0.81085
+								],
+								"blendShapeWeights": {
+									"curl": 21.5
+								}
+							},
+							{
+								"name": "[Natural]HandR.Ring",
+								"localPosition": [
+									0.43571,
+									0.65577,
+									-0.01858
+								],
+								"localRotation": [
+									0.685121,
+									0.300241,
+									0.614563,
+									-0.250554
+								],
+								"localScale": [
+									0.84152,
+									0.84152,
+									0.84152
+								],
+								"blendShapeWeights": {
+									"curl": 27.5
+								}
+							},
+							{
+								"name": "[Natural]HandR.Thumb",
+								"localPosition": [
+									0.39377,
+									0.66518,
+									0.02929
+								],
+								"localRotation": [
+									-0.010009,
+									0.042195,
+									0.912347,
+									-0.407114
+								],
+								"localScale": [
+									0.91994,
+									1.09989,
+									0.91994
+								],
+								"blendShapeWeights": {
+									"curl": 9
+								}
+							}
 						],
 						"blendShapeVariants": [
 							{
-								"name": "foot_high_heel",
-								"syncSourceSmrName": "Body_base",
+								"name": "HighHeel_15",
+								"syncSourceSmrName": "Bodyset2",
 								"nailNodes": [
-									{
-										"name": "FootL.Thumb",
-										"localPosition": [
-											-0.031299,
-											0.035519,
-											0.068259
-										],
-										"localRotation": [
-											0.018431,
-											0.628315,
-											0.776555,
-											0.042922
-										],
-										"localScale": [
-											0.65878,
-											0.7796,
-											0.65329
-										],
-										"blendShapeWeights": {
-											"flat": 46.5
-										}
-									},
-									{
-										"name": "FootL.Index",
-										"localPosition": [
-											-0.04148,
-											0.035958,
-											0.069886
-										],
-										"localRotation": [
-											0.053164,
-											0.60645,
-											0.792973,
-											-0.024211
-										],
-										"localScale": [
-											0.83462,
-											1.03994,
-											0.83462
-										],
-										"blendShapeWeights": {
-											"flat": 40.9
-										}
-									},
-									{
-										"name": "FootL.Middle",
-										"localPosition": [
-											-0.04999,
-											0.034451,
-											0.069443
-										],
-										"localRotation": [
-											0.043481,
-											0.589976,
-											0.800801,
-											-0.093571
-										],
-										"localScale": [
-											0.7834,
-											0.90161,
-											0.7834
-										],
-										"blendShapeWeights": {
-											"flat": 56.3
-										}
-									},
-									{
-										"name": "FootL.Ring",
-										"localPosition": [
-											-0.05773,
-											0.034675,
-											0.067003
-										],
-										"localRotation": [
-											0.037922,
-											0.609401,
-											0.790168,
-											-0.053162
-										],
-										"localScale": [
-											0.76891,
-											1.02126,
-											0.76891
-										],
-										"blendShapeWeights": {
-											"flat": 14.1
-										}
-									},
-									{
-										"name": "FootL.Little",
-										"localPosition": [
-											-0.06511,
-											0.034327,
-											0.063289
-										],
-										"localRotation": [
-											0.118615,
-											0.574394,
-											0.797404,
-											-0.141947
-										],
-										"localScale": [
-											0.67541,
-											1.051,
-											0.67541
-										],
-										"blendShapeWeights": {
-											"curl": 7.9
-										}
-									},
 									{
 										"name": "FootR.Little",
 										"localPosition": [
-											0.06511,
-											0.034327,
-											0.063289
+											0.07357,
+											-0.007726,
+											0.068056
 										],
 										"localRotation": [
-											-0.118615,
-											0.574394,
-											0.797404,
-											0.141947
+											-0.013326,
+											0.695339,
+											0.714745,
+											0.07393
 										],
 										"localScale": [
-											0.67541,
-											1.051,
-											0.67541
+											0.80913,
+											0.80913,
+											0.80913
 										],
 										"blendShapeWeights": {
-											"curl": 7.9
+											"flat": 30.0
 										}
 									},
 									{
 										"name": "FootR.Ring",
 										"localPosition": [
-											0.05773,
-											0.034675,
-											0.067003
+											0.06483,
+											-0.008166,
+											0.075936
 										],
 										"localRotation": [
-											-0.037922,
-											0.609402,
-											0.790168,
-											0.053162
+											0.006109,
+											0.679202,
+											0.733904,
+											0.005654
 										],
 										"localScale": [
-											0.76891,
-											1.02126,
-											0.76891
+											0.77992,
+											0.77992,
+											0.77992
 										],
 										"blendShapeWeights": {
-											"flat": 14.1
+											"flat": 22.7
 										}
 									},
 									{
 										"name": "FootR.Middle",
 										"localPosition": [
-											0.04999,
-											0.034451,
-											0.069443
+											0.0554,
+											-0.008476,
+											0.080436
 										],
 										"localRotation": [
-											-0.043481,
-											0.589976,
-											0.800801,
-											0.093572
+											0.047569,
+											0.669152,
+											0.741576,
+											-0.006203
 										],
 										"localScale": [
-											0.7834,
-											0.90161,
-											0.7834
+											0.86431,
+											0.86431,
+											0.86431
 										],
 										"blendShapeWeights": {
-											"flat": 56.3
+											"flat": 53.3
 										}
 									},
 									{
 										"name": "FootR.Index",
 										"localPosition": [
-											0.04148,
-											0.035958,
-											0.069886
+											0.04512,
+											-0.008696,
+											0.083206
 										],
 										"localRotation": [
-											-0.053163,
-											0.60645,
-											0.792973,
-											0.02421
+											0.037501,
+											0.674974,
+											0.736837,
+											0.008669
 										],
 										"localScale": [
-											0.83462,
-											1.03994,
-											0.83462
+											0.85611,
+											0.85611,
+											0.85611
 										],
 										"blendShapeWeights": {
-											"flat": 40.9
+											"flat": 38.6
 										}
 									},
 									{
 										"name": "FootR.Thumb",
 										"localPosition": [
-											0.031299,
-											0.035519,
-											0.068259
+											0.03285,
+											-0.008016,
+											0.082806
 										],
 										"localRotation": [
-											-0.018432,
-											0.628315,
-											0.776555,
-											-0.042922
+											0.06353,
+											0.668161,
+											0.739717,
+											-0.048407
 										],
 										"localScale": [
-											0.65878,
-											0.7796,
-											0.65329
+											0.67807,
+											0.67807,
+											0.67243
 										],
 										"blendShapeWeights": {
-											"flat": 46.5
+											"flat": 52.3
+										}
+									},
+									{
+										"name": "FootL.Little",
+										"localPosition": [
+											-0.07357,
+											-0.007726,
+											0.068056
+										],
+										"localRotation": [
+											0.013326,
+											0.695339,
+											0.714745,
+											-0.07393
+										],
+										"localScale": [
+											0.80913,
+											0.80913,
+											0.80913
+										],
+										"blendShapeWeights": {
+											"flat": 30.0
+										}
+									},
+									{
+										"name": "FootL.Ring",
+										"localPosition": [
+											-0.06483,
+											-0.008166,
+											0.075936
+										],
+										"localRotation": [
+											-0.006109,
+											0.679202,
+											0.733904,
+											-0.005655
+										],
+										"localScale": [
+											0.77992,
+											0.77992,
+											0.77992
+										],
+										"blendShapeWeights": {
+											"flat": 22.7
+										}
+									},
+									{
+										"name": "FootL.Middle",
+										"localPosition": [
+											-0.0554,
+											-0.008476,
+											0.080436
+										],
+										"localRotation": [
+											-0.047569,
+											0.669151,
+											0.741576,
+											0.006203
+										],
+										"localScale": [
+											0.86431,
+											0.86431,
+											0.86431
+										],
+										"blendShapeWeights": {
+											"flat": 53.3
+										}
+									},
+									{
+										"name": "FootL.Index",
+										"localPosition": [
+											-0.04512,
+											-0.008696,
+											0.083206
+										],
+										"localRotation": [
+											-0.037502,
+											0.674975,
+											0.736836,
+											-0.008668
+										],
+										"localScale": [
+											0.85611,
+											0.85611,
+											0.85611
+										],
+										"blendShapeWeights": {
+											"flat": 38.6
+										}
+									},
+									{
+										"name": "FootL.Thumb",
+										"localPosition": [
+											-0.03285,
+											-0.008016,
+											0.082806
+										],
+										"localRotation": [
+											-0.06353,
+											0.668161,
+											0.739717,
+											0.048408
+										],
+										"localScale": [
+											0.67807,
+											0.67807,
+											0.67243
+										],
+										"blendShapeWeights": {
+											"flat": 52.3
+										}
+									}
+								]
+							},
+							{
+								"name": "HighHeel_30",
+								"syncSourceSmrName": "Bodyset2",
+								"nailNodes": [
+									{
+										"name": "FootR.Little",
+										"localPosition": [
+											0.07357,
+											-0.023388,
+											0.050832
+										],
+										"localRotation": [
+											-0.013326,
+											0.69534,
+											0.714744,
+											0.07393
+										],
+										"localScale": [
+											0.80913,
+											0.80913,
+											0.80913
+										],
+										"blendShapeWeights": {
+											"flat": 30.0
+										}
+									},
+									{
+										"name": "FootR.Ring",
+										"localPosition": [
+											0.06483,
+											-0.023828,
+											0.058712
+										],
+										"localRotation": [
+											0.006109,
+											0.679202,
+											0.733904,
+											0.005654
+										],
+										"localScale": [
+											0.77992,
+											0.77992,
+											0.77992
+										],
+										"blendShapeWeights": {
+											"flat": 22.7
+										}
+									},
+									{
+										"name": "FootR.Middle",
+										"localPosition": [
+											0.0554,
+											-0.024138,
+											0.063212
+										],
+										"localRotation": [
+											0.047569,
+											0.669151,
+											0.741576,
+											-0.006204
+										],
+										"localScale": [
+											0.86431,
+											0.86431,
+											0.86431
+										],
+										"blendShapeWeights": {
+											"flat": 53.3
+										}
+									},
+									{
+										"name": "FootR.Index",
+										"localPosition": [
+											0.04512,
+											-0.024358,
+											0.065982
+										],
+										"localRotation": [
+											0.037502,
+											0.674974,
+											0.736837,
+											0.008668
+										],
+										"localScale": [
+											0.85611,
+											0.85611,
+											0.85611
+										],
+										"blendShapeWeights": {
+											"flat": 38.6
+										}
+									},
+									{
+										"name": "FootR.Thumb",
+										"localPosition": [
+											0.03285,
+											-0.023678,
+											0.065582
+										],
+										"localRotation": [
+											0.06353,
+											0.668161,
+											0.739717,
+											-0.048407
+										],
+										"localScale": [
+											0.67807,
+											0.67807,
+											0.67243
+										],
+										"blendShapeWeights": {
+											"flat": 52.3
+										}
+									},
+									{
+										"name": "FootL.Little",
+										"localPosition": [
+											-0.07357,
+											-0.023388,
+											0.050832
+										],
+										"localRotation": [
+											0.013326,
+											0.69534,
+											0.714745,
+											-0.073929
+										],
+										"localScale": [
+											0.80913,
+											0.80913,
+											0.80913
+										],
+										"blendShapeWeights": {
+											"flat": 30.0
+										}
+									},
+									{
+										"name": "FootL.Ring",
+										"localPosition": [
+											-0.06483,
+											-0.023828,
+											0.058712
+										],
+										"localRotation": [
+											-0.006109,
+											0.679201,
+											0.733905,
+											-0.005654
+										],
+										"localScale": [
+											0.77992,
+											0.77992,
+											0.77992
+										],
+										"blendShapeWeights": {
+											"flat": 22.7
+										}
+									},
+									{
+										"name": "FootL.Middle",
+										"localPosition": [
+											-0.0554,
+											-0.024138,
+											0.063212
+										],
+										"localRotation": [
+											-0.047569,
+											0.669152,
+											0.741576,
+											0.006203
+										],
+										"localScale": [
+											0.86431,
+											0.86431,
+											0.86431
+										],
+										"blendShapeWeights": {
+											"flat": 53.3
+										}
+									},
+									{
+										"name": "FootL.Index",
+										"localPosition": [
+											-0.04512,
+											-0.024358,
+											0.065982
+										],
+										"localRotation": [
+											-0.037502,
+											0.674975,
+											0.736836,
+											-0.008668
+										],
+										"localScale": [
+											0.85611,
+											0.85611,
+											0.85611
+										],
+										"blendShapeWeights": {
+											"flat": 38.6
+										}
+									},
+									{
+										"name": "FootL.Thumb",
+										"localPosition": [
+											-0.03285,
+											-0.023678,
+											0.065582
+										],
+										"localRotation": [
+											-0.06353,
+											0.668161,
+											0.739717,
+											0.048408
+										],
+										"localScale": [
+											0.67807,
+											0.67807,
+											0.67243
+										],
+										"blendShapeWeights": {
+											"flat": 52.3
 										}
 									}
 								]
@@ -237756,46 +238469,8 @@
 						],
 						"shrinkBlendShapeVariants": [
 							{
-								"blendShapeName": "shrink_hand",
-								"syncSourceSmrName": "Body_base",
-								"targets": [
-									"HandL",
-									"HandR"
-								]
-							},
-							{
-								"blendShapeName": "shrink_hand_L",
-								"syncSourceSmrName": "Body_base",
-								"targets": [
-									"HandL"
-								]
-							},
-							{
-								"blendShapeName": "shrink_hand_R",
-								"syncSourceSmrName": "Body_base",
-								"targets": [
-									"HandR"
-								]
-							},
-							{
-								"blendShapeName": "shrink_hand_nail",
-								"syncSourceSmrName": "Body_base",
-								"targets": [
-									"HandL.Index",
-									"HandL.Little",
-									"HandL.Middle",
-									"HandL.Ring",
-									"HandL.Thumb",
-									"HandR.Index",
-									"HandR.Little",
-									"HandR.Middle",
-									"HandR.Ring",
-									"HandR.Thumb"
-								]
-							},
-							{
-								"blendShapeName": "shrink_hand_nail_L",
-								"syncSourceSmrName": "Body_base",
+								"blendShapeName": "Hide_Finger.L",
+								"syncSourceSmrName": "Bodyset2",
 								"targets": [
 									"HandL.Index",
 									"HandL.Little",
@@ -237805,8 +238480,8 @@
 								]
 							},
 							{
-								"blendShapeName": "shrink_hand_nail_R",
-								"syncSourceSmrName": "Body_base",
+								"blendShapeName": "Hide_Finger.R",
+								"syncSourceSmrName": "Bodyset2",
 								"targets": [
 									"HandR.Index",
 									"HandR.Little",
@@ -237816,83 +238491,17 @@
 								]
 							},
 							{
-								"blendShapeName": "shrink_foot",
-								"syncSourceSmrName": "Body_base",
-								"targets": [
-									"FootL",
-									"FootR"
-								]
-							},
-							{
-								"blendShapeName": "shrink_foot_L",
-								"syncSourceSmrName": "Body_base",
+								"blendShapeName": "Hide_Toes.L",
+								"syncSourceSmrName": "Bodyset2",
 								"targets": [
 									"FootL"
 								]
 							},
 							{
-								"blendShapeName": "shrink_foot_R",
-								"syncSourceSmrName": "Body_base",
+								"blendShapeName": "Hide_Toes.R",
+								"syncSourceSmrName": "Bodyset2",
 								"targets": [
 									"FootR"
-								]
-							},
-							{
-								"blendShapeName": "shrink_foot_nail",
-								"syncSourceSmrName": "Body_base",
-								"targets": [
-									"FootL.Index",
-									"FootL.Little",
-									"FootL.Middle",
-									"FootL.Ring",
-									"FootL.Thumb",
-									"FootR.Index",
-									"FootR.Little",
-									"FootR.Middle",
-									"FootR.Ring",
-									"FootR.Thumb",
-									"HandL.Index",
-									"HandL.Little",
-									"HandL.Middle",
-									"HandL.Ring",
-									"HandL.Thumb",
-									"HandR.Index",
-									"HandR.Little",
-									"HandR.Middle",
-									"HandR.Ring",
-									"HandR.Thumb"
-								]
-							},
-							{
-								"blendShapeName": "shrink_foot_nail_L",
-								"syncSourceSmrName": "Body_base",
-								"targets": [
-									"FootL.Index",
-									"FootL.Little",
-									"FootL.Middle",
-									"FootL.Ring",
-									"FootL.Thumb",
-									"HandL.Index",
-									"HandL.Little",
-									"HandL.Middle",
-									"HandL.Ring",
-									"HandL.Thumb"
-								]
-							},
-							{
-								"blendShapeName": "shrink_foot_nail_R",
-								"syncSourceSmrName": "Body_base",
-								"targets": [
-									"FootR.Index",
-									"FootR.Little",
-									"FootR.Middle",
-									"FootR.Ring",
-									"FootR.Thumb",
-									"HandR.Index",
-									"HandR.Little",
-									"HandR.Middle",
-									"HandR.Ring",
-									"HandR.Thumb"
 								]
 							}
 						]

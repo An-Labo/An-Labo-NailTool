@@ -122,7 +122,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			NailPrefabBuilder.DestroyTemporaryPrefab(this.NailPrefab);
 
 			if (!string.IsNullOrEmpty(prefix)) {
-				foreach (Transform child in nailPrefabObject.transform) {
+				foreach (Transform child in nailPrefabObject.GetComponentsInChildren<Transform>(true)) {
+					if (child == nailPrefabObject.transform) continue;
 					child.name = child.name.Replace(prefix, "");
 				}
 			}
@@ -258,37 +259,30 @@ namespace world.anlabo.mdnailtool.Editor {
 			SchedulePostSetupRefresh(nailPrefabObject);
 		}
 
-		private static void ValidateSelectedNailMeshes(
-			Transform?[] handsNailObjects,
-			Transform?[] leftFootNailObjects,
-			Transform?[] rightFootNailObjects,
-			bool useFootNail)
+		private void ValidateSelectedNailMeshes(
+			Transform?[] handsNailObjects, Transform?[] leftFootNailObjects,
+			Transform?[] rightFootNailObjects, bool useFootNail)
 		{
 			var missing = new List<string>();
-
-			void Check(IEnumerable<Transform?> nailObjects)
-			{
-				foreach (Transform? nailObject in nailObjects)
-				{
-					if (nailObject == null) continue;
-					SkinnedMeshRenderer? smr = nailObject.GetComponentInChildren<SkinnedMeshRenderer>(true);
-					if (smr == null || smr.sharedMesh == null) missing.Add(nailObject.name);
+			void Check(Transform?[] objects, int offset, IReadOnlyList<string> names) {
+				for (int i = 0; i < names.Count; i++) {
+					if (this.ShouldRemoveNailSlot(offset + i)) continue;
+					Transform? nail = i < objects.Length ? objects[i] : null;
+					SkinnedMeshRenderer? renderer = nail?.GetComponent<SkinnedMeshRenderer>();
+					if (renderer == null || renderer.sharedMesh == null) missing.Add(names[i]);
 				}
 			}
-
-			Check(handsNailObjects);
-			if (useFootNail)
-			{
-				Check(leftFootNailObjects);
-				Check(rightFootNailObjects);
+			Check(handsNailObjects, 0, MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST);
+			if (useFootNail) {
+				Check(leftFootNailObjects, 10, MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST);
+				Check(rightFootNailObjects, 15, MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST);
 			}
-
 			if (missing.Count == 0) return;
-
 			string template = LanguageManager.S("error.execute.nail_mesh_missing")
 				?? "Nail mesh resources are missing: {0}. Please reinstall the [An-Labo.Virtual] resources.";
-			ToolConsole.Error("NailSetup", string.Format(template, string.Join(", ", missing.Distinct())));
+			throw new NailSetupUserException(string.Format(template, string.Join(", ", missing.Distinct())));
 		}
+
 		// アバターの Animator / Humanoid Rig をチェックし、欠落時はユーザー向け例外を投げる.
 		private void ValidateAvatarRig()
 		{
@@ -323,8 +317,7 @@ namespace world.anlabo.mdnailtool.Editor {
 
 			if (variant.NailNodes != null && variant.NailNodes.Length > 0)
 			{
-				NailPrefabNodeData[] baseNodes = (this.AvatarVariationData.NailNodes ?? Array.Empty<NailPrefabNodeData>())
-					.Concat(this.AvatarVariationData.FootNailNodes ?? Array.Empty<NailPrefabNodeData>()).ToArray();
+				NailPrefabNodeData[] baseNodes = this.AvatarVariationData.NailNodes ?? Array.Empty<NailPrefabNodeData>(); // DBShop already merged feet once.
 				NailPrefabNodeData[] scaledVariantNodes = ComposeVariantNodes(
 					baseNodes,
 					variant.NailNodes);

@@ -89,10 +89,11 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		private static readonly Regex ShapePrefixRegex = new(@"^\[([A-Za-z]+)\]", RegexOptions.Compiled);
 
 		internal static GameObject BuildFromNodes(NailPrefabNodeData[] rootNodes, string fallbackName, string? shapeOverride = null) {
+			rootNodes = NailSetupProcessor.NormalizeNailContainers(rootNodes);
 			if (rootNodes == null || rootNodes.Length == 0)
 				return new GameObject(fallbackName);
 
-			if (rootNodes.Length == 1) {
+			if (rootNodes.Length == 1 && !System.Text.RegularExpressions.Regex.IsMatch(ShapePrefixRegex.Replace(rootNodes[0].Name ?? "", ""), @"^(Hand|Foot)[LR]\.(Thumb|Index|Middle|Ring|Little)$")) {
 				string rootShape = !string.IsNullOrEmpty(shapeOverride) ? shapeOverride! : ExtractShape(rootNodes[0].Name);
 				return BuildSubtree(rootNodes[0], null, rootShape);
 			}

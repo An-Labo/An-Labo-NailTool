@@ -13,6 +13,52 @@ using Object = UnityEngine.Object;
 
 namespace world.anlabo.mdnailtool.Editor {
 	public partial class NailSetupProcessor {
+
+		// Collapse only pure grouping nodes whose TRS can be represented exactly on children.
+		// Normalize before shape overlays, otherwise flat deltas get appended beside old groups.
+		internal static NailPrefabNodeData[] NormalizeNailContainers(NailPrefabNodeData[]? nodes) {
+			var result = new List<NailPrefabNodeData>();
+			foreach (NailPrefabNodeData original in nodes ?? Array.Empty<NailPrefabNodeData>()) {
+				NailPrefabNodeData node = CloneNode(original);
+				if (node.Children != null) node.Children = NormalizeNailContainers(node.Children);
+				string bare = GetVariantMatchName(node.Name ?? "");
+				Vector3 scale = NodeVector(node.LocalScale, Vector3.one);
+				bool container = node.Children is { Length: > 0 }
+					&& !IsFingerNodeName(bare)
+					&& node.Children.All(c => IsFingerNodeName(GetVariantMatchName(c.Name ?? "")) || (c.Name ?? "").StartsWith("[", StringComparison.Ordinal))
+					&& string.IsNullOrEmpty(node.MeshGuid) && string.IsNullOrEmpty(node.RendererType)
+					&& string.IsNullOrEmpty(node.RootBoneName) && !node.MeshFileId.HasValue
+					&& (node.MaterialGuids == null || node.MaterialGuids.Length == 0)
+					&& (node.BlendShapeWeights == null || node.BlendShapeWeights.Count == 0)
+					&& (node.BoundsCenter == null || node.BoundsCenter.Length == 0)
+					&& (node.BoundsExtent == null || node.BoundsExtent.Length == 0)
+					&& scale.x == scale.y && scale.y == scale.z && scale.x != 0f;
+				if (!container) { result.Add(node); continue; }
+				Vector3 position = NodeVector(node.LocalPosition, Vector3.zero);
+				Quaternion rotation = NodeRotation(node.LocalRotation);
+				foreach (NailPrefabNodeData child in node.Children!) {
+					if (position != Vector3.zero || rotation != Quaternion.identity || scale != Vector3.one) {
+						Vector3 p = position + rotation * Vector3.Scale(scale, NodeVector(child.LocalPosition, Vector3.zero));
+						Quaternion r = rotation * NodeRotation(child.LocalRotation);
+						Vector3 s = Vector3.Scale(scale, NodeVector(child.LocalScale, Vector3.one));
+						child.LocalPosition = new[] { p.x, p.y, p.z };
+						child.LocalRotation = new[] { r.x, r.y, r.z, r.w };
+						child.LocalScale = new[] { s.x, s.y, s.z };
+					}
+					if (!(child.Name ?? "").StartsWith("[", StringComparison.Ordinal) && (node.Name ?? "").StartsWith("[", StringComparison.Ordinal)) {
+						int end = node.Name!.IndexOf(']');
+						if (end > 0) child.Name = node.Name.Substring(0, end + 1) + child.Name;
+					}
+					result.Add(child);
+				}
+			}
+			return result.ToArray();
+		}
+		private static bool IsFingerNodeName(string name) =>
+			System.Text.RegularExpressions.Regex.IsMatch(name, @"^(Hand|Foot)[LR]\.(Thumb|Index|Middle|Ring|Little)$");
+		private static Vector3 NodeVector(float[]? value, Vector3 fallback) => value is { Length: >= 3 } ? new Vector3(value[0], value[1], value[2]) : fallback;
+		private static Quaternion NodeRotation(float[]? value) => value is { Length: >= 4 } ? new Quaternion(value[0], value[1], value[2], value[3]) : Quaternion.identity;
+
 		private static Transform?[] GetHandsNailObjectList(GameObject nailPrefabObject) {
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
 				.Select(name => FindNailObject(nailPrefabObject, name))
@@ -32,10 +78,16 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 		private static Transform? FindNailObject(GameObject nailPrefabObject, string name) {
-			Transform? direct = nailPrefabObject.transform.Find(name);
-			if (direct != null) return direct;
-			return nailPrefabObject.GetComponentsInChildren<Transform>(true)
-				.FirstOrDefault(t => t != nailPrefabObject.transform && t.name == name);
+			Transform[] matches = nailPrefabObject.GetComponentsInChildren<Transform>(true)
+				.Where(t => t != nailPrefabObject.transform && t.name == name).ToArray();
+			if (matches.Length > 1) throw new NailSetupUserException($"Nail data contains duplicate fingers: {name}");
+			Transform? found = matches.FirstOrDefault();
+			for (Transform? parent = found?.parent; parent != null; parent = parent.parent) {
+				if (parent.localPosition != Vector3.zero || parent.localRotation != Quaternion.identity || parent.localScale != Vector3.one)
+					throw new NailSetupUserException($"Nail data has an unsupported transformed parent: {parent.name}/{name}");
+				if (parent == nailPrefabObject.transform) break;
+			}
+			return found;
 		}
 
 		// メッシュ無ければベースからコピー
@@ -65,6 +117,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			NailPrefabNodeData[]? baseNodes,
 			NailPrefabNodeData[] variantNodes)
 		{
+			baseNodes = NormalizeNailContainers(baseNodes);
+			variantNodes = NormalizeNailContainers(variantNodes);
 			bool hasHandNodes = variantNodes.Any(n =>
 				GetVariantMatchName(n.Name ?? "").StartsWith("Hand", StringComparison.Ordinal));
 			bool hasFootNodes = variantNodes.Any(n =>
@@ -155,6 +209,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			string targetShape)
 		{
 			if (allNodes == null || allNodes.Length == 0) return null;
+			allNodes = NormalizeNailContainers(allNodes);
 			NailPrefabNodeData[]? effective = null;
 			using DBNailShape db = new();
 			foreach (NailShape shape in db.collection) {

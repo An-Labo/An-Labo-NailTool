@@ -183,8 +183,8 @@ namespace world.anlabo.mdnailtool.Editor {
 								if (varPrefixMatch.Success)
 								{
 									string varPrefix = varPrefixMatch.Groups["prefix"].Value;
-									foreach (Transform child in instVariant.transform)
-										child.name = child.name.Replace(varPrefix, "");
+									foreach (Transform child in instVariant.GetComponentsInChildren<Transform>(true))
+										if (child != instVariant.transform) child.name = child.name.Replace(varPrefix, "");
 								}
 							}
 
@@ -406,6 +406,8 @@ namespace world.anlabo.mdnailtool.Editor {
 						handWeightSource,
 						handShrinkBS.Count > 0 ? handShrinkBS.ToArray() : null,
 						handWeightTransferMask);
+					if (handCombinedGo == null && Enumerable.Range(0, 10).Any(i => !this.ShouldRemoveNailSlot(i)))
+						throw new NailSetupUserException("Selected hand nails could not be baked.");
 					ToolConsole.Log($"  BakeBS hand result: {(handCombinedGo == null ? "(null)" : handCombinedGo.name)} BS frames={(handCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 
 					if (this.UseFootNail)
@@ -419,6 +421,8 @@ namespace world.anlabo.mdnailtool.Editor {
 							feetIsLeft,
 							footWeightSource,
 							footShrinkBS.Count > 0 ? footShrinkBS.ToArray() : null);
+						if (footCombinedGo == null && Enumerable.Range(10, 10).Any(i => !this.ShouldRemoveNailSlot(i)))
+							throw new NailSetupUserException("Selected foot nails could not be baked.");
 						ToolConsole.Log($"  BakeBS foot result: {(footCombinedGo == null ? "(null)" : footCombinedGo.name)} BS frames={(footCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
 					}
 
