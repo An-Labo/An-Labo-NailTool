@@ -1,4 +1,5 @@
 {
+	"error.execute.hand_target_missing": "選択した手の取り付け先が見つかりません: {0} ({1})。アバターのバリエーションと腕の階層を確認してください。",
   "window.settings_sidebar": "設定",
   "window.settings_sidebar_button": "☰ 設定",
   "window.treatment": "使い方・FAQ",
@@ -96,6 +97,8 @@
   "window.nail_settings": "ネイルの設定",
   "window.preview": "プレビュー",
   "window.scene_preview": "アバター着用プレビュー",
+  "error.avatar.manual_selection_required": "アバターの種類を自動判定できませんでした。基準アバターとバリエーションを手動で選択してください。",
+  "error.execute.backup_failed": "バックアップを保存できなかったため、着用を中止しました。保存先の空き容量や書き込み権限を確認して、もう一度お試しください。",
   "error.execute.no_avatar_variation": "基準アバターのバリエーションが取得できませんでした。アバターの選択を確認してください。",
   "error.execute.no_prefab": "ネイルが見つかりませんでした。Boothから再度ダウンロード・インポートしてください。",
   "error.execute.no_nail_shape": "ネイルの形が選択されていません。",
@@ -205,5 +208,7 @@
   "window.faq_empty": "同梱FAQはありません。",
   "window.faq_more_title": "他のFAQも確認する",
   "window.faq_more_body": "ここにない質問や最新の案内は、WebのFAQページにもまとめています。",
-  "window.faq_more_link": "FAQページを開く"
+  "window.faq_more_link": "FAQページを開く",
+  "error.custom_nail.material_failed": "自作ネイル用Materialを準備できませんでした。画像とシェーダープリセットを確認して、画像を選び直してください。以前のMaterialは解除しました。",
+  "error.custom_nail.material_required": "有効な外部Materialを選ぶか、自作ネイル画像からMaterialを準備してから着用してください。"
 }

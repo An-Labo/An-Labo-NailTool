@@ -273,19 +273,24 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			sb.AppendLine($"Variation: {variationName.Replace("Valiation", "Variation")}");
 			sb.AppendLine($"NailShape: {this._nailShapeDropDown?.value ?? "(null)"}");
 			{
+				using var temporaryPrefabs = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BeginTemporaryScope();
 				GameObject? diagPrefab = this._avatarDropDowns?.GetSelectedPrefab();
 				sb.AppendLine($"NailPrefab: {diagPrefab?.name ?? "(null)"}");
 				AppendNailMeshDiagnostics(sb, diagPrefab);
-				if (diagPrefab != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(diagPrefab)))
-				{
-					Object.DestroyImmediate(diagPrefab);
-				}
+
 			}
 			sb.AppendLine($"ForModularAvatar: {FormatNullableBool(this._forModularAvatar?.value)}");
 			sb.AppendLine($"BakeBlendShapes: {FormatNullableBool(this._bakeBlendShapes?.value)}");
 			sb.AppendLine($"ArmatureScaleCompensation: {FormatNullableBool(this._armatureScaleCompensation?.value)}");
 			sb.AppendLine($"UseFootNail: {FormatNullableBool(this._tglFootActive?.value)}");
 			sb.AppendLine($"HandActive: {FormatNullableBool(this._tglHandActive?.value)}");
+			// Do not include user file names, absolute paths, GUIDs, or image contents.
+			sb.AppendLine($"BetaFeatures: {GlobalSetting.EnableBetaFeatures}");
+			sb.AppendLine($"DirectMaterial: {FormatNullableBool(this._enableDirectMaterial?.value)}");
+			sb.AppendLine($"CustomTextureSelected: {!string.IsNullOrEmpty(GlobalSetting.CustomNailTexturePath)}");
+			sb.AppendLine($"CustomMaterialAssigned: {this._materialObjectField?.value != null}");
+			sb.AppendLine($"CustomMaterialError: {this._customNailTextureError?.style.display == DisplayStyle.Flex}");
+			sb.AppendLine($"ShaderPresetSelected: {!string.IsNullOrEmpty(GlobalSetting.SelectedShaderPreset)}");
 			sb.AppendLine($"HandDetail: {FormatNullableBool(this._tglHandDetail?.value)}");
 			sb.AppendLine($"FootDetail: {FormatNullableBool(this._tglFootDetail?.value)}");
 			sb.AppendLine($"AdditionalObjectSource: {this._additionalObjectSourceDropdown?.value ?? "(null)"}");

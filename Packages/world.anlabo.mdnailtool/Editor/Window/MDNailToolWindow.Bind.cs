@@ -79,6 +79,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._customNailTextureSelect.AddToClassList("mdn-custom-nail-texture-select");
 			this._customNailTextureSelect.RegisterValueChangedCallback(this.OnChangeCustomNailTexture);
 			this._customNailTextureRow?.Add(this._customNailTextureSelect);
+			this._customNailTextureError = new HelpBox("", HelpBoxMessageType.Error);
+			this._customNailTextureError.style.display = DisplayStyle.None;
+			this._customNailTextureRow?.Add(this._customNailTextureError);
 			Button refreshCustomNails = new(this.RebuildCustomNailTextures) { text = "↻" };
 			refreshCustomNails.AddToClassList("mdn-shader-preset-btn");
 			refreshCustomNails.tooltip = S("window.custom_nail_refresh") ?? "Reload textures";
@@ -157,6 +160,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void UpdateBetaFeaturesVisibility()
 		{
 			bool betaEnabled = this._enableBetaFeatures?.value == true;
+			if (betaEnabled) this.RebuildCustomNailTextures();
 			if (this._betaFeaturesArea != null)
 				this._betaFeaturesArea.style.display =
 					betaEnabled ? DisplayStyle.Flex : DisplayStyle.None;
@@ -180,6 +184,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			this._avatarDropDowns.RegisterCallback<ChangeEvent<string>>(evt =>
 			{
+				this.CompleteManualAvatarSelection();
+				this.UpdateStepSectionStates();
 				this.CleanupScenePreview();
 				this.UpdatePreview();
 				this.RequestScenePreviewUpdate();
@@ -815,6 +821,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					}
 					if (nodes != null && nodes.Length > 0) {
 						GameObject built = NailPrefabBuilder.BuildFromNodes(nodes, $"additional_{resolvedGuid}");
+						if (!isPreview) NailSetupTransaction.TrackCreated(built);
 						transforms.Add(built.transform);
 						continue;
 					}
@@ -831,7 +838,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 						ToolConsole.Warn("Window", $"finger[{i}]: AdditionalObject could not load: {objectPath} (registryName={registryName})");
 						continue;
 					}
-					transforms.Add(Object.Instantiate(obj, Vector3.zero, Quaternion.identity).transform);
+					GameObject instance = Object.Instantiate(obj, Vector3.zero, Quaternion.identity);
+					if (!isPreview) NailSetupTransaction.TrackCreated(instance);
+					transforms.Add(instance.transform);
 				}
 
 				if (transforms.Count > 0)

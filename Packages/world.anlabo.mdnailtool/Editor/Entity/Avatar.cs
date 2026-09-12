@@ -14,6 +14,11 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("avatarUrl")]
 		public string? Url { get; set; }
 
+		[JsonProperty("customerNotice")]
+		public string? CustomerNotice { get; set; }
+
+		public bool ShouldSerializeCustomerNotice() => !string.IsNullOrWhiteSpace(this.CustomerNotice);
+
 		[JsonProperty("displayNames")]
 		public IReadOnlyDictionary<string, string>? DisplayNames { get; set; }
 		

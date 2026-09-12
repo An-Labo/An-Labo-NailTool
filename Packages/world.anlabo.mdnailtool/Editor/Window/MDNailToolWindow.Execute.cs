@@ -72,21 +72,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				}
 			}
 
-			if (descriptor != null)
-			{
-				var avatarObjectField = this._avatarObjectField;
-				if (avatarObjectField != null)
-				{
-					avatarObjectField.value = descriptor;
-				}
-
-				AvatarMatching avatarMatching = new(descriptor);
-				(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? variation = avatarMatching.Match();
-				if (variation != null && this._avatarDropDowns != null)
-				{
-					this._avatarDropDowns.SetValues(variation.Value.shop, variation.Value.avatar, variation.Value.variation);
-				}
-			}
+			// Initial selection and later ObjectField changes use the same reset/match path.
+			this._avatarObjectField?.SetValueWithoutNotify(descriptor);
+			this.RefreshAvatarSelection(descriptor);
 
 			this.UpdateBlendShapeVariantDropDown();
 		}
@@ -368,31 +356,61 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnChangeAvatarSortOrder(AvatarSortOrder order) { this._avatarDropDowns?.Sort(order); }
 
+		private bool _avatarSelectionNeedsManual;
+
 		private void OnChangeAvatar(ChangeEvent<Object> evt)
 		{
-			if (evt.newValue is VRCAvatarDescriptor avatar)
-			{
-				// アバターが設定されたらエラー枠・バナーを解除
-				this.ClearAvatarFieldError();
-				this.HideErrorBanner();
+			this.RefreshAvatarSelection(evt.newValue as VRCAvatarDescriptor);
+		}
 
-				AvatarMatching matching = new(avatar);
-				(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? result = matching.Match();
-				if (result != null)
+		private void RefreshAvatarSelection(VRCAvatarDescriptor? avatar)
+		{
+			// Clear the old selection before matching, including when matching fails or throws.
+			this.CleanupScenePreview();
+			this._avatarDropDowns?.ClearSelection();
+			this._avatarSelectionNeedsManual = avatar != null;
+			this.ClearAvatarFieldError();
+			this.HideErrorBanner();
+
+			if (avatar != null)
+			{
+				(Shop shop, Entity.Avatar avatar, AvatarVariation variation)? result = null;
+				try
 				{
-					this._avatarDropDowns!.SetValues(result.Value.shop, result.Value.avatar, result.Value.variation);
-					this.UpdateBlendShapeVariantDropDown();
+					result = new AvatarMatching(avatar).Match();
 				}
+				catch (Exception ex)
+				{
+					ToolConsole.Warn("Avatar", $"Automatic avatar matching failed: {ex}");
+				}
+				if (result != null && this._avatarDropDowns != null)
+				{
+					this._avatarDropDowns.SetValues(result.Value.shop, result.Value.avatar, result.Value.variation);
+					this._avatarSelectionNeedsManual = false;
+				}
+				else
+				{
+					this.ShowErrorBanner(S("error.avatar.manual_selection_required"));
+				}
+			}
 
-				this.CleanupScenePreview();
-				this.UpdatePreview();
-				this.RequestScenePreviewUpdate();
-				this.UpdateStepSectionStates();
-			}
-			else
-			{
-				this.UpdateStepSectionStates();
-			}
+			this.UpdateBlendShapeVariantDropDown();
+			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
+			this.UpdateStepSectionStates();
+		}
+
+		private void CompleteManualAvatarSelection()
+		{
+			if (!this._avatarSelectionNeedsManual || this._avatarDropDowns?.GetSelectedAvatarVariation() == null) return;
+			this._avatarSelectionNeedsManual = false;
+			this.HideErrorBanner();
+		}
+
+		// Release the owned preview before a domain reload drops the controller reference.
+		private void OnDisable()
+		{
+			this.CleanupScenePreview();
 		}
 
 		private void OnDestroy()
@@ -416,6 +434,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnExecute()
 		{
+			if (this._enableDirectMaterial?.value == true && this._materialObjectField?.value == null)
+			{
+				this.ShowErrorBanner(S("error.custom_nail.material_required"));
+				return;
+			}
 			this.CleanupScenePreview();
 			this._nailPreviewController?.CleanupAdditionalObjects();
 
@@ -453,7 +476,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			AvatarVariation? avatarVariationData = this._avatarDropDowns!.GetSelectedAvatarVariation();
 			if (avatarVariationData == null)
 			{
-				this.ShowErrorBanner(S("error.execute.no_avatar_variation"));
+				this.ShowErrorBanner(S(this._avatarSelectionNeedsManual ? "error.avatar.manual_selection_required" : "error.execute.no_avatar_variation"));
 				return;
 			}
 
@@ -465,6 +488,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				return;
 			}
 
+			using var temporaryPrefabs = NailPrefabBuilder.BeginTemporaryScope();
 			GameObject? prefab = this._avatarDropDowns!.GetSelectedPrefab();
 			if (prefab == null)
 			{
@@ -492,7 +516,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					}
 					catch (Exception e)
 					{
-						ToolConsole.Warn("Backup", $"Backup creation failed. Continue setup without backup.\n{e}");
+						ToolConsole.Warn("Backup", $"Backup creation failed. Setup stopped.\n{e}");
+						this.ShowErrorBanner(S("error.execute.backup_failed"), e);
+						return;
 					}
 				}
 
@@ -524,9 +550,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 				if (avatarVariationData.NailNodes != null && avatarVariationData.NailNodes.Length > 0)
 				{
-					GameObject nodePrefab = NailPrefabBuilder.BuildFromNodes(avatarVariationData.NailNodes, avatarVariationData.VariationName);
+					GameObject nodePrefab = NailPrefabBuilder.BuildTemporaryFromNodes(avatarVariationData.NailNodes, avatarVariationData.VariationName);
 					GameObject resolvedNodePrefab = NailSetupProcessor.ResolveShapePrefab(nodePrefab, nailShapeName, avatarVariationData.NailNodes);
-					if (!ReferenceEquals(resolvedNodePrefab, nodePrefab)) Object.DestroyImmediate(nodePrefab);
+					if (!ReferenceEquals(resolvedNodePrefab, nodePrefab)) NailPrefabBuilder.DestroyTemporaryPrefab(nodePrefab);
 					prefab = resolvedNodePrefab;
 				}
 
@@ -556,7 +582,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					SelectedBlendShapeVariantName = (!(this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == true) && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
 					EnableAdditionalMaterials = true,
 					PerFingerAdditionalMaterials = this.BuildPerFingerAdditionalMaterials(false),
-					PerFingerAdditionalObjects = this.BuildPerFingerAdditionalObjects(false),
+					AdditionalObjectsFactory = () => this.BuildPerFingerAdditionalObjects(false),
 				};
 
 				// AvatarEntityをprocessorにセット（shop.jsonのblendShapeVariantsを参照するため）

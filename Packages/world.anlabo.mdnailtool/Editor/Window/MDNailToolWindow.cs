@@ -44,6 +44,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private ObjectField? _materialObjectField;
 		private VisualElement? _customNailTextureRow;
 		private DropdownField? _customNailTextureSelect;
+		private HelpBox? _customNailTextureError;
 		private readonly List<string> _customNailTexturePaths = new();
 		private LocalizedObjectField? _avatarObjectField;
 		private AvatarDropDowns? _avatarDropDowns;
@@ -150,8 +151,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		public void SetAvatar(Shop shop, Avatar? avatar, AvatarVariation? variation)
 		{
+			this.CleanupScenePreview();
 			this._avatarDropDowns?.SetValues(shop, avatar, variation);
+			this.CompleteManualAvatarSelection();
 			this.UpdateBlendShapeVariantDropDown();
+			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
+			this.UpdateStepSectionStates();
 		}
 
 		public void CreateGUI()
@@ -185,7 +191,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void UpdateStepSectionStates()
 		{
-			bool hasAvatar = this._avatarObjectField?.value is VRCAvatarDescriptor;
+			bool hasAvatar = this._avatarObjectField?.value is VRCAvatarDescriptor
+				&& this._avatarDropDowns?.GetSelectedAvatarVariation() != null;
 			bool hasNail = !string.IsNullOrEmpty(this.GetPrimarySelectedDesignName()) ||
 				(this._enableDirectMaterial?.value == true && this._materialObjectField?.value != null);
 			bool hasStyle = hasNail && !string.IsNullOrEmpty(this._nailShapeDropDown?.value);

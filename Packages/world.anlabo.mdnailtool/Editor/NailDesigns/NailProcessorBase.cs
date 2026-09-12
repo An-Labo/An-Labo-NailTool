@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,6 +34,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 				if (!isGenerate && !isPreview && !hasPreset) {
 					Material targetMaterial = this.GetBaseMaterial(materialName, nailShapeName);
+					NailSetupTransaction.RecordAssetChange(targetMaterial);
 					this.ProcessMaterial(targetMaterial, materialName, colorName, nailShapeName);
 					return targetMaterial;
 				}
@@ -61,12 +62,18 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 						Directory.CreateDirectory(MDNailToolDefines.GENERATED_ASSET_PATH);
 					}
 
-					AssetDatabase.CreateAsset(clonedMaterial, $"{MDNailToolDefines.GENERATED_ASSET_PATH}generated_{DateTime.Now : yyyy-MM-dd-HH-mm-ss}_{materialKey}.mat");
+					NailSetupTransaction.CreateGeneratedAsset(clonedMaterial, $"{MDNailToolDefines.GENERATED_ASSET_PATH}generated_{DateTime.Now : yyyy-MM-dd-HH-mm-ss}_{materialKey}.mat");
 					AssetDatabase.Refresh();
 					INailProcessor.RegisterCreatedMaterialCash(materialKey, clonedMaterial);
 				}
 
 				return clonedMaterial;
+			} catch (NailToolUserException) {
+				throw;
+			} catch (IOException ex) {
+				throw new NailToolUserException("NailSetup", "Could not access generated material storage.", ex);
+			} catch (UnauthorizedAccessException ex) {
+				throw new NailToolUserException("NailSetup", "Could not write generated material storage.", ex);
 			} catch (Exception ex) {
 				Debug.LogWarning($"[MDNailTool] Failed to build material for '{this.DesignName}' (material='{materialName}', color='{colorName}', shape='{nailShapeName}'): {ex.Message}. Returning fallback material.");
 				return this.GetFallbackMaterial();

@@ -1,4 +1,5 @@
 {
+	"error.execute.hand_target_missing": "The selected hand target is missing: {0} ({1}). Check the selected avatar variation and its arm hierarchy.",
   "window.settings_sidebar": "Settings",
   "window.settings_sidebar_button": "☰ Settings",
   "window.treatment": "Usage and FAQ",
@@ -97,6 +98,8 @@
   "window.nail_settings": "Style Settings",
   "window.preview": "Preview",
   "window.scene_preview": "Scene Preview",
+  "error.avatar.manual_selection_required": "Could not identify this avatar automatically. Select the base avatar and variation manually.",
+  "error.execute.backup_failed": "Nail setup stopped because the backup could not be saved. Check free space and write permissions for the backup folder, then try again.",
   "error.execute.no_avatar_variation": "Could not retrieve base avatar variation. Please check your avatar selection.",
   "error.execute.no_prefab": "Nail not found. Please re-download and import from Booth.",
   "error.execute.no_nail_shape": "No nail shape selected.",
@@ -205,5 +208,7 @@
   "window.faq_empty": "No bundled FAQ entries.",
   "window.faq_more_title": "Check other FAQs",
   "window.faq_more_body": "Additional questions and the latest notes are available on the web FAQ page.",
-  "window.faq_more_link": "Open FAQ page"
+  "window.faq_more_link": "Open FAQ page",
+  "error.custom_nail.material_failed": "The custom nail Material could not be prepared. Check the image and shader preset, then select the image again. The previous Material was cleared.",
+  "error.custom_nail.material_required": "Select a valid external Material or prepare one from a custom nail image before applying."
 }

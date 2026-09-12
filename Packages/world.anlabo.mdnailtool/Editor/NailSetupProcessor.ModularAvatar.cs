@@ -125,7 +125,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							NailPrefabNodeData[]? scaledVariantNodes = CloneVariantNodes(variant.NailNodes);
 							if (scaledVariantNodes != null && scaledVariantNodes.Length > 0)
 							{
-								variantPrefabAsset = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildFromNodes(scaledVariantNodes, variant.Name);
+								variantPrefabAsset = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildTemporaryFromNodes(scaledVariantNodes, variant.Name);
 								if (variantPrefabAsset != null) objectsToDestroy.Add(variantPrefabAsset);
 								ToolConsole.Log($"    variant='{variant.Name}' nailNodes -> in-memory build");
 							}
@@ -173,6 +173,7 @@ namespace world.anlabo.mdnailtool.Editor {
 							if (!ReferenceEquals(resolvedVariantPrefab, variantPrefabAsset) && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(resolvedVariantPrefab)))
 								objectsToDestroy.Add(resolvedVariantPrefab);
 							GameObject instVariant = Object.Instantiate(resolvedVariantPrefab, this.Avatar.transform);
+							NailSetupTransaction.TrackCreated(instVariant);
 							// C-1 fix: instVariant の objectsToDestroy 追加は全 vNail.SetParent 完了後に移動 (詳細は variants ループ末尾参照).
 
 							// バリアントプレハブの子名からシェイプ接頭辞([Oval]等)を除去
@@ -428,7 +429,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						{
 							if (additionalObj == null) continue;
 							additionalObj.SetParent(handCombinedGo.transform, true);
-							ModularAvatarBoneProxy bp = additionalObj.gameObject.AddComponent<ModularAvatarBoneProxy>();
+							ModularAvatarBoneProxy bp = Undo.AddComponent<ModularAvatarBoneProxy>(additionalObj.gameObject);
 							bp.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 							bp.target = targetBone;
 						}
@@ -452,7 +453,8 @@ namespace world.anlabo.mdnailtool.Editor {
 				{
 					// ---- HandNailラッパー作成 ----
 					handWrapper = new GameObject(handWrapperName);
-					Undo.RegisterCreatedObjectUndo(handWrapper, "Nail Setup");
+					NailSetupTransaction.TrackCreated(handWrapper);
+
 					handWrapper.transform.SetParent(nailPrefabObject.transform, false);
 					foreach (Transform? nailObject in handsNailObjects)
 					{
@@ -471,7 +473,8 @@ namespace world.anlabo.mdnailtool.Editor {
 					{
 						// ---- FootNailラッパー作成 ----
 						footWrapper = new GameObject(footWrapperName);
-						Undo.RegisterCreatedObjectUndo(footWrapper, "Nail Setup");
+						NailSetupTransaction.TrackCreated(footWrapper);
+
 						footWrapper.transform.SetParent(nailPrefabObject.transform, false);
 						foreach (Transform? nailObject in leftFootNailObjects)
 						{
@@ -504,12 +507,14 @@ namespace world.anlabo.mdnailtool.Editor {
 					Vector3 directLocalScale = nailObject.localScale;
 
 					GameObject proxyObject = new GameObject($"{nailObject.name}_BoneProxy");
-					Undo.RegisterCreatedObjectUndo(proxyObject, "Nail Setup BoneProxy");
+
+					NailSetupTransaction.TrackCreated(proxyObject);
+
 					if (wrapperParent != null) proxyObject.transform.SetParent(wrapperParent, false);
 					proxyObject.transform.SetPositionAndRotation(targetBone.position, targetBone.rotation);
 					proxyObject.transform.localScale = Vector3.one;
 
-					ModularAvatarBoneProxy boneProxy = proxyObject.AddComponent<ModularAvatarBoneProxy>();
+					ModularAvatarBoneProxy boneProxy = Undo.AddComponent<ModularAvatarBoneProxy>(proxyObject);
 					boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildAtRoot;
 					boneProxy.matchScale = true;
 					boneProxy.target = targetBone;
@@ -606,7 +611,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 						if (bindings.Count > 0)
 						{
-							ModularAvatarBlendshapeSync bsSync = nailObject.gameObject.AddComponent<ModularAvatarBlendshapeSync>();
+							ModularAvatarBlendshapeSync bsSync = Undo.AddComponent<ModularAvatarBlendshapeSync>(nailObject.gameObject);
 							bsSync.Bindings = bindings;
 						}
 					}
@@ -619,8 +624,9 @@ namespace world.anlabo.mdnailtool.Editor {
 					if (anLaboParent == null)
 					{
 						GameObject anLaboObj = new GameObject("[An-Labo]");
+						NailSetupTransaction.TrackCreated(anLaboObj);
 						anLaboObj.transform.SetParent(this.Avatar.transform, false);
-						Undo.RegisterCreatedObjectUndo(anLaboObj, "Nail Setup");
+
 						anLaboParent = anLaboObj.transform;
 					}
 					Transform? existingNailRoot = anLaboParent.Find(nailPrefabObject.name);
@@ -663,8 +669,8 @@ namespace world.anlabo.mdnailtool.Editor {
 				// B-1 fix: AddComponent の結果を Undo に登録 (Undo時にMarkerだけ消えてGOが残るデグレを防ぐ).
 				if (nailPrefabObject.GetComponent<MDNailObjectMarker>() == null)
 				{
-					MDNailObjectMarker marker = nailPrefabObject.AddComponent<MDNailObjectMarker>();
-					Undo.RegisterCreatedObjectUndo(marker, "Nail Setup Marker");
+					MDNailObjectMarker marker = Undo.AddComponent<MDNailObjectMarker>(nailPrefabObject);
+
 				}
 
 				// ---- MA Mesh Settings ----
@@ -673,7 +679,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				ModularAvatarMeshSettings meshSettings = nailPrefabObject.GetComponent<ModularAvatarMeshSettings>();
 				if (meshSettings == null)
 				{
-					meshSettings = nailPrefabObject.AddComponent<ModularAvatarMeshSettings>();
+					meshSettings = Undo.AddComponent<ModularAvatarMeshSettings>(nailPrefabObject);
 				}
 				meshSettings.InheritProbeAnchor = ModularAvatarMeshSettings.InheritMode.SetOrInherit;
 				meshSettings.InheritBounds = ModularAvatarMeshSettings.InheritMode.Set;
@@ -819,7 +825,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 						if (variantBindings.Count > 0)
 						{
-							ModularAvatarBlendshapeSync variantBsSync = child.gameObject.AddComponent<ModularAvatarBlendshapeSync>();
+							ModularAvatarBlendshapeSync variantBsSync = Undo.AddComponent<ModularAvatarBlendshapeSync>(child.gameObject);
 							variantBsSync.Bindings = variantBindings;
 
 						}
@@ -829,7 +835,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (this.GenerateExpressionMenu)
 					this.SetupExpressionMenu(nailPrefabObject);
 #else
-				Undo.RevertAllInCurrentGroup();
 				throw new NailToolUserException("NailSetup", "The setup for ModularAvatar cannot be executed in environments where ModularAvatar is not installed.");
 #endif
 		}
@@ -940,8 +945,8 @@ namespace world.anlabo.mdnailtool.Editor {
 				GameObject anLaboObj = nailRoot.transform.parent?.gameObject ?? this.Avatar.gameObject;
 				if (anLaboObj.GetComponent<ModularAvatarMenuInstaller>() == null) {
 					// [An-Labo]新規作成時: 最初のネイルのサムネイルを設定
-					anLaboObj.AddComponent<ModularAvatarMenuInstaller>();
-					var anLaboMenuItem = anLaboObj.AddComponent<ModularAvatarMenuItem>();
+					Undo.AddComponent<ModularAvatarMenuInstaller>(anLaboObj);
+					var anLaboMenuItem = Undo.AddComponent<ModularAvatarMenuItem>(anLaboObj);
 					SetMenuSubMenu(anLaboMenuItem);
 					SetMenuIcon(anLaboMenuItem, thumbnail);
 					anLaboMenuItem.label = "An-Labo";
@@ -955,11 +960,11 @@ namespace world.anlabo.mdnailtool.Editor {
 			} else {
 				// MergeAnLabo=false: nailRoot自身にMenuInstaller
 				if (nailRoot.GetComponent<ModularAvatarMenuInstaller>() == null)
-					nailRoot.AddComponent<ModularAvatarMenuInstaller>();
+					Undo.AddComponent<ModularAvatarMenuInstaller>(nailRoot);
 			}
 
 			// ---- nailRoot に MenuItem ----
-			ModularAvatarMenuItem rootMenuItem = nailRoot.AddComponent<ModularAvatarMenuItem>();
+			ModularAvatarMenuItem rootMenuItem = Undo.AddComponent<ModularAvatarMenuItem>(nailRoot);
 			SetMenuIcon(rootMenuItem, thumbnail);
 			rootMenuItem.label = menuLabel;
 			if (this.SplitHandFoot) {
@@ -973,7 +978,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				rootMenuItem.isDefault = true;
 				rootMenuItem.automaticValue = true;
 
-				ModularAvatarObjectToggle rootToggle = nailRoot.AddComponent<ModularAvatarObjectToggle>();
+				ModularAvatarObjectToggle rootToggle = Undo.AddComponent<ModularAvatarObjectToggle>(nailRoot);
 				// メニューの ON を「着用中」とし、OFF 時だけネイルを非表示にする。
 				rootToggle.Inverted = true;
 				var toggleTargets = new System.Collections.Generic.List<ToggledObject>();
@@ -1014,9 +1019,10 @@ namespace world.anlabo.mdnailtool.Editor {
 					// MenuItem/ObjectToggle を wrapper 自身に付けて wrapper を対象にすると自己参照になり、
 					// MA の初期 Active 判定が循環するため、メニュー制御用 GO を兄弟として分離する。
 					GameObject handControl = new($"HandNailToggle_{variationName}");
+					NailSetupTransaction.TrackCreated(handControl);
 					handControl.transform.SetParent(nailRoot.transform, false);
 					handControl.hideFlags = HideFlags.HideInHierarchy;
-					ModularAvatarObjectToggle handToggle = handControl.AddComponent<ModularAvatarObjectToggle>();
+					ModularAvatarObjectToggle handToggle = Undo.AddComponent<ModularAvatarObjectToggle>(handControl);
 					// メニューの ON を「着用中」として見せる。ネイル本体は初期状態で有効なため、
 					// 反転条件にすると自動生成パラメータの初期値が ON になり、OFF 時だけ非表示になる。
 					handToggle.Inverted = true;
@@ -1032,7 +1038,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 					handToggle.Objects = handToggleObjects;
 
-					ModularAvatarMenuItem handMenuItem = handControl.AddComponent<ModularAvatarMenuItem>();
+					ModularAvatarMenuItem handMenuItem = Undo.AddComponent<ModularAvatarMenuItem>(handControl);
 					SetMenuToggle(handMenuItem, 1);
 					SetMenuIcon(handMenuItem, null);
 					handMenuItem.isSaved = true;
@@ -1046,9 +1052,10 @@ namespace world.anlabo.mdnailtool.Editor {
 					Transform? footWrapperT = nailRoot.transform.Find(footWrapperName);
 					if (footWrapperT != null) {
 						GameObject footControl = new($"FootNailToggle_{variationName}");
+						NailSetupTransaction.TrackCreated(footControl);
 						footControl.transform.SetParent(nailRoot.transform, false);
 						footControl.hideFlags = HideFlags.HideInHierarchy;
-						ModularAvatarObjectToggle footToggle = footControl.AddComponent<ModularAvatarObjectToggle>();
+						ModularAvatarObjectToggle footToggle = Undo.AddComponent<ModularAvatarObjectToggle>(footControl);
 						footToggle.Inverted = true;
 						List<ToggledObject> footToggleObjects = footWrapperT.Cast<Transform>()
 							.Select(t => new ToggledObject {
@@ -1061,7 +1068,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 						footToggle.Objects = footToggleObjects;
 
-						ModularAvatarMenuItem footMenuItem = footControl.AddComponent<ModularAvatarMenuItem>();
+						ModularAvatarMenuItem footMenuItem = Undo.AddComponent<ModularAvatarMenuItem>(footControl);
 						SetMenuToggle(footMenuItem, 1);
 						SetMenuIcon(footMenuItem, null);
 						footMenuItem.isSaved = true;

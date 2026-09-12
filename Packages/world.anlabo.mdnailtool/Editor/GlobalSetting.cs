@@ -67,18 +67,44 @@ namespace world.anlabo.mdnailtool.Editor
 		private const string DIRECT_MATERIAL_ENABLED_KEY = "world.anlabo.mdnailtool.direct_material_enabled";
 		private const string CUSTOM_NAIL_TEXTURE_PATH_KEY = "world.anlabo.mdnailtool.custom_nail_texture_path";
 
-		internal static bool HasDirectMaterialPreference => EditorPrefs.HasKey(DIRECT_MATERIAL_ENABLED_KEY);
+		// Asset selections belong to a project. Do not migrate the old global keys:
+		// their originating project is unknown, even when the same path exists here.
+		private static string ProjectPreferenceKey(string key) => key + ".project.v1." + Application.dataPath;
+		private const string CUSTOM_NAIL_TEXTURE_GUID_KEY = "world.anlabo.mdnailtool.custom_nail_texture_guid";
+		private const string MATERIAL_SELECTION_SOURCE_KEY = "world.anlabo.mdnailtool.material_selection_source";
+		internal enum MaterialSelectionSource { None, Manual, CustomTexture }
+
+		internal static MaterialSelectionSource DirectMaterialSource
+		{
+			get => (MaterialSelectionSource)EditorPrefs.GetInt(ProjectPreferenceKey(MATERIAL_SELECTION_SOURCE_KEY), 0);
+			set => EditorPrefs.SetInt(ProjectPreferenceKey(MATERIAL_SELECTION_SOURCE_KEY), (int)value);
+		}
+
+		internal static bool HasDirectMaterialPreference => EditorPrefs.HasKey(ProjectPreferenceKey(DIRECT_MATERIAL_ENABLED_KEY));
 
 		internal static bool DirectMaterialEnabled
 		{
-			get => EditorPrefs.GetBool(DIRECT_MATERIAL_ENABLED_KEY, false);
-			set => EditorPrefs.SetBool(DIRECT_MATERIAL_ENABLED_KEY, value);
+			get => EditorPrefs.GetBool(ProjectPreferenceKey(DIRECT_MATERIAL_ENABLED_KEY), false);
+			set => EditorPrefs.SetBool(ProjectPreferenceKey(DIRECT_MATERIAL_ENABLED_KEY), value);
 		}
 
 		internal static string CustomNailTexturePath
 		{
-			get => EditorPrefs.GetString(CUSTOM_NAIL_TEXTURE_PATH_KEY, string.Empty);
-			set => EditorPrefs.SetString(CUSTOM_NAIL_TEXTURE_PATH_KEY, value ?? string.Empty);
+			get
+			{
+				string guid = EditorPrefs.GetString(ProjectPreferenceKey(CUSTOM_NAIL_TEXTURE_GUID_KEY), string.Empty);
+				// A deleted GUID must not silently resolve to a replacement image at the old path.
+				return string.IsNullOrEmpty(guid)
+					? EditorPrefs.GetString(ProjectPreferenceKey(CUSTOM_NAIL_TEXTURE_PATH_KEY), string.Empty)
+					: AssetDatabase.GUIDToAssetPath(guid);
+			}
+			set
+			{
+				string path = value ?? string.Empty;
+				EditorPrefs.SetString(ProjectPreferenceKey(CUSTOM_NAIL_TEXTURE_PATH_KEY), path);
+				EditorPrefs.SetString(ProjectPreferenceKey(CUSTOM_NAIL_TEXTURE_GUID_KEY),
+					string.IsNullOrEmpty(path) ? string.Empty : AssetDatabase.AssetPathToGUID(path));
+			}
 		}
 
 		internal static bool GenerateMaterial

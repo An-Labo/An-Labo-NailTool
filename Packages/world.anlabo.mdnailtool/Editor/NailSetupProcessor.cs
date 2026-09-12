@@ -60,6 +60,8 @@ namespace world.anlabo.mdnailtool.Editor {
 		public bool EnableAdditionalMaterials { get; set; } = true;
 		public IEnumerable<Material>?[]? PerFingerAdditionalMaterials { get; set; }
 		public IEnumerable<Transform>?[]? PerFingerAdditionalObjects { get; set; }
+		// Execute builds decorations only after preflight and inside the setup ownership scope.
+		public Func<IEnumerable<Transform>?[]?>? AdditionalObjectsFactory { get; set; }
 
 		/// <summary>Process中に発生した非致命的な警告メッセージ</summary>
 		public List<string> Warnings { get; } = new();
@@ -86,29 +88,9 @@ namespace world.anlabo.mdnailtool.Editor {
 
 
 		public void Process() {
+			using var temporaryPrefabs = NailPrefabBuilder.BeginTemporaryScope(this.NailPrefab);
 			ValidateAvatarRig();
-
-			INailProcessor.ClearCreatedMaterialCash();
-			Undo.IncrementCurrentGroup();
-
-			ApplySelectedVariantPrefab();
-			ResolveShapePrefabForCurrentShape();
-			GameObject nailPrefabObject = InstantiateAndLabelNailPrefab();
-			Undo.RegisterCreatedObjectUndo(nailPrefabObject, "Nail Setup");
-
-			string prefix = this.getPrefabPrefix();
-
-			// NailPrefabBuilder.BuildFromNodes 出力 (in-memory orphan) は Scene root に残り Default-Material のままマゼンタ描画されるため、prefix 取得後に destroy する.
-			if (this.NailPrefab != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(this.NailPrefab))) {
-				Object.DestroyImmediate(this.NailPrefab);
-			}
-
-			if (!string.IsNullOrEmpty(prefix)) {
-				foreach (Transform child in nailPrefabObject.transform) {
-					child.name = child.name.Replace(prefix, "");
-				}
-			}
-
+			ValidateHandBoneOverrides();
 			// 装着対象ボーンの取得
 			Dictionary<string, Transform?> targetBoneDictionary = GetTargetBoneDictionary(this.Avatar, this.AvatarVariationData.BoneMappingOverride);
 
@@ -117,6 +99,32 @@ namespace world.anlabo.mdnailtool.Editor {
 				.Any(name => targetBoneDictionary.ContainsKey(name) && targetBoneDictionary[name] != null);
 			if (!hasAnyFingerBone) {
 				throw new NailSetupUserException(LanguageManager.S("error.execute.no_finger_bones") ?? "error.execute.no_finger_bones");
+			}
+
+
+			using var transaction = new NailSetupTransaction(this.Avatar.gameObject);
+			ProcessCore(targetBoneDictionary);
+			transaction.Complete();
+		}
+
+		private void ProcessCore(Dictionary<string, Transform?> targetBoneDictionary) {
+			INailProcessor.ClearCreatedMaterialCash();
+			if (this.AdditionalObjectsFactory != null)
+				this.PerFingerAdditionalObjects = this.AdditionalObjectsFactory();
+
+			ApplySelectedVariantPrefab();
+			ResolveShapePrefabForCurrentShape();
+			GameObject nailPrefabObject = InstantiateAndLabelNailPrefab();
+
+			string prefix = this.getPrefabPrefix();
+
+			// Release only a source explicitly created as temporary by this tool.
+			NailPrefabBuilder.DestroyTemporaryPrefab(this.NailPrefab);
+
+			if (!string.IsNullOrEmpty(prefix)) {
+				foreach (Transform child in nailPrefabObject.transform) {
+					child.name = child.name.Replace(prefix, "");
+				}
 			}
 
 			// プレハブ内のネイルオブジェクトを取得
@@ -156,7 +164,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				try {
 					NailSetupUtil.ReplaceHandsNailMesh(handsNailObjects, this.OverrideMesh);
 				} catch (Exception) {
-					Undo.RevertAllInCurrentGroup();
 					throw;
 				}
 			}
@@ -165,7 +172,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			try {
 				NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, this.NailShapeName);
 			} catch (Exception) {
-				Undo.RevertAllInCurrentGroup();
 				throw;
 			}
 
@@ -174,7 +180,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				NailSetupUtil.ReplaceNailMaterial(handsNailObjects, leftFootNailObjects, rightFootNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, this.GenerateMaterial, false, this.OverrideMaterial,
 					this.EnableAdditionalMaterials, this.PerFingerAdditionalMaterials);
 			} catch (Exception) {
-				Undo.RevertAllInCurrentGroup();
 				throw;
 			}
 
@@ -182,7 +187,6 @@ namespace world.anlabo.mdnailtool.Editor {
 			try {
 				NailSetupUtil.AttachAdditionalObjects(handsNailObjects, this.NailDesignAndVariationNames, this.NailShapeName, false, this.PerFingerAdditionalObjects);
 			} catch (Exception) {
-				Undo.RevertAllInCurrentGroup();
 				throw;
 			}
 
@@ -204,27 +208,14 @@ namespace world.anlabo.mdnailtool.Editor {
 							}
 							continue;
 						}
-						foreach (Transform additionalObject in fingerObjects)
+						foreach (Transform additionalObject in fingerObjects) {
+							NailSetupTransaction.TrackCreated(additionalObject.gameObject);
 							additionalObject.SetParent(footNailObjects[fi], false);
+						}
 					}
 				} catch (Exception) {
-					Undo.RevertAllInCurrentGroup();
 					throw;
 				}
-			}
-
-			// Mip Streaming有効化
-			try {
-				var allRenderers = handsNailObjects
-					.Concat(this.UseFootNail
-						? leftFootNailObjects.Concat(rightFootNailObjects)
-						: Enumerable.Empty<Transform?>())
-					.Where(t => t != null)
-					.SelectMany(t => t!.GetComponentsInChildren<Renderer>(true))
-					.Cast<Renderer?>();
-				NailSetupUtil.EnableMipStreamingForRenderers(allRenderers);
-			} catch (Exception e) {
-				ToolConsole.Warn("NailSetup", $"{LanguageManager.S("warn.mip_streaming_failed") ?? "Failed to enable Mip Streaming"}: {e.Message}{BuildDiagnosticInfo()}");
 			}
 
 			// ---- BlendShapeのベイクとMA同期設定 ----
@@ -254,7 +245,15 @@ namespace world.anlabo.mdnailtool.Editor {
 					leftFootNailObjects, rightFootNailObjects, corrections);
 			}
 
-			CleanupOrphanedNailPrefabsInScene();
+
+			// Mip Streaming有効化
+			try {
+				// Combine may have replaced the original nail objects by this point.
+				var allRenderers = NailSetupTransaction.GetCreatedRenderers();
+				NailSetupUtil.EnableMipStreamingForRenderers(allRenderers);
+			} catch (Exception e) {
+				ToolConsole.Warn("NailSetup", $"{LanguageManager.S("warn.mip_streaming_failed") ?? "Failed to enable Mip Streaming"}: {e.Message}{BuildDiagnosticInfo()}");
+			}
 
 			SchedulePostSetupRefresh(nailPrefabObject);
 		}
@@ -290,28 +289,6 @@ namespace world.anlabo.mdnailtool.Editor {
 				?? "Nail mesh resources are missing: {0}. Please reinstall the [An-Labo.Virtual] resources.";
 			ToolConsole.Error("NailSetup", string.Format(template, string.Join(", ", missing.Distinct())));
 		}
-		// Scene root に取り残された NailPrefabBuilder.BuildFromNodes 出力 (parent=null, SMR が Default-Material のみ) を一掃する.
-		private static void CleanupOrphanedNailPrefabsInScene() {
-			UnityEngine.SceneManagement.Scene scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-			if (!scene.IsValid()) return;
-			Regex shapePrefixPattern = new(@"^\[(?:[^\]]+)\]");
-			foreach (GameObject go in scene.GetRootGameObjects()) {
-				if (go == null) continue;
-				if (go.transform.parent != null) continue;
-				if (!shapePrefixPattern.IsMatch(go.name)) continue;
-				SkinnedMeshRenderer[] smrs = go.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-				if (smrs.Length == 0) continue;
-				bool junk = true;
-				foreach (SkinnedMeshRenderer smr in smrs) {
-					foreach (Material m in smr.sharedMaterials) {
-						if (m != null && m.name != "Default-Material") { junk = false; break; }
-					}
-					if (!junk) break;
-				}
-				if (junk) Object.DestroyImmediate(go);
-			}
-		}
-
 		// アバターの Animator / Humanoid Rig をチェックし、欠落時はユーザー向け例外を投げる.
 		private void ValidateAvatarRig()
 		{
@@ -352,7 +329,7 @@ namespace world.anlabo.mdnailtool.Editor {
 					baseNodes,
 					variant.NailNodes);
 				this.SelectedBlendShapeVariantNailNodes = scaledVariantNodes;
-				this.NailPrefab = NailPrefabBuilder.BuildFromNodes(scaledVariantNodes, variant.Name, this.NailShapeName);
+				this.NailPrefab = NailPrefabBuilder.BuildTemporaryFromNodes(scaledVariantNodes, variant.Name, this.NailShapeName);
 				ToolConsole.Log($"  → NailPrefab composed from base + variant NailNodes: {variant.Name}");
 				return;
 			}
@@ -382,8 +359,8 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (allNodes != null && allNodes.Length > 0) {
 					NailPrefabNodeData[]? currentShapeNodes = ComposeShapeNodes(allNodes, this.NailShapeName);
 					if (currentShapeNodes != null) {
-						Object.DestroyImmediate(this.NailPrefab);
-						this.NailPrefab = NailPrefabBuilder.BuildFromNodes(currentShapeNodes, this.SelectedBlendShapeVariantName ?? this.AvatarVariationData!.VariationName, this.NailShapeName);
+						NailPrefabBuilder.DestroyTemporaryPrefab(this.NailPrefab);
+						this.NailPrefab = NailPrefabBuilder.BuildTemporaryFromNodes(currentShapeNodes, this.SelectedBlendShapeVariantName ?? this.AvatarVariationData!.VariationName, this.NailShapeName);
 					}
 				}
 				return;
@@ -419,6 +396,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				throw new NailSetupUserException(LanguageManager.S("error.execute.nail_prefab_load_failed") ?? "error.execute.nail_prefab_load_failed");
 			}
 			GameObject nailPrefabObject = Object.Instantiate(this.NailPrefab, this.Avatar.transform);
+			NailSetupTransaction.TrackCreated(nailPrefabObject);
 			var firstEntry = this.NailDesignAndVariationNames.FirstOrDefault(t => t.Item1 != null);
 			string designName = firstEntry.Item1 != null
 				? firstEntry.Item1.DesignName
@@ -490,4 +468,117 @@ namespace world.anlabo.mdnailtool.Editor {
 
 
 	}
+    // One synchronous setup owns its undo group and explicit creation references.
+    // Scene inventories are only a protection boundary, never a deletion candidate list.
+    internal sealed class NailSetupTransaction : IDisposable
+    {
+        [ThreadStatic] private static NailSetupTransaction? current;
+        private readonly NailSetupTransaction? previous;
+        private readonly int group;
+        private readonly HashSet<int> existingObjects;
+        private readonly HashSet<GameObject> created = new();
+        private readonly Dictionary<string, string> createdAssets = new();
+        private readonly HashSet<Object> changedAssets = new();
+        private bool completed;
+
+        internal NailSetupTransaction(GameObject avatar)
+        {
+            existingObjects = new HashSet<int>(Resources.FindObjectsOfTypeAll<GameObject>()
+                .Where(o => o.scene.IsValid()).Select(o => o.GetInstanceID()));
+            Undo.IncrementCurrentGroup();
+            group = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Nail Setup");
+            Undo.RegisterFullObjectHierarchyUndo(avatar, "Nail Setup");
+            previous = current;
+            current = this;
+        }
+
+        internal static bool TrackCreated(GameObject root)
+        {
+            if (current == null || root == null || EditorUtility.IsPersistent(root)) return false;
+            if (current.existingObjects.Contains(root.GetInstanceID())) return false;
+            if (current.created.Contains(root)) return true;
+            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+                if (!current.existingObjects.Contains(child.gameObject.GetInstanceID()))
+                    current.created.Add(child.gameObject);
+            Undo.RegisterCreatedObjectUndo(root, "Nail Setup");
+            return true;
+        }
+
+        internal static void RecordAssetChange(Object asset)
+        {
+            if (current == null || asset == null) return;
+            string path = AssetDatabase.GetAssetPath(asset);
+            if (current.createdAssets.ContainsKey(path)) return;
+            if (current.changedAssets.Add(asset))
+                Undo.RegisterCompleteObjectUndo(asset, "Nail Setup Asset");
+        }
+
+        internal static IEnumerable<Renderer> GetCreatedRenderers()
+        {
+            return current == null ? Enumerable.Empty<Renderer>()
+                : current.created.Where(o => o != null).SelectMany(o => o.GetComponents<Renderer>());
+        }
+
+        internal static void CreateGeneratedAsset(Object asset, string path)
+        {
+            // Never replace an earlier generated asset on a same-second/path collision.
+            string uniquePath = path;
+            try
+            {
+                uniquePath = AssetDatabase.GenerateUniqueAssetPath(path);
+                AssetDatabase.CreateAsset(asset, uniquePath);
+                string guid = AssetDatabase.AssetPathToGUID(uniquePath);
+                if (current != null && AssetDatabase.GetAssetPath(asset) == uniquePath && !string.IsNullOrEmpty(guid))
+                    current.createdAssets[uniquePath] = guid;
+                if (string.IsNullOrEmpty(uniquePath) || AssetDatabase.GetAssetPath(asset) != uniquePath
+                    || string.IsNullOrEmpty(guid) || !File.Exists(uniquePath))
+                    throw new IOException($"Generated asset was not saved: {uniquePath}");
+            }
+            catch (Exception ex)
+            {
+                throw new NailToolUserException("NailSetup", $"Could not save generated asset: {uniquePath}", ex);
+            }
+        }
+
+        internal void Complete()
+        {
+            Undo.CollapseUndoOperations(group);
+            completed = true;
+        }
+
+        public void Dispose()
+        {
+            current = previous;
+            try
+            {
+                if (completed) return;
+                // Revert registered deletions and property/component changes first.
+                Undo.RevertAllDownToGroup(group);
+                // A generated child may have left its initial root before an exception.
+                foreach (GameObject obj in created.Reverse())
+                {
+                    if (obj == null || EditorUtility.IsPersistent(obj)) continue;
+                    // Refuse to destroy a generated root if it now owns an original object.
+                    if (obj.GetComponentsInChildren<Transform>(true)
+                        .Any(t => existingObjects.Contains(t.gameObject.GetInstanceID()))) continue;
+                    Object.DestroyImmediate(obj);
+                }
+                foreach (var entry in createdAssets)
+                    if (!string.IsNullOrEmpty(entry.Value)
+                        && AssetDatabase.AssetPathToGUID(entry.Key) == entry.Value)
+                        AssetDatabase.DeleteAsset(entry.Key);
+                foreach (Object asset in changedAssets)
+                    if (asset != null && EditorUtility.IsPersistent(asset)) EditorUtility.SetDirty(asset);
+                if (changedAssets.Count > 0) AssetDatabase.SaveAssets();
+                INailProcessor.ClearCreatedMaterialCash();
+            }
+            finally
+            {
+                // A later operation must never join this setup's undo group.
+                Undo.IncrementCurrentGroup();
+            }
+        }
+    }
+
 }

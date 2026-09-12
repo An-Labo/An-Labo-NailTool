@@ -41,7 +41,8 @@ namespace world.anlabo.mdnailtool.Editor
 			if (validPairs.Length == 0) return null;
 
 			GameObject combinedGo = new GameObject(zoneName);
-			Undo.RegisterCreatedObjectUndo(combinedGo, "Nail Setup");
+			if (!NailSetupTransaction.TrackCreated(combinedGo))
+				Undo.RegisterCreatedObjectUndo(combinedGo, "Nail Setup");
 			combinedGo.transform.SetParent(nailPrefabObject.transform, false);
 			combinedGo.transform.localPosition = Vector3.zero;
 			combinedGo.transform.localRotation = Quaternion.identity;
@@ -392,12 +393,13 @@ namespace world.anlabo.mdnailtool.Editor
 			// CopySerialized は同頂点数でも頂点バッファが古く残るケースがあるため、常に明示コピーする。
 			if (existingMesh != null)
 			{
+				NailSetupTransaction.RecordAssetChange(existingMesh);
 				CopyMeshContents(combinedMesh, existingMesh);
 				combinedMesh = existingMesh;
 			}
 			else
 			{
-				AssetDatabase.CreateAsset(combinedMesh, assetPath);
+				NailSetupTransaction.CreateGeneratedAsset(combinedMesh, assetPath);
 			}
 			// Reapply after asset identity-preserving copy paths so existing mesh assets keep tangents.
 			combinedMesh.tangents = allTangents.ToArray();

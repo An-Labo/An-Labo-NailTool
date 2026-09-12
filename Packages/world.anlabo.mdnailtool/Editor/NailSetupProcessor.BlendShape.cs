@@ -72,6 +72,12 @@ namespace world.anlabo.mdnailtool.Editor {
 					resolvedSourceSmrs.Select(x => x.sourceSmr),
 					bakeBasePath,
 					this.AvatarVariationData.BlendShapeInitialWeights);
+			} catch (NailToolUserException) {
+				throw;
+			} catch (System.IO.IOException ex) {
+				throw new NailToolUserException("NailSetup", "Could not access generated mesh storage.", ex);
+			} catch (UnauthorizedAccessException ex) {
+				throw new NailToolUserException("NailSetup", "Could not write generated mesh storage.", ex);
 			} catch (Exception e) {
 				ToolConsole.Warn("NailSetup", $"{LanguageManager.S("warn.blendshape_bake_failed") ?? "Failed to bake BlendShapes"}: {e.Message}{BuildDiagnosticInfo()}");
 			}

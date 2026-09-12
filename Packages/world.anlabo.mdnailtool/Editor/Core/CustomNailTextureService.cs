@@ -61,8 +61,9 @@ namespace world.anlabo.mdnailtool.Editor.Core
 
 			EnsureFolder();
 			string folder = MDNailToolDefines.CUSTOM_NAIL_GENERATED_PATH;
-			string safeName = string.Concat(texture.name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
-			string assetPath = $"{folder}{safeName}.mat";
+			// Use asset identity, not the display name. Keep legacy name-based materials untouched.
+			string assetPath = GeneratedMaterialPath(texturePath);
+			if (string.IsNullOrEmpty(assetPath)) { UnityEngine.Object.DestroyImmediate(generated); return null; }
 			Material? existing = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
 			if (existing == null)
 			{
@@ -77,6 +78,12 @@ namespace world.anlabo.mdnailtool.Editor.Core
 			}
 			AssetDatabase.SaveAssets();
 			return existing;
+		}
+
+		internal static string GeneratedMaterialPath(string texturePath)
+		{
+			string guid = AssetDatabase.AssetPathToGUID(texturePath);
+			return string.IsNullOrEmpty(guid) ? "" : $"{MDNailToolDefines.CUSTOM_NAIL_GENERATED_PATH}CustomNail_{guid}.mat";
 		}
 
 		private static void SetTextureIfAvailable(Material material, string propertyName, Texture texture)

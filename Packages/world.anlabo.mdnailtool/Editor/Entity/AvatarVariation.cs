@@ -15,6 +15,11 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("nailPrefabGUID")]
 		public string? NailPrefabGUID { get; set; }
 
+		[JsonProperty("customerNotice")]
+		public string? CustomerNotice { get; set; }
+
+		public bool ShouldSerializeCustomerNotice() => !string.IsNullOrWhiteSpace(this.CustomerNotice);
+
 		[JsonProperty("displayNames")]
 		public IReadOnlyDictionary<string, string>? DisplayNames { get; set; }
 

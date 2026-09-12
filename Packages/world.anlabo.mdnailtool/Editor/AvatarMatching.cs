@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -144,18 +146,53 @@ namespace world.anlabo.mdnailtool.Editor {
 			string fbxName = Path.GetFileName(fbxPath);
 
 			// GUID一致（優先）
-			foreach (var (_, targetGuid, variation) in fbxEntries) {
-				if (string.IsNullOrEmpty(targetGuid)) continue;
-				if (fbxGuid == targetGuid) return variation;
-			}
+			var guidMatches = fbxEntries.Where(e => !string.IsNullOrEmpty(e.FbxGuid) && e.FbxGuid == fbxGuid)
+				.Select(e => e.variation).ToList();
+			if (guidMatches.Count > 0) return SelectLatestCompatibleVariation(guidMatches);
 
 			// 名前一致
-			foreach (var (targetName, _, variation) in fbxEntries) {
-				if (!IsSafeNameFallback(targetName)) continue;
-				if (fbxName.Contains(targetName!)) return variation;
-			}
+			var nameMatches = fbxEntries.Where(e => IsSafeNameFallback(e.FbxName) && fbxName.Contains(e.FbxName!))
+				.Select(e => e.variation).ToList();
+			if (nameMatches.Count > 0) return SelectLatestCompatibleVariation(nameMatches);
 
 			return null;
+		}
+
+		private static ShopAndAvatarAndVariation SelectLatestCompatibleVariation(List<ShopAndAvatarAndVariation> matches) {
+			// 別アバター・A/T・爪除去等の種類は版の大小で入れ替えない。
+			var best = matches[0];
+			foreach (var candidate in matches.Skip(1)) {
+				if (candidate.Shop.ShopName != best.Shop.ShopName || candidate.Avatar.AvatarName != best.Avatar.AvatarName) continue;
+				if (CompareVariationVersions(candidate.Variation.VariationName, best.Variation.VariationName) > 0) best = candidate;
+			}
+			return best;
+		}
+
+		internal static int CompareVariationVersions(string candidate, string current) {
+			var a = ReadVariationVersion(candidate);
+			var b = ReadVariationVersion(current);
+			if (!string.Equals(a.family, b.family, StringComparison.OrdinalIgnoreCase)) return 0;
+			if (a.legacy != b.legacy) return a.legacy ? -1 : 1;
+			return a.version.CompareTo(b.version);
+		}
+
+		private static (string family, bool legacy, Version version) ReadVariationVersion(string name) {
+			// variationNameに明示されたアバター版のみ。対応開始ツール版は参照しない。
+			string value = name ?? string.Empty;
+			bool legacy = Regex.IsMatch(value, @"(?i)(?:^|[\s_])(?:old|under)(?:$|[\s_])");
+			value = Regex.Replace(value, @"(?i)(?:^|[\s_])(?:old|under)(?=$|[\s_])", " ");
+			var match = Regex.Match(value, @"(?i)(?<![a-z0-9])(?:(?:ver\s*|v)(?<n>\d+(?:\.\d+){0,3})|(?<n>\d+\.\d+(?:\.\d+){0,2}))(?![a-z0-9.])");
+			Version version = new Version(0, 0, 0, 0);
+			string numericVersion = match.Groups["n"].Value;
+			if (numericVersion.Length > 0 && !numericVersion.Contains(".")) numericVersion += ".0";
+			if (match.Success && Version.TryParse(numericVersion, out var parsed)) {
+				version = new Version(parsed.Major, parsed.Minor, Math.Max(0, parsed.Build), Math.Max(0, parsed.Revision));
+				value = value.Remove(match.Index, match.Length);
+			}
+			value = Regex.Replace(value, @"(?i)\bver\b", "");
+			value = Regex.Replace(value, @"[\s_]+", " ").Trim();
+			if (string.Equals(value, "Default Valiation", StringComparison.OrdinalIgnoreCase) || string.Equals(value, "Default Variation", StringComparison.OrdinalIgnoreCase)) value = "";
+			return (value, legacy, version);
 		}
 
 		/// <summary>

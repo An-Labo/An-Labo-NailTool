@@ -77,7 +77,7 @@ namespace world.anlabo.mdnailtool.Editor
 				}
 
 				string assetPath = $"{saveBasePath}/{newMesh.name}.asset";
-				AssetDatabase.CreateAsset(newMesh, assetPath);
+				NailSetupTransaction.CreateGeneratedAsset(newMesh, assetPath);
 				nailSmr.sharedMesh = newMesh;
 
 				if (initialWeights != null)

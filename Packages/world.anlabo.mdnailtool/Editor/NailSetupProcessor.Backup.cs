@@ -18,29 +18,54 @@ namespace world.anlabo.mdnailtool.Editor {
 		}
 
 		public static void CreateBackup(GameObject avatarGameObject) {
-			EnsureAssetFolderExists(MDNailToolDefines.BACKUP_PATH.TrimEnd('/'));
-
-			GameObject clonedObject = Object.Instantiate(avatarGameObject);
+			if (avatarGameObject == null) throw new ArgumentNullException(nameof(avatarGameObject));
 			string safeAvatarName = SanitizeForFileName(avatarGameObject.name);
 			string prefabName = $"bk_{safeAvatarName}_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.prefab";
+			CreateBackupAtPath(avatarGameObject, MDNailToolDefines.BACKUP_PATH + prefabName);
+		}
 
+		// Keep the default destination above; return the verified path for callers that need it.
+		internal static string CreateBackupAtPath(GameObject avatarGameObject, string prefabPath) {
+			if (avatarGameObject == null) throw new ArgumentNullException(nameof(avatarGameObject));
+			if (string.IsNullOrEmpty(prefabPath)) throw new ArgumentException("A backup prefab path is required.", nameof(prefabPath));
+			prefabPath = prefabPath.Replace('\\', '/');
+			if (!prefabPath.StartsWith("Assets/", StringComparison.Ordinal)
+				|| !prefabPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+				throw new ArgumentException("Backup must be a prefab under Assets.", nameof(prefabPath));
+			foreach (string segment in prefabPath.Split('/')) {
+				if (segment.Length == 0 || segment == "." || segment == "..")
+					throw new ArgumentException("Invalid backup path.", nameof(prefabPath));
+			}
+			EnsureAssetFolderExists(Path.GetDirectoryName(prefabPath)!.Replace('\\', '/'));
+			string uniquePath = AssetDatabase.GenerateUniqueAssetPath(prefabPath);
+			if (string.IsNullOrEmpty(uniquePath) || File.Exists(uniquePath))
+				throw new IOException($"Could not reserve a new backup path: {prefabPath}");
+
+			GameObject clonedObject = Object.Instantiate(avatarGameObject);
 			try {
-				PrefabUtility.SaveAsPrefabAsset(clonedObject, MDNailToolDefines.BACKUP_PATH + prefabName);
-				AssetDatabase.Refresh();
+				GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(clonedObject, uniquePath, out bool success);
+				if (!success || savedPrefab == null || !File.Exists(uniquePath)
+					|| string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(uniquePath)))
+					throw new IOException($"Could not save the avatar backup: {uniquePath}");
+				return uniquePath;
 			} finally {
-				Object.DestroyImmediate(clonedObject);
+				if (clonedObject != null) Object.DestroyImmediate(clonedObject);
 			}
 		}
 
-		// AssetDatabase.CreateFolder で親階層も含めて .meta 同時生成する. Directory.CreateDirectory だと
-		// 角括弧 / 空白入り path で .meta 連動が壊れ SaveAsPrefabAsset の .meta 書込が失敗する.
+		// Create folders through AssetDatabase so their .meta files are created together.
 		private static void EnsureAssetFolderExists(string assetPath) {
-			if (string.IsNullOrEmpty(assetPath) || AssetDatabase.IsValidFolder(assetPath)) return;
+			if (AssetDatabase.IsValidFolder(assetPath)) return;
 			string parent = Path.GetDirectoryName(assetPath)?.Replace('\\', '/') ?? "";
 			string leaf = Path.GetFileName(assetPath);
-			if (string.IsNullOrEmpty(parent) || string.IsNullOrEmpty(leaf)) return;
+			if (string.IsNullOrEmpty(parent) || string.IsNullOrEmpty(leaf))
+				throw new IOException($"Could not access the backup folder: {assetPath}");
 			EnsureAssetFolderExists(parent);
-			if (!AssetDatabase.IsValidFolder(assetPath)) AssetDatabase.CreateFolder(parent, leaf);
+			if (!AssetDatabase.IsValidFolder(assetPath)) {
+				string guid = AssetDatabase.CreateFolder(parent, leaf);
+				if (string.IsNullOrEmpty(guid) || !AssetDatabase.IsValidFolder(assetPath))
+					throw new IOException($"Could not create the backup folder: {assetPath}");
+			}
 		}
 
 		private string getPrefabPrefix() {

@@ -169,33 +169,80 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0).Select(avatar => (shop, avatar)))
 				.ToDictionary(tuple => tuple.shop.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.GetDisplayName(langKey));
 			this._avatarPopup.choices = this._avatarPopupElements;
-			this._avatarPopup.value = this._avatarPopupElements[0];
+			this._avatarPopup.value = this._avatarPopupElements.FirstOrDefault();
 
-			Avatar? avatar = dbShop.collection.First().FindAvatarByName(this._avatarPopup.value.Split(SPLIT)[1]);
-			if (avatar == null) return;
+			if (!this.TryGetSelectedAvatarNames(out string shopName, out string avatarName)) { this.ClearVariantSelection(); return; }
+			Avatar? avatar = dbShop.FindShopByName(shopName)?.FindAvatarByName(avatarName);
+			if (avatar == null) { this.ClearVariantSelection(); return; }
 
 			this._variantPopupElements = avatar.AvatarVariations.Values.Select(variation => variation.VariationName).ToList();
 			this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
 				.ToDictionary(variation => variation.VariationName, variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
 			this._variantPopup.choices = this._variantPopupElements;
-			this._variantPopup.value = this._variantPopupElements?[0];
+			this._variantPopup.value = this._variantPopupElements?.FirstOrDefault();
+		}
+
+		private static bool TryParseAvatarKey(string? value, out string shopName, out string avatarName) {
+			shopName = avatarName = string.Empty;
+			if (value == null || value.Length == 0) return false;
+			string[] names = value.Split(SPLIT);
+			if (names.Length != 2 || string.IsNullOrEmpty(names[0]) || string.IsNullOrEmpty(names[1])) return false;
+			shopName = names[0]; avatarName = names[1];
+			return true;
+		}
+
+		private bool TryGetSelectedAvatarNames(out string shopName, out string avatarName) {
+			if (TryParseAvatarKey(this._avatarPopup.value, out shopName, out avatarName)
+				&& this._avatarPopupElements?.Contains(this._avatarPopup.value) == true) return true;
+			shopName = avatarName = string.Empty;
+			return false;
+		}
+
+		private void ClearVariantSelection() {
+			this._variantPopupElements = new List<string>();
+			this._variantDisplayNameDictionary = new Dictionary<string, string>();
+			this._variantPopup.choices = this._variantPopupElements;
+			this._variantPopup.SetValueWithoutNotify(null);
+			this.BlendShapeVariantPopup.choices = new List<string>();
+			this.BlendShapeVariantPopup.SetValueWithoutNotify(null);
+			this.BlendShapeVariantPopup.style.display = DisplayStyle.None;
+		}
+
+		public void ClearSelection() {
+			// Invalidate the previous avatar even if refreshing the candidate list fails.
+			this._avatarPopup.SetValueWithoutNotify(null);
+			this.ClearVariantSelection();
+			string langKey = LanguageManager.CurrentLanguageData.language;
+			using DBShop dbShop = new();
+			this._shopPopupElements = dbShop.collection.Select(shop => shop.ShopName).Prepend(ALL_ITEM).ToList();
+			this._shopDisplayNameDictionary = dbShop.collection.ToDictionary(shop => shop.ShopName,
+				shop => shop.DisplayNames?.GetValueOrDefault(langKey, shop.ShopName) ?? shop.ShopName);
+			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop") ?? "Filter by Shop";
+			this._shopPopup.choices = this._shopPopupElements;
+			this._shopPopup.SetValueWithoutNotify(ALL_ITEM);
+			this.SortShopList(this._avatarSortOrder);
+			this._avatarPopupElements = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0)
+				.Select(avatar => shop.ShopName + SPLIT + avatar.AvatarName)).ToList();
+			this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Where(avatar => avatar.AvatarVariations.Count > 0)
+				.Select(avatar => (shop, avatar))).ToDictionary(pair => pair.shop.ShopName + SPLIT + pair.avatar.AvatarName, pair => pair.avatar.GetDisplayName(langKey));
+			this.SortAvatarList(this._avatarSortOrder);
+			this._avatarPopup.choices = this._avatarPopupElements;
+			this._avatarPopup.SetValueWithoutNotify(null);
+			this.ClearVariantSelection();
 		}
 
 		public void Sort(AvatarSortOrder order) {
 			this._avatarSortOrder = order;
-			using DBShop dbShop = new();
 			this.SortShopList(order);
-
-			string[] avatarNames = this._avatarPopup.value.Split(SPLIT);
-			string shopName = avatarNames[0];
-			string avatarName = avatarNames[1];
-			string? variantName = this._variantPopup.value;
-
+			if (!this.TryGetSelectedAvatarNames(out string shopName, out string avatarName)) { this.ClearSelection(); return; }
+			using DBShop dbShop = new();
 			Shop? shop = dbShop.FindShopByName(shopName);
-			if (shop == null) throw new NailToolDeveloperException("Window", "Not found shop.");
-			Avatar? avatar = shop.FindAvatarByName(avatarName);
-			AvatarVariation? variation = avatar?.FindAvatarVariation(variantName);
+			Avatar? avatar = shop?.FindAvatarByName(avatarName);
+			if (shop == null || avatar == null) { this.ClearSelection(); return; }
+			string? variantName = this._variantPopup.value;
+			AvatarVariation? variation = string.IsNullOrEmpty(variantName) ? null : avatar.FindAvatarVariation(variantName);
 			this.SetValues(shop, avatar, variation, this._shopPopup.value == ALL_ITEM);
+			if (variation == null) this._variantPopup.SetValueWithoutNotify(null);
 		}
 
 		public void SetValues(Shop shop, Avatar? avatar, AvatarVariation? avatarVariation, bool isAllItem = false) {
@@ -217,7 +264,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 			this.SortAvatarList(this._avatarSortOrder);
 
-			avatar ??= shop.Avatars.Values.First();
+			avatar ??= shop.Avatars.Values.FirstOrDefault();
+			if (avatar == null || avatar.AvatarVariations.Count == 0) { this.ClearSelection(); return; }
 			this._avatarPopup.choices = this._avatarPopupElements;
 			this._avatarPopup.SetValueWithoutNotify(shop.ShopName + SPLIT + avatar.AvatarName);
 
@@ -241,10 +289,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			} else {
 				Shop? shop = dbShop.FindShopByName(evt.newValue);
 				if (shop == null) {
-					this._avatarPopupElements = null;
-					this._avatarDisplayNameDictionary = null;
-					this._avatarPopup.choices = new List<string?>();
-					this._avatarPopup.value = null;
+					this.ClearSelection();
 					return;
 				}
 
@@ -256,23 +301,24 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._avatarPopup.choices = this._avatarPopupElements;
 			this.SortAvatarList(this._avatarSortOrder);
 			if (evt.newValue != ALL_ITEM) {
-				this._avatarPopup.value = this._avatarPopupElements?[0];
+				this._avatarPopup.value = this._avatarPopupElements?.FirstOrDefault();
 			}
 		}
 
 		private void OnChangeAvatarPopup(ChangeEvent<string?> evt) {
 			string langKey = LanguageManager.CurrentLanguageData.language;
-			string[] names = evt.newValue?.Split(SPLIT) ?? new[] { "", "" };
-			string shopName = names[0];
-			string avatarName = names[1];
+			if (!TryParseAvatarKey(evt.newValue, out string shopName, out string avatarName)
+				|| this._avatarPopupElements?.Contains(evt.newValue!) != true) {
+				this._avatarPopup.SetValueWithoutNotify(null);
+				this.ClearVariantSelection();
+				return;
+			}
 			using DBShop dbShop = new();
 			Shop? shop = dbShop.FindShopByName(shopName);
 			Avatar? avatar = shop?.FindAvatarByName(avatarName);
 			if (avatar == null) {
-				this._variantPopupElements = null;
-				this._variantDisplayNameDictionary = null;
-				this._variantPopup.choices = new List<string?>();
-				this._variantPopup.value = null;
+				this._avatarPopup.SetValueWithoutNotify(null);
+				this.ClearVariantSelection();
 				return;
 			}
 
@@ -280,7 +326,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
 				.ToDictionary(variation => variation.VariationName, variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
 			this._variantPopup.choices = this._variantPopupElements;
-			this._variantPopup.value = this._variantPopupElements?[0];
+			this._variantPopup.value = this._variantPopupElements?.FirstOrDefault();
 		}
 
 		private string GetShopPopupDisplayName(string? id) {
@@ -302,9 +348,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public AvatarVariation? GetSelectedAvatarVariation() {
-			string[] avatarNames = this._avatarPopup.value.Split(SPLIT);
-			string shopName = avatarNames[0];
-			string avatarName = avatarNames[1];
+			if (!this.TryGetSelectedAvatarNames(out string shopName, out string avatarName)) return null;
 			string? variantName = this._variantPopup.value;
 			if (string.IsNullOrEmpty(shopName) || string.IsNullOrEmpty(avatarName) || string.IsNullOrEmpty(variantName)) return null;
 
@@ -316,9 +360,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public GameObject? GetSelectedPrefab() {
-			string[] avatarNames = this._avatarPopup.value.Split(SPLIT);
-			string shopName = avatarNames[0];
-			string avatarName = avatarNames[1];
+			if (!this.TryGetSelectedAvatarNames(out string shopName, out string avatarName)) return null;
 			string? variantName = this._variantPopup.value;
 
 			if (string.IsNullOrEmpty(shopName) || string.IsNullOrEmpty(avatarName) || string.IsNullOrEmpty(variantName)) return null;
@@ -333,7 +375,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				// NailNodes は全 shape concat 配列. UI 初期表示用にデフォルト shape (Natural) を filter.
 				NailPrefabNodeData[] natural = System.Array.FindAll(variation.NailNodes, n => n.Name != null && n.Name.StartsWith("[Natural]"));
 				NailPrefabNodeData[] src = natural.Length > 0 ? natural : new[] { variation.NailNodes[0] };
-				return NailPrefabBuilder.BuildFromNodes(src, variantName);
+				return NailPrefabBuilder.BuildTemporaryFromNodes(src, variantName);
 			}
 
 			string guid = variation.NailPrefabGUID ?? string.Empty;
@@ -372,52 +414,40 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		public string GetAvatarKey() {
-			return this._avatarPopup.value;
+			return this.TryGetSelectedAvatarNames(out _, out _) ? this._avatarPopup.value : string.Empty;
 		}
 
 		public string GetAvatarName() {
-			return this._avatarPopup.value.Split(SPLIT)[1];
+			return this.TryGetSelectedAvatarNames(out _, out string avatarName) ? avatarName : string.Empty;
 		}
 
 		public string GetShopName() {
-			return this._avatarPopup.value.Split(SPLIT)[0];
+			return this.TryGetSelectedAvatarNames(out string shopName, out _) ? shopName : string.Empty;
 		}
 
 
 		public void UpdateLanguage() {
 			string langKey = LanguageManager.CurrentLanguageData.language;
 			using DBShop dbShop = new();
-			this._shopDisplayNameDictionary = dbShop.collection.ToDictionary(shop => shop.ShopName, shop => (shop.DisplayNames?.GetValueOrDefault(langKey, shop.ShopName) ?? shop.ShopName));
+			this._shopDisplayNameDictionary = dbShop.collection.ToDictionary(shop => shop.ShopName,
+				shop => shop.DisplayNames?.GetValueOrDefault(langKey, shop.ShopName) ?? shop.ShopName);
 			this._shopDisplayNameDictionary[ALL_ITEM] = LanguageManager.S("window.filter_by_shop") ?? "Filter by Shop";
 			this.SortShopList(this._avatarSortOrder);
 			this._shopPopup.SetValueWithoutNotify(this._shopPopup.value);
-
-			if (this._shopPopup.value == ALL_ITEM) {
-				this._avatarDisplayNameDictionary = dbShop.collection.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop.ShopName, avatar)))
-					.ToDictionary(tuple => tuple.ShopName + SPLIT + tuple.avatar.AvatarName, tuple => tuple.avatar.GetDisplayName(langKey));
-				string[] names = this._avatarPopup.value.Split(SPLIT);
-				string shopName = names[0];
-				string avatarName = names[1];
-				Avatar? avatar = dbShop.FindShopByName(shopName)?.FindAvatarByName(avatarName);
-				if (avatar != null) {
-					this._variantDisplayNameDictionary = avatar.AvatarVariations.Values
-						.ToDictionary(variation => variation.VariationName, variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
-				}
+			var shops = dbShop.collection.Where(shop => this._shopPopup.value == ALL_ITEM || shop.ShopName == this._shopPopup.value);
+			this._avatarDisplayNameDictionary = shops.SelectMany(shop => shop.Avatars.Values.Select(avatar => (shop, avatar)))
+				.ToDictionary(pair => pair.shop.ShopName + SPLIT + pair.avatar.AvatarName, pair => pair.avatar.GetDisplayName(langKey));
+			Avatar? avatar = this.TryGetSelectedAvatarNames(out string shopName, out string avatarName)
+				? dbShop.FindShopByName(shopName)?.FindAvatarByName(avatarName) : null;
+			if (avatar == null) {
+				this._avatarPopup.SetValueWithoutNotify(null);
+				this.ClearVariantSelection();
 			} else {
-				Shop? shop = dbShop.FindShopByName(this._shopPopup.value);
-				if (shop != null) {
-					this._avatarDisplayNameDictionary = shop.Avatars.Values.ToDictionary(avatar => avatar.AvatarName, avatar => avatar.GetDisplayName(langKey));
-				}
-
-				Avatar? avatar = shop?.FindAvatarByName(this._avatarPopup.value);
-				if (avatar != null) {
-					this._variantDisplayNameDictionary = avatar.AvatarVariations.Values.ToDictionary(variation => variation.VariationName,
-						variation => (variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName));
-				}
+				this._variantDisplayNameDictionary = avatar.AvatarVariations.Values.ToDictionary(variation => variation.VariationName,
+					variation => variation.DisplayNames?.GetValueOrDefault(langKey, variation.VariationName) ?? variation.VariationName);
 			}
-
+			this._avatarPopupElements ??= new List<string>();
 			this.SortAvatarList(this._avatarSortOrder);
-
 			this._avatarPopup.SetValueWithoutNotify(this._avatarPopup.value);
 			this._variantPopup.SetValueWithoutNotify(this._variantPopup.value);
 			this.tooltip = LanguageManager.S("tooltip.avatar_dropdowns") ?? "";

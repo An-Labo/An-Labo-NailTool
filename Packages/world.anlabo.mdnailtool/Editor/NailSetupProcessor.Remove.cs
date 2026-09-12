@@ -90,6 +90,20 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 		}
 
+
+		// An explicit hand target must never silently fall back to the ordinary hand.
+		private void ValidateHandBoneOverrides() {
+			var overrides = this.AvatarVariationData.BoneMappingOverride;
+			if (overrides == null) return;
+			foreach (string name in MDNailToolDefines.TARGET_HANDS_BONE_NAME_LIST) {
+				if (!overrides.TryGetValue(name, out string path)) continue;
+				if (!string.IsNullOrWhiteSpace(path) && this.Avatar.transform.Find(path) != null) continue;
+				string template = world.anlabo.mdnailtool.Editor.Language.LanguageManager.S("error.execute.hand_target_missing")
+					?? "The selected hand target is missing: {0} ({1}). Check the selected avatar variation and its arm hierarchy.";
+				throw new NailSetupUserException(string.Format(template, name, path));
+			}
+		}
+
 		internal static Dictionary<string, Transform?> GetTargetBoneDictionary(VRCAvatarDescriptor avatar, IReadOnlyDictionary<string, string>? boneMappingOverride) {
 			Animator? avatarAnimator = avatar.GetComponent<Animator>();
 			UEAvatar? animatorAvatar = avatarAnimator != null ? avatarAnimator.avatar : null;

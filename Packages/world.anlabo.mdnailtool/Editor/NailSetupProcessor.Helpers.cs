@@ -224,9 +224,9 @@ namespace world.anlabo.mdnailtool.Editor {
 				if (nailNodes != null && nailNodes.Length > 0) {
 					NailPrefabNodeData[]? currentShapeNodes = ComposeShapeNodes(nailNodes, targetShape);
 					if (currentShapeNodes != null) {
-						return NailDesigns.NailPrefabBuilder.BuildFromNodes(currentShapeNodes, basePrefab.name, targetShape);
+						return NailDesigns.NailPrefabBuilder.BuildTemporaryFromNodes(currentShapeNodes, basePrefab.name, targetShape);
 					}
-					return NailDesigns.NailPrefabBuilder.BuildFromNodes(nailNodes, basePrefab.name, targetShape);
+					return NailDesigns.NailPrefabBuilder.BuildTemporaryFromNodes(nailNodes, basePrefab.name, targetShape);
 				}
 				return basePrefab;
 			}

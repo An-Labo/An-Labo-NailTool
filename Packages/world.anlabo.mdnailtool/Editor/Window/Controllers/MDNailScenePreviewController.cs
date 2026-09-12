@@ -17,6 +17,8 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
         private Transform? _scenePreviewRoot;
         private GameObject? _lastPrefabSource;
 
+        internal Transform? PreviewRoot => _scenePreviewObject != null ? _scenePreviewObject.transform : null;
+
         private readonly Dictionary<Renderer, bool> _originalRendererEnabled = new();
         private bool _isOriginalHidden = false;
 
@@ -41,13 +43,6 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
             }
             _lastPrefabSource = null;
 
-            if (avatar == null) return;
-
-            var existing = avatar.transform.Find(_scenePreviewName);
-            if (existing != null)
-            {
-                Object.DestroyImmediate(existing.gameObject);
-            }
         }
 
         public void Update(
@@ -78,23 +73,14 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
 
             if (_scenePreviewObject == null)
             {
-                var existing = avatar.transform.Find(_scenePreviewName);
-                if (existing != null)
-                {
-                    // 既存オブジェクトの生成元 Prefab 不明なので _lastPrefabSource は更新しない
-                    // 次回 Update で必ず prefab 不一致扱い→作り直しが走る
-                    _scenePreviewObject = existing.gameObject;
-                }
-                else
-                {
-                    if (prefab == null) return;
+                // A same-name object may belong to the user; never adopt it.
+                if (prefab == null) return;
 
-                    _scenePreviewObject = Object.Instantiate(prefab);
-                    _scenePreviewObject.name = _scenePreviewName;
-                    _scenePreviewObject.transform.SetParent(avatar.transform, false);
-                    _scenePreviewObject.hideFlags = HideFlags.DontSave;
-                    _lastPrefabSource = prefab;
-                }
+                _scenePreviewObject = Object.Instantiate(prefab);
+                _scenePreviewObject.name = _scenePreviewName;
+                _scenePreviewObject.transform.SetParent(avatar.transform, false);
+                _scenePreviewObject.hideFlags = HideFlags.DontSave;
+                _lastPrefabSource = prefab;
 
                 _scenePreviewRoot = _scenePreviewObject.transform;
             }
@@ -305,8 +291,8 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
             }
 
             var avatarAll = avatar.GetComponentsInChildren<Transform>(true);
-            Transform? FindInAvatarByContains(string name)
-                => avatarAll.FirstOrDefault(t => t.name.Contains(name) && !IsUnderPreviewRoot(t));
+            Transform? FindInAvatarByName(string name)
+                => avatarAll.FirstOrDefault(t => string.Equals(t.name, name, System.StringComparison.Ordinal) && !IsUnderPreviewRoot(t));
 
             IEnumerable<string> names =
                 MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
@@ -315,7 +301,7 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
 
             foreach (var n in names)
             {
-                var t = FindInAvatarByContains(n);
+                var t = FindInAvatarByName(n);
                 if (t == null) continue;
 
                 foreach (var r in t.GetComponentsInChildren<Renderer>(true))
@@ -354,20 +340,10 @@ namespace world.anlabo.mdnailtool.Editor.Window.Controllers
             _isOriginalHidden = false;
         }
 
-        /// <summary>
-        /// A-2 fix: Apply 直前に呼び出して, Hide 中の元 Renderer を強制的に enabled=true に戻す.
-        /// プレビュー Hide 状態のまま Apply -> Cleanup の流れに入ると元 Renderer が
-        /// false のままシーンに保存される事例があるため, Cleanup より先に強制復元する保険.
-        /// </summary>
+        // Every exit restores the recorded state, including originally disabled renderers.
         public void ForceRestoreAllRenderers()
         {
-            foreach (var kvp in _originalRendererEnabled)
-            {
-                if (kvp.Key != null)
-                    kvp.Key.enabled = true;
-            }
-            _originalRendererEnabled.Clear();
-            _isOriginalHidden = false;
+            RestoreOriginalNails();
         }
 
         public void SetScenePreviewActive(VRCAvatarDescriptor avatar, bool active)

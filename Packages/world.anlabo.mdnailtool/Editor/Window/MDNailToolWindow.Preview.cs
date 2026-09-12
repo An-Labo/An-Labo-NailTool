@@ -147,20 +147,31 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this.RebuildCustomNailTextures();
 		}
 
+		private bool _settingCustomNailMaterial;
+
 		private void RebuildCustomNailTextures()
 		{
-			if (this._customNailTextureSelect == null) return;
+			if (!GlobalSetting.EnableBetaFeatures || this._customNailTextureSelect == null) return;
 			this._customNailTexturePaths.Clear();
 			this._customNailTexturePaths.AddRange(CustomNailTextureService.FindTexturePaths());
-			List<string> names = this._customNailTexturePaths.Select(System.IO.Path.GetFileNameWithoutExtension).ToList();
+			// Include subfolder and extension in labels; selection uses the index, not a name lookup.
+			List<string> names = this._customNailTexturePaths.Select(path => path.Substring(MDNailToolDefines.CUSTOM_NAIL_TEXTURE_PATH.Length)).ToList();
 			string prompt = S("window.custom_nail_texture_prompt") ?? "Select a texture";
 			List<string> choices = new() { prompt };
 			choices.AddRange(names);
 			this._customNailTextureSelect.choices = choices;
 			string savedPath = GlobalSetting.CustomNailTexturePath;
-			int savedIndex = this._customNailTexturePaths.IndexOf(savedPath);
-			if (savedIndex < 0 && this._customNailTexturePaths.Count == 1) savedIndex = 0;
+			var source = GlobalSetting.DirectMaterialSource;
+			int savedIndex = source == GlobalSetting.MaterialSelectionSource.CustomTexture
+				? this._customNailTexturePaths.IndexOf(savedPath) : -1;
+			if (source == GlobalSetting.MaterialSelectionSource.None && this._customNailTexturePaths.Count == 1) savedIndex = 0;
 			this._customNailTextureSelect.SetValueWithoutNotify(savedIndex >= 0 ? names[savedIndex] : prompt);
+			if (source == GlobalSetting.MaterialSelectionSource.Manual) return;
+			if (savedIndex < 0 && source == GlobalSetting.MaterialSelectionSource.CustomTexture)
+			{
+				SetCustomNailTextureFailure();
+				return;
+			}
 			if (savedIndex >= 0 && this._materialObjectField?.value == null)
 				this.ApplyCustomNailTexture(savedIndex);
 		}
@@ -168,23 +179,55 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void OnChangeCustomNailTexture(ChangeEvent<string> evt)
 		{
 			if (this._customNailTextureSelect == null || string.IsNullOrEmpty(evt.newValue)) return;
-			int index = this._customNailTextureSelect.choices.IndexOf(evt.newValue) - 1;
-			if (index < 0 || index >= this._customNailTexturePaths.Count) return;
+			int index = this._customNailTextureSelect.index - 1;
+			if (index < 0 || index >= this._customNailTexturePaths.Count)
+			{
+				GlobalSetting.CustomNailTexturePath = "";
+				GlobalSetting.DirectMaterialSource = GlobalSetting.MaterialSelectionSource.None;
+				SetCustomNailTextureFailure();
+				return;
+			}
 			this.ApplyCustomNailTexture(index);
 		}
 
 		private void ApplyCustomNailTexture(int index)
 		{
+			if (!GlobalSetting.EnableBetaFeatures) return;
 			if (index < 0 || index >= this._customNailTexturePaths.Count) return;
 			string texturePath = this._customNailTexturePaths[index];
-			Material? material = CustomNailTextureService.BuildMaterial(texturePath);
-			if (material == null) return;
+			GlobalSetting.DirectMaterialSource = GlobalSetting.MaterialSelectionSource.CustomTexture;
+			// Keep the attempted choice on failure; never silently restore a previously successful image.
+			GlobalSetting.CustomNailTexturePath = texturePath;
+			Material? material;
+			try { material = CustomNailTextureService.BuildMaterial(texturePath); }
+			catch (Exception) { SetCustomNailTextureFailure(); return; }
+			if (material == null) { SetCustomNailTextureFailure(); return; }
+			if (this._customNailTextureError != null) this._customNailTextureError.style.display = DisplayStyle.None;
 			GlobalSetting.CustomNailTexturePath = texturePath;
 			if (this._materialObjectField == null) return;
-			if (this._nailDesignDropDowns == null)
-				this._materialObjectField.SetValueWithoutNotify(material);
-			else
-				this._materialObjectField.value = material;
+			this.SetCustomNailMaterialField(material);
+		}
+
+		private void SetCustomNailMaterialField(Material? material)
+		{
+			if (this._materialObjectField == null) return;
+			this._settingCustomNailMaterial = true;
+			try
+			{
+				if (this._nailDesignDropDowns == null) this._materialObjectField.SetValueWithoutNotify(material);
+				else this._materialObjectField.value = material;
+			}
+			finally { this._settingCustomNailMaterial = false; }
+		}
+
+		private void SetCustomNailTextureFailure()
+		{
+			if (this._customNailTextureError != null)
+			{
+				this._customNailTextureError.text = S("error.custom_nail.material_failed") ?? "Custom nail material could not be prepared.";
+				this._customNailTextureError.style.display = DisplayStyle.Flex;
+			}
+			this.SetCustomNailMaterialField(null);
 		}
 
 		private Material? GetDirectMaterial()
@@ -193,7 +236,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			return this._materialObjectField?.value as Material;
 		}
 
-		private void OnChangeMaterial(ChangeEvent<Object?> evt) { this.UpdateNailShapeFilter(); this.UpdatePreview(); this.RequestScenePreviewUpdate(); this.UpdateStepSectionStates(); }
+		private void OnChangeMaterial(ChangeEvent<Object?> evt)
+		{
+			if (!this._settingCustomNailMaterial)
+			{
+				GlobalSetting.DirectMaterialSource = GlobalSetting.MaterialSelectionSource.Manual;
+				GlobalSetting.CustomNailTexturePath = "";
+				if (this._customNailTextureSelect != null)
+					this._customNailTextureSelect.SetValueWithoutNotify(S("window.custom_nail_texture_prompt") ?? "Select a texture");
+				if (this._customNailTextureError != null) this._customNailTextureError.style.display = DisplayStyle.None;
+			}
+			this.UpdateNailShapeFilter(); this.UpdatePreview(); this.RequestScenePreviewUpdate(); this.UpdateStepSectionStates();
+		}
 		private void OnChangeShapeDropDown(ChangeEvent<string> evt) { GlobalSetting.LastUseShapeName = evt.newValue; this.UpdatePreview(); this.RequestScenePreviewUpdate(); this.UpdateStepSectionStates(); }
 		private void OnChangeNailMaterialDropDown(ChangeEvent<string?> evt)
 		{
@@ -316,6 +370,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
 			if (avatar == null) return;
 
+			using var temporaryPrefabs = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BeginTemporaryScope();
 			GameObject? originalPrefab = this._avatarDropDowns?.GetSelectedPrefab();
 			if (originalPrefab == null) return;
 			var prefab = originalPrefab;
@@ -383,45 +438,18 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this.ApplyVariantPositionBlend(avatar, prefab, nailShapeName);
 			}
 
-			// GetSelectedPrefab / ResolveShapePrefab が返した in-memory orphan は controller が Instantiate 済なので即 destroy.
-			if (prefab != originalPrefab && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(prefab)))
-			{
-				Object.DestroyImmediate(prefab);
-			}
-			if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(originalPrefab)))
-			{
-				Object.DestroyImmediate(originalPrefab);
-			}
+
 		}
 
 
 		private void CleanupScenePreview()
 		{
 			VRCAvatarDescriptor? avatar = this._avatarObjectField?.value as VRCAvatarDescriptor;
-			// A-2 fix: Apply 直前の Cleanup で, Hide 状態の元 Renderer を強制的に enabled=true に戻す.
-			// プレビュー Hide 状態のまま Apply に入ると元 Renderer が false のまま保存される事故を防ぐ保険.
+			// Restore the recorded state before discarding the controller, including disabled originals.
 			this._scenePreviewController?.ForceRestoreAllRenderers();
 			this._scenePreviewController?.Cleanup(avatar);
 			this._scenePreviewController = null;
 
-			// 過去の orphan 蓄積掃除 (旧版で発生した Scene root の [Shape]xxx 残骸を一括除去).
-			SweepScenePreviewOrphans();
-		}
-
-		private static void SweepScenePreviewOrphans()
-		{
-			UnityEngine.SceneManagement.Scene scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-			if (!scene.IsValid()) return;
-			var shapePrefix = new System.Text.RegularExpressions.Regex(@"^\[(?:[^\]]+)\]");
-			foreach (GameObject go in scene.GetRootGameObjects())
-			{
-				if (go == null) continue;
-				if (go.transform.parent != null) continue;
-				if (!shapePrefix.IsMatch(go.name)) continue;
-				SkinnedMeshRenderer[] smrs = go.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-				if (smrs.Length == 0) continue;
-				Object.DestroyImmediate(go);
-			}
 		}
 
 		/// <summary>
@@ -440,7 +468,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (variant.NailNodes != null && variant.NailNodes.Length > 0)
 			{
 				variantNailNodes = variant.NailNodes;
-				return world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildFromNodes(variant.NailNodes, variant.Name ?? "variant");
+				return world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildTemporaryFromNodes(variant.NailNodes, variant.Name ?? "variant");
 			}
 
 			if (string.IsNullOrEmpty(variant.NailPrefabGUID)) return null;
@@ -468,7 +496,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		/// </summary>
 		private void ApplyVariantPositionBlend(VRCAvatarDescriptor avatar, GameObject basePrefab, string nailShapeName)
 		{
-			Transform? previewRoot = avatar.transform.Find(SCENE_PREVIEW_NAME);
+			Transform? previewRoot = this._scenePreviewController?.PreviewRoot;
 			if (previewRoot == null) return;
 
 			AvatarBlendShapeVariant[]? variants = this.GetBlendShapeVariants();
@@ -484,12 +512,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				float weight = GetBodyBlendShapeWeight(avatar, variant);
 				if (weight <= 0f) continue;
 
+				using var variantTemporaryPrefabs = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BeginTemporaryScope();
 				GameObject? variantPrefab = null;
-				bool variantIsOrphan = false;
 				if (variant.NailNodes != null && variant.NailNodes.Length > 0)
 				{
-					variantPrefab = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildFromNodes(variant.NailNodes, variant.Name ?? "variant");
-					variantIsOrphan = true;
+					variantPrefab = world.anlabo.mdnailtool.Editor.NailDesigns.NailPrefabBuilder.BuildTemporaryFromNodes(variant.NailNodes, variant.Name ?? "variant");
 				}
 				else if (!string.IsNullOrEmpty(variant.NailPrefabGUID))
 				{
@@ -501,7 +528,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				}
 				if (variantPrefab == null) continue;
 
-				GameObject originalVariantPrefab = variantPrefab;
 				variantPrefab = NailSetupProcessor.ResolveShapePrefab(variantPrefab, nailShapeName, variant.NailNodes);
 				var variantTransforms = variantPrefab.GetComponentsInChildren<Transform>(true);
 
@@ -521,10 +547,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					previewNail.localRotation = Quaternion.Slerp(Quaternion.identity, rotDelta, weight) * previewNail.localRotation;
 				}
 
-				if (variantIsOrphan) {
-					if (variantPrefab != null) Object.DestroyImmediate(variantPrefab);
-					if (originalVariantPrefab != null && !ReferenceEquals(originalVariantPrefab, variantPrefab)) Object.DestroyImmediate(originalVariantPrefab);
-				}
 			}
 		}
 

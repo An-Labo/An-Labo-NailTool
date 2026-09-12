@@ -1,6 +1,8 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -9,6 +11,74 @@ using world.anlabo.mdnailtool.Editor.Model;
 
 namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 	internal static class NailPrefabBuilder {
+		// Only explicit temporary builds belong to a scope. BuildFromNodes also creates
+		// permanent decorations, and Instantiate clones must never inherit ownership.
+		private sealed class GameObjectReferenceComparer : IEqualityComparer<GameObject> {
+			public bool Equals(GameObject? x, GameObject? y) => ReferenceEquals(x, y);
+			public int GetHashCode(GameObject obj) => RuntimeHelpers.GetHashCode(obj);
+		}
+
+		private static readonly IEqualityComparer<GameObject> TemporaryReferenceComparer = new GameObjectReferenceComparer();
+		private static readonly Dictionary<GameObject, TemporaryScope> TemporaryOwners = new(TemporaryReferenceComparer);
+		private static TemporaryScope? _currentTemporaryScope;
+
+		internal sealed class TemporaryScope : IDisposable {
+			private readonly TemporaryScope? _parent;
+			private readonly HashSet<GameObject> _objects = new(TemporaryReferenceComparer);
+			private bool _disposed;
+
+			internal TemporaryScope(GameObject? existingTemporary) {
+				_parent = _currentTemporaryScope;
+				_currentTemporaryScope = this;
+				// An ordinary scene object or prefab asset is never adopted.
+				if (!ReferenceEquals(existingTemporary, null) && TemporaryOwners.ContainsKey(existingTemporary))
+					Own(existingTemporary);
+			}
+
+			internal void Own(GameObject temporary) {
+				if (_disposed) throw new ObjectDisposedException(nameof(TemporaryScope));
+				if (TemporaryOwners.TryGetValue(temporary, out TemporaryScope? previous))
+					previous._objects.Remove(temporary);
+				TemporaryOwners[temporary] = this;
+				_objects.Add(temporary);
+			}
+
+			internal void Forget(GameObject temporary) => _objects.Remove(temporary);
+
+			public void Dispose() {
+				if (_disposed) return;
+				_disposed = true;
+				while (_currentTemporaryScope != null && _currentTemporaryScope._disposed)
+					_currentTemporaryScope = _currentTemporaryScope._parent;
+				var remaining = new GameObject[_objects.Count];
+				_objects.CopyTo(remaining);
+				foreach (GameObject temporary in remaining) DestroyTemporaryPrefab(temporary);
+			}
+		}
+
+		internal static TemporaryScope BeginTemporaryScope(GameObject? existingTemporary = null)
+			=> new(existingTemporary);
+
+		internal static GameObject BuildTemporaryFromNodes(NailPrefabNodeData[] rootNodes, string fallbackName, string? shapeOverride = null) {
+			TemporaryScope scope = _currentTemporaryScope
+				?? throw new InvalidOperationException("Temporary nail prefabs require a temporary scope.");
+			GameObject temporary = BuildFromNodes(rootNodes, fallbackName, shapeOverride);
+			try {
+				scope.Own(temporary);
+				return temporary;
+			} catch {
+				if (temporary != null) UnityEngine.Object.DestroyImmediate(temporary);
+				throw;
+			}
+		}
+
+		internal static void DestroyTemporaryPrefab(GameObject? temporary) {
+			if (ReferenceEquals(temporary, null) || !TemporaryOwners.TryGetValue(temporary, out TemporaryScope? owner)) return;
+			TemporaryOwners.Remove(temporary);
+			owner.Forget(temporary);
+			if (temporary != null) UnityEngine.Object.DestroyImmediate(temporary);
+		}
+
 		private const string UNITY_DEFAULT_RES_GUID = "0000000000000000e000000000000000";
 
 		private static readonly Dictionary<long, string> BUILTIN_MESH_NAMES = new() {
@@ -36,11 +106,16 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 				sameShape = ExtractShape(rootNodes[i].Name) == commonShape;
 			string rootName = sameShape ? $"[{commonShape}]{ShapePrefixRegex.Replace(fallbackName ?? "", "")}" : fallbackName;
 			GameObject root = new GameObject(rootName);
-			foreach (NailPrefabNodeData node in rootNodes) {
-				string shape = !string.IsNullOrEmpty(shapeOverride) ? shapeOverride! : ExtractShape(node.Name);
-				BuildSubtree(node, root.transform, shape);
+			try {
+				foreach (NailPrefabNodeData node in rootNodes) {
+					string shape = !string.IsNullOrEmpty(shapeOverride) ? shapeOverride! : ExtractShape(node.Name);
+					BuildSubtree(node, root.transform, shape);
+				}
+				return root;
+			} catch {
+				if (root != null) UnityEngine.Object.DestroyImmediate(root);
+				throw;
 			}
-			return root;
 		}
 
 		private static string ExtractShape(string? name) {
@@ -101,65 +176,70 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		private static GameObject BuildSubtree(NailPrefabNodeData data, Transform? parent, string shape) {
 			var go = new GameObject(data.Name);
-			if (parent != null) go.transform.SetParent(parent, false);
+			try {
+				if (parent != null) go.transform.SetParent(parent, false);
 
-			if (data.LocalPosition != null && data.LocalPosition.Length >= 3)
-				go.transform.localPosition = new Vector3(data.LocalPosition[0], data.LocalPosition[1], data.LocalPosition[2]);
-			if (data.LocalRotation != null && data.LocalRotation.Length >= 4)
-				go.transform.localRotation = new Quaternion(data.LocalRotation[0], data.LocalRotation[1], data.LocalRotation[2], data.LocalRotation[3]);
-			if (data.LocalScale != null && data.LocalScale.Length >= 3)
-				go.transform.localScale = new Vector3(data.LocalScale[0], data.LocalScale[1], data.LocalScale[2]);
+				if (data.LocalPosition != null && data.LocalPosition.Length >= 3)
+					go.transform.localPosition = new Vector3(data.LocalPosition[0], data.LocalPosition[1], data.LocalPosition[2]);
+				if (data.LocalRotation != null && data.LocalRotation.Length >= 4)
+					go.transform.localRotation = new Quaternion(data.LocalRotation[0], data.LocalRotation[1], data.LocalRotation[2], data.LocalRotation[3]);
+				if (data.LocalScale != null && data.LocalScale.Length >= 3)
+					go.transform.localScale = new Vector3(data.LocalScale[0], data.LocalScale[1], data.LocalScale[2]);
 
-			// SMR 推定: 明示 smr / 旧 MeshGuid あり / 名前から mesh 導出可.
-			string? rendererType = data.RendererType;
-			if (rendererType == null
-			    && (!string.IsNullOrEmpty(data.MeshGuid) || CanDeriveMesh(data.Name, shape)))
-				rendererType = "smr";
+				// SMR 推定: 明示 smr / 旧 MeshGuid あり / 名前から mesh 導出可.
+				string? rendererType = data.RendererType;
+				if (rendererType == null
+				    && (!string.IsNullOrEmpty(data.MeshGuid) || CanDeriveMesh(data.Name, shape)))
+					rendererType = "smr";
 
-			if (rendererType == "smr") {
-				Mesh? mesh = ResolveMesh(data, shape);
-				if (mesh != null) {
-					var smr = go.AddComponent<SkinnedMeshRenderer>();
-					smr.sharedMesh = mesh;
-					smr.updateWhenOffscreen = true;
+				if (rendererType == "smr") {
+					Mesh? mesh = ResolveMesh(data, shape);
+					if (mesh != null) {
+						var smr = go.AddComponent<SkinnedMeshRenderer>();
+						smr.sharedMesh = mesh;
+						smr.updateWhenOffscreen = true;
 
-					// 全 node の 98.5% が center=[0,0.02,0] / extent=[0.02,0.02,0.02] のため null をデフォルトとして扱う.
-					Vector3 boundsCenter = (data.BoundsCenter != null && data.BoundsCenter.Length >= 3)
-						? new Vector3(data.BoundsCenter[0], data.BoundsCenter[1], data.BoundsCenter[2])
-						: new Vector3(0f, 0.02f, 0f);
-					Vector3 boundsSize = (data.BoundsExtent != null && data.BoundsExtent.Length >= 3)
-						? new Vector3(data.BoundsExtent[0] * 2f, data.BoundsExtent[1] * 2f, data.BoundsExtent[2] * 2f)
-						: new Vector3(0.04f, 0.04f, 0.04f);
-					smr.localBounds = new Bounds(boundsCenter, boundsSize);
+						// 全 node の 98.5% が center=[0,0.02,0] / extent=[0.02,0.02,0.02] のため null をデフォルトとして扱う.
+						Vector3 boundsCenter = (data.BoundsCenter != null && data.BoundsCenter.Length >= 3)
+							? new Vector3(data.BoundsCenter[0], data.BoundsCenter[1], data.BoundsCenter[2])
+							: new Vector3(0f, 0.02f, 0f);
+						Vector3 boundsSize = (data.BoundsExtent != null && data.BoundsExtent.Length >= 3)
+							? new Vector3(data.BoundsExtent[0] * 2f, data.BoundsExtent[1] * 2f, data.BoundsExtent[2] * 2f)
+							: new Vector3(0.04f, 0.04f, 0.04f);
+						smr.localBounds = new Bounds(boundsCenter, boundsSize);
 
-					if (data.BlendShapeWeights != null) {
-						for (int i = 0; i < mesh.blendShapeCount; i++) {
-							string bsName = mesh.GetBlendShapeName(i);
-							if (data.BlendShapeWeights.TryGetValue(bsName, out float w))
-								smr.SetBlendShapeWeight(i, w);
+						if (data.BlendShapeWeights != null) {
+							for (int i = 0; i < mesh.blendShapeCount; i++) {
+								string bsName = mesh.GetBlendShapeName(i);
+								if (data.BlendShapeWeights.TryGetValue(bsName, out float w))
+									smr.SetBlendShapeWeight(i, w);
+							}
 						}
 					}
+				} else if (rendererType == "mr") {
+					Mesh? mesh = ResolveMesh(data, shape);
+					if (mesh != null) {
+						var mf = go.AddComponent<MeshFilter>();
+						mf.sharedMesh = mesh;
+					}
+					var mr = go.AddComponent<MeshRenderer>();
+					Material?[] mats = ResolveMaterials(data.MaterialGuids);
+					if (mats.Length > 0) {
+						var resolved = new Material[mats.Length];
+						for (int i = 0; i < mats.Length; i++) resolved[i] = mats[i]!;
+						mr.sharedMaterials = resolved;
+					}
 				}
-			} else if (rendererType == "mr") {
-				Mesh? mesh = ResolveMesh(data, shape);
-				if (mesh != null) {
-					var mf = go.AddComponent<MeshFilter>();
-					mf.sharedMesh = mesh;
-				}
-				var mr = go.AddComponent<MeshRenderer>();
-				Material?[] mats = ResolveMaterials(data.MaterialGuids);
-				if (mats.Length > 0) {
-					var resolved = new Material[mats.Length];
-					for (int i = 0; i < mats.Length; i++) resolved[i] = mats[i]!;
-					mr.sharedMaterials = resolved;
-				}
-			}
 
-			if (data.Children != null) {
-				foreach (var child in data.Children)
-					BuildSubtree(child, go.transform, shape);
+				if (data.Children != null) {
+					foreach (var child in data.Children)
+						BuildSubtree(child, go.transform, shape);
+				}
+				return go;
+			} catch {
+				if (go != null) UnityEngine.Object.DestroyImmediate(go);
+				throw;
 			}
-			return go;
 		}
 	}
 }

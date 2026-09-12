@@ -139,6 +139,7 @@ namespace world.anlabo.mdnailtool.Editor
 				{
 					foreach (Transform additionalObject in fingerObjects)
 					{
+						NailSetupTransaction.TrackCreated(additionalObject.gameObject);
 						additionalObject.SetParent(transform, false);
 					}
 				}
@@ -153,6 +154,7 @@ namespace world.anlabo.mdnailtool.Editor
 
 					foreach (Transform additionalObject in processor.GetAdditionalObjects(colorName, nailShapeName, (MDNailToolDefines.TargetFinger)index, isPreview))
 					{
+						NailSetupTransaction.TrackCreated(additionalObject.gameObject);
 						additionalObject.SetParent(transform, false);
 					}
 				}
