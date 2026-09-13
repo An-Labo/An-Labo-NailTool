@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using world.anlabo.mdnailtool.Editor.Entity;
@@ -179,7 +179,8 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 
 		private static void ApplyRootScale(NailPrefabNodeData node, float[] scale) {
 			if (node.Children == null || node.Children.Length == 0) {
-				ApplyScaleToSelf(node, scale);
+				// Flat finger roots need the same position correction as legacy children.
+				ApplyScaleAsChild(node, scale);
 				return;
 			}
 			foreach (NailPrefabNodeData child in node.Children) ApplyScaleAsChild(child, scale);
