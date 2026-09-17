@@ -341,9 +341,12 @@ namespace world.anlabo.mdnailtool.Editor {
 				tempInstance.transform.SetPositionAndRotation(avatar.transform.position, avatar.transform.rotation);
 				tempInstance.transform.localScale = avatar.transform.lossyScale;
 
+				Dictionary<string, Transform> tempBonesByPath = new();
 				Dictionary<string, Transform> tempBonesByName = new();
 				foreach (Transform t in tempInstance.GetComponentsInChildren<Transform>())
 				{
+					string path = GetRelativePath(tempInstance.transform, t);
+					if (!string.IsNullOrEmpty(path)) tempBonesByPath[path] = t;
 					if (!tempBonesByName.ContainsKey(t.name))
 						tempBonesByName[t.name] = t;
 				}
@@ -358,7 +361,11 @@ namespace world.anlabo.mdnailtool.Editor {
 					Transform? actualBone = targetBoneDictionary.GetValueOrDefault(boneName);
 					if (actualBone == null) continue;
 
-					if (!tempBonesByName.TryGetValue(actualBone.name, out Transform? tempBone)) continue;
+					// Prefer the exact hierarchy path. Name-only lookup can select a different
+					// same-named bone in FBXs that contain duplicate armature branches.
+					string actualPath = GetRelativePath(avatar.transform, actualBone);
+					if (!tempBonesByPath.TryGetValue(actualPath, out Transform? tempBone)
+						&& !tempBonesByName.TryGetValue(actualBone.name, out tempBone)) continue;
 
 					Vector3 localPos = tempBone.InverseTransformPoint(nail.position);
 					Quaternion localRot = Quaternion.Inverse(tempBone.rotation) * nail.rotation;

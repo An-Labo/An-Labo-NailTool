@@ -361,7 +361,8 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             // 子バリアント(parentVariantが設定されているもの)はメインリストに表示しない
             _allDesigns = db.collection
                 .Where(d => string.IsNullOrEmpty(d.ParentVariant))
-                .OrderByDescending(d => d.Id)
+                .OrderByDescending(d => d.EffectiveSortOrder)
+                .ThenByDescending(d => d.Id)
                 .ToList();
             _installedDesignGroups = _allDesigns
                 .Where(db.IsInstalledDesignGroup)
@@ -413,7 +414,10 @@ namespace world.anlabo.mdnailtool.Editor.Window {
                     int cB = GlobalSetting.DesignUseCount.GetValueOrDefault(b.DesignName, 0);
                     if (cA != cB) return cB.CompareTo(cA);
                 }
-                if (_sortDropdown.index == 0) return b.Id.CompareTo(a.Id);
+                if (_sortDropdown.index == 0) {
+                    int order = b.EffectiveSortOrder.CompareTo(a.EffectiveSortOrder);
+                    return order != 0 ? order : b.Id.CompareTo(a.Id);
+                }
                 return string.Compare(a.DesignName, b.DesignName, StringComparison.Ordinal);
             });
 

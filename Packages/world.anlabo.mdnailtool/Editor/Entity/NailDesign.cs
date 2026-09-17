@@ -10,6 +10,15 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("id")]
 		public int Id { get; set; } = -1;
 
+		// id is a stable lookup key. sortOrder is only needed when historical
+		// release order cannot be represented by that key (for example, after
+		// repairing a duplicate legacy id).
+		[JsonProperty("sortOrder")]
+		public int? SortOrder { get; set; }
+
+		[JsonIgnore]
+		public int EffectiveSortOrder => this.SortOrder ?? this.Id;
+
 		[JsonRequired]
 		[JsonProperty("designName")]
 		public string DesignName { get; set; } = null!;

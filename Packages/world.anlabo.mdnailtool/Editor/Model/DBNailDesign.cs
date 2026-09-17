@@ -25,7 +25,8 @@ namespace world.anlabo.mdnailtool.Editor.Model {
 			return this._data.Values
 				.Where(d => !string.IsNullOrEmpty(d.ParentVariant)
 				         && string.Equals(d.ParentVariant, parentDesignName, System.StringComparison.OrdinalIgnoreCase))
-				.OrderBy(d => d.Id)
+				.OrderBy(d => d.EffectiveSortOrder)
+				.ThenBy(d => d.Id)
 				.ToList();
 		}
 

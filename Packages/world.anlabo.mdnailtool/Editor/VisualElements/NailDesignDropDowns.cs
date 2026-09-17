@@ -336,7 +336,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this._designPopupElements = dbNailDesign.collection
 				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
 				.Where(dbNailDesign.IsInstalledDesignGroup)
-				.OrderBy(nailDesign => nailDesign.Id)
+				.OrderBy(nailDesign => nailDesign.EffectiveSortOrder)
+				.ThenBy(nailDesign => nailDesign.Id)
 				.Select(design => design.DesignName)
 				.ToList();
 			this._designDisplayNameDictionary = dbNailDesign.collection

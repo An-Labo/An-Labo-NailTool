@@ -354,8 +354,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				if (IsOwnedDesignWithUrl(design)) return design!.Url;
 			}
 
-			// 履歴なし/履歴中に所有デザインなし → 所有デザインの中で Id降順 (新しい順) でURL持ちを探す
-			foreach (NailDesign design in db.collection.OrderByDescending(d => d.Id))
+			// 履歴なし/履歴中に所有デザインなし → 所有デザインの中で発売順の新しいものからURL持ちを探す
+			foreach (NailDesign design in db.collection
+			         .OrderByDescending(d => d.EffectiveSortOrder)
+			         .ThenByDescending(d => d.Id))
 			{
 				if (IsOwnedDesignWithUrl(design)) return design.Url;
 			}

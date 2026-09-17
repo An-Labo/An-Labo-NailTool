@@ -73,7 +73,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this.LatestInstalledDesignName = dbNailDesign.collection
 				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
 				.Where(dbNailDesign.IsInstalledDesignGroup)
-				.OrderByDescending(design => design.Id)
+				.OrderByDescending(design => design.EffectiveSortOrder)
+				.ThenByDescending(design => design.Id)
 				.Select(design => design.DesignName)
 				.FirstOrDefault();
 			Action<EventBase> selectNailAction = SelectNail;
@@ -88,11 +89,13 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 				.Where(design => string.IsNullOrEmpty(design.ParentVariant))
 				.OrderByDescending(dbNailDesign.IsInstalledDesignGroup);
 			ordered = sortByNewest
-				? ordered.ThenByDescending(d => d.Id)
+				? ordered.ThenByDescending(d => d.EffectiveSortOrder)
+				         .ThenByDescending(d => d.Id)
 				         .ThenByDescending(d => useCounts.GetValueOrDefault(d.DesignName, 0))
 				         .ThenByDescending(d => lastUsedTime.GetValueOrDefault(d.DesignName, DateTime.MinValue))
 				: ordered.ThenByDescending(d => useCounts.GetValueOrDefault(d.DesignName, 0))
 				         .ThenByDescending(d => lastUsedTime.GetValueOrDefault(d.DesignName, DateTime.MinValue))
+				         .ThenByDescending(d => d.EffectiveSortOrder)
 				         .ThenByDescending(d => d.Id);
 
 			foreach (NailDesign nailDesign in ordered) {
