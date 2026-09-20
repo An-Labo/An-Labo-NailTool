@@ -13,6 +13,9 @@ namespace world.anlabo.mdnailtool.Editor.JsonData {
 		[JsonProperty("additionalMaterialGUIDs")]
 		public  string[]? AdditionalMaterialGUIDs { get; set; }
 
+		[JsonProperty("additionalMaterialGUIDsByShape")]
+		public IReadOnlyDictionary<string, string[]>? AdditionalMaterialGUIDsByShape { get; set; }
+
 		[JsonProperty("additionalObjectGUIDs")]
 		public IReadOnlyDictionary<MDNailToolDefines.TargetFinger, string[]>? AdditionalObjectGUIDs { get; set; }
 	}

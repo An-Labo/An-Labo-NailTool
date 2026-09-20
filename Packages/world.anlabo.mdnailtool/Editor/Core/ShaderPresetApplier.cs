@@ -26,6 +26,9 @@ namespace world.anlabo.mdnailtool.Editor.Core
 			"_MatCap2ndLod",
 
 			"_Metallic",
+			"_UseReflection",
+			"_Smoothness",
+			"_Reflectance",
 			"_UseEmission",
 			"_EmissionColor",
 			"_EmissionMainStrength",
@@ -36,9 +39,13 @@ namespace world.anlabo.mdnailtool.Editor.Core
 			"_Emission2ndMainStrength",
 			"_Emission2ndBlend",
 
+			"_UseGlitter",
 			"_GlitterColor",
 			"_GlitterParams1",
 			"_GlitterParams2",
+			"_GlitterApplyShape",
+			"_GlitterEnableLighting",
+			"_GlitterScaleRandomize",
 			"_GlitterMainStrength",
 			"_GlitterVRParallaxStrength",
 			"_GlitterSensitivity",

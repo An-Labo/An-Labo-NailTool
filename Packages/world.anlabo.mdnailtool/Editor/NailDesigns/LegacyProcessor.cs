@@ -37,18 +37,20 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 		}
 
 		public override IEnumerable<Material> GetAdditionalMaterials(string colorName, string nailShapeName, bool isPreview) {
-			string[]? guids = this.DesignData.Legacy?.AdditionalMaterialGUIDs;
-			if (guids == null) yield break;
-			foreach (string guid in guids) {
-				string materialPath = AssetDatabase.GUIDToAssetPath(guid);
-				Material? material = MDNailToolAssetLoader.LoadAssetSafe<Material>(materialPath);
-				if (material == null) {
-					ToolConsole.Log($"[Error] Not found additional material : {this.DesignName} : {colorName} : {guid} : {materialPath}");
-					continue;
+			IEnumerable<string>? references = this.DesignData.Legacy?.AdditionalMaterialGUIDs;
+			IReadOnlyDictionary<string, string[]>? byShape = this.DesignData.Legacy?.AdditionalMaterialGUIDsByShape;
+			if (byShape != null) {
+				var matches = byShape
+					.Where(entry => string.Equals(entry.Key, nailShapeName, StringComparison.OrdinalIgnoreCase))
+					.ToArray();
+				if (matches.Length > 1) {
+					throw new InvalidOperationException(
+						$"Duplicate additionalMaterialGUIDsByShape keys (case-insensitive): {string.Join(", ", matches.Select(entry => entry.Key))}");
 				}
-
-				yield return material;
+				if (matches.Length == 1) references = matches[0].Value ?? Array.Empty<string>();
 			}
+
+			return this.LoadAdditionalMaterials(references, colorName, nailShapeName);
 		}
 
 		public override IEnumerable<Transform> GetAdditionalObjects(string colorName, string nailShapeName, MDNailToolDefines.TargetFinger targetFinger, bool isPreview) {

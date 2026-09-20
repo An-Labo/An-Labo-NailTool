@@ -13,6 +13,8 @@ using world.anlabo.mdnailtool.Editor.NailDesigns;
 
 namespace world.anlabo.mdnailtool.Editor.VisualElements {
 	public class NailDesignDropDowns : VisualElement, ILocalizedElement {
+		internal const string AdditionalMaterialNoneOverride = "\u001fnone";
+
 		private readonly Toggle _enableToggle;
 
 		private readonly Label _fingerNameLabel;
@@ -560,6 +562,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			if (string.IsNullOrEmpty(value) || this._additionalMaterialPopup.choices == null ||
 			    this._additionalMaterialPopup.choices.Count == 0) return null;
 			if (this._additionalMaterialPopup.index == 0) return null;
+			if (this._additionalMaterialPopup.index == 1) return AdditionalMaterialNoneOverride;
 			return value;
 		}
 

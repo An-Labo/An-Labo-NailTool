@@ -6,7 +6,9 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 using world.anlabo.mdnailtool.Editor.Core;
+using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.JsonData;
+using world.anlabo.mdnailtool.Editor.Model;
 using Object = UnityEngine.Object;
 
 #nullable enable
@@ -88,6 +90,34 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		public virtual IEnumerable<Material> GetAdditionalMaterials(string colorName, string nailShapeName, bool isPreview) {
 			return Enumerable.Empty<Material>();
+		}
+
+		protected IEnumerable<Material> LoadAdditionalMaterials(
+			IEnumerable<string>? references,
+			string colorName,
+			string nailShapeName) {
+			if (references == null) yield break;
+
+			AdditionalAssetRegistry registry = DBAdditionalAssets.Load();
+			var seenGuids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			foreach (string reference in references) {
+				if (string.IsNullOrWhiteSpace(reference)) {
+					ToolConsole.Log($"[Error] Empty additional material reference : {this.DesignName} : {colorName} : {nailShapeName}");
+					continue;
+				}
+
+				foreach (string guid in registry.ResolveMaterialGuids(reference)) {
+					if (string.IsNullOrWhiteSpace(guid) || !seenGuids.Add(guid)) continue;
+					string materialPath = AssetDatabase.GUIDToAssetPath(guid);
+					Material? material = MDNailToolAssetLoader.LoadAssetSafe<Material>(materialPath);
+					if (material == null) {
+						ToolConsole.Log($"[Error] Not found additional material : {this.DesignName} : {colorName} : {nailShapeName} : {reference} : {guid} : {materialPath}");
+						continue;
+					}
+
+					yield return material;
+				}
+			}
 		}
 
 		public virtual IEnumerable<Transform> GetAdditionalObjects(string colorName, string nailShapeName, MDNailToolDefines.TargetFinger targetFinger, bool isPreview) {

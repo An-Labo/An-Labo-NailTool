@@ -406,8 +406,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				NailDesignDropDowns.UseScrollablePopup(this._additionalMaterialSourceDropdown);
 				this._additionalMaterialSourceDropdown.RegisterValueChangedCallback(evt =>
 				{
-					string? noneLabel = this._additionalMaterialSourceDropdown.choices.FirstOrDefault();
-					string? selected = evt.newValue == noneLabel ? null : evt.newValue;
+					string? selected = this._additionalMaterialSourceDropdown.index switch
+					{
+						0 => null,
+						1 => NailDesignDropDowns.AdditionalMaterialNoneOverride,
+						_ => evt.newValue,
+					};
 					GlobalSetting.AdditionalMaterialSourceDesign = selected;
 
 					this.SyncPerFingerAdditionalMaterial(evt.newValue);
@@ -487,7 +491,9 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (this._additionalMaterialSourceDropdown == null) return;
 
 			var choices = new List<string>();
+			string autoLabel = S("window.additional_material_source_auto") ?? "自動";
 			string noneLabel = S("window.additional_material_source_none") ?? "なし";
+			choices.Add(autoLabel);
 			choices.Add(noneLabel);
 
 			// レジストリの名前を表示（GUIDが1つでも有効なもののみ）
@@ -506,6 +512,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			// 保存された選択を復元
 			string? saved = GlobalSetting.AdditionalMaterialSourceDesign;
+			if (saved == NailDesignDropDowns.AdditionalMaterialNoneOverride)
+			{
+				this._additionalMaterialSourceDropdown.SetValueWithoutNotify(noneLabel);
+				this.SyncPerFingerAdditionalMaterial(noneLabel);
+				return;
+			}
 			if (!string.IsNullOrEmpty(saved) && choices.Contains(saved!))
 			{
 				this._additionalMaterialSourceDropdown.SetValueWithoutNotify(saved!);
@@ -513,8 +525,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				return;
 			}
 
-			this._additionalMaterialSourceDropdown.SetValueWithoutNotify(noneLabel);
-			this.SyncPerFingerAdditionalMaterial(noneLabel);
+			this._additionalMaterialSourceDropdown.SetValueWithoutNotify(autoLabel);
+			this.SyncPerFingerAdditionalMaterial(autoLabel);
 		}
 
 		private void PopulatePerFingerAdditionalMaterialDropdowns(List<string> choices)
@@ -530,42 +542,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			if (this._additionalMaterialSourceDropdown == null) return;
 
-			string noneLabel = this._additionalMaterialSourceDropdown.choices.FirstOrDefault() ?? "";
-
-			// 現在選択中のデザインを取得
-			string? currentDesignName = this._nailDesignDropDowns?.FirstOrDefault()?.GetSelectedDesignName();
-			if (string.IsNullOrEmpty(currentDesignName))
-			{
-				this._additionalMaterialSourceDropdown.SetValueWithoutNotify(noneLabel);
-				GlobalSetting.AdditionalMaterialSourceDesign = null;
-				this.SyncPerFingerAdditionalMaterial(noneLabel);
-				return;
-			}
-
-			// デザインの追加マテリアルGUIDからレジストリ名を逆引き
-			using DBNailDesign dbNailDesign = new();
-			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(currentDesignName);
-			if (design?.AdditionalMaterialGUIDs is { Length: > 0 })
-			{
-				var registry = DBAdditionalAssets.Load();
-				var names = registry.FindMaterialNames(design.AdditionalMaterialGUIDs);
-				if (names.Count > 0)
-				{
-					string registryName = names.First();
-					if (this._additionalMaterialSourceDropdown.choices.Contains(registryName))
-					{
-						this._additionalMaterialSourceDropdown.SetValueWithoutNotify(registryName);
-						GlobalSetting.AdditionalMaterialSourceDesign = registryName;
-						this.SyncPerFingerAdditionalMaterial(registryName);
-						return;
-					}
-				}
-			}
-
-			// デザインに追加マテリアルがない → なしにリセット
-			this._additionalMaterialSourceDropdown.SetValueWithoutNotify(noneLabel);
+			string autoLabel = this._additionalMaterialSourceDropdown.choices.FirstOrDefault() ?? "";
+			this._additionalMaterialSourceDropdown.SetValueWithoutNotify(autoLabel);
 			GlobalSetting.AdditionalMaterialSourceDesign = null;
-			this.SyncPerFingerAdditionalMaterial(noneLabel);
+			this.SyncPerFingerAdditionalMaterial(autoLabel);
 		}
 
 		private void SyncPerFingerAdditionalMaterial(string? displayValue)
@@ -581,9 +561,14 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			if (this._nailDesignDropDowns == null) return null;
 
-			string? noneLabel = this._additionalMaterialSourceDropdown?.choices.FirstOrDefault();
 			string? globalValue = this._additionalMaterialSourceDropdown?.value;
-			string? globalSource = (globalValue == noneLabel) ? null : globalValue;
+			int globalIndex = this._additionalMaterialSourceDropdown?.index ?? 0;
+			string? globalSource = globalIndex switch
+			{
+				0 => null,
+				1 => NailDesignDropDowns.AdditionalMaterialNoneOverride,
+				_ => globalValue,
+			};
 
 			string?[] sources = MDNailSelectionBuilder.BuildAdditionalMaterialSources(
 				this._nailDesignDropDowns,
@@ -602,22 +587,33 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			for (int i = 0; i < 20; i++)
 			{
 				string? registryName = sources[i];
-				if (string.IsNullOrEmpty(registryName) || registryName == noneLabel) continue;
+				if (string.IsNullOrEmpty(registryName)) continue;
+				if (registryName == NailDesignDropDowns.AdditionalMaterialNoneOverride)
+				{
+					result[i] = Array.Empty<Material>();
+					anyNonNull = true;
+					continue;
+				}
 
 				var mats = new List<Material>();
+				var seenGuids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 				foreach (string resolvedGuid in registry.ResolveMaterialGuids(registryName!))
 				{
+					if (string.IsNullOrWhiteSpace(resolvedGuid) || !seenGuids.Add(resolvedGuid)) continue;
 					string matPath = AssetDatabase.GUIDToAssetPath(resolvedGuid);
-					if (string.IsNullOrEmpty(matPath)) continue;
+					if (string.IsNullOrEmpty(matPath))
+					{
+						ToolConsole.Log($"[Error] Not found additional material override : {registryName} : {resolvedGuid}");
+						continue;
+					}
 					Material? mat = MDNailToolAssetLoader.LoadAssetSafe<Material>(matPath);
 					if (mat != null) mats.Add(mat);
+					else ToolConsole.Log($"[Error] Not found additional material override : {registryName} : {resolvedGuid} : {matPath}");
 				}
 
-				if (mats.Count > 0)
-				{
-					result[i] = mats;
-					anyNonNull = true;
-				}
+				// 明示指定が壊れていても Auto へ戻さず、追加なしとして扱う。
+				result[i] = mats;
+				anyNonNull = true;
 			}
 
 			return anyNonNull ? result : null;

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 using Newtonsoft.Json;
 
 #nullable enable
@@ -57,8 +58,34 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 		[JsonProperty("additionalMaterialGUIDs")]
 		public string[]? AdditionalMaterialGUIDs { get; set; }
 
+		// shape -> additional material GUIDs or additionalAssets registry names.
+		// A matching shape entry (including an empty array) takes precedence over
+		// the legacy design-wide additionalMaterialGUIDs list.
+		[JsonProperty("additionalMaterialGUIDsByShape")]
+		public IReadOnlyDictionary<string, string[]>? AdditionalMaterialGUIDsByShape { get; set; }
+
 		[JsonProperty("additionalObjectGUIDs")]
 		public IReadOnlyDictionary<string, string[]>? AdditionalObjectGUIDs { get; set; }
+
+		public IReadOnlyList<string> GetAdditionalMaterialReferences(string nailShapeName) {
+			if (this.AdditionalMaterialGUIDsByShape != null) {
+				var matchedKeys = new List<string>();
+				foreach (KeyValuePair<string, string[]> entry in this.AdditionalMaterialGUIDsByShape) {
+					if (string.Equals(entry.Key, nailShapeName, StringComparison.OrdinalIgnoreCase)) {
+						matchedKeys.Add(entry.Key);
+					}
+				}
+				if (matchedKeys.Count > 1) {
+					throw new InvalidOperationException(
+						$"Duplicate additionalMaterialGUIDsByShape keys (case-insensitive): {string.Join(", ", matchedKeys)}");
+				}
+				if (matchedKeys.Count == 1) {
+					return this.AdditionalMaterialGUIDsByShape[matchedKeys[0]] ?? Array.Empty<string>();
+				}
+			}
+
+			return this.AdditionalMaterialGUIDs ?? Array.Empty<string>();
+		}
 
 		// materialName -> NailMaterialDelta。非 null なら zip 展開不要でマテリアル再構築可能
 		[JsonProperty("materialData")]

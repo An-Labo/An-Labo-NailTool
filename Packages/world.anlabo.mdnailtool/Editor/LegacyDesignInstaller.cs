@@ -83,6 +83,19 @@ namespace world.anlabo.mdnailtool.Editor {
 						.ToArray();
 				}
 
+				if (nailDesign.AdditionalMaterialGUIDsByShape is { Count: > 0 }) {
+					var registry = DBAdditionalAssets.Load();
+					designData.Legacy.AdditionalMaterialGUIDsByShape = nailDesign.AdditionalMaterialGUIDsByShape
+						.ToDictionary(
+							entry => entry.Key,
+							entry => (entry.Value ?? Array.Empty<string>())
+								.SelectMany(reference => registry.ResolveMaterialGuids(reference))
+								.Where(guid => !string.IsNullOrWhiteSpace(guid))
+								.Distinct(StringComparer.OrdinalIgnoreCase)
+								.ToArray(),
+							StringComparer.OrdinalIgnoreCase);
+				}
+
 				if (nailDesign.AdditionalObjectGUIDs is { Count: > 0 }) {
 					designData.Legacy.AdditionalObjectGUIDs = ParseObjectGUIDs(nailDesign.AdditionalObjectGUIDs);
 				}

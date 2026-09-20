@@ -116,6 +116,11 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			if (tex != null) targetMaterial.SetTexture(MainTex, tex);
 		}
 
+		public override IEnumerable<Material> GetAdditionalMaterials(string colorName, string nailShapeName, bool isPreview) {
+			IReadOnlyList<string> references = this._nailDesign.GetAdditionalMaterialReferences(nailShapeName);
+			return this.LoadAdditionalMaterials(references, colorName, nailShapeName);
+		}
+
 		private string? FindCompatibleTexturePath(string materialDirectory, string fileNamePrefix, string expectedVariantKey) {
 			try {
 				// import後にdirectory timestampが変われば、negative cacheを含め自動的に再評価する。
