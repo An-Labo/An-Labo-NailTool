@@ -122104,7 +122104,7 @@
 								],
 								"localRotation": [
 									0.05391,
-									-7E-05,
+									-7e-05,
 									0.725543,
 									0.686062
 								],
@@ -122214,7 +122214,7 @@
 								],
 								"localRotation": [
 									-0.05391,
-									-7E-05,
+									-7e-05,
 									0.725543,
 									-0.686062
 								],
@@ -122236,7 +122236,7 @@
 								],
 								"localRotation": [
 									0.05391,
-									-7E-05,
+									-7e-05,
 									0.725543,
 									0.686062
 								],
@@ -122258,7 +122258,7 @@
 								],
 								"localRotation": [
 									-0.05391,
-									-7E-05,
+									-7e-05,
 									0.725543,
 									-0.686062
 								],
@@ -126044,7 +126044,7 @@
 								"localPosition": [
 									-0.44201,
 									0.83508,
-									6E-05
+									6e-05
 								],
 								"localRotation": [
 									-0.45647,
@@ -126151,7 +126151,7 @@
 								"localPosition": [
 									0.44201,
 									0.83508,
-									6E-05
+									6e-05
 								],
 								"localRotation": [
 									0.45647,
@@ -129561,7 +129561,7 @@
 									-0.04523,
 									0.61797,
 									0.7849,
-									1E-05
+									1e-05
 								],
 								"localScale": [
 									1.46643,
@@ -129665,7 +129665,7 @@
 									-0.04523,
 									-0.61797,
 									-0.7849,
-									1E-05
+									1e-05
 								],
 								"localScale": [
 									1.46643,
@@ -158223,15 +158223,15 @@
 						},
 						"avatarPrefabs": [
 							{
-								"prefabName": "Yawl",
-								"prefabGUID": ""
+								"prefabName": "Yawl_Dress",
+								"prefabGUID": "25b4b71d8190f4c40b95965973dc1f22"
 							}
 						],
 						"avatarFbxs": [
 							{
-								"fbxName": "Yawl",
-								"fbxGUID": "",
-								"bodyName": "Body"
+								"fbxName": "Yawl_Dress",
+								"fbxGUID": "a932d8c1edda31e42a2bcaeb39477256",
+								"bodyName": "Yawl_bodybase"
 							}
 						],
 						"sharedBodyId": "Yawl"
@@ -158239,20 +158239,508 @@
 					"sotai": {
 						"variationName": "sotai",
 						"displayNames": {
-							"ja": "Default Valiation",
-							"en": "Default Valiation"
+							"ja": "sotai",
+							"en": "sotai"
 						},
 						"avatarPrefabs": [
 							{
-								"prefabName": "Yawl",
-								"prefabGUID": ""
+								"prefabName": "Yawl_Dress_sotai",
+								"prefabGUID": "6276a1cd6644aa440a6890f028ac73be"
 							}
 						],
 						"avatarFbxs": [
 							{
-								"fbxName": "Yawl",
-								"fbxGUID": "",
-								"bodyName": "Body"
+								"fbxName": "Yawl_Dress_sotai",
+								"fbxGUID": "f3b9dcc697b06474795df8e05843c491",
+								"bodyName": "Yawl_bodybase"
+							}
+						],
+						"nailNodes": [
+							{
+								"name": "[Natural]HandL.Index",
+								"localPosition": [
+									-0.58818,
+									1.05814,
+									0.00494
+								],
+								"localRotation": [
+									-0.512227,
+									0.465681,
+									0.516153,
+									0.504331
+								],
+								"localScale": [
+									0.92815,
+									0.92815,
+									0.92815
+								],
+								"blendShapeWeights": {
+									"curl": 24.5
+								}
+							},
+							{
+								"name": "[Natural]HandL.Little",
+								"localPosition": [
+									-0.57155,
+									1.05331,
+									-0.04744
+								],
+								"localRotation": [
+									-0.579717,
+									0.503674,
+									0.439116,
+									0.466281
+								],
+								"localScale": [
+									1.01086,
+									1.01086,
+									1.01086
+								],
+								"blendShapeWeights": {
+									"curl": 31.3
+								}
+							},
+							{
+								"name": "[Natural]HandL.Middle",
+								"localPosition": [
+									-0.59789,
+									1.05868,
+									-0.01278
+								],
+								"localRotation": [
+									-0.509138,
+									0.475626,
+									0.525527,
+									0.488242
+								],
+								"localScale": [
+									0.96174,
+									0.96174,
+									0.96174
+								],
+								"blendShapeWeights": {
+									"curl": 38.4
+								}
+							},
+							{
+								"name": "[Natural]HandL.Ring",
+								"localPosition": [
+									-0.59108,
+									1.0575,
+									-0.02938
+								],
+								"localRotation": [
+									-0.531779,
+									0.498356,
+									0.510691,
+									0.456121
+								],
+								"localScale": [
+									0.98528,
+									0.98528,
+									0.98528
+								],
+								"blendShapeWeights": {
+									"curl": 34.8
+								}
+							},
+							{
+								"name": "[Natural]HandL.Thumb",
+								"localPosition": [
+									-0.53736,
+									1.03766,
+									0.04025
+								],
+								"localRotation": [
+									0.097131,
+									0.386157,
+									0.715062,
+									0.574573
+								],
+								"localScale": [
+									0.81679,
+									1.08817,
+									0.81679
+								],
+								"blendShapeWeights": {
+									"curl": 28.2
+								}
+							},
+							{
+								"name": "[Natural]HandR.Index",
+								"localPosition": [
+									0.58818,
+									1.05814,
+									0.00494
+								],
+								"localRotation": [
+									0.512227,
+									0.465681,
+									0.516153,
+									-0.504331
+								],
+								"localScale": [
+									0.92815,
+									0.92815,
+									0.92815
+								],
+								"blendShapeWeights": {
+									"curl": 24.5
+								}
+							},
+							{
+								"name": "[Natural]HandR.Little",
+								"localPosition": [
+									0.57155,
+									1.05331,
+									-0.04744
+								],
+								"localRotation": [
+									0.579717,
+									0.503674,
+									0.439116,
+									-0.466281
+								],
+								"localScale": [
+									1.01086,
+									1.01086,
+									1.01086
+								],
+								"blendShapeWeights": {
+									"curl": 31.3
+								}
+							},
+							{
+								"name": "[Natural]HandR.Middle",
+								"localPosition": [
+									0.59789,
+									1.05868,
+									-0.01278
+								],
+								"localRotation": [
+									0.509138,
+									0.475626,
+									0.525527,
+									-0.488242
+								],
+								"localScale": [
+									0.96174,
+									0.96174,
+									0.96174
+								],
+								"blendShapeWeights": {
+									"curl": 38.4
+								}
+							},
+							{
+								"name": "[Natural]HandR.Ring",
+								"localPosition": [
+									0.59108,
+									1.0575,
+									-0.02938
+								],
+								"localRotation": [
+									0.531779,
+									0.498356,
+									0.510691,
+									-0.456121
+								],
+								"localScale": [
+									0.98528,
+									0.98528,
+									0.98528
+								],
+								"blendShapeWeights": {
+									"curl": 34.8
+								}
+							},
+							{
+								"name": "[Natural]HandR.Thumb",
+								"localPosition": [
+									0.53736,
+									1.03766,
+									0.04025
+								],
+								"localRotation": [
+									-0.097131,
+									0.386157,
+									0.715062,
+									-0.574573
+								],
+								"localScale": [
+									0.81679,
+									1.08817,
+									0.81679
+								],
+								"blendShapeWeights": {
+									"curl": 28.2
+								}
+							},
+							{
+								"name": "[Oval]HandL.Thumb",
+								"localPosition": [
+									-0.53736,
+									1.03766,
+									0.04025
+								],
+								"localRotation": [
+									0.097131,
+									0.386157,
+									0.715062,
+									0.574573
+								],
+								"localScale": [
+									0.81679,
+									0.81679,
+									0.81679
+								],
+								"blendShapeWeights": {
+									"curl": 28.2
+								}
+							},
+							{
+								"name": "[Oval]HandR.Thumb",
+								"localPosition": [
+									0.53736,
+									1.03766,
+									0.04025
+								],
+								"localRotation": [
+									-0.097131,
+									0.386157,
+									0.715062,
+									-0.574573
+								],
+								"localScale": [
+									0.81679,
+									0.81679,
+									0.81679
+								],
+								"blendShapeWeights": {
+									"curl": 28.2
+								}
+							}
+						],
+						"footNailNodes": [
+							{
+								"name": "FootL.Index",
+								"localPosition": [
+									-0.05679,
+									0.01233,
+									0.08806
+								],
+								"localRotation": [
+									-0.06428,
+									0.548312,
+									0.833772,
+									-0.00678
+								],
+								"localScale": [
+									0.7863,
+									0.7863,
+									0.7863
+								],
+								"blendShapeWeights": {
+									"flat": 22.9
+								}
+							},
+							{
+								"name": "FootL.Little",
+								"localPosition": [
+									-0.08437,
+									0.00899,
+									0.07185
+								],
+								"localRotation": [
+									0.02866,
+									0.570737,
+									0.810026,
+									-0.131509
+								],
+								"localScale": [
+									0.80375,
+									0.80375,
+									0.80375
+								],
+								"blendShapeWeights": {
+									"flat": 41.9
+								}
+							},
+							{
+								"name": "FootL.Middle",
+								"localPosition": [
+									-0.06625,
+									0.01134,
+									0.08312
+								],
+								"localRotation": [
+									-0.03734,
+									0.529848,
+									0.846507,
+									-0.03595
+								],
+								"localScale": [
+									0.77986,
+									0.77986,
+									0.77986
+								],
+								"blendShapeWeights": {
+									"flat": 52.9
+								}
+							},
+							{
+								"name": "FootL.Ring",
+								"localPosition": [
+									-0.07536,
+									0.01099,
+									0.07927
+								],
+								"localRotation": [
+									-0.05605,
+									0.53066,
+									0.844279,
+									-0.04951
+								],
+								"localScale": [
+									0.76464,
+									0.77295,
+									0.77295
+								],
+								"blendShapeWeights": {
+									"flat": 39.7
+								}
+							},
+							{
+								"name": "FootL.Thumb",
+								"localPosition": [
+									-0.04491,
+									0.01382,
+									0.0869
+								],
+								"localRotation": [
+									-0.09824,
+									0.633081,
+									0.761601,
+									0.09758
+								],
+								"localScale": [
+									0.81911,
+									0.81911,
+									0.81911
+								],
+								"blendShapeWeights": {
+									"flat": 56.5
+								}
+							},
+							{
+								"name": "FootR.Index",
+								"localPosition": [
+									0.05679,
+									0.01233,
+									0.08806
+								],
+								"localRotation": [
+									0.06428,
+									0.548312,
+									0.833772,
+									0.00678
+								],
+								"localScale": [
+									0.7863,
+									0.7863,
+									0.7863
+								],
+								"blendShapeWeights": {
+									"flat": 22.9
+								}
+							},
+							{
+								"name": "FootR.Little",
+								"localPosition": [
+									0.08437,
+									0.00899,
+									0.07185
+								],
+								"localRotation": [
+									-0.02866,
+									0.570737,
+									0.810026,
+									0.131509
+								],
+								"localScale": [
+									0.80375,
+									0.80375,
+									0.80375
+								],
+								"blendShapeWeights": {
+									"flat": 41.9
+								}
+							},
+							{
+								"name": "FootR.Middle",
+								"localPosition": [
+									0.06625,
+									0.01134,
+									0.08312
+								],
+								"localRotation": [
+									0.03734,
+									0.529848,
+									0.846507,
+									0.03595
+								],
+								"localScale": [
+									0.77986,
+									0.77986,
+									0.77986
+								],
+								"blendShapeWeights": {
+									"flat": 52.9
+								}
+							},
+							{
+								"name": "FootR.Ring",
+								"localPosition": [
+									0.07536,
+									0.01099,
+									0.07927
+								],
+								"localRotation": [
+									0.05605,
+									0.53066,
+									0.844279,
+									0.04951
+								],
+								"localScale": [
+									0.76464,
+									0.77295,
+									0.77295
+								],
+								"blendShapeWeights": {
+									"flat": 39.7
+								}
+							},
+							{
+								"name": "FootR.Thumb",
+								"localPosition": [
+									0.04491,
+									0.01382,
+									0.0869
+								],
+								"localRotation": [
+									0.09824,
+									0.633081,
+									0.761601,
+									-0.09758
+								],
+								"localScale": [
+									0.81911,
+									0.81911,
+									0.81911
+								],
+								"blendShapeWeights": {
+									"flat": 56.5
+								}
 							}
 						]
 					}
@@ -182647,7 +183135,7 @@
 											-0.00442,
 											0.581771,
 											0.813341,
-											8E-05
+											8e-05
 										],
 										"localScale": [
 											0.90027,
@@ -182759,7 +183247,7 @@
 											0.00442,
 											0.581771,
 											0.813341,
-											-8E-05
+											-8e-05
 										],
 										"localScale": [
 											0.90027,
@@ -183317,7 +183805,7 @@
 									-0.00442,
 									0.57483,
 									0.818261,
-									4E-05
+									4e-05
 								],
 								"localScale": [
 									0.90027,
@@ -183429,7 +183917,7 @@
 									0.00442,
 									0.57483,
 									0.818261,
-									-4E-05
+									-4e-05
 								],
 								"localScale": [
 									0.90027,
@@ -188908,7 +189396,7 @@
 											0.17664
 										],
 										"localRotation": [
-											-4E-05,
+											-4e-05,
 											0.61476,
 											0.77516,
 											-0.14559
@@ -189018,7 +189506,7 @@
 											0.17664
 										],
 										"localRotation": [
-											4E-05,
+											4e-05,
 											0.61476,
 											0.77516,
 											0.14559
@@ -196864,7 +197352,7 @@
 								"localPosition": [
 									-0.61504,
 									1.23669,
-									-6E-05
+									-6e-05
 								],
 								"localRotation": [
 									-0.489858,
@@ -196974,7 +197462,7 @@
 								"localPosition": [
 									0.61504,
 									1.23669,
-									-6E-05
+									-6e-05
 								],
 								"localRotation": [
 									-0.489861,
@@ -197340,7 +197828,7 @@
 								"localPosition": [
 									-0.61532,
 									1.22959,
-									-7E-05
+									-7e-05
 								],
 								"localRotation": [
 									-0.489858,
@@ -197450,7 +197938,7 @@
 								"localPosition": [
 									0.61532,
 									1.22959,
-									-7E-05
+									-7e-05
 								],
 								"localRotation": [
 									-0.489861,
@@ -215278,10 +215766,10 @@
 											0.14739
 										],
 										"localRotation": [
-											2.3E-05,
+											2.3e-05,
 											0.598145,
 											0.801388,
-											1.8E-05
+											1.8e-05
 										],
 										"localScale": [
 											1.73449,
@@ -215432,10 +215920,10 @@
 											0.13645
 										],
 										"localRotation": [
-											-2.3E-05,
+											-2.3e-05,
 											0.598145,
 											0.801388,
-											-1.9E-05
+											-1.9e-05
 										],
 										"localScale": [
 											1.73449,
