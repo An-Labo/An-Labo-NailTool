@@ -38,6 +38,13 @@ jobs:
         run: |
           echo "zipFile=${{ env.packageName }}-${{ steps.version.outputs.prop }}".zip >> $GITHUB_ENV
 
+      - name: Remove orphaned development folder metadata from release checkout
+        shell: bash
+        run: |
+          if [ ! -d "Packages/${{env.packageName}}/Editor/Develop" ]; then
+            rm -f -- "Packages/${{env.packageName}}/Editor/Develop.meta"
+          fi
+
       - name: Create Zip
         uses: thedoctor0/zip-release@a24011d8d445e4da5935a7e73c1f98e22a439464
         with:
