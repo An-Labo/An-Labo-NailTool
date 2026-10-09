@@ -318,37 +318,42 @@ namespace world.anlabo.mdnailtool.Editor {
 					}
 
 					// 結合後の爪へ、最寄りの体表面三角形から補間したウェイトを転送する。
-					// 手足それぞれで対象ボーンを最も多く共有するSMRを転送元として選ぶ。
+					// リグ共有だけでなく、実際に対象指へウェイトを持つSMRを選ぶ。
 					SkinnedMeshRenderer? ResolveWeightSource(IEnumerable<Transform?> nailObjects, bool isHand)
 					{
-						var targetBones = nailObjects
-							.Where(t => t != null && t.parent != null)
-							.Select(t => t!.parent)
-							.ToHashSet();
-						return this.Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
-							.Where(smr => smr.sharedMesh != null
-								&& smr.bones.Length > 0
-								&& smr.sharedMesh.boneWeights.Length == smr.sharedMesh.vertexCount)
-							.Select(smr => new { Smr = smr, MatchingBones = smr.bones.Count(targetBones.Contains) })
-							.Where(x => x.MatchingBones > 0)
-							.OrderByDescending(x => x.MatchingBones)
-							.ThenByDescending(x => isHand
-								? x.Smr.name.IndexOf("hand", StringComparison.OrdinalIgnoreCase) >= 0
-								: x.Smr.name.IndexOf("foot", StringComparison.OrdinalIgnoreCase) >= 0)
-							.ThenByDescending(x => x.Smr.sharedMesh!.vertexCount)
-							.Select(x => x.Smr)
-							.FirstOrDefault();
+						var source = NailSetupUtil.ResolveFingerWeightSource(this.Avatar.gameObject, nailObjects,
+                            this.AvatarVariationData.AvatarFbxs.Where(f => !string.IsNullOrEmpty(f.BodyName)).Select(f => f.BodyName!),
+                            isHand, nailPrefabObject);
+						if (source == null) {
+							string warning = $"No single body mesh covers the weights of every selected {(isHand ? "hand" : "foot")} finger. Keeping rigid nail weights.";
+							this.Warnings.Add(warning);
+							ToolConsole.Log($"[Warning] {warning}");
+						}
+						return source;
 					}
 					int weightTransferMode = this.AvatarVariationData.WeightTransferMode;
-					SkinnedMeshRenderer? handWeightSource = weightTransferMode == 1 || weightTransferMode == 2
-						? ResolveWeightSource(handsNailObjects, true)
+					int ResolveFingerMode(string key, bool thumb) {
+						if (this.AvatarVariationData.WeightTransferByFinger?.TryGetValue(key, out string value) == true) {
+							switch (value?.ToLowerInvariant()) {
+								case "on": return 1;
+								case "off": return -1;
+								case "auto": return 0;
+								default: ToolConsole.Log($"[Warning] Unknown weight mode for {key}: {value}. Keeping the base setting."); break;
+							}
+						}
+						return weightTransferMode == 3 ? 0 : weightTransferMode == 1 || (weightTransferMode == 2 && thumb) ? 1 : -1;
+					}
+					string[] fingerNames = { "Thumb", "Index", "Middle", "Ring", "Little" };
+					int[] handModes = handsNailObjects.Select((_, i) => ResolveFingerMode($"Hand{(i < 5 ? "L" : "R")}.{fingerNames[i % 5]}", i % 5 == 0)).ToArray();
+					var footNails = leftFootNailObjects.Concat(rightFootNailObjects).ToArray();
+					int[] footModes = footNails.Select((_, i) => ResolveFingerMode($"Foot{(i < 5 ? "L" : "R")}.{fingerNames[i % 5]}", false)).ToArray();
+					SkinnedMeshRenderer? handWeightSource = handModes.Any(m => m >= 0)
+						? ResolveWeightSource(handsNailObjects.Where((_, i) => handModes[i] >= 0), true)
 						: null;
-					SkinnedMeshRenderer? footWeightSource = weightTransferMode == 1
-						? ResolveWeightSource(leftFootNailObjects.Concat(rightFootNailObjects), false)
+					SkinnedMeshRenderer? footWeightSource = footModes.Any(m => m >= 0)
+						? ResolveWeightSource(footNails.Where((_, i) => footModes[i] >= 0), false)
 						: null;
-					bool[]? handWeightTransferMask = weightTransferMode == 2
-						? handsNailObjects.Select((_, i) => i % 5 == 0).ToArray()
-						: null;
+					bool[] handWeightTransferMask = handModes.Select(m => m >= 0).ToArray();
 					ToolConsole.Log($"  Body weight transfer: mode={weightTransferMode} handSource={(handWeightSource == null ? "(none)" : handWeightSource.name)} footSource={(footWeightSource == null ? "(none)" : footWeightSource.name)}");
 					// メッシュ統合
 					ToolConsole.Log($"  BakeBS: handVariants.Count={handVariants.Count} footVariants.Count={footVariants.Count}");
@@ -405,7 +410,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						handsIsLeft,
 						handWeightSource,
 						handShrinkBS.Count > 0 ? handShrinkBS.ToArray() : null,
-						handWeightTransferMask);
+						handWeightTransferMask, handModes);
 					if (handCombinedGo == null && Enumerable.Range(0, 10).Any(i => !this.ShouldRemoveNailSlot(i)))
 						throw new NailSetupUserException("Selected hand nails could not be baked.");
 					ToolConsole.Log($"  BakeBS hand result: {(handCombinedGo == null ? "(null)" : handCombinedGo.name)} BS frames={(handCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");
@@ -420,7 +425,8 @@ namespace world.anlabo.mdnailtool.Editor {
 							footVariants.Count > 0 ? footVariants.ToArray() : null,
 							feetIsLeft,
 							footWeightSource,
-							footShrinkBS.Count > 0 ? footShrinkBS.ToArray() : null);
+							footShrinkBS.Count > 0 ? footShrinkBS.ToArray() : null,
+							footModes.Select(m => m >= 0).ToArray(), footModes);
 						if (footCombinedGo == null && Enumerable.Range(10, 10).Any(i => !this.ShouldRemoveNailSlot(i)))
 							throw new NailSetupUserException("Selected foot nails could not be baked.");
 						ToolConsole.Log($"  BakeBS foot result: {(footCombinedGo == null ? "(null)" : footCombinedGo.name)} BS frames={(footCombinedGo?.GetComponent<SkinnedMeshRenderer>()?.sharedMesh?.blendShapeCount ?? -1)}");

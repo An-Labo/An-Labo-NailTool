@@ -11,6 +11,18 @@ namespace world.anlabo.mdnailtool.Editor
 {
 	public static partial class NailSetupUtil
 	{
+		public sealed class FingerWeightAssessment
+		{
+			public string FingerKey = "";
+			public string Status = "unknown";
+			public string Reason = "";
+			public string Body = "";
+			public string BoneWeights = "";
+			public int NearbyVertices;
+			public int MixedVertices;
+			public int ObservedMixedVertices;
+			public bool Applied;
+		}
 		public static GameObject? BakeAndCombineNailMeshes(
 			Transform?[] nailObjects,
 			GameObject nailPrefabObject,
@@ -20,7 +32,10 @@ namespace world.anlabo.mdnailtool.Editor
 			bool[]? isLeftSide = null,
 			SkinnedMeshRenderer? bodySmr = null,
 			(string BSName, bool[] NailMask)[]? shrinkBSDefinitions = null,
-			bool[]? transferBodyWeightsByNail = null)
+			bool[]? transferBodyWeightsByNail = null,
+			int[]? weightTransferModesByNail = null,
+			ICollection<FingerWeightAssessment>? assessments = null,
+			bool inMemoryOnly = false)
 		{
 			var indexedNails = nailObjects
 				.Select((t, i) => (t, originalIndex: i))
@@ -39,9 +54,11 @@ namespace world.anlabo.mdnailtool.Editor
 				? indexedNails.Select(x => x.originalIndex < transferBodyWeightsByNail.Length && transferBodyWeightsByNail[x.originalIndex]).ToArray()
 				: null;
 			if (validPairs.Length == 0) return null;
+			int[]? validPairModes = weightTransferModesByNail == null ? null
+				: indexedNails.Select(x => x.originalIndex < weightTransferModesByNail.Length ? weightTransferModesByNail[x.originalIndex] : -1).ToArray();
 
 			GameObject combinedGo = new GameObject(zoneName);
-			if (!NailSetupTransaction.TrackCreated(combinedGo))
+			if (!inMemoryOnly && !NailSetupTransaction.TrackCreated(combinedGo))
 				Undo.RegisterCreatedObjectUndo(combinedGo, "Nail Setup");
 			combinedGo.transform.SetParent(nailPrefabObject.transform, false);
 			combinedGo.transform.localPosition = Vector3.zero;
@@ -60,6 +77,8 @@ namespace world.anlabo.mdnailtool.Editor
 				&& bodySmr.bones.Length > 0
 				&& rigidBoneTransforms.All(b => Array.IndexOf(bodySmr.bones, b) >= 0);
 			Transform[] boneTransforms = rigidBoneTransforms;
+			if (bodySmr != null && !transferBodyWeights)
+				ToolConsole.Log($"[Warning] {zoneName}: source mesh cannot cover every attached finger bone. Keeping all {zoneName} weights rigid.");
 
 			var combinedMesh = new Mesh();
 			combinedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
@@ -377,7 +396,7 @@ namespace world.anlabo.mdnailtool.Editor
 				}
 			}
 
-			if (!Directory.Exists(saveBasePath))
+			if (!inMemoryOnly && !Directory.Exists(saveBasePath))
 				Directory.CreateDirectory(saveBasePath);
 
 			// 通常形状だけでなく Point 等の全 BlendShape 形状を含む Bounds を作る。
@@ -387,6 +406,7 @@ namespace world.anlabo.mdnailtool.Editor
 			IEnumerable<string>? boundsExcludedBlendShapes = shrinkBSDefinitions?.Select(x => x.BSName);
 			combinedMesh.bounds = CalculateBlendShapeBounds(combinedMesh, 0.01f, boundsExcludedBlendShapes);
 
+			if (!inMemoryOnly) {
 			string assetPath = $"{saveBasePath}/{zoneName}.asset";
 			Mesh? existingMesh = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
 			// 既存assetのインスタンスIDを保持し、再着用時に他オブジェクトからの参照を維持する。
@@ -404,6 +424,7 @@ namespace world.anlabo.mdnailtool.Editor
 			// Reapply after asset identity-preserving copy paths so existing mesh assets keep tangents.
 			combinedMesh.tangents = allTangents.ToArray();
 			AssetDatabase.SaveAssets();
+			}
 
 			SkinnedMeshRenderer combinedSmr = combinedGo.AddComponent<SkinnedMeshRenderer>();
 			combinedSmr.bones           = boneTransforms;
@@ -442,12 +463,16 @@ namespace world.anlabo.mdnailtool.Editor
 							transferVertexMask[vertexOffsets[si] + vi] = shouldTransfer;
 					}
 				}
-				ApplySurfaceWeightTransfer(combinedSmr, bodySmr!, transferVertexMask);
+				int[] vertexSlots = new int[combinedMesh.vertexCount];
+				for (int si = 0; si < validPairs.Length; si++)
+					for (int vi = 0; vi < cachedMeshes[si].vertexCount; vi++) vertexSlots[vertexOffsets[si] + vi] = si;
+				ApplySurfaceWeightTransfer(combinedSmr, bodySmr!, transferVertexMask, validPairModes, vertexSlots, validPairs.Select(x => x.transform.name).ToArray(), assessments);
 				combinedSmr.sharedMesh = null;
 				combinedSmr.sharedMesh = combinedMesh;
-				EditorUtility.SetDirty(combinedMesh);
-				AssetDatabase.SaveAssets();
+				if (!inMemoryOnly) { EditorUtility.SetDirty(combinedMesh); AssetDatabase.SaveAssets(); }
 			}
+			else if (assessments != null)
+				foreach (var pair in validPairs) assessments.Add(new FingerWeightAssessment { FingerKey = FingerKeyFromName(pair.transform.name), Reason = "指全体のウェイトを持つ体メッシュを特定できません" });
 
 			for (int bsIdx = 0; bsIdx < combinedMesh.blendShapeCount; bsIdx++)
 			{
@@ -562,14 +587,17 @@ namespace world.anlabo.mdnailtool.Editor
 				}
 			}
 		}
-		private static void ApplySurfaceWeightTransfer(SkinnedMeshRenderer nails, SkinnedMeshRenderer body, bool[]? transferVertexMask = null)
+		private static void ApplySurfaceWeightTransfer(SkinnedMeshRenderer nails, SkinnedMeshRenderer body, bool[]? transferVertexMask = null,
+			int[]? modesByNail = null, int[]? vertexSlots = null, string[]? fingerNames = null,
+			ICollection<FingerWeightAssessment>? assessments = null)
 		{
 			Mesh nailMesh = nails.sharedMesh;
 			Mesh bodyMesh = body.sharedMesh;
 			BoneWeight[] bodyWeights = bodyMesh.boneWeights;
 			int[] bodyTriangles = bodyMesh.triangles;
 			if (bodyWeights.Length != bodyMesh.vertexCount || bodyTriangles.Length < 3) return;
-			if (bodyMesh.bindposes.Length != body.bones.Length) return;
+			Transform[] bodyBones = body.bones;
+			if (bodyMesh.bindposes.Length != bodyBones.Length) return;
 
 			BoneWeight[] rigidWeights = nailMesh.boneWeights;
 			Transform[] rigidBones = nails.bones;
@@ -582,6 +610,15 @@ namespace world.anlabo.mdnailtool.Editor
 			Matrix4x4 worldToNails = nails.transform.worldToLocalMatrix;
 			Matrix4x4 bodyToWorld = body.transform.localToWorldMatrix;
 			Matrix4x4 worldToBody = body.transform.worldToLocalMatrix;
+			int groupCount = modesByNail?.Length ?? 0;
+			var groupVertices = new int[groupCount];
+			var nearbyVertices = new int[groupCount];
+			var mixedVertices = new int[groupCount];
+			var observedMixedVertices = new int[groupCount];
+			var unsafeGroups = new bool[groupCount];
+			var groupReasons = new string[groupCount];
+			var evidence = Enumerable.Range(0, groupCount).Select(_ => new Dictionary<string, float[]>()).ToArray();
+			var rigidBodyIndices = new int[currentVertices.Length];
 
 			for (int vi = 0; vi < currentVertices.Length; vi++)
 			{
@@ -589,8 +626,12 @@ namespace world.anlabo.mdnailtool.Editor
 				int rigidIndex = rigid.boneIndex0;
 				if (rigidIndex < 0 || rigidIndex >= rigidBones.Length) return;
 				Transform rigidBone = rigidBones[rigidIndex];
-				int bodyBoneIndex = Array.IndexOf(body.bones, rigidBone);
+				int bodyBoneIndex = Array.IndexOf(bodyBones, rigidBone);
 				if (bodyBoneIndex < 0) return;
+				rigidBodyIndices[vi] = bodyBoneIndex;
+				int slot = vertexSlots == null ? rigidIndex : vertexSlots[vi];
+				bool automatic = modesByNail != null && slot < groupCount && modesByNail[slot] == 0;
+				if (modesByNail != null) groupVertices[slot]++;
 
 				// 現在のDistal骨上へ配置された点を、同じ骨のBody bind姿勢へ戻す。
 				Matrix4x4 toBind = worldToNails * bodyToWorld
@@ -604,6 +645,7 @@ namespace world.anlabo.mdnailtool.Editor
 				float nearestDistance = float.MaxValue;
 				int ia = 0, ib = 0, ic = 0;
 				Vector3 bary = new Vector3(1f, 0f, 0f);
+				Vector3 nearestPointBody = bindPointBody;
 				for (int ti = 0; ti < bodyTriangles.Length; ti += 3)
 				{
 					int a = bodyTriangles[ti], b = bodyTriangles[ti + 1], c = bodyTriangles[ti + 2];
@@ -613,17 +655,41 @@ namespace world.anlabo.mdnailtool.Editor
 					nearestDistance = distance;
 					ia = a; ib = b; ic = c;
 					bary = candidateBary;
+					nearestPointBody = closest;
 				}
 
 				BoneWeight weight = default;
-				if (transferVertexMask == null || (vi < transferVertexMask.Length && transferVertexMask[vi]))
+				if (modesByNail != null || transferVertexMask == null || (vi < transferVertexMask.Length && transferVertexMask[vi]))
 				{
 					var accumulated = new Dictionary<int, float>();
 					AccumulateBoneWeight(accumulated, bodyWeights[ia], bary.x);
 					AccumulateBoneWeight(accumulated, bodyWeights[ib], bary.y);
 					AccumulateBoneWeight(accumulated, bodyWeights[ic], bary.z);
+					if (modesByNail != null)
+					{
+						var chain = new HashSet<Transform>();
+						Transform? chainBone = rigidBone;
+						for (int level = 0; level < 3 && chainBone != null; level++, chainBone = chainBone.parent) chain.Add(chainBone);
+						bool sharedBone = rigidBones.Count(b => b == rigidBone) > 1;
+						bool foreignBone = accumulated.Any(x => x.Value >= 0.01f && (x.Key < 0 || x.Key >= bodyBones.Length || !chain.Contains(bodyBones[x.Key])));
+						bool tooFar = bodyToWorld.MultiplyVector(bindPointBody - nearestPointBody).magnitude > 0.01f;
+						if (sharedBone) { unsafeGroups[slot] = true; groupReasons[slot] = "複数の指が同じボーンを使い、指を区別できません"; }
+						if (!tooFar) {
+							nearbyVertices[slot]++;
+							if (foreignBone) { unsafeGroups[slot] = true; if (!sharedBone) groupReasons[slot] = "爪付近に別の指・ボーンのウェイトが混ざっています"; }
+							if (accumulated.Count(x => x.Value >= 0.01f) >= 2) mixedVertices[slot]++;
+							if (accumulated.Count(x => x.Value > 0.00001f) >= 2) observedMixedVertices[slot]++;
+							foreach (var entry in accumulated.Where(x => x.Value > 0.00001f && x.Key >= 0 && x.Key < bodyBones.Length)) {
+								string name = bodyBones[entry.Key] != null ? bodyBones[entry.Key].name : "(missing)";
+								if (!evidence[slot].TryGetValue(name, out var range)) evidence[slot][name] = new[] { entry.Value, entry.Value };
+								else { range[0] = Math.Min(range[0], entry.Value); range[1] = Math.Max(range[1], entry.Value); }
+							}
+						}
+						if (automatic) accumulated = accumulated.Where(x => x.Key >= 0 && x.Key < bodyBones.Length && chain.Contains(bodyBones[x.Key])).ToDictionary(x => x.Key, x => x.Value);
+					}
 					var strongest = accumulated.Where(x => x.Value > 0f).OrderByDescending(x => x.Value).Take(4).ToArray();
 					float total = strongest.Sum(x => x.Value);
+					if (total <= 1e-8f) { weight.boneIndex0 = bodyBoneIndex; weight.weight0 = 1f; }
 					for (int i = 0; total > 1e-8f && i < strongest.Length; i++)
 					{
 						float normalized = strongest[i].Value / total;
@@ -642,15 +708,41 @@ namespace world.anlabo.mdnailtool.Editor
 				output[vi] = weight;
 			}
 
+			if (modesByNail != null)
+			{
+				var enabled = new bool[groupCount];
+				for (int slot = 0; slot < groupCount; slot++)
+				{
+					int required = Math.Max(2, (int)Math.Ceiling(nearbyVertices[slot] * 0.1));
+					bool known = !unsafeGroups[slot] && nearbyVertices[slot] >= 2;
+					bool needed = known && mixedVertices[slot] >= required;
+					enabled[slot] = modesByNail[slot] > 0 || modesByNail[slot] == 0 && needed;
+					string label = fingerNames != null && slot < fingerNames.Length ? fingerNames[slot] : slot.ToString();
+					assessments?.Add(new FingerWeightAssessment { FingerKey = FingerKeyFromName(label), Status = known ? needed ? "required" : "unnecessary" : "unknown", Reason = known ? needed ? "爪付近で複数ウェイトを検出したため生成が必要です" : observedMixedVertices[slot] == 0 ? "爪付近は単一ウェイトのため生成は不要です" : "複数ウェイトは微小・少数のため通常追従を使います" : groupReasons[slot] ?? "体表に近い爪の頂点を十分に確認できません", Body = body.name, BoneWeights = string.Join(" / ", evidence[slot].Select(e => Math.Abs(e.Value[1] - e.Value[0]) < 0.00001f ? $"{e.Key} {e.Value[0] * 100:F1}%" : $"{e.Key} {e.Value[0] * 100:F1}–{e.Value[1] * 100:F1}%")), NearbyVertices = nearbyVertices[slot], MixedVertices = mixedVertices[slot], ObservedMixedVertices = observedMixedVertices[slot], Applied = enabled[slot] });
+					ToolConsole.Log($"  Finger weight: {label} mode={modesByNail[slot]} transfer={enabled[slot]} mixed={mixedVertices[slot]}/{groupVertices[slot]} unsafe={unsafeGroups[slot]} (auto: 1% influence, 10% vertices, minimum 2, max distance 1cm)");
+					if (modesByNail[slot] == 0 && unsafeGroups[slot]) ToolConsole.Log($"[Warning] {label}: automatic weights are ambiguous or outside this finger. Keeping rigid weights; check the bone mapping and nail position.");
+				}
+				for (int vi = 0; vi < output.Length; vi++)
+				{
+					int slot = vertexSlots == null ? rigidWeights[vi].boneIndex0 : vertexSlots[vi];
+					if (slot >= groupCount || !enabled[slot]) output[vi] = new BoneWeight { boneIndex0 = rigidBodyIndices[vi], weight0 = 1f };
+				}
+			}
+
 			TransformMeshToBindPose(nailMesh, bindVertices, currentToBind);
 			Matrix4x4 bodyToNails = worldToBody * nails.transform.localToWorldMatrix;
 			Matrix4x4[] nailBindposes = bodyMesh.bindposes.Select(bindpose => bindpose * bodyToNails).ToArray();
 			nailMesh.boneWeights = output;
 			nailMesh.bindposes = nailBindposes;
-			nails.bones = body.bones;
+			nails.bones = bodyBones;
 			nails.rootBone = body.rootBone;
 			nails.sharedMesh = null;
 			nails.sharedMesh = nailMesh;		}
+
+		private static string FingerKeyFromName(string name) {
+			var match = System.Text.RegularExpressions.Regex.Match(name, @"(?:Hand|Foot)[LR]\.(?:Thumb|Index|Middle|Ring|Little)");
+			return match.Success ? match.Value : name;
+		}
 
 		private static void TransformMeshToBindPose(Mesh mesh, Vector3[] bindVertices, Matrix4x4[] currentToBind)
 		{
