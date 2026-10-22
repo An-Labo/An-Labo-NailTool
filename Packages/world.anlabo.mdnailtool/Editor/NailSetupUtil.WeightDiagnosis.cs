@@ -12,6 +12,9 @@ namespace world.anlabo.mdnailtool.Editor {
     public static partial class NailSetupUtil {
         public static string[] FingerWeightKeys => MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST.Concat(MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST).Concat(MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST).ToArray();
 
+        public static HashSet<string> ParseWeightTransferFingers(string? value) =>
+            new HashSet<string>((value ?? "").Split(',').Select(s => s.Trim()).Where(s => s.Length > 0), StringComparer.Ordinal);
+
         public static SkinnedMeshRenderer? ResolveFingerWeightSource(GameObject avatar, IEnumerable<Transform?> nailObjects, IEnumerable<string> bodyNames, bool isHand, GameObject? excludedRoot = null) {
             var nails = nailObjects.Where(t => t != null && t.parent != null).Select(t => t!).ToArray();
             var chains = nails.Select(t => new[] { t.parent, t.parent.parent, t.parent.parent?.parent }.Where(b => b != null).ToArray()).ToArray();

@@ -59,6 +59,15 @@ namespace world.anlabo.mdnailtool.Editor {
 			: base(subsystem, message, cause, file, method, line) { }
 	}
 
+	// 足ネイルの素材フォルダが無い時だけを見分ける。プレビューはこれだけを許して描画を続ける。
+	public class FootNailMeshNotFoundException : NailToolDeveloperException {
+		public FootNailMeshNotFoundException(string subsystem, string message, Exception? cause = null,
+			[CallerFilePath] string file = "",
+			[CallerMemberName] string method = "",
+			[CallerLineNumber] int line = 0)
+			: base(subsystem, message, cause, file, method, line) { }
+	}
+
 	public class NailToolResourceException : NailToolException {
 		public NailToolResourceException(string subsystem, string message, Exception? cause = null,
 			[CallerFilePath] string file = "",

@@ -55,6 +55,12 @@ namespace world.anlabo.mdnailtool.Editor {
 		public bool ArmatureScaleCompensation { get; set; }
 		public bool BakeBlendShapes { get; set; }
 		public string? SelectedBlendShapeVariantName { get; set; }
+		// まとめて登録時、同じパラメータ名を共有して番号違いのトグルにすることで VRChat 上で排他切替にする。null は従来の独立トグル。
+		public string? ExclusiveMenuParameter { get; set; }
+		public int ExclusiveMenuValue { get; set; }
+		public bool ExclusiveMenuIsDefault { get; set; }
+		// 同じデザイン・色で素材だけ違うネイルを並べる時、オブジェクト名とメニュー名の衝突を避けるための表示名。
+		public string? NailLabelOverride { get; set; }
 		private NailPrefabNodeData[]? SelectedBlendShapeVariantNailNodes { get; set; }
 		public Entity.Avatar? AvatarEntity { get; set; }
 		public bool EnableAdditionalMaterials { get; set; } = true;
@@ -170,10 +176,12 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			// 足のメッシュの適用
-			try {
-				NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, this.NailShapeName);
-			} catch (Exception) {
-				throw;
+			if (this.UseFootNail) {
+				try {
+					NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, this.NailShapeName);
+				} catch (Exception) {
+					throw;
+				}
 			}
 
 			// マテリアルの適用
@@ -395,7 +403,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				? firstEntry.Item1.DesignName
 				: (this.OverrideMaterial?.name ?? "Unknown");
 			string colorName = firstEntry.Item1 != null ? firstEntry.Item3 : "";
-			string nailLabel = string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}";
+			string nailLabel = this.NailLabelOverride ?? (string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}");
 			nailPrefabObject.name = $"[An-Labo]{nailLabel}";
 			return nailPrefabObject;
 		}
@@ -538,6 +546,11 @@ namespace world.anlabo.mdnailtool.Editor {
         {
             Undo.CollapseUndoOperations(group);
             completed = true;
+            // まとめて登録では外側の取引が後続失敗時に先行分も戻すため、生成物の所有を引き継ぐ。
+            if (previous == null) return;
+            previous.created.UnionWith(created);
+            foreach (var entry in createdAssets) previous.createdAssets[entry.Key] = entry.Value;
+            previous.changedAssets.UnionWith(changedAssets);
         }
 
         public void Dispose()

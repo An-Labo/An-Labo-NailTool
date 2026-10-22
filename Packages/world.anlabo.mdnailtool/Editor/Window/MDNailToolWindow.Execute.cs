@@ -361,6 +361,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void OnChangeAvatar(ChangeEvent<Object> evt)
 		{
 			this.RefreshAvatarSelection(evt.newValue as VRCAvatarDescriptor);
+			this.RefreshMultiNailMenuPreview();
 		}
 
 		private void RefreshAvatarSelection(VRCAvatarDescriptor? avatar)
@@ -434,7 +435,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnExecute()
 		{
-			if (this._enableDirectMaterial?.value == true && this._materialObjectField?.value == null)
+			bool isMultiNail = this.IsMultiNailMode;
+			if (!isMultiNail && this._enableDirectMaterial?.value == true && this._materialObjectField?.value == null)
 			{
 				this.ShowErrorBanner(S("error.custom_nail.material_required"));
 				return;
@@ -480,8 +482,25 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				return;
 			}
 
+			// まとめて登録で自動ONにする設定を先に確定させ、後続の設定チェックがそれを前提に判定できるようにする。
+			var multiSelections = isMultiNail ? this.GetMultiNailSelections() : null;
+			if (multiSelections != null)
+			{
+				if (multiSelections.Count == 0)
+				{
+					this.ShowErrorBanner(S("error.multi_nail.no_selection") ?? "Select at least one nail to register.");
+					return;
+				}
+#if MD_NAIL_FOR_MA
+				this.ForceMultiNailMenuSettings();
+#else
+				this.ShowErrorBanner(S("error.multi_nail.requires_ma") ?? "Switch registration needs Modular Avatar installed in the project.");
+				return;
+#endif
+			}
+
 			// Body表面ウェイト転送は、MAの結合SMRを生成する経路でのみ実行できる。
-			if ((avatarVariationData.WeightTransferMode == 1 || avatarVariationData.WeightTransferMode == 2)
+			if (NailSetupUtil.ParseWeightTransferFingers(avatarVariationData.WeightTransfer).Count > 0
 				&& (this._forModularAvatar?.value != true || this._bakeBlendShapes?.value != true))
 			{
 				this.ShowErrorBanner(S("error.execute.weight_transfer_requires_ma_combine"), showRequiredSettingsAction: true);
@@ -501,6 +520,31 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				this.ShowErrorBanner(S("error.execute.no_nail_shape"));
 				return;
+			}
+			// 形ごとにマテリアルがあるため、どの形にも対応しないネイルは付けられない。付け始める前に止める。
+			if (multiSelections != null)
+			{
+				string? noShape;
+				try
+				{
+					List<string> shapeNames;
+					using (DBNailShape dbNailShape = new()) shapeNames = dbNailShape.collection.Select(s => s.ShapeName).ToList();
+					noShape = multiSelections.Select(s => s.designName).Distinct()
+						.FirstOrDefault(d => !shapeNames.Any(INailProcessor.CreateNailDesign(d).IsSupportedNailShape));
+				}
+				catch (Exception e)
+				{
+					// デザインの読み込み失敗も、着用中の失敗と同じ案内で知らせる。
+					ToolConsole.Error("Window", $"{e}");
+					this.ShowErrorBanner(S("error.execute.unexpected"), e);
+					this.ShowContactLinks(e.ToString());
+					return;
+				}
+				if (noShape != null)
+				{
+					this.ShowErrorBanner(string.Format(S("error.multi_nail.no_shape") ?? "No nail shape is available for {0}.", noShape));
+					return;
+				}
 			}
 
 			// ---- Process ----
@@ -525,12 +569,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				AssetDatabase.StartAssetEditing();
 				assetEditingStarted = true;
 
-				(INailProcessor, string, string)[] designAndVariationNames = this.GetNailProcessors();
-
 				Mesh?[]? selectedMeshes = this._nailShapeDropDown!.GetSelectedShapeMeshes();
 				Mesh?[]? overrideMesh = isHandActive ? selectedMeshes : new Mesh?[10];
 
-				Material? directMaterial = this.GetDirectMaterial();
+				Material? directMaterial = isMultiNail ? null : this.GetDirectMaterial();
 
 				Avatar? freshAvatarEntity = null;
 				DBShop.ClearCache();
@@ -548,62 +590,123 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					}
 				}
 
-				if (avatarVariationData.NailNodes != null && avatarVariationData.NailNodes.Length > 0)
+				// 着用処理は一時プレハブを使い終わると破棄するため、まとめて登録では1回ごとに作り直す。
+				AvatarVariation runVariation = avatarVariationData;
+				GameObject basePrefab = prefab;
+				string runShapeName = nailShapeName;
+				GameObject ResolveRunPrefab()
 				{
-					GameObject nodePrefab = NailPrefabBuilder.BuildTemporaryFromNodes(avatarVariationData.NailNodes, avatarVariationData.VariationName);
-					GameObject resolvedNodePrefab = NailSetupProcessor.ResolveShapePrefab(nodePrefab, nailShapeName, avatarVariationData.NailNodes);
+					if (runVariation.NailNodes == null || runVariation.NailNodes.Length == 0) return basePrefab;
+					GameObject nodePrefab = NailPrefabBuilder.BuildTemporaryFromNodes(runVariation.NailNodes, runVariation.VariationName);
+					GameObject resolvedNodePrefab = NailSetupProcessor.ResolveShapePrefab(nodePrefab, runShapeName, runVariation.NailNodes);
 					if (!ReferenceEquals(resolvedNodePrefab, nodePrefab)) NailPrefabBuilder.DestroyTemporaryPrefab(nodePrefab);
-					prefab = resolvedNodePrefab;
+					return resolvedNodePrefab;
 				}
 
-				NailSetupProcessor processor = new(avatar, avatarVariationData, prefab, designAndVariationNames, nailShapeName)
+				// まとめて登録は途中で失敗したら先行分と既存メニューの初期値変更も含めて全部戻す。
+				using NailSetupTransaction? batchTransaction = multiSelections == null ? null : new NailSetupTransaction(avatar.gameObject);
+
+				var runs = new List<((INailProcessor, string, string)[] names, int value, bool isDefault, string? label, string shape)>();
+				if (multiSelections == null)
 				{
-					AvatarName = this._avatarDropDowns?.GetAvatarName(),
-					OverrideMesh = overrideMesh,
-					UseFootNail = isFootActive,
-					RemoveCurrentNail = this._removeCurrentNail!.value,
-					GenerateMaterial = directMaterial == null,  // 直接指定時は生成OFF
-					Backup = this._backup!.value,
-					ForModularAvatar = this._forModularAvatar!.value,
-					OverrideMaterial = directMaterial,
-					EnabledNailSlots = this._nailDesignDropDowns?.Select((dropdown, index) =>
-						 dropdown.IsFingerEnabled && (index < 10 ? isHandActive : isFootActive)).ToArray(),
-					GenerateExpressionMenu = (this._forModularAvatar?.value == true)
-					                      && (this._generateExpressionMenu?.value == true),
-					SplitHandFoot = (this._forModularAvatar?.value == true)
-					             && (this._generateExpressionMenu?.value == true)
-					             && (this._splitHandFootExpressionMenu?.value == true),
-					MergeAnLabo = (this._forModularAvatar?.value == true)
-					           && (this._generateExpressionMenu?.value == true)
-					           && (this._mergeAnLaboExpressionMenu?.value == true),
-					ArmatureScaleCompensation = (this._armatureScaleCompensation?.value == true),
-					BakeBlendShapes = (this._forModularAvatar?.value == true)
-					               && (this._bakeBlendShapes?.value == true),
-					SelectedBlendShapeVariantName = (!(this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == true) && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
-					EnableAdditionalMaterials = true,
-					PerFingerAdditionalMaterials = this.BuildPerFingerAdditionalMaterials(false),
-					AdditionalObjectsFactory = () => this.BuildPerFingerAdditionalObjects(false),
-				};
+					runs.Add((this.GetNailProcessors(), 0, false, null, nailShapeName));
+				}
+				else
+				{
+					int usedMax = 0;
+#if MD_NAIL_FOR_MA
+					usedMax = NailSetupProcessor.PrepareExclusiveMenuGroup(avatar, MultiNailParameter);
+#endif
+					List<string> allShapes;
+					using (DBNailShape dbNailShape = new()) allShapes = dbNailShape.collection.Select(s => s.ShapeName).ToList();
+					var designCache = new Dictionary<string, INailProcessor>();
+					for (int i = 0; i < multiSelections.Count; i++)
+					{
+						var sel = multiSelections[i];
+						if (!designCache.TryGetValue(sel.designName, out INailProcessor? design))
+						{
+							design = INailProcessor.CreateNailDesign(sel.designName);
+							designCache.Add(sel.designName, design);
+						}
+						// 形ごとにマテリアルがあるため、選んだ形に対応しないデザインは対応する最初の形で付ける。
+						string shape = design.IsSupportedNailShape(nailShapeName)
+							? nailShapeName
+							: allShapes.FirstOrDefault(design.IsSupportedNailShape) ?? nailShapeName;
+						runs.Add((BuildUniformNailSelection(design, sel.materialName, sel.colorName, isHandActive, isFootActive),
+							usedMax + i + 1, sel.isStart, BuildMultiNailLabel(multiSelections, i), shape));
+					}
+				}
 
-				// AvatarEntityをprocessorにセット（shop.jsonのblendShapeVariantsを参照するため）
-				processor.AvatarEntity = freshAvatarEntity;
+				var allWarnings = new List<string>();
+				for (int runIndex = 0; runIndex < runs.Count; runIndex++)
+				{
+					var run = runs[runIndex];
+					(INailProcessor, string, string)[] designAndVariationNames = run.names;
+					runShapeName = run.shape;
+					Mesh?[]? runMesh = run.shape == nailShapeName || !isHandActive ? overrideMesh : NailShapeDropDown.GetShapeMeshes(run.shape);
+					NailSetupProcessor processor = new(avatar, avatarVariationData, ResolveRunPrefab(), designAndVariationNames, run.shape)
+					{
+						AvatarName = this._avatarDropDowns?.GetAvatarName(),
+						OverrideMesh = runMesh,
+						UseFootNail = isFootActive,
+						// 2本目以降で外すと、同じ登録で入れた前のネイルまで消えてしまう。
+						RemoveCurrentNail = runIndex == 0 && this._removeCurrentNail!.value,
+						GenerateMaterial = directMaterial == null,  // 直接指定時は生成OFF
+						Backup = this._backup!.value,
+						ForModularAvatar = this._forModularAvatar!.value,
+						OverrideMaterial = directMaterial,
+						EnabledNailSlots = this._nailDesignDropDowns?.Select((dropdown, index) =>
+							 dropdown.IsFingerEnabled && (index < 10 ? isHandActive : isFootActive)).ToArray(),
+						GenerateExpressionMenu = (this._forModularAvatar?.value == true)
+						                      && (this._generateExpressionMenu?.value == true),
+						SplitHandFoot = (this._forModularAvatar?.value == true)
+						             && (this._generateExpressionMenu?.value == true)
+						             && (this._splitHandFootExpressionMenu?.value == true)
+						             // まとめて登録はネイル1つ = メニュー1項目で切り替える。手足に分けると各ネイルがサブメニューになる。
+						             && multiSelections == null,
+						MergeAnLabo = (this._forModularAvatar?.value == true)
+						           && (this._generateExpressionMenu?.value == true)
+						           // まとめて登録は切替項目がトップメニューに散らばらないよう常に An-Labo の中へまとめる。
+						           && (this._mergeAnLaboExpressionMenu?.value == true || multiSelections != null),
+						ArmatureScaleCompensation = (this._armatureScaleCompensation?.value == true),
+						BakeBlendShapes = (this._forModularAvatar?.value == true)
+						               && (this._bakeBlendShapes?.value == true),
+						SelectedBlendShapeVariantName = (!(this._forModularAvatar?.value == true && this._bakeBlendShapes?.value == true) && this._avatarDropDowns?.BlendShapeVariantPopup != null && this._avatarDropDowns.BlendShapeVariantPopup.index > 0) ? this._avatarDropDowns.BlendShapeVariantPopup.value : null,
+						EnableAdditionalMaterials = true,
+						// まとめて登録はデザインごとの既定の追加パーツを使う。画面の追加パーツ指定は単体選択中のデザイン向け。
+						PerFingerAdditionalMaterials = multiSelections == null ? this.BuildPerFingerAdditionalMaterials(false) : null,
+						AdditionalObjectsFactory = multiSelections == null ? new Func<IEnumerable<Transform>?[]?>(() => this.BuildPerFingerAdditionalObjects(false)) : null,
+						ExclusiveMenuParameter = multiSelections == null ? null : MultiNailParameter,
+						ExclusiveMenuValue = run.value,
+						ExclusiveMenuIsDefault = run.isDefault,
+						NailLabelOverride = run.label,
+					};
 
-				processor.Process();
+					// AvatarEntityをprocessorにセット（shop.jsonのblendShapeVariantsを参照するため）
+					processor.AvatarEntity = freshAvatarEntity;
+
+					processor.Process();
+					allWarnings.AddRange(processor.Warnings);
+				}
 
 				if (!isHandActive) this.RemoveHandNailObjects(avatar);
 				if (!isFootActive) this.RemoveFootNailObjects(avatar);
+				batchTransaction?.Complete();
 
+				// 失敗して戻した分を着用回数に数えないよう、全件成功後に記録する。
 				string avatarKey = this._avatarDropDowns!.GetAvatarKey();
-				MDNailToolUsageStats.Update(designAndVariationNames, avatarKey);
+				foreach (var run in runs) MDNailToolUsageStats.Update(run.names, avatarKey);
+
 				this._nailDesignSelect!.Init();
+				this.RefreshMultiNailMenuPreview();
 
 				this.HideErrorBanner();
-				if (processor.Warnings.Count > 0)
+				if (allWarnings.Count > 0)
 				{
 					string warnSummary = string.Format(
 						S("warning.variant_load_failed") ?? "一部のバリアントの読み込みに失敗しました ({0}件)",
-						processor.Warnings.Count);
-					this.ShowWarningBanner(warnSummary, processor.Warnings);
+						allWarnings.Count);
+					this.ShowWarningBanner(warnSummary, allWarnings);
 				}
 				else
 				{

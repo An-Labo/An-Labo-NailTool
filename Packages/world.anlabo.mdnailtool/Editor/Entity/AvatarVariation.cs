@@ -25,15 +25,9 @@ namespace world.anlabo.mdnailtool.Editor.Entity {
 
 		[JsonProperty("boneMappingOverride")]
 		public IReadOnlyDictionary<string, string>? BoneMappingOverride { get; set; }
-		// 0/未指定: 従来処理、1: 全爪をBody表面ウェイト転送、
-		// 2: 手の親指だけBody表面ウェイト転送（他の指はDistal 1.0を維持）。
-		// 3: 指単位で複数ウェイトの必要性を判定。AvatarEditorでvariationごとに指定する。
-		[JsonProperty("weightTransferMode")]
-		public int WeightTransferMode { get; set; }
-
-		// 指単位の上書き。未指定は既存mode、auto/on/offを装着時に評価する。
-		[JsonProperty("weightTransferByFinger")]
-		public IReadOnlyDictionary<string, string>? WeightTransferByFinger { get; set; }
+		// Body表面ウェイトを転送する指（例: "HandL.Thumb,HandR.Thumb"）。必要性はAvatarEditorの登録時に判定済みのため、装着時は判定しない。
+		[JsonProperty("weightTransfer")]
+		public string? WeightTransfer { get; set; }
 
 		[JsonProperty("blendShapeSyncSources")]
 		public string[]? BlendShapeSyncSources { get; set; }

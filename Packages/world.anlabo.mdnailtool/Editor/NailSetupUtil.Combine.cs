@@ -11,6 +11,8 @@ namespace world.anlabo.mdnailtool.Editor
 {
 	public static partial class NailSetupUtil
 	{
+		public const int WeightTransferRigid = -1, WeightTransferAuto = 0, WeightTransferForced = 1;
+
 		public sealed class FingerWeightAssessment
 		{
 			public string FingerKey = "";
@@ -630,7 +632,7 @@ namespace world.anlabo.mdnailtool.Editor
 				if (bodyBoneIndex < 0) return;
 				rigidBodyIndices[vi] = bodyBoneIndex;
 				int slot = vertexSlots == null ? rigidIndex : vertexSlots[vi];
-				bool automatic = modesByNail != null && slot < groupCount && modesByNail[slot] == 0;
+				bool filterToFinger = modesByNail != null && slot < groupCount && modesByNail[slot] >= WeightTransferAuto;
 				if (modesByNail != null) groupVertices[slot]++;
 
 				// 現在のDistal骨上へ配置された点を、同じ骨のBody bind姿勢へ戻す。
@@ -639,6 +641,12 @@ namespace world.anlabo.mdnailtool.Editor
 					* rigidBone.worldToLocalMatrix * nailsToWorld;
 				currentToBind[vi] = toBind;
 				bindVertices[vi] = toBind.MultiplyPoint3x4(currentVertices[vi]);
+				if (modesByNail != null && slot < groupCount && modesByNail[slot] == WeightTransferRigid)
+				{
+					// 転送しない指は体表の探索を省き、元のDistalへ100%追従させる。
+					output[vi] = new BoneWeight { boneIndex0 = bodyBoneIndex, weight0 = 1f };
+					continue;
+				}
 				Vector3 bindPointBody = worldToBody.MultiplyPoint3x4(
 					nailsToWorld.MultiplyPoint3x4(bindVertices[vi]));
 
@@ -685,7 +693,7 @@ namespace world.anlabo.mdnailtool.Editor
 								else { range[0] = Math.Min(range[0], entry.Value); range[1] = Math.Max(range[1], entry.Value); }
 							}
 						}
-						if (automatic) accumulated = accumulated.Where(x => x.Key >= 0 && x.Key < bodyBones.Length && chain.Contains(bodyBones[x.Key])).ToDictionary(x => x.Key, x => x.Value);
+						if (filterToFinger) accumulated = accumulated.Where(x => x.Key >= 0 && x.Key < bodyBones.Length && chain.Contains(bodyBones[x.Key])).ToDictionary(x => x.Key, x => x.Value);
 					}
 					var strongest = accumulated.Where(x => x.Value > 0f).OrderByDescending(x => x.Value).Take(4).ToArray();
 					float total = strongest.Sum(x => x.Value);
@@ -719,8 +727,9 @@ namespace world.anlabo.mdnailtool.Editor
 					enabled[slot] = modesByNail[slot] > 0 || modesByNail[slot] == 0 && needed;
 					string label = fingerNames != null && slot < fingerNames.Length ? fingerNames[slot] : slot.ToString();
 					assessments?.Add(new FingerWeightAssessment { FingerKey = FingerKeyFromName(label), Status = known ? needed ? "required" : "unnecessary" : "unknown", Reason = known ? needed ? "爪付近で複数ウェイトを検出したため生成が必要です" : observedMixedVertices[slot] == 0 ? "爪付近は単一ウェイトのため生成は不要です" : "複数ウェイトは微小・少数のため通常追従を使います" : groupReasons[slot] ?? "体表に近い爪の頂点を十分に確認できません", Body = body.name, BoneWeights = string.Join(" / ", evidence[slot].Select(e => Math.Abs(e.Value[1] - e.Value[0]) < 0.00001f ? $"{e.Key} {e.Value[0] * 100:F1}%" : $"{e.Key} {e.Value[0] * 100:F1}–{e.Value[1] * 100:F1}%")), NearbyVertices = nearbyVertices[slot], MixedVertices = mixedVertices[slot], ObservedMixedVertices = observedMixedVertices[slot], Applied = enabled[slot] });
+					if (modesByNail[slot] != WeightTransferAuto) { if (enabled[slot]) ToolConsole.Log($"  Finger weight: {label} transfer=registered"); continue; }
 					ToolConsole.Log($"  Finger weight: {label} mode={modesByNail[slot]} transfer={enabled[slot]} mixed={mixedVertices[slot]}/{groupVertices[slot]} unsafe={unsafeGroups[slot]} (auto: 1% influence, 10% vertices, minimum 2, max distance 1cm)");
-					if (modesByNail[slot] == 0 && unsafeGroups[slot]) ToolConsole.Log($"[Warning] {label}: automatic weights are ambiguous or outside this finger. Keeping rigid weights; check the bone mapping and nail position.");
+					if (unsafeGroups[slot]) ToolConsole.Log($"[Warning] {label}: automatic weights are ambiguous or outside this finger. Keeping rigid weights; check the bone mapping and nail position.");
 				}
 				for (int vi = 0; vi < output.Length; vi++)
 				{

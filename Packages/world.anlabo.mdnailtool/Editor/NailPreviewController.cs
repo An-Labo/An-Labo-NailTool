@@ -27,7 +27,12 @@ namespace world.anlabo.mdnailtool.Editor {
 			if (this._nailPreview.NailObj == null) return;
 			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(this._nailPreview.NailObj);
 			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(this._nailPreview.NailObj);
-			NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, nailShapeName);
+			// プレビューは手だけの時も足を描くため、足の素材が無くても画面を止めない。装着時は NailSetupProcessor 側で止まる。
+			try {
+				NailSetupUtil.ReplaceFootNailMesh(leftFootNailObjects, rightFootNailObjects, nailShapeName);
+			} catch (FootNailMeshNotFoundException) {
+				Debug.LogWarning($"[NailTool] Foot nail meshes for shape '{nailShapeName}' were not found. Re-import the nail base assets to use foot nails.");
+			}
 		}
 
 		public void ChangeNailMaterial((INailProcessor, string, string)[] designAndVariationNames, string nailShapeName, Material? overrideMaterial = null,

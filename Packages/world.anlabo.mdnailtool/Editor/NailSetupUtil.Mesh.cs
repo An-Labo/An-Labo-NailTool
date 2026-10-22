@@ -55,9 +55,10 @@ namespace world.anlabo.mdnailtool.Editor
 				if (Directory.Exists(path)) break;
 			}
 
+			// 手だけの装着は呼び出し元で足の置き換えを飛ばす。足を付ける時に素材が無ければ、違う形のまま付けず止める。
 			if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
 			{
-				throw new NailToolDeveloperException("NailSetup", "Not found foot nail objects.");
+				throw new FootNailMeshNotFoundException("NailSetup", "Not found foot nail objects.");
 			}
 
 

@@ -28,6 +28,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 	{
 		private void OnSelectNail(string designName)
 		{
+			if (this.TryAddMultiNail(designName)) return;
+			this.ShowNailDesign(designName, null, null);
+		}
+
+		// 素材・色を指定した時はその組み合わせを表示する。未指定・未導入なら先頭を使う。
+		private void ShowNailDesign(string designName, string? preferredMaterial, string? preferredColor)
+		{
 			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = false;
 			using DBNailDesign dbNailDesign = new();
 			NailDesign? design = dbNailDesign.FindNailDesignByDesignName(designName);
@@ -44,11 +51,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			List<string> materialPopupElements = design.MaterialVariation != null ?
 				design.MaterialVariation.Where(pair => nailProcessor.IsInstalledMaterialVariation(pair.Value.MaterialName)).Select(pair => pair.Value.MaterialName).ToList() : new List<string> { "" };
-			string materialValue = materialPopupElements.FirstOrDefault() ?? "";
+			string materialValue = preferredMaterial != null && materialPopupElements.Contains(preferredMaterial)
+				? preferredMaterial : materialPopupElements.FirstOrDefault() ?? "";
 
 			List<string> colorPopupElements = design.ColorVariation
 				.Where(pair => nailProcessor.IsInstalledColorVariation(materialValue, pair.Value.ColorName)).Select(pair => pair.Value.ColorName).ToList();
-			string colorValue = colorPopupElements.FirstOrDefault() ?? "";
+			string colorValue = preferredColor != null && colorPopupElements.Contains(preferredColor)
+				? preferredColor : colorPopupElements.FirstOrDefault() ?? "";
 
 			foreach (NailDesignDropDowns nailDesignDropDowns in this._nailDesignDropDowns!)
 			{
@@ -123,7 +132,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private void OnChangeNailVariantDropDown(ChangeEvent<string> evt)
 		{
 			if (string.IsNullOrEmpty(evt.newValue)) return;
-			this.OnSelectNail(evt.newValue);
+			this.ShowNailDesign(evt.newValue, null, null);
 		}
 
 		private void OnChangeEnableDirectMaterial(ChangeEvent<bool> evt)
@@ -143,6 +152,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 		private void OnSelectExternalNail()
 		{
+			// 外部マテリアルはまとめて登録の対象外。
+			if (this.IsMultiNailMode) return;
 			if (this._enableDirectMaterial != null) this._enableDirectMaterial.value = true;
 			this.RebuildCustomNailTextures();
 		}
@@ -233,6 +244,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		private Material? GetDirectMaterial()
 		{
 			if (this._enableDirectMaterial != null && !this._enableDirectMaterial.value) return null;
+			// まとめて登録は各デザインのマテリアルで付けるので、プレビューも直接指定を使わない。
+			if (this.IsMultiNailMode) return null;
 			return this._materialObjectField?.value as Material;
 		}
 

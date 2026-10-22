@@ -21,6 +21,7 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 
 		private readonly ScrollView _scroll;
 		private readonly VisualElement _list;
+		private HashSet<string> _highlighted = new();
 
 		public NailDesignSelect() {
 			this._scroll = new ScrollView(ScrollViewMode.Horizontal) {
@@ -171,6 +172,31 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 						pickingMode = PickingMode.Ignore
 					});
 				}
+			}
+			this.ApplyHighlight();
+		}
+
+		// まとめて登録で選んだサムネイルに枠を付ける。null で全解除。
+		public void SetHighlightedDesigns(IEnumerable<string>? designNames) {
+			this._highlighted = designNames == null ? new HashSet<string>() : new HashSet<string>(designNames);
+			this.ApplyHighlight();
+		}
+
+		private void ApplyHighlight() {
+			Color color = new(0.24f, 0.62f, 1f);
+			foreach (Button button in this._list.Query<Button>().ToList()) {
+				if (string.IsNullOrEmpty(button.name) || !button.enabledSelf) continue;
+				bool on = this._highlighted.Contains(button.name);
+				StyleFloat width = on ? new StyleFloat(3) : new StyleFloat(StyleKeyword.Null);
+				StyleColor border = on ? new StyleColor(color) : new StyleColor(StyleKeyword.Null);
+				button.style.borderTopWidth = width;
+				button.style.borderRightWidth = width;
+				button.style.borderBottomWidth = width;
+				button.style.borderLeftWidth = width;
+				button.style.borderTopColor = border;
+				button.style.borderRightColor = border;
+				button.style.borderBottomColor = border;
+				button.style.borderLeftColor = border;
 			}
 		}
 

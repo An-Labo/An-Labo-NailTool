@@ -34,8 +34,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			this.SetValueWithoutNotify(shapeNames.Contains(GlobalSetting.LastUseShapeName) ? GlobalSetting.LastUseShapeName : shapeNames[0]);
 		}
 
-		public Mesh?[]? GetSelectedShapeMeshes() {
-			string? shapeName = this.value;
+		public Mesh?[]? GetSelectedShapeMeshes() => GetShapeMeshes(this.value);
+
+		public static Mesh?[]? GetShapeMeshes(string? shapeName) {
 			if (string.IsNullOrEmpty(shapeName)) return null;
 			
 			using DBNailShape dbNailShape = new();

@@ -170,6 +170,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (this._customNailTextureRow != null)
 				this._customNailTextureRow.style.display = betaEnabled && this._enableDirectMaterial?.value == true
 					? DisplayStyle.Flex : DisplayStyle.None;
+			this.UpdateMultiNailVisibility();
 		}
 		private void BindAvatarUI()
 		{
@@ -203,6 +204,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._nailDesignSelect.OnSelectNail += this.OnSelectNail;
 			this._nailDesignSelect.OnSelectExternalNail += this.OnSelectExternalNail;
 			this._nailDesignSelect.OnSearchButtonClicked += this.ShowNailSearchWindow;
+			this.BindMultiNailUI();
 			// UXML生成時より後に復元されたベータ設定を反映し、再起動時も先頭カードを再構築する。
 			this.UpdateBetaFeaturesVisibility();
 
@@ -250,6 +252,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._removeCurrentNail = this.rootVisualElement.Q<Toggle>("remove-current-nail");
 			this._removeCurrentNail.SetValueWithoutNotify(GlobalSetting.RemoveCurrentNail);
 			this._removeCurrentNail.RegisterValueChangedCallback(OnChangeRemoveCurrentNail);
+			this._removeCurrentNail.RegisterValueChangedCallback(_ => this.RefreshMultiNailMenuPreview());
 			// ラベルクリックでトグル
 			var lblRemove = this.rootVisualElement.Q<LocalizedLabel>("label-remove-nail");
 			lblRemove?.RegisterCallback<ClickEvent>(_ => { if (this._removeCurrentNail != null) this._removeCurrentNail.value = !this._removeCurrentNail.value; });

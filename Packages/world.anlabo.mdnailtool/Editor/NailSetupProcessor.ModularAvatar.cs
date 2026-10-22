@@ -331,22 +331,14 @@ namespace world.anlabo.mdnailtool.Editor {
 						}
 						return source;
 					}
-					int weightTransferMode = this.AvatarVariationData.WeightTransferMode;
-					int ResolveFingerMode(string key, bool thumb) {
-						if (this.AvatarVariationData.WeightTransferByFinger?.TryGetValue(key, out string value) == true) {
-							switch (value?.ToLowerInvariant()) {
-								case "on": return 1;
-								case "off": return -1;
-								case "auto": return 0;
-								default: ToolConsole.Log($"[Warning] Unknown weight mode for {key}: {value}. Keeping the base setting."); break;
-							}
-						}
-						return weightTransferMode == 3 ? 0 : weightTransferMode == 1 || (weightTransferMode == 2 && thumb) ? 1 : -1;
-					}
+					var transferFingers = NailSetupUtil.ParseWeightTransferFingers(this.AvatarVariationData.WeightTransfer);
+					foreach (string unknown in transferFingers.Where(k => !NailSetupUtil.FingerWeightKeys.Contains(k)))
+						ToolConsole.Log($"[Warning] Unknown weight transfer finger: {unknown}. Ignored.");
+					int ResolveFingerMode(string key) => transferFingers.Contains(key) ? NailSetupUtil.WeightTransferForced : NailSetupUtil.WeightTransferRigid;
 					string[] fingerNames = { "Thumb", "Index", "Middle", "Ring", "Little" };
-					int[] handModes = handsNailObjects.Select((_, i) => ResolveFingerMode($"Hand{(i < 5 ? "L" : "R")}.{fingerNames[i % 5]}", i % 5 == 0)).ToArray();
+					int[] handModes = handsNailObjects.Select((_, i) => ResolveFingerMode($"Hand{(i < 5 ? "L" : "R")}.{fingerNames[i % 5]}")).ToArray();
 					var footNails = leftFootNailObjects.Concat(rightFootNailObjects).ToArray();
-					int[] footModes = footNails.Select((_, i) => ResolveFingerMode($"Foot{(i < 5 ? "L" : "R")}.{fingerNames[i % 5]}", false)).ToArray();
+					int[] footModes = footNails.Select((_, i) => ResolveFingerMode($"Foot{(i < 5 ? "L" : "R")}.{fingerNames[i % 5]}")).ToArray();
 					SkinnedMeshRenderer? handWeightSource = handModes.Any(m => m >= 0)
 						? ResolveWeightSource(handsNailObjects.Where((_, i) => handModes[i] >= 0), true)
 						: null;
@@ -354,7 +346,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						? ResolveWeightSource(footNails.Where((_, i) => footModes[i] >= 0), false)
 						: null;
 					bool[] handWeightTransferMask = handModes.Select(m => m >= 0).ToArray();
-					ToolConsole.Log($"  Body weight transfer: mode={weightTransferMode} handSource={(handWeightSource == null ? "(none)" : handWeightSource.name)} footSource={(footWeightSource == null ? "(none)" : footWeightSource.name)}");
+					ToolConsole.Log($"  Body weight transfer: fingers={(transferFingers.Count == 0 ? "(none)" : string.Join(",", transferFingers))} handSource={(handWeightSource == null ? "(none)" : handWeightSource.name)} footSource={(footWeightSource == null ? "(none)" : footWeightSource.name)}");
 					// メッシュ統合
 					ToolConsole.Log($"  BakeBS: handVariants.Count={handVariants.Count} footVariants.Count={footVariants.Count}");
 					bool[] handsIsLeft = handsNailObjects.Select((_, i) => i < 5).ToArray();
@@ -921,6 +913,86 @@ namespace world.anlabo.mdnailtool.Editor {
 #endif
 		}
 
+		private static string GetMenuParameter(ModularAvatarMenuItem item) {
+#if MA_HAS_PORTABLE_API
+			return item.PortableControl.Parameter ?? "";
+#else
+			return item.Control?.parameter?.name ?? "";
+#endif
+		}
+
+		private static void SetMenuParameter(ModularAvatarMenuItem item, string parameter) {
+#if MA_HAS_PORTABLE_API
+			item.PortableControl.Parameter = parameter;
+#else
+			if (item.Control == null) item.Control = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+			item.Control.parameter = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.Parameter { name = parameter };
+#endif
+		}
+
+		private static float GetMenuValue(ModularAvatarMenuItem item) {
+#if MA_HAS_PORTABLE_API
+			return item.PortableControl.Value;
+#else
+			return item.Control?.value ?? 0f;
+#endif
+		}
+
+		private string ExclusiveParameterFor(string? part) =>
+			part == null ? this.ExclusiveMenuParameter! : $"{this.ExclusiveMenuParameter}/{part}";
+
+		// 保存・同期は従来と同じ。排他切替時は明示番号にし、未選択の初期値0を「ネイルなし」として使う。
+		private void ConfigureNailToggle(ModularAvatarMenuItem item, string? part) {
+			item.isSaved = true;
+			item.isSynced = true;
+			if (this.ExclusiveMenuParameter == null) {
+				SetMenuToggle(item, 1);
+				item.isDefault = true;
+				item.automaticValue = true;
+				return;
+			}
+			SetMenuToggle(item, this.ExclusiveMenuValue);
+			SetMenuParameter(item, this.ExclusiveParameterFor(part));
+			item.isDefault = this.ExclusiveMenuIsDefault;
+			item.automaticValue = false;
+		}
+
+		/// <summary>
+		/// アバター内の既存の排他切替グループを走査し、使用済みの最大番号を返す。
+		/// 今回の登録で初期値を決め直すため、既存項目の「初期値にする」は解除する。
+		/// </summary>
+		internal static int PrepareExclusiveMenuGroup(VRCAvatarDescriptor avatar, string parameter) {
+			int maxValue = 0;
+			foreach (ModularAvatarMenuItem item in avatar.GetComponentsInChildren<ModularAvatarMenuItem>(true)) {
+				string p = GetMenuParameter(item);
+				if (p != parameter && !p.StartsWith(parameter + "/")) continue;
+				maxValue = Mathf.Max(maxValue, Mathf.RoundToInt(GetMenuValue(item)));
+				if (item.isDefault) {
+					Undo.RecordObject(item, "Reset nail switch default");
+					item.isDefault = false;
+				}
+			}
+			return maxValue;
+		}
+
+		// An-Labo サブメニューは MA が [An-Labo] 直下のメニュー項目を並び順どおりに並べて作る。その中身を返す。
+		// replaceable: An-Labo まとめ時の同名置き換え対象 (マーカー付き) かどうか。置き換えは並び位置を保つ。
+		// removable: 「現在のネイルを削除」で消えるか。RemoveNail は有効なマーカーの GameObject だけを消す。
+		internal static List<(string rootName, string label, bool replaceable, bool removable)> FindAnLaboMenuEntries(VRCAvatarDescriptor avatar) {
+			var result = new List<(string rootName, string label, bool replaceable, bool removable)>();
+			Transform? anLabo = avatar.transform.Find("[An-Labo]");
+			if (anLabo == null) return result;
+			foreach (Transform child in anLabo) {
+				ModularAvatarMenuItem? item = child.GetComponent<ModularAvatarMenuItem>();
+				if (item == null) continue;
+				string label = !string.IsNullOrEmpty(item.label) ? item.label : child.name;
+				bool replaceable = child.GetComponent<MDNailObjectMarker>() != null;
+				bool removable = child.GetComponentsInParent<MDNailObjectMarker>(true).Any(m => m.gameObject.activeInHierarchy);
+				result.Add((child.name, label, replaceable, removable));
+			}
+			return result;
+		}
+
 		private static void SetMenuIcon(ModularAvatarMenuItem item, Texture2D? icon) {
 #if MA_HAS_PORTABLE_API
 			item.PortableControl.Icon = icon;
@@ -935,7 +1007,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			string designName = firstEntry.Item1 != null
 				? firstEntry.Item1.DesignName : (this.OverrideMaterial?.name ?? "Nail");
 			string colorName = firstEntry.Item1 != null ? firstEntry.Item3 : "";
-			string menuLabel = string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}";
+			string menuLabel = this.NailLabelOverride ?? (string.IsNullOrEmpty(colorName) ? designName : $"{designName}_{colorName}");
 			string variationName = this.AvatarVariationData.VariationName;
 			string handWrapperName = $"HandNail_{variationName}";
 			string footWrapperName = $"FootNail_{variationName}";
@@ -973,6 +1045,18 @@ namespace world.anlabo.mdnailtool.Editor {
 					Undo.AddComponent<ModularAvatarMenuInstaller>(nailRoot);
 			}
 
+			// 同じデザイン・色を再登録すると既存ルートが再利用されるため、旧メニュー部品を外して番号の二重登録を防ぐ。
+			if (this.ExclusiveMenuParameter != null) {
+				foreach (ModularAvatarObjectToggle oldToggle in nailRoot.GetComponents<ModularAvatarObjectToggle>())
+					Undo.DestroyObjectImmediate(oldToggle);
+				foreach (ModularAvatarMenuItem oldItem in nailRoot.GetComponents<ModularAvatarMenuItem>())
+					Undo.DestroyObjectImmediate(oldItem);
+				foreach (string controlName in new[] { $"HandNailToggle_{variationName}", $"FootNailToggle_{variationName}" }) {
+					Transform? oldControl = nailRoot.transform.Find(controlName);
+					if (oldControl != null) Undo.DestroyObjectImmediate(oldControl.gameObject);
+				}
+			}
+
 			// ---- nailRoot に MenuItem ----
 			ModularAvatarMenuItem rootMenuItem = Undo.AddComponent<ModularAvatarMenuItem>(nailRoot);
 			SetMenuIcon(rootMenuItem, thumbnail);
@@ -982,11 +1066,7 @@ namespace world.anlabo.mdnailtool.Editor {
 				rootMenuItem.MenuSource = SubmenuSource.Children;
 			} else {
 				// SplitHandFoot=OFF: nailRoot自体にObjectToggle (HandNail/FootNailラッパーをまとめてON/OFF)
-				SetMenuToggle(rootMenuItem, 1);
-				rootMenuItem.isSaved = true;
-				rootMenuItem.isSynced = true;
-				rootMenuItem.isDefault = true;
-				rootMenuItem.automaticValue = true;
+				this.ConfigureNailToggle(rootMenuItem, null);
 
 				ModularAvatarObjectToggle rootToggle = Undo.AddComponent<ModularAvatarObjectToggle>(nailRoot);
 				// メニューの ON を「着用中」とし、OFF 時だけネイルを非表示にする。
@@ -1049,12 +1129,8 @@ namespace world.anlabo.mdnailtool.Editor {
 					handToggle.Objects = handToggleObjects;
 
 					ModularAvatarMenuItem handMenuItem = Undo.AddComponent<ModularAvatarMenuItem>(handControl);
-					SetMenuToggle(handMenuItem, 1);
+					this.ConfigureNailToggle(handMenuItem, "Hand");
 					SetMenuIcon(handMenuItem, null);
-					handMenuItem.isSaved = true;
-					handMenuItem.isSynced = true;
-					handMenuItem.isDefault = true;
-					handMenuItem.automaticValue = true;
 					handMenuItem.label = $"HandNail - {variationName}";
 				}
 
@@ -1079,12 +1155,8 @@ namespace world.anlabo.mdnailtool.Editor {
 						footToggle.Objects = footToggleObjects;
 
 						ModularAvatarMenuItem footMenuItem = Undo.AddComponent<ModularAvatarMenuItem>(footControl);
-						SetMenuToggle(footMenuItem, 1);
+						this.ConfigureNailToggle(footMenuItem, "Foot");
 						SetMenuIcon(footMenuItem, null);
-						footMenuItem.isSaved = true;
-						footMenuItem.isSynced = true;
-						footMenuItem.isDefault = true;
-						footMenuItem.automaticValue = true;
 						footMenuItem.label = $"FootNail - {variationName}";
 					}
 				}
