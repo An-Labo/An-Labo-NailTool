@@ -46,9 +46,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var title = new Label(LanguageManager.S("window.support_title") ?? "Help");
 			title.AddToClassList("mdn-support-title");
 			header.Add(title);
-			var lead = new Label(LanguageManager.S("window.support_lead") ?? "Check common questions and recent activity here.");
-			lead.AddToClassList("mdn-support-lead");
-			header.Add(lead);
 			rootVisualElement.Add(header);
 
 			BuildLogSection();
@@ -56,7 +53,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var faq = new VisualElement();
 			faq.AddToClassList("mdn-support-faq");
 			rootVisualElement.Add(faq);
-			FAQWindow.BuildContent(faq, _expandedFaqId);
+			FAQWindow.BuildContent(faq, _expandedFaqId, embedded: true);
 
 		}
 

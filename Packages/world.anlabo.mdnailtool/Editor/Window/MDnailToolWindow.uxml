@@ -20,9 +20,9 @@
             <ui:VisualElement class="mdn-helplink-row">
                 <ui:VisualElement name="changelog-banner-container" />
                 <ui:VisualElement class="mdn-spacer" />
-                <ui:Label text="[Manual]" name="link-manual" class="mdn-link mdn-helplink-item" />
-                <ui:Label text="[FAQ]" name="link-contact-header" class="mdn-link mdn-helplink-item" />
-                <ui:Label text="[Usage Stats]" name="link-usage-stats" class="mdn-link mdn-helplink-item" />
+                <ui:Label text="Manual" name="link-manual" class="mdn-link mdn-helplink-item" />
+                <ui:Label text="FAQ" name="link-contact-header" class="mdn-link mdn-helplink-item" />
+                <ui:Label text="Usage Stats" name="link-usage-stats" class="mdn-link mdn-helplink-item" />
                 <!-- 試着プレビューバナー (helplink-rowに被せる absolute) -->
                 <ui:VisualElement name="tryout-banner" class="mdn-tryout-banner">
                     <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
@@ -287,6 +287,7 @@
                             class="mdn-option-label mdn-term-help-continuation" />
                     </ui:VisualElement>
                     <world.anlabo.mdnailtool.Editor.VisualElements.LocalizedLabel
+                        name="bake-blendshape-footnail-note"
                         text-id="window.bake_blendshapes_footnail_note"
                         class="mdn-option-note mdn-option-indent" />
                     <ui:Label

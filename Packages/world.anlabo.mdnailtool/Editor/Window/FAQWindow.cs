@@ -56,17 +56,20 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			BuildContent(rootVisualElement);
 		}
 
-		internal static void BuildContent(VisualElement root, string? expandedEntryId = null)
+		internal static void BuildContent(VisualElement root, string? expandedEntryId = null, bool embedded = false)
 		{
 			root.AddToClassList("mdn-faq-root");
 
-			Label title = new(LanguageManager.S("window.faq_title") ?? "FAQ");
-			title.AddToClassList("mdn-faq-title");
-			root.Add(title);
+			if (!embedded)
+			{
+				Label title = new(LanguageManager.S("window.faq_title") ?? "FAQ");
+				title.AddToClassList("mdn-faq-title");
+				root.Add(title);
 
-			Label lead = new(LanguageManager.S("window.faq_lead") ?? "Please check these items first.");
-			lead.AddToClassList("mdn-faq-lead");
-			root.Add(lead);
+				Label lead = new(LanguageManager.S("window.faq_lead") ?? "Please check these items first.");
+				lead.AddToClassList("mdn-faq-lead");
+				root.Add(lead);
+			}
 
 			ScrollView scroll = new(ScrollViewMode.Vertical);
 			scroll.AddToClassList("mdn-faq-scroll");
@@ -121,11 +124,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 		{
 			VisualElement card = new();
 			card.AddToClassList("mdn-faq-external-card");
-
-			Label description = new(LanguageManager.S("window.faq_external_description")
-			                        ?? "For avatar support requests and terms of use, please check the website.");
-			description.AddToClassList("mdn-faq-external-description");
-			card.Add(description);
 
 			VisualElement links = new();
 			links.AddToClassList("mdn-faq-external-links");

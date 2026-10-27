@@ -332,6 +332,8 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 					this._footSelects.style.display = (isActive && isDetail) ? DisplayStyle.Flex : DisplayStyle.None;
 					_tglFootDetail.SetEnabled(isActive);
+					var footNailNote = this.rootVisualElement.Q<VisualElement>("bake-blendshape-footnail-note");
+					if (footNailNote != null) footNailNote.style.display = isActive ? DisplayStyle.Flex : DisplayStyle.None;
 
 					GlobalSetting.UseFootNail = isActive;
 					MDNailToolPrefs.FootDetail = isDetail;

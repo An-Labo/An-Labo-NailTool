@@ -792,7 +792,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 
 			this._manualLink = this.rootVisualElement.Q<Label>("link-manual");
 			if (this._manualLink != null) {
-				this._manualLink.text = $"[{S("link.manual.label") ?? "Manual"}]";
+				this._manualLink.text = S("link.manual.label") ?? "Manual";
 				this._manualLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL(S("link.manual")));
 			}
 
@@ -811,7 +811,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			var usageStatsLink = this.rootVisualElement.Q<Label>("link-usage-stats");
 			if (usageStatsLink != null)
 			{
-				usageStatsLink.text = $"[{S("usage_stats.link_label") ?? "Usage Stats"}]";
+				usageStatsLink.text = S("usage_stats.link_label") ?? "Usage Stats";
 				usageStatsLink.RegisterCallback<ClickEvent>(_ => UsageStatsWindow.ShowWindow());
 			}
 

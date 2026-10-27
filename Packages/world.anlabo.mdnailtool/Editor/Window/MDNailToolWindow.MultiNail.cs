@@ -424,13 +424,6 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			if (this._multiNailList == null) return;
 			this._multiNailList.Clear();
 
-			if (this._multiNailRows.Count == 0)
-			{
-				Label empty = new(S("window.multi_nail.empty") ?? "No nails added yet.");
-				empty.style.opacity = 0.7f;
-				this._multiNailList.Add(empty);
-			}
-
 			var order = this.MultiNailEntries.Select((e, i) => (e.pick.Id, i + 1)).ToDictionary(x => x.Id, x => x.Item2);
 			// 1回にまとめて登録する数をVRChatの1ページ分で止める。登録済みの分と合わせて超えた時は MA が More に分ける。
 			bool full = order.Count >= MultiNailMenuPageSize;

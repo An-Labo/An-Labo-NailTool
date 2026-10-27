@@ -111,24 +111,6 @@ namespace world.anlabo.mdnailtool.Editor.Window {
             var root = rootVisualElement;
             root.AddToClassList("mdn-search-root");
 
-            // ---- タイトル行 ----
-            var titleBar = new VisualElement();
-            titleBar.style.flexDirection = FlexDirection.Row;
-            titleBar.style.alignItems = Align.Center;
-            titleBar.style.marginBottom = 6;
-            titleBar.style.paddingBottom = 6;
-            titleBar.style.borderBottomWidth = 1;
-            titleBar.style.borderBottomColor = new Color(0.27f, 0.27f, 0.27f);
-
-            var titleLbl = new Label("Nail Design Search");
-            titleLbl.style.fontSize = 14;
-            titleLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLbl.style.color = isDark ? new Color(0.93f, 0.93f, 0.93f) : new Color(0.1f, 0.1f, 0.1f);
-            titleLbl.style.flexGrow = 1;
-            titleBar.Add(titleLbl);
-
-            root.Add(titleBar);
-
             // ---- トップバー ----
             var topBar = new VisualElement();
             topBar.AddToClassList("mdn-search-topbar");
