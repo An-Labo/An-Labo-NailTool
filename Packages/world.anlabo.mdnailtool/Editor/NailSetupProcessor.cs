@@ -139,6 +139,12 @@ namespace world.anlabo.mdnailtool.Editor {
 			Transform?[] leftFootNailObjects = GetLeftFootNailObjectList(nailPrefabObject);
 			Transform?[] rightFootNailObjects = GetRightFootNailObjectList(nailPrefabObject);
 
+			// 足の登録が無いアバター (Hand Only 等) は、足ネイルの指定が残っていても手だけ付ける。
+			if (this.UseFootNail && leftFootNailObjects.All(t => t == null) && rightFootNailObjects.All(t => t == null)) {
+				ToolConsole.Log($"  no foot nail data for '{this.AvatarVariationData.VariationName}', foot nails skipped");
+				this.UseFootNail = false;
+			}
+
 			for (int i = 0; i < 10 && i < handsNailObjects.Length; i++) {
 				if (i < this.NailDesignAndVariationNames.Length && this.ShouldRemoveNailSlot(i) && handsNailObjects[i] != null) {
 					UnityEngine.Object.DestroyImmediate(handsNailObjects[i]!.gameObject);

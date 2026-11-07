@@ -155,6 +155,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			this._avatarDropDowns?.SetValues(shop, avatar, variation);
 			this.CompleteManualAvatarSelection();
 			this.UpdateBlendShapeVariantDropDown();
+			this.UpdateFootAvailability();
 			this.UpdatePreview();
 			this.RequestScenePreviewUpdate();
 			this.UpdateStepSectionStates();

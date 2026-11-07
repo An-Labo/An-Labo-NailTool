@@ -188,9 +188,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				this.CompleteManualAvatarSelection();
 				this.UpdateStepSectionStates();
 				this.CleanupScenePreview();
+				this.UpdateFootAvailability();
 				this.UpdatePreview();
 				this.RequestScenePreviewUpdate();
-				
+
 				if (evt.target != this._avatarDropDowns.BlendShapeVariantPopup)
 				{
 					this.UpdateBlendShapeVariantDropDown();
@@ -803,6 +804,11 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			{
 				string? registryName = sources[i];
 				if (string.IsNullOrEmpty(registryName) || registryName == noneLabel)
+				{
+					continue;
+				}
+				// 全体欄で選ぶと足を指ごとにしない時に足にも同じ名前が入るため、付けてよい指かをここでも見る。
+				if (registry.Objects != null && registry.Objects.TryGetValue(registryName!, out AdditionalObjectEntry? allowEntry) && !allowEntry.IsAllowedForFinger(i))
 				{
 					continue;
 				}

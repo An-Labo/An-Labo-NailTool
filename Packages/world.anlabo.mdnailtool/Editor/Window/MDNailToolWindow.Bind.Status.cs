@@ -1024,7 +1024,12 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			INailProcessor.ClearPreviewMaterialCash();
 
 			if (this._tglHandActive != null) this._tglHandActive.value = true;
-			if (this._tglFootActive != null) this._tglFootActive.value = true;
+			// 押せない間は表示を変えず、保存値だけ初期値へ戻す。
+			if (this._tglFootActive != null)
+			{
+				if (this._tglFootActive.enabledSelf) this._tglFootActive.value = true;
+				else GlobalSetting.UseFootNail = true;
+			}
 			if (this._tglHandDetail != null) this._tglHandDetail.value = false;
 			if (this._tglFootDetail != null) this._tglFootDetail.value = false;
 			// 指ごと有効化 (bulk 全 ON で 20 指すべて enabled に揃える).

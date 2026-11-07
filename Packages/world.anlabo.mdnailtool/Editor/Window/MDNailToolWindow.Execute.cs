@@ -321,39 +321,55 @@ namespace world.anlabo.mdnailtool.Editor.Window
 				_tglFootActive.SetValueWithoutNotify(GlobalSetting.UseFootNail);
 				_tglFootDetail.SetValueWithoutNotify(MDNailToolPrefs.FootDetail);
 
-				lblFootActive?.RegisterCallback<ClickEvent>(_ => _tglFootActive.value = !_tglFootActive.value);
+				lblFootActive?.RegisterCallback<ClickEvent>(_ => { if (_tglFootActive.enabledSelf) _tglFootActive.value = !_tglFootActive.value; });
 				lblFootDetail?.RegisterCallback<ClickEvent>(_ => _tglFootDetail.value = !_tglFootDetail.value);
 
-				void UpdateFootVisibility()
-				{
-					if (this._footSelects == null) return;
-					bool isActive = _tglFootActive.value;
-					bool isDetail = _tglFootDetail.value;
-
-					this._footSelects.style.display = (isActive && isDetail) ? DisplayStyle.Flex : DisplayStyle.None;
-					_tglFootDetail.SetEnabled(isActive);
-					var footNailNote = this.rootVisualElement.Q<VisualElement>("bake-blendshape-footnail-note");
-					if (footNailNote != null) footNailNote.style.display = isActive ? DisplayStyle.Flex : DisplayStyle.None;
-
-					GlobalSetting.UseFootNail = isActive;
-					MDNailToolPrefs.FootDetail = isDetail;
-
-					this.UpdatePreview();
-					this.RequestScenePreviewUpdate();
-
-					// どちらかがONになったらエラーハイライトとバナーを解除
-					if (isActive || (this._tglHandActive?.value ?? false))
-					{
-						this.ClearHandFootError();
-						if (this._errorMessage?.text == S("error.execute.no_target"))
-							this.HideErrorBanner();
-					}
-				}
-
-				_tglFootActive.RegisterValueChangedCallback(_ => UpdateFootVisibility());
-				_tglFootDetail.RegisterValueChangedCallback(_ => UpdateFootVisibility());
-				UpdateFootVisibility();
+				_tglFootActive.RegisterValueChangedCallback(_ => this.UpdateFootVisibility());
+				_tglFootDetail.RegisterValueChangedCallback(_ => this.UpdateFootVisibility());
+				this.UpdateFootVisibility();
+				this.UpdateFootAvailability();
 			}
+		}
+
+		private void UpdateFootVisibility()
+		{
+			if (this._footSelects == null || this._tglFootActive == null || this._tglFootDetail == null) return;
+			bool isActive = this._tglFootActive.value;
+			bool isDetail = this._tglFootDetail.value;
+
+			this._footSelects.style.display = (isActive && isDetail) ? DisplayStyle.Flex : DisplayStyle.None;
+			this._tglFootDetail.SetEnabled(isActive);
+			var footNailNote = this.rootVisualElement.Q<VisualElement>("bake-blendshape-footnail-note");
+			if (footNailNote != null) footNailNote.style.display = isActive ? DisplayStyle.Flex : DisplayStyle.None;
+
+			// 足の登録が無いアバターで押せない間の「オフ」は表示だけ。足ありのアバターへ戻した時に元の値へ戻す。
+			if (this._tglFootActive.enabledSelf) GlobalSetting.UseFootNail = isActive;
+			MDNailToolPrefs.FootDetail = isDetail;
+
+			this.UpdatePreview();
+			this.RequestScenePreviewUpdate();
+
+			// どちらかがONになったらエラーハイライトとバナーを解除
+			if (isActive || (this._tglHandActive?.value ?? false))
+			{
+				this.ClearHandFootError();
+				if (this._errorMessage?.text == S("error.execute.no_target"))
+					this.HideErrorBanner();
+			}
+		}
+
+		// 選んだバリエーションに足の登録が無い時は「フットネイル」を押せないオフにする。
+		private void UpdateFootAvailability()
+		{
+			if (this._tglFootActive == null) return;
+			AvatarVariation? variation = this._avatarDropDowns?.GetSelectedAvatarVariation();
+			bool available = variation == null || NailSetupProcessor.HasFootNailData(variation,
+				variation.NailNodes is { Length: > 0 } ? null : this._avatarDropDowns!.GetSelectedPrefab());
+			if (available == this._tglFootActive.enabledSelf) return;
+
+			this._tglFootActive.SetEnabled(available);
+			this._tglFootActive.SetValueWithoutNotify(available && GlobalSetting.UseFootNail);
+			this.UpdateFootVisibility();
 		}
 
 		private void OnChangeAvatarSortOrder(AvatarSortOrder order) { this._avatarDropDowns?.Sort(order); }
@@ -398,6 +414,7 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			}
 
 			this.UpdateBlendShapeVariantDropDown();
+			this.UpdateFootAvailability();
 			this.UpdatePreview();
 			this.RequestScenePreviewUpdate();
 			this.UpdateStepSectionStates();

@@ -59,6 +59,21 @@ namespace world.anlabo.mdnailtool.Editor {
 		private static Vector3 NodeVector(float[]? value, Vector3 fallback) => value is { Length: >= 3 } ? new Vector3(value[0], value[1], value[2]) : fallback;
 		private static Quaternion NodeRotation(float[]? value) => value is { Length: >= 4 } ? new Quaternion(value[0], value[1], value[2], value[3]) : Quaternion.identity;
 
+		// 画面の足トグル用。付ける処理と同じ元データ (NailNodes、無ければ元Prefab) に足の爪が1本でもあるかで判定する。
+		internal static bool HasFootNailData(AvatarVariation variation, GameObject? basePrefab) {
+			if (variation.NailNodes is { Length: > 0 }) return ContainsFootNode(variation.NailNodes);
+			return basePrefab != null && basePrefab.GetComponentsInChildren<Transform>(true).Any(t => IsFootNailName(t.name));
+		}
+
+		private static bool ContainsFootNode(IEnumerable<NailPrefabNodeData> nodes) =>
+			nodes.Any(n => IsFootNailName(n.Name ?? "") || (n.Children != null && ContainsFootNode(n.Children)));
+
+		private static bool IsFootNailName(string name) {
+			string bare = GetVariantMatchName(name);
+			return MDNailToolDefines.LEFT_FOOT_NAIL_OBJECT_NAME_LIST.Contains(bare)
+			       || MDNailToolDefines.RIGHT_FOOT_NAIL_OBJECT_NAME_LIST.Contains(bare);
+		}
+
 		private static Transform?[] GetHandsNailObjectList(GameObject nailPrefabObject) {
 			return MDNailToolDefines.HANDS_NAIL_OBJECT_NAME_LIST
 				.Select(name => FindNailObject(nailPrefabObject, name))
