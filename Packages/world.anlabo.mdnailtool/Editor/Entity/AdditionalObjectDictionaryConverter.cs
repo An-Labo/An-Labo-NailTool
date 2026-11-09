@@ -68,7 +68,7 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 				AdditionalObjectEntry entry = kv.Value;
 
 				// 旧形式互換: AllowedFingers も Fingers も無い場合は配列で出力
-				if (entry.AllowedFingers == null && entry.Fingers == null && entry.Guids != null)
+				if (entry.AllowedFingers == null && entry.BulkFingers == null && entry.Fingers == null && entry.Guids != null)
 				{
 					serializer.Serialize(writer, entry.Guids);
 				}

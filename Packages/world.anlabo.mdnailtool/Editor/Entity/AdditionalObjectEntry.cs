@@ -28,6 +28,10 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 		[JsonProperty("fingers")]
 		public Dictionary<string, List<string>>? Fingers { get; set; }
 
+		/// <summary>手の指を一括で設定したときに付ける指インデックス. null = 使用可能な指すべて.</summary>
+		[JsonProperty("bulkFingers", NullValueHandling = NullValueHandling.Ignore)]
+		public List<int>? BulkFingers { get; set; }
+
 		/// <summary>全指共通GUIDリスト. Fingers が null の場合にこちらが使用される.</summary>
 		[JsonProperty("guids")]
 		public List<string>? Guids { get; set; }
@@ -41,6 +45,13 @@ namespace world.anlabo.mdnailtool.Editor.Entity
 		{
 			if (AllowedFingers == null) return true;
 			return AllowedFingers.Contains(fingerIndex);
+		}
+
+		/// <summary>手の指を一括で設定したときに、指定指インデックスへ付けるか判定する.</summary>
+		public bool IsBulkFinger(int fingerIndex)
+		{
+			if (BulkFingers == null) return true;
+			return BulkFingers.Contains(fingerIndex);
 		}
 
 		/// <summary>

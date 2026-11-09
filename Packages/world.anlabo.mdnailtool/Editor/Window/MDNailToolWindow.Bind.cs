@@ -785,11 +785,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 			string? globalValue = this._additionalObjectSourceDropdown?.value;
 			string? globalSource = (globalValue == noneLabel) ? null : globalValue;
 
+			bool isHandDetail = this._tglHandDetail?.value ?? false;
+
 			// 指ごとのソースを決定（MDNailSelectionBuilder経由）
 			string?[] sources = MDNailSelectionBuilder.BuildAdditionalObjectSources(
 				this._nailDesignDropDowns,
 				this._tglHandActive?.value ?? true,
-				this._tglHandDetail?.value ?? false,
+				isHandDetail,
 				this._tglFootActive?.value ?? false,
 				this._tglFootDetail?.value ?? false,
 				globalSource
@@ -808,7 +810,13 @@ namespace world.anlabo.mdnailtool.Editor.Window
 					continue;
 				}
 				// 全体欄で選ぶと足を指ごとにしない時に足にも同じ名前が入るため、付けてよい指かをここでも見る。
-				if (registry.Objects != null && registry.Objects.TryGetValue(registryName!, out AdditionalObjectEntry? allowEntry) && !allowEntry.IsAllowedForFinger(i))
+				AdditionalObjectEntry? allowEntry = null;
+				if (registry.Objects != null && registry.Objects.TryGetValue(registryName!, out allowEntry) && !allowEntry.IsAllowedForFinger(i))
+				{
+					continue;
+				}
+				// 一括だと全指に同じ名前が入るため、チェーンのように一括で付ける指が決まっている物はここで絞る。
+				if (!isHandDetail && i < MDNailSlot.FootStartIndex && allowEntry != null && !allowEntry.IsBulkFinger(i))
 				{
 					continue;
 				}
