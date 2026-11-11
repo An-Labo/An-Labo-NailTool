@@ -532,8 +532,8 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 			return this._designDisplayNameDictionary.GetValueOrDefault(id, id) ?? id;
 		}
 
-		public (string, string, string) GetSelectedDesignAndVariationName() {
-			if (!this.IsFingerEnabled) return ("", "", "");
+		public (string, string, string) GetSelectedDesignAndVariationName(bool ignoreFingerEnabled = false) {
+			if (!ignoreFingerEnabled && !this.IsFingerEnabled) return ("", "", "");
 			if (this._isVariantMode && !string.IsNullOrEmpty(this._selectedVariantDesignName)) {
 				// バリアントモード: バリアントデザイン名 + そのデザインの最初のマテリアル
 				string designName = this._selectedVariantDesignName!;

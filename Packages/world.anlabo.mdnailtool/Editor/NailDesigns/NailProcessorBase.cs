@@ -8,6 +8,7 @@ using UnityEngine;
 using world.anlabo.mdnailtool.Editor.Core;
 using world.anlabo.mdnailtool.Editor.Entity;
 using world.anlabo.mdnailtool.Editor.JsonData;
+using world.anlabo.mdnailtool.Editor.Language;
 using world.anlabo.mdnailtool.Editor.Model;
 using Object = UnityEngine.Object;
 
@@ -25,6 +26,7 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 
 		public Material GetMaterial(string materialName, string colorName, string nailShapeName, bool isGenerate, bool isPreview) {
 			if (!this.IsInstalledColorVariation(materialName, colorName)) {
+				if (!isPreview) throw this.CreateMaterialBuildFailedException(materialName, colorName, nailShapeName, "not installed", null);
 				Debug.LogWarning($"[MDNailTool] Skipped: '{this.DesignName}' (material='{materialName}', color='{colorName}', shape='{nailShapeName}') is not installed. Returning fallback material.");
 				return this.GetFallbackMaterial();
 			}
@@ -77,9 +79,21 @@ namespace world.anlabo.mdnailtool.Editor.NailDesigns {
 			} catch (UnauthorizedAccessException ex) {
 				throw new NailToolUserException("NailSetup", "Could not write generated material storage.", ex);
 			} catch (Exception ex) {
+				// 着用で白い代わりのMaterialを付けると、失敗なのに完了と表示されるため中止する。プレビューは表示を続ける。
+				if (!isPreview) throw this.CreateMaterialBuildFailedException(materialName, colorName, nailShapeName, ex.Message, ex);
 				Debug.LogWarning($"[MDNailTool] Failed to build material for '{this.DesignName}' (material='{materialName}', color='{colorName}', shape='{nailShapeName}'): {ex.Message}. Returning fallback material.");
 				return this.GetFallbackMaterial();
 			}
+		}
+
+		private NailToolUserException CreateMaterialBuildFailedException(string materialName, string colorName, string nailShapeName, string reason, Exception? cause) {
+			string template = LanguageManager.S("error.execute.material_build_failed")
+				?? "Wearing was cancelled because the nail material could not be created ({0}: {1}). Check that the required shader such as lilToon is installed. If this continues, download and import the nail from BOOTH again.";
+			var exception = new NailToolUserException("NailSetup", string.Format(template, this.DesignName, reason), cause);
+			exception.Context["material"] = materialName;
+			exception.Context["color"] = colorName;
+			exception.Context["shape"] = nailShapeName;
+			return exception;
 		}
 
 		private Material GetFallbackMaterial() {

@@ -61,11 +61,13 @@ namespace world.anlabo.mdnailtool.Editor {
 				}
 
 				foreach (GameObject avatarPrefab in avatarPrefabs) {
-					foreach ((string? targetName, string? _, ShopAndAvatarAndVariation variation) in prefabs) {
-						if (!IsSafeNameFallback(targetName)) continue;
-						if (avatarPrefab.name.Contains(targetName!))
-							return (variation.Shop, variation.Avatar, variation.Variation);
-					}
+					var nameMatches = prefabs
+						.Where(p => IsSafeNameFallback(p.prefabName) && IsNameMatch(avatarPrefab.name, p.prefabName!))
+						.Select(p => (p.prefabName!, p.variation))
+						.ToList();
+					ShopAndAvatarAndVariation? matched = SelectNameMatch(nameMatches);
+					if (matched != null)
+						return (matched.Value.Shop, matched.Value.Avatar, matched.Value.Variation);
 				}
 
 			}
@@ -143,7 +145,7 @@ namespace world.anlabo.mdnailtool.Editor {
 			IEnumerable<(string? FbxName, string? FbxGuid, ShopAndAvatarAndVariation variation)> fbxEntries) {
 
 			string fbxGuid = AssetDatabase.GUIDFromAssetPath(fbxPath).ToString();
-			string fbxName = Path.GetFileName(fbxPath);
+			string fbxName = Path.GetFileNameWithoutExtension(fbxPath);
 
 			// GUID一致（優先）
 			var guidMatches = fbxEntries.Where(e => !string.IsNullOrEmpty(e.FbxGuid) && e.FbxGuid == fbxGuid)
@@ -151,11 +153,31 @@ namespace world.anlabo.mdnailtool.Editor {
 			if (guidMatches.Count > 0) return SelectLatestCompatibleVariation(guidMatches);
 
 			// 名前一致
-			var nameMatches = fbxEntries.Where(e => IsSafeNameFallback(e.FbxName) && fbxName.Contains(e.FbxName!))
-				.Select(e => e.variation).ToList();
-			if (nameMatches.Count > 0) return SelectLatestCompatibleVariation(nameMatches);
+			var nameMatches = fbxEntries.Where(e => IsSafeNameFallback(e.FbxName) && IsNameMatch(fbxName, e.FbxName!))
+				.Select(e => (e.FbxName!, e.variation)).ToList();
+			return SelectNameMatch(nameMatches);
+		}
 
-			return null;
+		/// <summary>
+		/// GUID がない場合の名前照合。DB 名で始まるアセット名だけを一致とする。
+		/// </summary>
+		internal static bool IsNameMatch(string assetName, string targetName) {
+			string target = targetName.Trim();
+			if (target.Length == 0 || !assetName.StartsWith(target, StringComparison.Ordinal)) return false;
+			// 文字で終わる DB 名は続きも文字なら別名（"Nagi" と "NagiyaRuri"）。
+			// "_" や数字で終わる DB 名は版番号などが続く前提の前方一致として扱う。
+			if (!char.IsLetter(target[target.Length - 1])) return true;
+			return assetName.Length == target.Length || !char.IsLetter(assetName[target.Length]);
+		}
+
+		private static ShopAndAvatarAndVariation? SelectNameMatch(List<(string name, ShopAndAvatarAndVariation variation)> matches) {
+			if (matches.Count == 0) return null;
+			// 長い DB 名ほど具体的なので優先する（"FBX" より "FBX_Moe"）。
+			int longest = matches.Max(m => m.name.Trim().Length);
+			var best = matches.Where(m => m.name.Trim().Length == longest).Select(m => m.variation).ToList();
+			// 同じ長さの名前が別アバターに当たる場合は名前だけで決めず、手動選択に回す。
+			if (best.Select(v => (v.Shop.ShopName, v.Avatar.AvatarName)).Distinct().Count() > 1) return null;
+			return SelectLatestCompatibleVariation(best);
 		}
 
 		private static ShopAndAvatarAndVariation SelectLatestCompatibleVariation(List<ShopAndAvatarAndVariation> matches) {

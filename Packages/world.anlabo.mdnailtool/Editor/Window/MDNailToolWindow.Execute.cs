@@ -674,8 +674,10 @@ namespace world.anlabo.mdnailtool.Editor.Window
 						Backup = this._backup!.value,
 						ForModularAvatar = this._forModularAvatar!.value,
 						OverrideMaterial = directMaterial,
-						EnabledNailSlots = this._nailDesignDropDowns?.Select((dropdown, index) =>
-							 dropdown.IsFingerEnabled && (index < 10 ? isHandActive : isFootActive)).ToArray(),
+						// 指ごとのON/OFFは詳細設定を開いている時だけ効かせる。閉じた後も残すと一部の指だけ付かなくなる。
+						EnabledNailSlots = this._nailDesignDropDowns?.Select((dropdown, index) => index < 10
+							? isHandActive && (!(this._tglHandDetail?.value ?? false) || dropdown.IsFingerEnabled)
+							: isFootActive && (!(this._tglFootDetail?.value ?? false) || dropdown.IsFingerEnabled)).ToArray(),
 						GenerateExpressionMenu = (this._forModularAvatar?.value == true)
 						                      && (this._generateExpressionMenu?.value == true),
 						SplitHandFoot = (this._forModularAvatar?.value == true)

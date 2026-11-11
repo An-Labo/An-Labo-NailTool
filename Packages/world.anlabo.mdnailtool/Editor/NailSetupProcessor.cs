@@ -206,7 +206,8 @@ namespace world.anlabo.mdnailtool.Editor {
 			}
 
 			// 足の追加オブジェクト (per-finger indices 10-19)
-			if (this.UseFootNail && this.PerFingerAdditionalObjects != null)
+			// 足の登録が無いアバターで足を付けない時も、作成済みの足の装飾はここで消す (Scene 直下に残さない).
+			if (this.PerFingerAdditionalObjects != null)
 			{
 				try {
 					Transform?[] footNailObjects = leftFootNailObjects.Concat(rightFootNailObjects).ToArray();
@@ -217,7 +218,7 @@ namespace world.anlabo.mdnailtool.Editor {
 						var fingerObjects = this.PerFingerAdditionalObjects[perFingerIdx];
 						if (fingerObjects == null) continue;
 						// 親付け先がない場合は Instantiate 済み孤児 GO を Destroy する (Scene 残留防止).
-						if (footNailObjects[fi] == null) {
+						if (!this.UseFootNail || footNailObjects[fi] == null) {
 							foreach (Transform additionalObject in fingerObjects) {
 								if (additionalObject != null) Object.DestroyImmediate(additionalObject.gameObject);
 							}

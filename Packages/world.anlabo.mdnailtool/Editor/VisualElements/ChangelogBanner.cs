@@ -62,7 +62,9 @@ namespace world.anlabo.mdnailtool.Editor.VisualElements {
 		}
 
 		private static string GetLang() {
-			return LanguageManager.CurrentLanguageData.language == "jp" ? "jp" : "en";
+			// 言語設定のコードは "ja"、changelog.json の日本語キーは "jp"。
+			string? language = LanguageManager.CurrentLanguageData.language;
+			return language == "ja" || language == "jp" ? "jp" : "en";
 		}
 
 		private static string FormatEntry(ChangelogEntry entry, string lang) {

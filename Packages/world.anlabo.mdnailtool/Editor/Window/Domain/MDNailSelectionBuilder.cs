@@ -27,6 +27,11 @@ namespace world.anlabo.mdnailtool.Editor.Window.Domain
 			// HandDetail/FootDetail=false 時の全指共通デザインは ON状態の最初の指から取る。
 			// 単純に [0] を使うと指0番OFFで全指消滅する。
 			var globalMasterSource = allSelections.FirstOrDefault(s => !string.IsNullOrEmpty(s.d));
+			// 詳細設定で全指をOFFにしたまま閉じた時も、閉じた側は指のON/OFFを見ずに付ける。
+			if (string.IsNullOrEmpty(globalMasterSource.d))
+				globalMasterSource = nailDesignDropDowns
+					.Select(dropDowns => dropDowns.GetSelectedDesignAndVariationName(ignoreFingerEnabled: true))
+					.FirstOrDefault(s => !string.IsNullOrEmpty(s.Item1));
 			if (string.IsNullOrEmpty(globalMasterSource.d)) globalMasterSource = emptyDummy;
 
 			if (isHandActive)
