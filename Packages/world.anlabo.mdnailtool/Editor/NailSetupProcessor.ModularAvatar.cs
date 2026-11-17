@@ -434,6 +434,9 @@ namespace world.anlabo.mdnailtool.Editor {
 							ModularAvatarBoneProxy bp = Undo.AddComponent<ModularAvatarBoneProxy>(additionalObj.gameObject);
 							bp.attachmentMode = BoneProxyAttachmentMode.AsChildKeepWorldPose;
 							bp.target = targetBone;
+							// 指のPhysBoneに巻き込まれて指先の関節が止まるのを防ぐ
+							if (additionalObj.GetComponent<ModularAvatarPBBlocker>() == null)
+								Undo.AddComponent<ModularAvatarPBBlocker>(additionalObj.gameObject);
 						}
 					}
 
@@ -520,6 +523,8 @@ namespace world.anlabo.mdnailtool.Editor {
 					boneProxy.attachmentMode = BoneProxyAttachmentMode.AsChildAtRoot;
 					boneProxy.matchScale = true;
 					boneProxy.target = targetBone;
+					// 指先の骨の子になると指のPhysBoneに長さ0の骨として巻き込まれ、指先の関節が止まるため対象から外す
+					Undo.AddComponent<ModularAvatarPBBlocker>(proxyObject);
 
 					nailObject.SetParent(proxyObject.transform, false);
 					nailObject.localPosition = directLocalPosition;
@@ -1045,16 +1050,16 @@ namespace world.anlabo.mdnailtool.Editor {
 					Undo.AddComponent<ModularAvatarMenuInstaller>(nailRoot);
 			}
 
-			// 同じデザイン・色を再登録すると既存ルートが再利用されるため、旧メニュー部品を外して番号の二重登録を防ぐ。
-			if (this.ExclusiveMenuParameter != null) {
-				foreach (ModularAvatarObjectToggle oldToggle in nailRoot.GetComponents<ModularAvatarObjectToggle>())
-					Undo.DestroyObjectImmediate(oldToggle);
-				foreach (ModularAvatarMenuItem oldItem in nailRoot.GetComponents<ModularAvatarMenuItem>())
-					Undo.DestroyObjectImmediate(oldItem);
-				foreach (string controlName in new[] { $"HandNailToggle_{variationName}", $"FootNailToggle_{variationName}" }) {
-					Transform? oldControl = nailRoot.transform.Find(controlName);
-					if (oldControl != null) Undo.DestroyObjectImmediate(oldControl.gameObject);
-				}
+			// 同じデザイン・色を付け直すと既存ルートが使い回されるため、単体・まとめて登録のどちらでも旧メニュー部品を外さないと2組目が足される。
+			// 既に二重になったルートも1組に戻せるよう、切替用の子は同名が無くなるまで消す。
+			foreach (ModularAvatarObjectToggle oldToggle in nailRoot.GetComponents<ModularAvatarObjectToggle>())
+				Undo.DestroyObjectImmediate(oldToggle);
+			foreach (ModularAvatarMenuItem oldItem in nailRoot.GetComponents<ModularAvatarMenuItem>())
+				Undo.DestroyObjectImmediate(oldItem);
+			foreach (string controlName in new[] { $"HandNailToggle_{variationName}", $"FootNailToggle_{variationName}" }) {
+				Transform? oldControl;
+				while ((oldControl = nailRoot.transform.Find(controlName)) != null)
+					Undo.DestroyObjectImmediate(oldControl.gameObject);
 			}
 
 			// ---- nailRoot に MenuItem ----
